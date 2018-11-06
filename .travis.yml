@@ -14,13 +14,11 @@ matrix:
         - liblapack-dev
         - clang-3.6
         - libhdf5-serial-dev
-        - gfortran
         - g++-4.9
     env:
       - CXX_COMPILER='clang++-3.6'
       - PYTHON_VER='3.6'
       - C_COMPILER='clang-3.6'
-      - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
       - VERSION='3.6'
@@ -36,15 +34,9 @@ script:
 - conda create -q -n qforte python=$PYTHON_VER numpy cmake 
 - source activate qforte
 - python -V
-#- pyenv global system 3.6
 - cd ${TRAVIS_BUILD_DIR}
 - export CXX=${CXX_COMPILER}
-#- export CC=${C_COMPILER}
-#- export FC=${Fortran_COMPILER}
-#- export CTEST_OUTPUT_ON_FAILURE=1
 - ${CXX_COMPILER} --version
-#- ${Fortran_COMPILER} --version
-#- ${C_COMPILER} --version
 - cd ${HOME}/build/evangelistalab/qforte
 - python setup.py build
 - python setup.py test
