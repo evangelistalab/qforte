@@ -46,5 +46,5 @@ install:
 - ${Fortran_COMPILER} --version
 - ${C_COMPILER} --version
 - cd ${HOME}/build/evangelistalab/qforte
-- python setup compile
+- python setup.py compile
 - ls -l
