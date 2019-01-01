@@ -1,9 +1,10 @@
 #ifndef _quantum_computer_h_
 #define _quantum_computer_h_
 
-#include <complex>
 #include <string>
 #include <vector>
+
+#include "qforte-def.h" // double_c
 
 class QuantumGate;
 
@@ -34,6 +35,8 @@ class Basis {
     }
 
     void zero() { state_ = static_cast<basis_t>(0); }
+
+    Basis& insert(size_t pos);
 
     size_t add() const { return state_; }
 
@@ -80,6 +83,8 @@ class QuantumComputer {
     /// return the coefficient of a basis state
     std::complex<double> coeff(const Basis& basis);
 
+    void set_state(std::vector<std::pair<Basis, double_c>> state);
+
   private:
     /// the number of qubits
     size_t nqubit_;
@@ -96,6 +101,9 @@ class QuantumComputer {
     double print_threshold_ = 0.0;
 
     void apply_1qubit_gate(const QuantumGate& qg);
+    void apply_1qubit_gate_insertion(const QuantumGate& qg);
+
+    void apply_2qubit_gate(const QuantumGate& qg);
 };
 
 #endif // _quantum_computer_h_

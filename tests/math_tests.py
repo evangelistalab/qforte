@@ -2,26 +2,78 @@ import unittest
 # import our `pybind11`-based extension module from package qforte 
 from qforte import qforte
 
+# this function creates a Basis object from a string representation
 def make_basis(str):
     return qforte.Basis(int(str[::-1], 2))
 
 class MainTest(unittest.TestCase):
     def test_X_gate(self):
-        # test that 1 + 1 = 2
-        nqubits = 3
+        # test the Pauli X gate
+        nqubits = 1
+        basis0 = make_basis('0')
+        basis1 = make_basis('1')
         computer = qforte.QuantumComputer(nqubits)
         X = qforte.make_gate('X',0,0);
+        # test X|0> = |1>
         computer.apply_gate(X)
-        print(make_basis('100').str(nqubits))
-        basis100 = make_basis('100')
-        coeff100 = computer.coeff(basis100)
-        self.assertEqual(coeff100, 1.0 + 0.0j)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 1.0 + 0.0j)
+        # test X|1> = |0>
+        computer.set_state([(basis1,1.0)])
+        computer.apply_gate(X)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        self.assertAlmostEqual(coeff0, 1.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
 
-#    def test_subtract(self):
-#        # test that 1 - 1 = 0
-#        self.assertEqual(qforte.subtract(1, 1), 0)
 
-    def test_computer(self):
+    def test_Y_gate(self):
+        # test the Pauli Y gate
+        nqubits = 1
+        basis0 = make_basis('0')
+        basis1 = make_basis('1')
+        computer = qforte.QuantumComputer(nqubits)
+        Y = qforte.make_gate('Y',0,0);
+        # test Y|0> = i|1>
+        computer.apply_gate(Y)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 1.0j)
+        # test Y|1> = -i|0>
+        computer.set_state([(basis1,1.0)])
+        computer.apply_gate(Y)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        self.assertAlmostEqual(coeff0, 0.0 - 1.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
+
+
+    def test_Z_gate(self):
+        # test the Pauli Y gate
+        nqubits = 1
+        basis0 = make_basis('0')
+        basis1 = make_basis('1')
+        computer = qforte.QuantumComputer(nqubits)
+        Z = qforte.make_gate('Z',0,0);
+        # test Z|0> = |0>
+        computer.apply_gate(Z)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        self.assertAlmostEqual(coeff0, 1.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
+        # test Z|1> = -|1>
+        computer.set_state([(basis1,1.0)])
+        computer.apply_gate(Z)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, -1.0 + 0.0j)
+
+
+    def tesat_computer(self):
         # test that 1 - 1 = 0
 
 #        print('\n'.join(qc.str()))

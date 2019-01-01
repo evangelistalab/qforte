@@ -23,6 +23,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_circuit", &QuantumComputer::apply_circuit)
         .def("apply_gate", &QuantumComputer::apply_gate)
         .def("coeff", &QuantumComputer::coeff)
+        .def("set_state", &QuantumComputer::set_state)
         .def("str", &QuantumComputer::str)
         .def("__repr__", [](const QuantumComputer& qc) {
             std::string r("QuantumComputer(\n");

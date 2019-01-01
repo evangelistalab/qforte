@@ -2,8 +2,9 @@
 #define _quantum_gate_h_
 
 #include <array>
-#include <complex>
 #include <vector>
+
+#include "qforte-def.h" // double_c
 
 /// alias for a 4 x 4 complex matrix
 using complex_4_4_mat = std::array<std::array<std::complex<double>, 4>, 4>;
