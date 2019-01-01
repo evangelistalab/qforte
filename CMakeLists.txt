@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8.12)
-set (CMAKE_CXX_STANDARD 11)
+cmake_minimum_required(VERSION 3.4)
+set (CMAKE_CXX_STANDARD 17)
 
 project(qforte)
 
@@ -8,11 +8,16 @@ set(SOURCE_DIR "src/qforte")
 
 # Tell CMake that headers are also in SOURCE_DIR
 include_directories(${SOURCE_DIR})
-set(SOURCES "${SOURCE_DIR}/math.cc")
+#set(SOURCES "${SOURCE_DIR}/math.cc")
 
 # Generate Python module
 add_subdirectory(lib/pybind11)
-pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc")
+add_subdirectory(lib/fmt)
+pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
+    "${SOURCE_DIR}/quantum_computer.cc"
+    "${SOURCE_DIR}/quantum_gate.cc")
+
+target_link_libraries(qforte PRIVATE fmt-header-only)
 
 SET(TEST_DIR "tests")
 SET(TESTS ${SOURCES}
@@ -21,4 +26,5 @@ SET(TESTS ${SOURCES}
 
 # Generate a test executable
 include_directories(lib/catch2/single_include/catch2)
+include_directories(lib/fmt/include)
 add_executable("${PROJECT_NAME}_test" ${TESTS})
