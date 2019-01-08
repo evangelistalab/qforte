@@ -5,7 +5,7 @@
 #include "quantum_gate.h"
 #include "quantum_computer.h"
 
-std::string Basis::str(size_t nqubit) const {
+std::string QuantumBasis::str(size_t nqubit) const {
     std::string s;
     s += "|";
     for (int i = 0; i < nqubit; ++i) {
@@ -19,9 +19,9 @@ std::string Basis::str(size_t nqubit) const {
     return s;
 }
 
-void Basis::set(basis_t state) { state_ = state; }
+void QuantumBasis::set(basis_t state) { state_ = state; }
 
-Basis& Basis::insert(size_t pos) {
+QuantumBasis& QuantumBasis::insert(size_t pos) {
     basis_t temp(state_);
     state_ = state_ << 1;
     basis_t mask = (1 << pos) - 1;
@@ -39,18 +39,20 @@ std::vector<std::string> QuantumCircuit::str() const {
 
 QuantumComputer::QuantumComputer(int nqubit) : nqubit_(nqubit) {
     nbasis_ = std::pow(2, nqubit_);
-    basis_.assign(nbasis_, Basis());
+    basis_.assign(nbasis_, QuantumBasis());
     coeff_.assign(nbasis_, 0.0);
     new_coeff_.assign(nbasis_, 0.0);
     for (size_t i = 0; i < nbasis_; i++) {
-        basis_[i] = Basis(i);
+        basis_[i] = QuantumBasis(i);
     }
     coeff_[0] = 1.;
 }
 
-std::complex<double> QuantumComputer::coeff(const Basis& basis) { return coeff_[basis.add()]; }
+std::complex<double> QuantumComputer::coeff(const QuantumBasis& basis) {
+    return coeff_[basis.add()];
+}
 
-void QuantumComputer::set_state(std::vector<std::pair<Basis, double_c>> state) {
+void QuantumComputer::set_state(std::vector<std::pair<QuantumBasis, double_c>> state) {
     std::fill(coeff_.begin(), coeff_.end(), 0.0);
     for (const auto& basis_c : state) {
         coeff_[basis_c.first.add()] = basis_c.second;
@@ -81,9 +83,9 @@ void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
             if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
-                for (const Basis& basis_J : basis_) {
+                for (const QuantumBasis& basis_J : basis_) {
                     if (basis_J.get_bit(target) == j) {
-                        Basis basis_I = basis_J;
+                        QuantumBasis basis_I = basis_J;
                         basis_I.set_bit(target, i);
                         new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
                     }
@@ -97,7 +99,7 @@ void QuantumComputer::apply_1qubit_gate_insertion(const QuantumGate& qg) {
     size_t target = qg.target();
     const auto& gate = qg.gate();
 
-    Basis basis_I, basis_J, basis_K;
+    QuantumBasis basis_I, basis_J, basis_K;
     size_t nbasis_minus1 = std::pow(2, nqubit_ - 1);
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
@@ -128,9 +130,9 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
             const auto j_c = two_qubits_basis[j].first;
             const auto j_t = two_qubits_basis[j].second;
             if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
-                for (const Basis& basis_J : basis_) {
+                for (const QuantumBasis& basis_J : basis_) {
                     if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
-                        Basis basis_I = basis_J;
+                        QuantumBasis basis_I = basis_J;
                         basis_I.set_bit(control, i_c);
                         basis_I.set_bit(target, i_t);
                         new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];

@@ -8,7 +8,17 @@
 
 class QuantumGate;
 
-class Basis {
+/**
+ * @brief The QuantumBasis class
+ *
+ * This class represents an element of the Hilbert space basis:
+ *   |q_1 q_2 ... q_n> with q_i = {0, 1}
+ *
+ *   for example:
+ *
+ *   |1010>, |0000>, |1110>
+ */
+class QuantumBasis {
   public:
     /// the type used to represent a quantum state (a 64 bit unsigned long)
     using basis_t = uint64_t;
@@ -17,7 +27,7 @@ class Basis {
     static constexpr size_t max_qubits_ = 8 * sizeof(basis_t);
 
     /// constructor
-    Basis(size_t n = static_cast<basis_t>(0)) { state_ = n; }
+    QuantumBasis(size_t n = static_cast<basis_t>(0)) { state_ = n; }
 
     /// a mask for bit in position pos
     static constexpr basis_t maskbit(size_t pos) { return (static_cast<basis_t>(1)) << pos; }
@@ -37,7 +47,7 @@ class Basis {
     void set(basis_t state);
     void zero() { state_ = static_cast<basis_t>(0); }
 
-    Basis& insert(size_t pos);
+    QuantumBasis& insert(size_t pos);
 
     size_t add() const { return state_; }
 
@@ -82,9 +92,9 @@ class QuantumComputer {
     std::vector<std::string> str() const;
 
     /// return the coefficient of a basis state
-    std::complex<double> coeff(const Basis& basis);
+    std::complex<double> coeff(const QuantumBasis& basis);
 
-    void set_state(std::vector<std::pair<Basis, double_c>> state);
+    void set_state(std::vector<std::pair<QuantumBasis, double_c>> state);
 
   private:
     /// the number of qubits
@@ -92,7 +102,7 @@ class QuantumComputer {
     /// the number of basis states
     size_t nbasis_;
     /// the tensor product basis
-    std::vector<Basis> basis_;
+    std::vector<QuantumBasis> basis_;
     /// the coefficients of the tensor product basis
     std::vector<std::complex<double>> coeff_;
     /// the coefficients of the tensor product basis
