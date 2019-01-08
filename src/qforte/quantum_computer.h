@@ -34,6 +34,7 @@ class Basis {
         return state_;
     }
 
+    void set(basis_t state);
     void zero() { state_ = static_cast<basis_t>(0); }
 
     Basis& insert(size_t pos);
@@ -99,6 +100,8 @@ class QuantumComputer {
 
     /// the threshold for priting a determinant
     double print_threshold_ = 0.0;
+
+    double compute_threshold_ = 1.0e-16;
 
     void apply_1qubit_gate(const QuantumGate& qg);
     void apply_1qubit_gate_insertion(const QuantumGate& qg);

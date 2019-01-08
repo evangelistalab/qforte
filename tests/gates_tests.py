@@ -6,7 +6,7 @@ from qforte import qforte
 def make_basis(str):
     return qforte.Basis(int(str[::-1], 2))
 
-class MainTest(unittest.TestCase):
+class GatesTests(unittest.TestCase):
     def test_X_gate(self):
         # test the Pauli X gate
         nqubits = 1
@@ -73,7 +73,7 @@ class MainTest(unittest.TestCase):
         self.assertAlmostEqual(coeff1, -1.0 + 0.0j)
 
 
-    def tesat_computer(self):
+    def test_computer(self):
         # test that 1 - 1 = 0
 
 #        print('\n'.join(qc.str()))
@@ -103,13 +103,16 @@ class MainTest(unittest.TestCase):
 #        print('\n'.join(qcircuit.str()))
 #        self.assertEqual(qforte.subtract(1, 1), 0)
 
-        computer = qforte.QuantumComputer(3)
-        print(repr(computer))
+        computer = qforte.QuantumComputer(16)
+#        print(repr(computer))
 #        circuit = qforte.QuantumCircuit()
 #        circuit.add_gate(X)
-        computer.apply_gate(H)
-        computer.apply_gate(H)
-        print(repr(computer))
+        for i in range(3000):
+            computer.apply_gate(X)
+            computer.apply_gate(Y)
+            computer.apply_gate(Z)
+            computer.apply_gate(H)
+#        print(repr(computer))
 
 if __name__ == '__main__':
     unittest.main()
