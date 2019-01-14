@@ -71,6 +71,9 @@ void QuantumComputer::apply_gate(const QuantumGate& qg) {
     if (nqubits == 1) {
         apply_1qubit_gate(qg);
     }
+    if (nqubits == 2){
+        apply_2qubit_gate(qg);
+    }
 
     coeff_ = new_coeff_;
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
