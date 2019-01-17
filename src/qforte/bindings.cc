@@ -22,6 +22,8 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
         .def("apply_circuit", &QuantumComputer::apply_circuit)
         .def("apply_gate", &QuantumComputer::apply_gate)
+        .def("measure_circut", &QuantumComputer::measure_circut)
+        .def("measure_gate", &QuantumComputer::measure_gate)
         .def("coeff", &QuantumComputer::coeff)
         .def("set_state", &QuantumComputer::set_state)
         .def("str", &QuantumComputer::str)

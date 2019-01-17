@@ -88,6 +88,12 @@ class QuantumComputer {
     /// apply a gate to the quantum computer
     void apply_gate(const QuantumGate& qg);
 
+    /// measure the expectation value of many 1qubit gates
+    std::complex<double> measure_circut(QuantumCircuit& qc);
+
+    /// measure the expectation value of a single 1qubit gate
+    std::complex<double> measure_gate(QuantumGate& qg);
+
     /// return a vector of strings representing the state of the computer
     std::vector<std::string> str() const;
 

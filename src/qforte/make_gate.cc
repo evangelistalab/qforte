@@ -59,6 +59,13 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             };
             return QuantumGate(type, target, control, gate);
         }
+        if (type == "I") {
+            std::complex<double> gate[4][4]{
+                {[0] = 1.0},
+                {[1] = 1.0},
+            };
+            return QuantumGate(type, target, control, gate);
+        }
     } else {
         if ((type == "cX") or (type == "CNOT")) {
             std::complex<double> gate[4][4]{
