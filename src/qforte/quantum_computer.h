@@ -94,6 +94,10 @@ class QuantumComputer {
     /// return the coefficient of a basis state
     std::complex<double> coeff(const QuantumBasis& basis);
 
+    /// set the quantum computer to the state
+    /// basis_1 * c_1 + basis_2 * c_2 + ...
+    /// where this information is passed as a vectors of pairs
+    ///  [(basis_1, c_1), (basis_2, c_2), ...]
     void set_state(std::vector<std::pair<QuantumBasis, double_c>> state);
 
   private:
