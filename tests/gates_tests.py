@@ -72,6 +72,122 @@ class GatesTests(unittest.TestCase):
         self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
         self.assertAlmostEqual(coeff1, -1.0 + 0.0j)
 
+    def test_cX_gate(self):
+        # test the cX/CNOT gate
+        nqubits = 2
+        basis0 = make_basis('00') # basis0:|00>
+        basis1 = make_basis('01') # basis1:|10>
+        basis2 = make_basis('10') # basis2:|01>
+        basis3 = make_basis('11') # basis3:|11>
+        computer = qforte.QuantumComputer(nqubits)
+        CNOT = qforte.make_gate('CNOT',0,1);
+
+        # test CNOT|00> = |00>
+        computer.set_state([(basis0,1.0)])
+        computer.apply_gate(CNOT)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        self.assertAlmostEqual(coeff0, 1.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff2, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff3, 0.0 + 0.0j)
+
+        # test CNOT|10> = |11>
+        computer.set_state([(basis1,1.0)])
+        computer.apply_gate(CNOT)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff2, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff3, 1.0 + 0.0j)
+
+        # test CNOT|01> = |01>
+        computer.set_state([(basis2,1.0)])
+        computer.apply_gate(CNOT)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff2, 1.0 + 0.0j)
+        self.assertAlmostEqual(coeff3, 0.0 + 0.0j)
+
+        # test CNOT|11> = |10>
+        computer.set_state([(basis3,1.0)])
+        computer.apply_gate(CNOT)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 1.0 + 0.0j)
+        self.assertAlmostEqual(coeff2, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff3, 0.0 + 0.0j)
+
+    def test_cY_gate(self):
+        # test the cY gate
+        nqubits = 2
+        basis0 = make_basis('00') # basis0:|00>
+        basis1 = make_basis('01') # basis1:|10>
+        basis2 = make_basis('10') # basis2:|01>
+        basis3 = make_basis('11') # basis3:|11>
+        computer = qforte.QuantumComputer(nqubits)
+        cY = qforte.make_gate('cY',0,1);
+
+        # test cY|00> = |00>
+        computer.set_state([(basis0,1.0)])
+        computer.apply_gate(cY)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        self.assertAlmostEqual(coeff0, 1.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff2, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff3, 0.0 + 0.0j)
+
+        # test cY|01> = |01>
+        computer.set_state([(basis2,1.0)])
+        computer.apply_gate(cY)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff2, 1.0 + 0.0j)
+        self.assertAlmostEqual(coeff3, 0.0 + 0.0j)
+
+        # test cY|10> = i|11>
+        computer.set_state([(basis1,1.0)])
+        computer.apply_gate(cY)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff2, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff3, 0.0 + 1.0j)
+
+        # test cY|11> = -i|10>
+        computer.set_state([(basis3,1.0)])
+        computer.apply_gate(cY)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        self.assertAlmostEqual(coeff0, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff1, 0.0 - 1.0j)
+        self.assertAlmostEqual(coeff2, 0.0 + 0.0j)
+        self.assertAlmostEqual(coeff3, 0.0 + 0.0j)
+
 
     def test_computer(self):
         # test that 1 - 1 = 0
