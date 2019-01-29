@@ -1,5 +1,5 @@
 import unittest
-# import our `pybind11`-based extension module from package qforte 
+# import our `pybind11`-based extension module from package qforte
 from qforte import qforte
 
 # this function creates a Basis object from a string representation
@@ -229,6 +229,58 @@ class GatesTests(unittest.TestCase):
             computer.apply_gate(Z)
             computer.apply_gate(H)
 #        print(repr(computer))
+
+    def test_op_exp_val_1(self):
+        #test direct expectation value measurement
+        trial_state = qforte.QuantumComputer(4)
+
+        trial_prep = [None]*5
+        trial_prep[0] = qforte.make_gate('H',0,0)
+        trial_prep[1] = qforte.make_gate('H',1,1)
+        trial_prep[2] = qforte.make_gate('H',2,2)
+        trial_prep[3] = qforte.make_gate('H',3,3)
+        trial_prep[4] = qforte.make_gate('cX',0,1)
+
+        trial_circ = qforte.QuantumCircuit()
+
+        #prepare the circuit
+        for gate in trial_prep:
+            trial_circ.add_gate(gate)
+
+        # use circuit to prepare trial state
+        trial_state.apply_circuit(trial_circ)
+
+        # gates needed for [a1^ a2] operator
+        X1 = qforte.make_gate('X',1,1)
+        X2 = qforte.make_gate('X',2,2)
+        Y1 = qforte.make_gate('Y',1,1)
+        Y2 = qforte.make_gate('Y',2,2)
+
+        # initialize circuits to make operator
+        circ1 = qforte.QuantumCircuit()
+        circ1.add_gate(X2)
+        circ1.add_gate(Y1)
+        circ2 = qforte.QuantumCircuit()
+        circ2.add_gate(Y2)
+        circ2.add_gate(Y1)
+        circ3 = qforte.QuantumCircuit()
+        circ3.add_gate(X2)
+        circ3.add_gate(X1)
+        circ4 = qforte.QuantumCircuit()
+        circ4.add_gate(Y2)
+        circ4.add_gate(X1)
+
+        #build the quantum operator for [a1^ a2]
+        a1_dag_a2 = qforte.QuantumOperator()
+        a1_dag_a2.add_term(0.0-0.25j, circ1)
+        a1_dag_a2.add_term(0.25, circ2)
+        a1_dag_a2.add_term(0.25, circ3)
+        a1_dag_a2.add_term(0.0+0.25j, circ4)
+
+        #get direct expectatoin value
+        exp = trial_state.direct_op_exp_val(a1_dag_a2)
+        self.assertAlmostEqual(exp, 0.2499999999999999 + 0.0j)
+
 
 if __name__ == '__main__':
     unittest.main()

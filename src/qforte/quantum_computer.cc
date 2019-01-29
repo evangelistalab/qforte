@@ -146,31 +146,37 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
     }
 }
 
-std::complex<double> QuantumComputer::measure_circut(QuantumCircuit& qc) {
-    std::vector<std::complex<double>> old_coeff = coeff_;
-
-    apply_circuit(qc);
+std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& qo) {
     std::complex<double> result = 0.0;
-
-    for (const QuantumBasis& basis_J : basis_) {
-      result += std::conj(old_coeff[basis_J.add()]) * coeff_[basis_J.add()];
+    for (const auto& term : qo.terms()) {
+        result += term.first * direct_circ_exp_val(term.second);
     }
-
-    coeff_ = old_coeff;
-
     return result;
 }
 
-std::complex<double> QuantumComputer::measure_gate(QuantumGate& qg) {
-    apply_1qubit_gate(qg);
+std::complex<double> QuantumComputer::direct_circ_exp_val(const QuantumCircuit& qc) {
+    std::vector<std::complex<double>> old_coeff = coeff_;
     std::complex<double> result = 0.0;
-    for (const QuantumBasis& basis_J : basis_) {
-        result += std::conj(coeff_[basis_J.add()]) * new_coeff_[basis_J.add()];
-    }
 
-    coeff_ = new_coeff_;
+    apply_circuit(qc);
+    result = std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
+                                std::complex<double>(0.0, 0.0), add_c<double>,complex_prod<double>
+                                );
+
+    coeff_ = old_coeff;
+    return result;
+}
+
+std::complex<double> QuantumComputer::direct_gate_exp_val(const QuantumGate& qg) {
+    std::vector<std::complex<double>> coeff_temp = coeff_;
+    std::complex<double> result = 0.0;
+
+    apply_1qubit_gate(qg);
+    result = std::inner_product(coeff_temp.begin(), coeff_temp.end(), new_coeff_.begin(),
+                                std::complex<double>(0.0, 0.0), add_c<double>,complex_prod<double>
+                                );
+
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
-
     return result;
 }
 
