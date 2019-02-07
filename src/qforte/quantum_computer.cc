@@ -171,7 +171,12 @@ std::complex<double> QuantumComputer::direct_gate_exp_val(const QuantumGate& qg)
     std::vector<std::complex<double>> coeff_temp = coeff_;
     std::complex<double> result = 0.0;
 
-    apply_1qubit_gate(qg);
+    if (nqubits == 1) {
+        apply_1qubit_gate(qg);
+    }
+    if (nqubits == 2){
+        apply_2qubit_gate(qg);
+    }
     result = std::inner_product(coeff_temp.begin(), coeff_temp.end(), new_coeff_.begin(),
                                 std::complex<double>(0.0, 0.0), add_c<double>,complex_prod<double>
                                 );
