@@ -3,8 +3,15 @@
 
 #include <string>
 #include <vector>
+#include <numeric>
 
 #include "qforte-def.h" // double_c
+
+template<class T>
+std::complex< T > complex_prod(std::complex< T > a, std::complex< T > b) { return std::conj<T>(a)*b; }
+
+template<class T>
+std::complex< T > add_c(std::complex< T > a, std::complex< T > b) { return a+b; }
 
 class QuantumGate;
 
@@ -77,6 +84,27 @@ class QuantumCircuit {
     std::vector<QuantumGate> gates_;
 };
 
+class QuantumOperator {
+  public:
+    /// default constructor: creates an empty quantum operator
+    QuantumOperator() {}
+
+    /// add a circuit as a term in the quantum operator
+    void add_term(std::complex<double> circ_coeff ,const QuantumCircuit& circuit) {
+        terms_.push_back(std::make_pair(circ_coeff, circuit));
+    }
+
+    /// return a vector of terms and thier coeficients
+    const std::vector<std::pair<std::complex<double>,QuantumCircuit>>& terms() const { return terms_; }
+
+    /// return a vector of string representing this quantum operator
+    std::vector<std::string> str() const;
+
+  private:
+    /// the list of circuits
+    std::vector<std::pair<std::complex<double>,QuantumCircuit>> terms_;
+};
+
 class QuantumComputer {
   public:
     /// default constructor: create a quantum computer with nqubit qubits
@@ -88,11 +116,32 @@ class QuantumComputer {
     /// apply a gate to the quantum computer
     void apply_gate(const QuantumGate& qg);
 
+    /// get the expectation value of the sum of many circuits directly
+    /// (ie without simulated measurement)
+    std::complex<double> direct_op_exp_val(const QuantumOperator& qo);
+
+    /// get the expectation value of many 1qubit gates directly
+    /// (ie without simulated measurement)
+    std::complex<double> direct_circ_exp_val(const QuantumCircuit& qc);
+
+    /// get the expectation value of a single 1qubit gate directly
+    /// (ie without simulated measurement)
+    std::complex<double> direct_gate_exp_val(const QuantumGate& qg);
+
     /// return a vector of strings representing the state of the computer
     std::vector<std::string> str() const;
 
+    /// return a vector of the coeficients
+    std::vector<std::complex<double>> get_coeff_vec() const { return coeff_; };
+
     /// return the coefficient of a basis state
     std::complex<double> coeff(const QuantumBasis& basis);
+
+    /// return the number of qubits
+    size_t get_nqubit() const { return nqubit_; }
+
+    /// return the number of basis states
+    size_t get_nbasis() const { return nbasis_; }
 
     /// set the quantum computer to the state
     /// basis_1 * c_1 + basis_2 * c_2 + ...
@@ -118,6 +167,7 @@ class QuantumComputer {
     double compute_threshold_ = 1.0e-16;
 
     void apply_1qubit_gate(const QuantumGate& qg);
+
     void apply_1qubit_gate_insertion(const QuantumGate& qg);
 
     void apply_2qubit_gate(const QuantumGate& qg);

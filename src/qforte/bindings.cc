@@ -14,6 +14,11 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_gate", &QuantumCircuit::add_gate)
         .def("str", &QuantumCircuit::str);
 
+    py::class_<QuantumOperator>(m, "QuantumOperator")
+        .def(py::init<>())
+        .def("add_term", &QuantumOperator::add_term);
+        //.def("str", &QuantumOperator::str);
+
     py::class_<QuantumBasis>(m, "QuantumBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
         .def("str", &QuantumBasis::str);
@@ -22,6 +27,9 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
         .def("apply_circuit", &QuantumComputer::apply_circuit)
         .def("apply_gate", &QuantumComputer::apply_gate)
+        .def("direct_op_exp_val", &QuantumComputer::direct_op_exp_val)
+        .def("direct_circ_exp_val", &QuantumComputer::direct_circ_exp_val)
+        .def("direct_gate_exp_val", &QuantumComputer::direct_gate_exp_val)
         .def("coeff", &QuantumComputer::coeff)
         .def("set_state", &QuantumComputer::set_state)
         .def("str", &QuantumComputer::str)
