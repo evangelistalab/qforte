@@ -143,6 +143,10 @@ class QuantumComputer {
     /// return the number of basis states
     size_t get_nbasis() const { return nbasis_; }
 
+    /// set the quantum computer to the state
+    /// basis_1 * c_1 + basis_2 * c_2 + ...
+    /// where this information is passed as a vectors of pairs
+    ///  [(basis_1, c_1), (basis_2, c_2), ...]
     void set_state(std::vector<std::pair<QuantumBasis, double_c>> state);
 
   private:
