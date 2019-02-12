@@ -1,4 +1,5 @@
 #include <map>
+#include <random>
 
 #include "fmt/format.h"
 
@@ -77,6 +78,44 @@ void QuantumComputer::apply_gate(const QuantumGate& qg) {
 
     coeff_ = new_coeff_;
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
+}
+size_t QuantumComputer::measure_circuit(const QuantumCircuit& qc) {
+    // initialize a "Mirror" QC to represent the corresponding change
+    // of basis
+    QuantumCircuit Mirror;
+
+    // copy old coefficients
+    std::vector<std::complex<double>> old_coeff = coeff_;
+
+    for(const QuantumGate& gate : qc.gates()){
+        size_t target_qubit = gate.target();
+        std::complex<double> gate_id = (gate.gate())[1][0];
+        if ( std::abs(gate_id) < 10e-10 ) {
+            QuantumGate temp = make_gate("I", target_qubit, target_qubit);
+            Mirror.add_gate(temp);
+        } else if ( std::abs(std::real(gate_id)) < 10e-10 ) {
+            QuantumGate temp = make_gate("H", target_qubit, target_qubit);
+            Mirror.add_gate(temp);
+        } else {
+            QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Mirror.add_gate(temp);
+        }
+    }
+    // apply Mirror circuit to 'trick' qcomputer into measureing in non Z basis
+    apply_circuit(Mirror);
+    std::vector<double> probs(nbasis_);
+    for (size_t k = 0; k < nbasis_; k++) { probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]); }
+
+    // random number device
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // 'pick' an index from the discrete_distribution!
+    std::discrete_distribution<size_t> dd(std::begin(probs), std::end(probs));
+    size_t result = dd(gen);
+
+    coeff_ = old_coeff;
+    return result;
 }
 
 void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
@@ -170,6 +209,7 @@ std::complex<double> QuantumComputer::direct_circ_exp_val(const QuantumCircuit& 
 std::complex<double> QuantumComputer::direct_gate_exp_val(const QuantumGate& qg) {
     std::vector<std::complex<double>> coeff_temp = coeff_;
     std::complex<double> result = 0.0;
+    int nqubits = qg.nqubits();
 
     int nqubits = qg.nqubits();
     if (nqubits == 1) {

@@ -116,6 +116,9 @@ class QuantumComputer {
     /// apply a gate to the quantum computer
     void apply_gate(const QuantumGate& qg);
 
+    /// measure the state of the quanum computer in basis of circuit
+    size_t measure_circuit(const QuantumCircuit& qc);
+
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
     std::complex<double> direct_op_exp_val(const QuantumOperator& qo);
