@@ -79,13 +79,17 @@ void QuantumComputer::apply_gate(const QuantumGate& qg) {
     coeff_ = new_coeff_;
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
 }
-size_t QuantumComputer::measure_circuit(const QuantumCircuit& qc) {
+
+std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, size_t n_measurements) {
     // initialize a "Mirror" QC to represent the corresponding change
     // of basis
     QuantumCircuit Mirror;
 
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
+
+    // TODO: make code more readable
+    // TODO: add gate lable?
 
     for(const QuantumGate& gate : qc.gates()){
         size_t target_qubit = gate.target();
@@ -102,6 +106,8 @@ size_t QuantumComputer::measure_circuit(const QuantumCircuit& qc) {
         }
     }
     // apply Mirror circuit to 'trick' qcomputer into measureing in non Z basis
+
+
     apply_circuit(Mirror);
     std::vector<double> probs(nbasis_);
     for (size_t k = 0; k < nbasis_; k++) { probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]); }
@@ -111,11 +117,22 @@ size_t QuantumComputer::measure_circuit(const QuantumCircuit& qc) {
     std::mt19937 gen(rd());
 
     // 'pick' an index from the discrete_distribution!
-    std::discrete_distribution<size_t> dd(std::begin(probs), std::end(probs));
-    size_t result = dd(gen);
+    std::discrete_distribution<> dd(std::begin(probs), std::end(probs));
 
+    std::vector<double> results(n_measurements);
+
+    for(size_t k = 0; k < n_measurements; k++){
+        size_t measurement = dd(gen);
+        double value = 1.;
+        for(const QuantumGate& gate : qc.gates()){
+            size_t target_qubit = gate.target();
+            value *= 1. - 2. * static_cast<double>(basis_[measurement].get_bit(target_qubit));
+        }
+        results[k] = value;
+    }
+    
     coeff_ = old_coeff;
-    return result;
+    return results;
 }
 
 void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
