@@ -171,6 +171,7 @@ std::complex<double> QuantumComputer::direct_gate_exp_val(const QuantumGate& qg)
     std::vector<std::complex<double>> coeff_temp = coeff_;
     std::complex<double> result = 0.0;
 
+    int nqubits = qg.nqubits();
     if (nqubits == 1) {
         apply_1qubit_gate(qg);
     }
