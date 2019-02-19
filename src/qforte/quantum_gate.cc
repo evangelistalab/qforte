@@ -23,6 +23,8 @@ size_t QuantumGate::control() const { return control_; }
 
 const complex_4_4_mat& QuantumGate::gate() const { return gate_; }
 
+std::string QuantumGate::gate_id() const { return label_; }
+
 std::string QuantumGate::str() const {
     std::string s =
         fmt::format("{} gate, target qubit:{}, contol qubit:{}\n", label_, target_, control_);

@@ -34,6 +34,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("direct_gate_exp_val", &QuantumComputer::direct_gate_exp_val)
         .def("coeff", &QuantumComputer::coeff)
         .def("set_state", &QuantumComputer::set_state)
+        .def("zero_state", &QuantumComputer::zero_state)
         .def("str", &QuantumComputer::str)
         .def("__repr__", [](const QuantumComputer& qc) {
             std::string r("QuantumComputer(\n");

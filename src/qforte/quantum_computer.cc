@@ -60,6 +60,10 @@ void QuantumComputer::set_state(std::vector<std::pair<QuantumBasis, double_c>> s
     }
 }
 
+void QuantumComputer::zero_state() {
+    std::fill(coeff_.begin(), coeff_.end(), 0.0);
+}
+
 void QuantumComputer::apply_circuit(const QuantumCircuit& qc) {
     for (const auto& gate : qc.gates()) {
         apply_gate(gate);
@@ -91,18 +95,35 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, s
     // TODO: make code more readable
     // TODO: add gate lable?
 
+    // for(const QuantumGate& gate : qc.gates()){
+    //     size_t target_qubit = gate.target();
+    //     std::complex<double> gate_id = (gate.gate())[1][0];
+    //     if ( std::abs(gate_id) < 10e-10 ) {
+    //         QuantumGate temp = make_gate("I", target_qubit, target_qubit);
+    //         Mirror.add_gate(temp);
+    //     } else if ( std::abs(std::real(gate_id)) < 10e-10 ) {
+    //         QuantumGate temp = make_gate("H", target_qubit, target_qubit);
+    //         Mirror.add_gate(temp);
+    //     } else {
+    //         QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
+    //         Mirror.add_gate(temp);
+    //     }
+    // }
+
     for(const QuantumGate& gate : qc.gates()){
         size_t target_qubit = gate.target();
-        std::complex<double> gate_id = (gate.gate())[1][0];
-        if ( std::abs(gate_id) < 10e-10 ) {
+        std::string gate_id = gate.gate_id();
+        if ( gate_id == "Z" ) {
             QuantumGate temp = make_gate("I", target_qubit, target_qubit);
             Mirror.add_gate(temp);
-        } else if ( std::abs(std::real(gate_id)) < 10e-10 ) {
+        } else if ( gate_id == "X" ) {
             QuantumGate temp = make_gate("H", target_qubit, target_qubit);
             Mirror.add_gate(temp);
-        } else {
+        } else if (gate_id == "Y"){
             QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
             Mirror.add_gate(temp);
+        } else if (gate_id != "I") {
+            //std::cout<<'unrecognized gate in operator!'<<std::endl;
         }
     }
     // apply Mirror circuit to 'trick' qcomputer into measureing in non Z basis
@@ -130,7 +151,7 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, s
         }
         results[k] = value;
     }
-    
+
     coeff_ = old_coeff;
     return results;
 }

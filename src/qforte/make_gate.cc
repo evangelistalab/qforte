@@ -45,6 +45,15 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             };
             return QuantumGate(type, target, control, gate);
         }
+        if (type == "Rx") {
+            std::complex<double> a = std::cos(0.5 * parameter);
+            std::complex<double> b = 1.0i * std::sin(0.5 * parameter);
+            std::complex<double> gate[4][4]{
+                {+a, -b},
+                {-b, +a},
+            };
+            return QuantumGate(type, target, control, gate);
+        }
         if (type == "S") {
             std::complex<double> gate[4][4]{
                 {1.0, 0.0},

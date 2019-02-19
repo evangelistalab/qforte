@@ -1,3 +1,4 @@
+
 #ifndef _quantum_gate_h_
 #define _quantum_gate_h_
 
@@ -30,6 +31,9 @@ class QuantumGate {
     const complex_4_4_mat& gate() const;
 
     std::string str() const;
+
+    /// Return the string specifying what type of gate [X, Y , CNOT, ...]
+    std::string gate_id() const;
 
     size_t nqubits() const;
 

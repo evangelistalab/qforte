@@ -89,6 +89,13 @@ class QuantumOperator {
     /// default constructor: creates an empty quantum operator
     QuantumOperator() {}
 
+    /// build from a string of open fermion qubit operators
+    void build_from_openferm_str(std::string op) {}
+
+    /// build from an openfermion qubit operator directly
+    /// might make this a python function?
+    void build_from_openferm(std::string op) {}
+
     /// add a circuit as a term in the quantum operator
     void add_term(std::complex<double> circ_coeff ,const QuantumCircuit& circuit) {
         terms_.push_back(std::make_pair(circ_coeff, circuit));
@@ -151,6 +158,8 @@ class QuantumComputer {
     /// where this information is passed as a vectors of pairs
     ///  [(basis_1, c_1), (basis_2, c_2), ...]
     void set_state(std::vector<std::pair<QuantumBasis, double_c>> state);
+
+    void zero_state();
 
   private:
     /// the number of qubits
