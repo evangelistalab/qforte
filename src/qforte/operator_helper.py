@@ -1,4 +1,3 @@
-import qforte
 from openfermion.ops import QubitOperator
 import numpy as np
 
@@ -22,22 +21,5 @@ def build_from_openferm(OF_qubitops):
 
         #Add this term to operator
         qforte_ops.add_term(coeff, circ_term)
-    
+
     return qforte_ops
- 
-def build_from_input(instr):   
-
-    #Build QuantumOperator from input strings
-
-
-
-
-#test_operator = QubitOperator('X2 Y1', 0.0-0.25j)
-#test_operator += QubitOperator('Y2 Y1', 0.25)
-#test_operator += QubitOperator('X2 X1', 0.25)
-#test_operator += QubitOperator('Y2 X1', 0.0+0.25j)
-#print(test_operator)
-
-#qforte_operator = build_from_openferm(test_operator)
-#print('\n'.join(qforte_operator.str()))
-
