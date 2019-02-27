@@ -1,3 +1,4 @@
+import qforte
 from openfermion.ops import QubitOperator
 import numpy as np
 
@@ -23,3 +24,22 @@ def build_from_openferm(OF_qubitops):
         qforte_ops.add_term(coeff, circ_term)
 
     return qforte_ops
+
+def smart_print(Inputobj):
+    
+    #Assert the class and print smartly
+    if isinstance(Inputobj, qforte.QuantumOperator):
+        print('\n Quantum operator:')
+        ops_term = Inputobj.terms()
+        for term in ops_term:
+            print('\n')
+            print(term[0])
+            print('\n'.join(term[1].str()))
+
+    if isinstance(Inputobj, qforte.QuantumCircuit):
+        print('\n Quantum circuit:')
+        print('\n'.join(Inputobj.str()))
+
+    if isinstance(Inputobj, qforte.QubitOperator):
+        print('\n Openfermion Qubit operator:')
+        print(Inputobj)
