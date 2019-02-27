@@ -16,7 +16,8 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
         .def(py::init<>())
-        .def("add_term", &QuantumOperator::add_term);
+        .def("add_term", &QuantumOperator::add_term)
+        .def("terms", &QuantumOperator::terms);
         //.def("str", &QuantumOperator::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")

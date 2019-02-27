@@ -27,8 +27,7 @@ print(test_operator)
 
 qforte_operator = qforte.build_from_openferm(test_operator)
 
-#for terms in qforte_operator:
-#    print('\n'.join(terms.str()))
+qforte.smart_print(qforte_operator)
 
 exp = trial_state.direct_op_exp_val(qforte_operator)
 print(exp)
