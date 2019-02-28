@@ -1,4 +1,5 @@
 import qforte
+from openfermion.ops import QubitOperator
 #from openfermion.ops import QubitOperator
 
 trial_state = qforte.QuantumComputer(4)
@@ -19,10 +20,10 @@ for gate in trial_prep:
 # use circuit to prepare trial state
 trial_state.apply_circuit(trial_circ)
 
-test_operator = qforte.QubitOperator('X2 Y1', 0.0-0.25j)
-test_operator += qforte.QubitOperator('Y2 Y1', 0.25)
-test_operator += qforte.QubitOperator('X2 X1', 0.25)
-test_operator += qforte.QubitOperator('Y2 X1', 0.0+0.25j)
+test_operator = QubitOperator('X2 Y1', 0.0-0.25j)
+test_operator += QubitOperator('Y2 Y1', 0.25)
+test_operator += QubitOperator('X2 X1', 0.25)
+test_operator += QubitOperator('Y2 X1', 0.0+0.25j)
 print(test_operator)
 
 qforte_operator = qforte.build_from_openferm(test_operator)
