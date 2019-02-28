@@ -2,8 +2,9 @@ import qforte
 from openfermion.ops import QubitOperator
 import numpy as np
 
-def build_from_openferm(OF_qubitops):
+def build_from_openfermion(OF_qubitops):
 
+    #Document!!!
     #Build QuantumOperator from openfermion QubitOperator
     qforte_ops = qforte.QuantumOperator()
     for term, coeff in sorted(OF_qubitops.terms.items()):
@@ -43,3 +44,7 @@ def smart_print(Inputobj):
     if isinstance(Inputobj, qforte.QubitOperator):
         print('\n Openfermion Qubit operator:')
         print(Inputobj)
+
+    if isinstance(Inputobj, qforte.QuantumComputer):
+        print('\n Quantum Computer:')
+        print('\n'.join(Inputobj.str()))

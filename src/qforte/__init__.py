@@ -5,4 +5,4 @@
 #sys.path.insert(1, os.path.abspath('.'))
 from .operator_helper import *
 
-from .qforte import *
+from qforte.helper import *
