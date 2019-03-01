@@ -1,2 +1,3 @@
 #define CATCH_CONFIG_MAIN
+#define CATCH_INTERNAL_CONFIG_CPP17_UNCAUGHT_EXCEPTIONS
 #include <catch.hpp>
