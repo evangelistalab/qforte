@@ -39,7 +39,8 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(
             os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable]
+                      '-DPYTHON_EXECUTABLE=' + sys.executable,
+                      '-DCODE_COVERAGE=ON']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -72,9 +73,9 @@ class CMakeBuild(build_ext):
 
     def copy_test_file(self, src_file):
         '''
-        Copy ``src_file`` to `tests/bin` directory, ensuring parent directory 
+        Copy ``src_file`` to `tests/bin` directory, ensuring parent directory
         exists. Messages like `creating directory /path/to/package` and
-        `copying directory /src/path/to/package -> path/to/package` are 
+        `copying directory /src/path/to/package -> path/to/package` are
         displayed on standard output. Adapted from scikit-build.
         '''
         # Create directory if needed
@@ -102,7 +103,7 @@ setup(
     # tell setuptools that all packages will be under the 'src' directory
     # and nowhere else
     package_dir={'':'src'},
-    # add an extension module named 'python_cpp_example' to the package 
+    # add an extension module named 'python_cpp_example' to the package
     # 'python_cpp_example'
     ext_modules=[CMakeExtension('qforte/qforte')],
     # add custom build_ext command
