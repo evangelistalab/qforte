@@ -71,7 +71,7 @@ void QuantumComputer::apply_gate(const QuantumGate& qg) {
     if (nqubits == 1) {
         apply_1qubit_gate(qg);
     }
-    if (nqubits == 2){
+    if (nqubits == 2) {
         apply_2qubit_gate(qg);
     }
 
@@ -85,7 +85,8 @@ void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
 
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
-            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
+            auto op_i_j = gate[i][j];
+            if (std::abs(op_i_j) > compute_threshold_) {
                 for (const QuantumBasis& basis_J : basis_) {
                     if (basis_J.get_bit(target) == j) {
                         QuantumBasis basis_I = basis_J;
@@ -106,7 +107,8 @@ void QuantumComputer::apply_1qubit_gate_insertion(const QuantumGate& qg) {
     size_t nbasis_minus1 = std::pow(2, nqubit_ - 1);
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
-            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
+            auto op_i_j = gate[i][j];
+            if (std::abs(op_i_j) > compute_threshold_) {
                 for (size_t K = 0; K < nbasis_minus1; K++) {
                     basis_K.set(K);
                     basis_I = basis_J = basis_K.insert(target);
@@ -132,7 +134,8 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
         for (size_t j = 0; j < 4; j++) {
             const auto j_c = two_qubits_basis[j].first;
             const auto j_t = two_qubits_basis[j].second;
-            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
+            auto op_i_j = gate[i][j];
+            if (std::abs(op_i_j) > compute_threshold_) {
                 for (const QuantumBasis& basis_J : basis_) {
                     if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
                         QuantumBasis basis_I = basis_J;
@@ -159,9 +162,9 @@ std::complex<double> QuantumComputer::direct_circ_exp_val(const QuantumCircuit& 
     std::complex<double> result = 0.0;
 
     apply_circuit(qc);
-    result = std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
-                                std::complex<double>(0.0, 0.0), add_c<double>,complex_prod<double>
-                                );
+    result =
+        std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
+                           std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
 
     coeff_ = old_coeff;
     return result;
@@ -175,12 +178,12 @@ std::complex<double> QuantumComputer::direct_gate_exp_val(const QuantumGate& qg)
     if (nqubits == 1) {
         apply_1qubit_gate(qg);
     }
-    if (nqubits == 2){
+    if (nqubits == 2) {
         apply_2qubit_gate(qg);
     }
-    result = std::inner_product(coeff_temp.begin(), coeff_temp.end(), new_coeff_.begin(),
-                                std::complex<double>(0.0, 0.0), add_c<double>,complex_prod<double>
-                                );
+    result =
+        std::inner_product(coeff_temp.begin(), coeff_temp.end(), new_coeff_.begin(),
+                           std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
 
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
     return result;

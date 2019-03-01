@@ -118,6 +118,7 @@ class QuantumComputer {
 
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
+    /// @return <Psi| Operator |Psi>
     std::complex<double> direct_op_exp_val(const QuantumOperator& qo);
 
     /// get the expectation value of many 1qubit gates directly
