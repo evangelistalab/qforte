@@ -1,5 +1,5 @@
 language: cpp
-sudo: false
+dist: trusty
 matrix:
   include:
   - os: linux
@@ -7,7 +7,7 @@ matrix:
     addons: &1
       apt:
         sources:
-        - llvm-toolchain-precise-5.0
+        - llvm-toolchain-trusty-5.0
         - ubuntu-toolchain-r-test
         - george-edison55-precise-backports
         packages:
