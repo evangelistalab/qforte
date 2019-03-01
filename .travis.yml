@@ -39,8 +39,6 @@ script:
 - ${CXX_COMPILER} --version
 - cd ${HOME}/build/evangelistalab/qforte
 - python setup.py build
-- cmake . -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
-- make
 - python setup.py test
 
 after_success:
