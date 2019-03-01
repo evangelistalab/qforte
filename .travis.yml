@@ -12,7 +12,7 @@ matrix:
         - george-edison55-precise-backports
         packages:
         - liblapack-dev
-        - clang-3.6
+        - clang-5
         - libhdf5-serial-dev
         - g++-4.9
     env:
@@ -31,7 +31,7 @@ script:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n qforte python=$PYTHON_VER numpy cmake 
+- conda create -q -n qforte python=$PYTHON_VER numpy cmake
 - source activate qforte
 - python -V
 - cd ${TRAVIS_BUILD_DIR}
