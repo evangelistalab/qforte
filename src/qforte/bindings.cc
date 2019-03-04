@@ -12,11 +12,13 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<QuantumCircuit>(m, "QuantumCircuit")
         .def(py::init<>())
         .def("add_gate", &QuantumCircuit::add_gate)
+        .def("set_parameters", &QuantumCircuit::set_parameters)
         .def("str", &QuantumCircuit::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
-        .def(py::init<>())
+        .def(py::init<bool>(), "is_mirror"_a = false, "make a quantum operator")
         .def("add_term", &QuantumOperator::add_term)
+        .def("get_is_mirror", &QuantumOperator::get_is_mirror)
         .def("terms", &QuantumOperator::terms);
         //.def("str", &QuantumOperator::str);
 
@@ -29,6 +31,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_circuit", &QuantumComputer::apply_circuit)
         .def("apply_gate", &QuantumComputer::apply_gate)
         .def("measure_circuit", &QuantumComputer::measure_circuit)
+        .def("measure_rotated_circuit", &QuantumComputer::measure_rotated_circuit)
         .def("direct_op_exp_val", &QuantumComputer::direct_op_exp_val)
         .def("direct_circ_exp_val", &QuantumComputer::direct_circ_exp_val)
         .def("direct_gate_exp_val", &QuantumComputer::direct_gate_exp_val)
@@ -49,5 +52,5 @@ PYBIND11_MODULE(qforte, m) {
         .def("str", &QuantumGate::str)
         .def("__str__", &QuantumGate::str);
 
-    m.def("make_gate", &make_gate, "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
+    m.def("make_gate", &make_gate, "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0, "mirror"_a = false);
 }

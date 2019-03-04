@@ -76,6 +76,9 @@ class QuantumCircuit {
     /// return a vector of gates
     const std::vector<QuantumGate>& gates() const { return gates_; }
 
+    /// reset the circuit with a new set of parameters
+    void set_parameters(const std::vector<double>& params);
+
     /// return a vector of string representing this circuit
     std::vector<std::string> str() const;
 
@@ -86,8 +89,8 @@ class QuantumCircuit {
 
 class QuantumOperator {
   public:
-    /// default constructor: creates an empty quantum operator
-    QuantumOperator() {}
+    /// creates an empty quantum operator
+    QuantumOperator(bool mirror = false) { is_mirror_ = mirror; }
 
     /// build from a string of open fermion qubit operators
     void build_from_openferm_str(std::string op) {}
@@ -101,6 +104,9 @@ class QuantumOperator {
         terms_.push_back(std::make_pair(circ_coeff, circuit));
     }
 
+    /// return whether the operator was constructed as a mirror or not
+    bool get_is_mirror() const {return is_mirror_; }
+
     /// return a vector of terms and thier coeficients
     const std::vector<std::pair<std::complex<double>,QuantumCircuit>>& terms() const { return terms_; }
 
@@ -110,6 +116,9 @@ class QuantumOperator {
   private:
     /// the list of circuits
     std::vector<std::pair<std::complex<double>,QuantumCircuit>> terms_;
+
+    /// is this operator made of pre-rotated "mirror" terms?
+    bool is_mirror_;
 };
 
 class QuantumComputer {
@@ -125,6 +134,9 @@ class QuantumComputer {
 
     /// measure the state of the quanum computer in basis of circuit
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
+
+    /// measure the state of the quanum computer in pre-rotated basis of circuit
+    std::vector<double> measure_rotated_circuit(const QuantumCircuit& rot_qc, size_t n_measurements);
 
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)

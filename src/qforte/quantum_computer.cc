@@ -30,6 +30,21 @@ QuantumBasis& QuantumBasis::insert(size_t pos) {
     return *this;
 }
 
+void QuantumCircuit::set_parameters(const std::vector<double>& params) {
+    // need a loop over only gates in state preparation circuit that
+    // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
+    // TODO: make a indexing funciton using a map (Nick)
+    size_t param_idx = 0;
+    for (auto& gate : gates_) {
+        std::string gate_id = gate.gate_id();
+        if (gate_id == "Rx" or "Ry" or "Rz") {
+            size_t target_qubit = gate.target();
+            gate = make_gate(gate_id, target_qubit, target_qubit, params[param_idx]);
+            param_idx++;
+        }
+    }
+}
+
 std::vector<std::string> QuantumCircuit::str() const {
     std::vector<std::string> s;
     for (const auto& gate : gates_) {
@@ -92,23 +107,9 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, s
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
 
-    // TODO: make code more readable
-    // TODO: add gate lable?
-
-    // for(const QuantumGate& gate : qc.gates()){
-    //     size_t target_qubit = gate.target();
-    //     std::complex<double> gate_id = (gate.gate())[1][0];
-    //     if ( std::abs(gate_id) < 10e-10 ) {
-    //         QuantumGate temp = make_gate("I", target_qubit, target_qubit);
-    //         Mirror.add_gate(temp);
-    //     } else if ( std::abs(std::real(gate_id)) < 10e-10 ) {
-    //         QuantumGate temp = make_gate("H", target_qubit, target_qubit);
-    //         Mirror.add_gate(temp);
-    //     } else {
-    //         QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
-    //         Mirror.add_gate(temp);
-    //     }
-    // }
+    // TODO: make code more readable (Nick)
+    // TODO: add gate lable not via enum? (Nick)
+    // TODO: Acount for case where gate is only the identity 
 
     for(const QuantumGate& gate : qc.gates()){
         size_t target_qubit = gate.target();
@@ -146,6 +147,34 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, s
         size_t measurement = dd(gen);
         double value = 1.;
         for(const QuantumGate& gate : qc.gates()){
+            size_t target_qubit = gate.target();
+            value *= 1. - 2. * static_cast<double>(basis_[measurement].get_bit(target_qubit));
+        }
+        results[k] = value;
+    }
+
+    coeff_ = old_coeff;
+    return results;
+}
+
+std::vector<double> QuantumComputer::measure_rotated_circuit(const QuantumCircuit& rot_qc, size_t n_measurements) {
+
+    std::vector<std::complex<double>> old_coeff = coeff_;
+
+    apply_circuit(rot_qc);
+    std::vector<double> probs(nbasis_);
+    for (size_t k = 0; k < nbasis_; k++) { probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]); }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::discrete_distribution<> dd(std::begin(probs), std::end(probs));
+    std::vector<double> results(n_measurements);
+
+    for(size_t k = 0; k < n_measurements; k++){
+        size_t measurement = dd(gen);
+        double value = 1.;
+        for(const QuantumGate& gate : rot_qc.gates()){
             size_t target_qubit = gate.target();
             value *= 1. - 2. * static_cast<double>(basis_[measurement].get_bit(target_qubit));
         }

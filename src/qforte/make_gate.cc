@@ -4,9 +4,25 @@
 
 #include "quantum_gate.h"
 
-QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter) {
+QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter, bool mirror) {
     using namespace std::complex_literals;
     if (target == control) {
+        if(mirror) {
+            if (type == "X") {
+                type = "H";
+            }
+            else if (type == "Y") {
+                type = "Rzy";
+            }
+            else if (type == "Z") {
+                type = "I";
+            } else {
+                std::string msg =
+                    fmt::format("Mirror gate\ntype = {} can only be of type X, Y or Z,", type);
+                throw std::invalid_argument(msg);
+            }
+        }
+
         if (type == "X") {
             std::complex<double> gate[4][4]{
                 {0.0, 1.0},
@@ -54,6 +70,24 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             };
             return QuantumGate(type, target, control, gate);
         }
+        if (type == "Ry") {
+            std::complex<double> a = std::cos(0.5 * parameter);
+            std::complex<double> b = std::sin(0.5 * parameter);
+            std::complex<double> gate[4][4]{
+                {+a, -b},
+                {+b, +a},
+            };
+            return QuantumGate(type, target, control, gate);
+        }
+        if (type == "Rz") {
+            std::complex<double> a = std::exp(-1.0i * 0.5 * parameter);
+            std::complex<double> b = std::exp(1.0i * 0.5 * parameter);
+            std::complex<double> gate[4][4]{
+                {[0] = a},
+                {[1] = b},
+            };
+            return QuantumGate(type, target, control, gate);
+        }
         if (type == "S") {
             std::complex<double> gate[4][4]{
                 {1.0, 0.0},
@@ -85,6 +119,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             };
             return QuantumGate(type, target, control, gate);
         }
+
     } else {
         if ((type == "cX") or (type == "CNOT")) {
             std::complex<double> gate[4][4]{

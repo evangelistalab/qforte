@@ -1,8 +1,9 @@
-#__version__ = '0.1'
-#__author__  = 'Qforte Developer'
-
-# Load Python modules
+__version__ = '0.1'
+__author__ = 'Qforte Dev'
 #sys.path.insert(1, os.path.abspath('.'))
-from .qforte import *
+
+from .qforte import * #'.' will import information from python files (qforte.py) AND python extensions like .so files
 
 from qforte.helper import *
+
+from qforte.experiment import * #looking for all function in an

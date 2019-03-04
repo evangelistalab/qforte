@@ -4,6 +4,8 @@ qforte.py
 The core module of my example project
 """
 
+import experiment
+
 def about_me(your_name):
     """
     Return the most important thing about a person.
