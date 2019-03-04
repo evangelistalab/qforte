@@ -109,7 +109,7 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, s
 
     // TODO: make code more readable (Nick)
     // TODO: add gate lable not via enum? (Nick)
-    // TODO: Acount for case where gate is only the identity 
+    // TODO: Acount for case where gate is only the identity
 
     for(const QuantumGate& gate : qc.gates()){
         size_t target_qubit = gate.target();
@@ -278,7 +278,6 @@ std::complex<double> QuantumComputer::direct_gate_exp_val(const QuantumGate& qg)
     std::complex<double> result = 0.0;
     int nqubits = qg.nqubits();
 
-    int nqubits = qg.nqubits();
     if (nqubits == 1) {
         apply_1qubit_gate(qg);
     }
