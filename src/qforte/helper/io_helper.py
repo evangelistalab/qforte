@@ -12,7 +12,7 @@ def smart_print(Inputobj, print_type='compact'):
     """
     
     if isinstance(Inputobj, qforte.QuantumOperator):
-        print('\n Quantum operator:')a
+        print('\n Quantum operator:')
 
         if print_type == 'full':
             ops_term = Inputobj.terms()
