@@ -26,12 +26,26 @@ def smart_print(Inputobj, print_type='compact'):
             for term in ops_term:
                 print(term[0], end="")
                 strp = term[1].str()
+                trigger = 0 # A flag for anormallies
                 print('[', end="")
                 for termstr in strp:
                     tmpstr = termstr.split('\n')
-                    print(tmpstr[0][0], end="")
-                    print(tmpstr[0][21], end=" ")
+                    tmp_a = tmpstr[0].split()
+                    print(tmp_a[0], end="") #Print the action string (X, Y, Z, cX, R, ...)
+                    if str(tmp_a[0]) == 'R':
+                        trigger = 1
+                    tmp_b = tmpstr[0].split(':')
+                    control = tmp_b[2]
+                    tmp_c = tmp_b[1].split(',')
+                    target = tmp_c[0]
+                    if target == control: #Print the target and control(if necessary)
+                        print(target, end=" ")
+                    else:
+                        print(target, end="-")
+                        print(control, end=" ")
                 print(']')
+                if trigger == 1:
+                    print('R gate presented, use \'full\' print to see the matrix! \n')
 
     if isinstance(Inputobj, qforte.QuantumCircuit):
         print('\n Quantum circuit:')
@@ -44,8 +58,17 @@ def smart_print(Inputobj, print_type='compact'):
                 print('[', end="")
                 for termstr in strp:
                     tmpstr = termstr.split('\n')
-                    print(tmpstr[0][0], end="")
-                    print(tmpstr[0][21], end=" ")
+                    tmp_a = tmpstr[0].split()
+                    print(tmp_a[0], end="") #Print the action string (X, Y, Z, cX, R, ...)
+                    tmp_b = tmpstr[0].split(':')
+                    control = tmp_b[2]
+                    tmp_c = tmp_b[1].split(',')
+                    target = tmp_c[0]
+                    if target == control: #Print the target and control(if necessary)
+                        print(target, end=" ")
+                    else:
+                        print(target, end="-")
+                        print(control, end=" ")
                 print(']')
 
     if isinstance(Inputobj, qforte.QuantumComputer):
@@ -53,19 +76,28 @@ def smart_print(Inputobj, print_type='compact'):
         print('\n'.join(Inputobj.str()))
 
 def build_circuit(Inputstr):
-    circ = qforte.QuantumCircuit()
-    sepstr = Inputstr.split()
 
-    for i in lens(sepstr):
-        numstr = ''
-        for j in lens(sepstr)-1:
-            numstr += sepstr[j+1]
-            if sepstr[j+1] == ' ':
-                break
+    """
+    build_circuit is a function that build a QuantumCircuit 
+    conveniently from input
+
+    :param Inputstr: the circuit to build, format:
+    ['Action string']_['Target']_['Control(if needed)']_['Parameter']
+    """
+
+    circ = qforte.QuantumCircuit()
+    sepstr = Inputstr.split() #Separate string to a list by space
+
+    for i in range(len(sepstr)):
+        inputgate = sepstr[i].split('_')
+        if len(inputgate) == 2:
+            circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1])))
+        else:
+            if inputgate[0] == 'R':
+                circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1]), float(inputgate[2])))
+            else:
+                circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[2])))
         
-        circ.add_gate(qforte.make_gate(sepstr[0], numstr))
-    
     return circ
            
-#def build_operator(Inputstr):
 
