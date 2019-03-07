@@ -6,3 +6,4 @@ from .qforte import * #'.' will import information from python files (qforte.py)
 from qforte.helper import *
 from qforte.experiment import * #looking for all function in an
 from qforte.vqe import * #looking for all function in an
+from qforte.utils import * #exponentiation and trotterizatoin
