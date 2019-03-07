@@ -108,7 +108,7 @@ def build_circuit(Inputstr):
         if len(inputgate) == 2:
             circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1])))
         else:
-            if inputgate[0] == 'R':
+            if 'Rz' in inputgate[0]:
                 circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1]), float(inputgate[2])))
             else:
                 circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[2])))
@@ -116,6 +116,14 @@ def build_circuit(Inputstr):
     return circ
            
 def build_operator(Inputstr):
+
+    """
+    build_operator is a function that build a QuantumCircuit
+    conveniently from input
+
+    :param Inputstr: the operator to build, format:
+    ['coeff1, circ1; coeff2, circ2, ...']
+    """
 
     ops = qforte.QuantumOperator()
     sepstr = Inputstr.split(';')
