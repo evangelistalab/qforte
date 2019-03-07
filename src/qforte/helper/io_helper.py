@@ -23,14 +23,24 @@ def smart_print(Inputobj, print_type='compact'):
 
         if print_type == 'compact':
             ops_term = Inputobj.terms()
+            first = True
             for term in ops_term:
+                if first:
+                    first = False
+                else:
+                    print("+", end=" ")
                 print(term[0], end="")
                 strp = term[1].str()
                 trigger = 0 # A flag for anormallies
                 print('[', end="")
+                subfirst = True
                 for termstr in strp:
                     tmpstr = termstr.split('\n')
                     tmp_a = tmpstr[0].split()
+                    if subfirst:
+                        subfirst = False
+                    else:
+                        print("", end=" ")
                     print(tmp_a[0], end="") #Print the action string (X, Y, Z, cX, R, ...)
                     if str(tmp_a[0]) == 'R':
                         trigger = 1
@@ -39,10 +49,10 @@ def smart_print(Inputobj, print_type='compact'):
                     tmp_c = tmp_b[1].split(',')
                     target = tmp_c[0]
                     if target == control: #Print the target and control(if necessary)
-                        print(target, end=" ")
+                        print(target, end="")
                     else:
                         print(target, end="-")
-                        print(control, end=" ")
+                        print(control, end="")
                 print(']')
                 if trigger == 1:
                     print('R gate presented, use \'full\' print to see the matrix! \n')
@@ -54,22 +64,27 @@ def smart_print(Inputobj, print_type='compact'):
             print('\n'.join(Inputobj.str()))
 
         if print_type == 'compact':
-                strp = Inputobj.str()
-                print('[', end="")
-                for termstr in strp:
-                    tmpstr = termstr.split('\n')
-                    tmp_a = tmpstr[0].split()
-                    print(tmp_a[0], end="") #Print the action string (X, Y, Z, cX, R, ...)
-                    tmp_b = tmpstr[0].split(':')
-                    control = tmp_b[2]
-                    tmp_c = tmp_b[1].split(',')
-                    target = tmp_c[0]
-                    if target == control: #Print the target and control(if necessary)
-                        print(target, end=" ")
-                    else:
-                        print(target, end="-")
-                        print(control, end=" ")
-                print(']')
+            strp = Inputobj.str()
+            print('[', end="")
+            subfirst = True
+            for termstr in strp:
+                tmpstr = termstr.split('\n')
+                tmp_a = tmpstr[0].split()
+                if subfirst:
+                    subfirst = False
+                else:
+                    print(" ", end=" ")
+                print(tmp_a[0], end="") #Print the action string (X, Y, Z, cX, R, ...)
+                tmp_b = tmpstr[0].split(':')
+                control = tmp_b[2]
+                tmp_c = tmp_b[1].split(',')
+                target = tmp_c[0]
+                if target == control: #Print the target and control(if necessary)
+                    print(target, end="")
+                else:
+                    print(target, end="-")
+                    print(control, end="")
+            print(']')
 
     if isinstance(Inputobj, qforte.QuantumComputer):
         print('\n Quantum Computer:')
@@ -100,4 +115,12 @@ def build_circuit(Inputstr):
         
     return circ
            
+def build_operator(Inputstr):
 
+    ops = qforte.QuantumOperator()
+    sepstr = Inputstr.split(';')
+    for i in range(len(sepstr)):
+        inputterm = sepstr[i].split(',')
+        ops.add_term(complex(inputterm[0]), qforte.build_circuit(inputterm[1]))
+    
+    return ops
