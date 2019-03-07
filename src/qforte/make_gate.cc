@@ -80,11 +80,13 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             return QuantumGate(type, target, control, gate);
         }
         if (type == "Rz") {
-            std::complex<double> a = std::exp(-1.0i * 0.5 * parameter);
-            std::complex<double> b = std::exp(1.0i * 0.5 * parameter);
+            std::complex<double> tmp_a = -1.0i * 0.5 * parameter;
+            std::complex<double> a = std::exp(tmp_a);
+            std::complex<double> tmp_b = 1.0i * 0.5 * parameter;
+            std::complex<double> b = std::exp(tmp_b);
             std::complex<double> gate[4][4]{
-                {[0] = a},
-                {[1] = b},
+                {a, 0.0},
+                {0.0, b},
             };
             return QuantumGate(type, target, control, gate);
         }
