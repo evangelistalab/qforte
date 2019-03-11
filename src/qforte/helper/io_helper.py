@@ -108,7 +108,7 @@ def build_circuit(Inputstr):
         if len(inputgate) == 2:
             circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1])))
         else:
-            if 'Rz' in inputgate[0]:
+            if 'R' in inputgate[0]:
                 circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1]), float(inputgate[2])))
             else:
                 circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[2])))
