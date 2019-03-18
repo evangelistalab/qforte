@@ -1,5 +1,6 @@
 #include <map>
 #include <random>
+#include <algorithm>
 
 #include "fmt/format.h"
 
@@ -43,6 +44,11 @@ void QuantumCircuit::set_parameters(const std::vector<double>& params) {
             param_idx++;
         }
     }
+}
+
+void QuantumCircuit::set_reversed_gates() {
+    rev_copy_ = gates_;
+    std::reverse(std::begin(rev_copy_), std::end(rev_copy_));
 }
 
 std::vector<std::string> QuantumCircuit::str() const {

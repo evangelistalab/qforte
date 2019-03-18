@@ -76,8 +76,17 @@ class QuantumCircuit {
     /// return a vector of gates
     const std::vector<QuantumGate>& gates() const { return gates_; }
 
+    /// return a vector of reversed gates
+    const std::vector<QuantumGate>& reversed_gates() const { return rev_copy_; }
+
     /// reset the circuit with a new set of parameters
     void set_parameters(const std::vector<double>& params);
+
+    /// set the reversed gates 
+    void set_reversed_gates();
+
+    /// reset the circuit with a new set of parameters
+    void set_rev_copy();
 
     /// return a vector of string representing this circuit
     std::vector<std::string> str() const;
@@ -85,6 +94,9 @@ class QuantumCircuit {
   private:
     /// the list of gates
     std::vector<QuantumGate> gates_;
+
+    /// reversed list of gates
+    std::vector<QuantumGate> rev_copy_;
 };
 
 class QuantumOperator {
