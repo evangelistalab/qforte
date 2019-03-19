@@ -1,0 +1,81 @@
+import qforte
+import numpy
+
+def qft_circuit(n):
+
+    """
+    qft_circuit is a function that generates circuit for
+    Quantum Fourier Transformation implemented in a efficient
+    approach.
+
+    :param n: the number of qubits
+    """
+
+    # Build qft circuit
+    qft_circ = qforte.QuantumCircuit()
+    for j in range(n):
+        qft_circ.add_gate(qforte.make_gate('H', j, j))
+        for k in range(2, n+1):
+            phase = 2.0*numpy.pi/(2**k)
+            qft_circ.add_gate(qforte.make_gate('cR', j, k-1, phase))
+
+    # Build reversing circuit
+    if n % 2 == 0:
+        for i in range(n/2):
+            qft_circ.add_gate(qforte.make_gate('SWAP', i, n-i))
+    else:
+        for i in range((n-1)/2):
+            qft_circ.add_gate(qforte.make_gate('SWAP', i, n-i))
+
+    return qft_circ
+
+def qft(qc_state):
+
+    """
+    qft is a function that performs a Quantum Fourier
+    Transformation on QuantumComputer states
+
+    :param qc_state: the input QuantumComputer state
+    """
+
+    if isinstance(qforte.QuantumComputer):
+        continue
+    else
+        return NotImplemented
+
+    # Apply qft circuits
+    circ = qft_circuit(qc_state.get_nqubit())
+    qc_state.apply_circuit(circ)
+
+    # Normalize coeffs
+    coeff_ = qc_state.get_coeff_vec()
+    for a in coeff_:
+        a *= 1.0/numpy.sqrt(2)
+
+    return qc_state
+
+def rev_qft(qc_state):
+
+    """
+    qft is a function that performs a inversed Quantum 
+    Fourier Transformation on QuantumComputer states
+
+    :param qc_state: the input QuantumComputer state
+    """
+
+    if isinstance(qforte.QuantumComputer):
+        continue
+    else
+        return NotImplemented
+    
+    # Apply qft circuits
+    circ = qft_circuit(qc_state.get_nqubit())
+    rev_circ = cicr.set_reversed_gate()
+    qc_state.apply_circuit(rev_circ)`
+
+    # Normalize coeffs
+    coeff_ = qc_state.get_coeff_vec()
+    for a in coeff_:
+        a *= 1.0/numpy.sqrt(2)
+
+    return qc_state          
