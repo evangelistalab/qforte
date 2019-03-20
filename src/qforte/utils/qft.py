@@ -15,17 +15,17 @@ def qft_circuit(n):
     qft_circ = qforte.QuantumCircuit()
     for j in range(n):
         qft_circ.add_gate(qforte.make_gate('H', j, j))
-        for k in range(2, n+1):
+        for k in range(2, n+1-j):
             phase = 2.0*numpy.pi/(2**k)
             qft_circ.add_gate(qforte.make_gate('cR', j, k-1, phase))
 
     # Build reversing circuit
     if n % 2 == 0:
-        for i in range(n/2):
-            qft_circ.add_gate(qforte.make_gate('SWAP', i, n-i))
+        for i in range(int(n/2)):
+            qft_circ.add_gate(qforte.make_gate('SWAP', i, n-1-i))
     else:
-        for i in range((n-1)/2):
-            qft_circ.add_gate(qforte.make_gate('SWAP', i, n-i))
+        for i in range(int((n-1)/2)):
+            qft_circ.add_gate(qforte.make_gate('SWAP', i, n-1-i))
 
     return qft_circ
 
@@ -38,9 +38,9 @@ def qft(qc_state):
     :param qc_state: the input QuantumComputer state
     """
 
-    if isinstance(qforte.QuantumComputer):
-        continue
-    else
+    if isinstance(qc_state, qforte.QuantumComputer):
+        print('')
+    else:
         return NotImplemented
 
     # Apply qft circuits
@@ -63,15 +63,15 @@ def rev_qft(qc_state):
     :param qc_state: the input QuantumComputer state
     """
 
-    if isinstance(qforte.QuantumComputer):
-        continue
-    else
+    if isinstance(qc_state, qforte.QuantumComputer):
+        print('')
+    else:
         return NotImplemented
     
     # Apply qft circuits
     circ = qft_circuit(qc_state.get_nqubit())
     rev_circ = cicr.set_reversed_gate()
-    qc_state.apply_circuit(rev_circ)`
+    qc_state.apply_circuit(rev_circ)
 
     # Normalize coeffs
     coeff_ = qc_state.get_coeff_vec()
