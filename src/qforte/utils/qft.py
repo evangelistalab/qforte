@@ -54,7 +54,7 @@ def qft(qc_state, n):
 
     return qc_state
 
-def rev_qft(qc_state):
+def rev_qft(qc_state, n):
 
     """
     qft is a function that performs a inversed Quantum 
