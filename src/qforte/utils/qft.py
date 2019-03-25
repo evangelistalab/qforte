@@ -1,7 +1,7 @@
 import qforte
 import numpy
 
-def qft_circuit(n):
+def qft_circuit(n, direct):
 
     """
     qft_circuit is a function that generates circuit for
@@ -17,7 +17,10 @@ def qft_circuit(n):
         qft_circ.add_gate(qforte.make_gate('H', j, j))
         for k in range(2, n+1-j):
             phase = 2.0*numpy.pi/(2**k)
-            qft_circ.add_gate(qforte.make_gate('cR', j, j+k-1, phase))
+            if direct == 'forward':
+                qft_circ.add_gate(qforte.make_gate('cR', j, j+k-1, phase))
+            if direct == 'reverse':
+                qft_circ.add_gate(qforte.make_gate('cR', j, j+k-1, (-1)*phase))
 
     # Build reversing circuit
     if n % 2 == 0:
@@ -44,7 +47,7 @@ def qft(qc_state, n):
         return NotImplemented
 
     # Apply qft circuits
-    circ = qft_circuit(n)
+    circ = qft_circuit(n, 'forward')
     qc_state.apply_circuit(circ)
 
     # Normalize coeffs
@@ -69,7 +72,7 @@ def rev_qft(qc_state, n):
         return NotImplemented
     
     # Apply qft circuits
-    circ = qft_circuit(n)
+    circ = qft_circuit(n, 'reverse')
     circ.reversed_gates()
     qc_state.apply_circuit(circ)
 
