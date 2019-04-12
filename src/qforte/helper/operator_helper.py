@@ -5,14 +5,15 @@ import numpy as np
 def build_from_openfermion(OF_qubitops):
 
     """
-    build_from_openfermion is a function that build a QuantumOperator instance in 
+    build_from_openfermion is a function that build a QuantumOperator instance in
     qforte from a openfermion QubitOperator instance
-    
+
     :param OF_qubitops: the QubitOperator instance from openfermion.
     """
 
     qforte_ops = qforte.QuantumOperator()
-    for term, coeff in sorted(OF_qubitops.terms.items()):
+    #for term, coeff in sorted(OF_qubitops.terms.items()):
+    for term, coeff in OF_qubitops.terms.items():
         circ_term = qforte.QuantumCircuit()
         #Exclude zero terms
         if np.isclose(coeff, 0.0):
@@ -30,4 +31,3 @@ def build_from_openfermion(OF_qubitops):
         qforte_ops.add_term(coeff, circ_term)
 
     return qforte_ops
-

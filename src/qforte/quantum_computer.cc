@@ -31,6 +31,23 @@ QuantumBasis& QuantumBasis::insert(size_t pos) {
     return *this;
 }
 
+// std::vector<double> QuantumCircuit::get_parameters() {
+//     // need a loop over only gates in state preparation circuit that
+//     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
+//     // TODO: make a indexing funciton using a map (Nick)
+//     size_t param_idx = 0;
+//     std::vector<double> params
+//     for (auto& gate : gates_) {
+//         std::string gate_id = gate.gate_id();
+//         if (gate_id == "Rz") {
+//
+//             double param = gate.gate()[][];
+//             gate = make_gate(gate_id, target_qubit, target_qubit, params[param_idx]);
+//             param_idx++;
+//         }
+//     }
+// }
+
 void QuantumCircuit::set_parameters(const std::vector<double>& params) {
     // need a loop over only gates in state preparation circuit that
     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
@@ -38,7 +55,7 @@ void QuantumCircuit::set_parameters(const std::vector<double>& params) {
     size_t param_idx = 0;
     for (auto& gate : gates_) {
         std::string gate_id = gate.gate_id();
-        if (gate_id == "Rx" or "Ry" or "Rz") {
+        if (gate_id == "Rz") {
             size_t target_qubit = gate.target();
             gate = make_gate(gate_id, target_qubit, target_qubit, params[param_idx]);
             param_idx++;
