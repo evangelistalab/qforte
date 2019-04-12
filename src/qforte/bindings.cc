@@ -39,6 +39,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("direct_circ_exp_val", &QuantumComputer::direct_circ_exp_val)
         .def("direct_gate_exp_val", &QuantumComputer::direct_gate_exp_val)
         .def("coeff", &QuantumComputer::coeff)
+        .def("get_coeff_vec", &QuantumComputer::get_coeff_vec)
         .def("set_state", &QuantumComputer::set_state)
         .def("zero_state", &QuantumComputer::zero_state)
         .def("str", &QuantumComputer::str)

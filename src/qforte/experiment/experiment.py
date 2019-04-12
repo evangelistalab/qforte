@@ -28,11 +28,13 @@ class Experiment(object):
 
     """
 
-    def __init__(self, n_qubits, generator, operator, N_samples, many_preps = False):
+    def __init__(self, n_qubits, n_elec, generator, operator, N_samples, RHF_ref = True, many_preps = False):
         self.n_qubits_ = n_qubits
+        self.n_elec_ = n_elec
         self.generator_ = generator
         self.operator_ = operator
         self.N_samples_ = N_samples
+        self.RHF_ref_ = RHF_ref
         self.many_preps_ = many_preps
 
     """
@@ -47,6 +49,14 @@ class Experiment(object):
         if(self.many_preps_==False):
             #1 initialize a quantum computer
             qc = qforte.QuantumComputer(self.n_qubits_)
+
+            # set up for HF
+            if(self.RHF_ref_):
+                HFgen = qforte.QuantumCircuit()
+                for n in range(self.n_elec_):
+                    HFgen.add_gate(qforte.make_gate('X', n, n))
+
+                qc.apply_circuit(HFgen)
 
             #2 build/update generator with params
             self.generator_.set_parameters(params)
