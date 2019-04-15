@@ -12,6 +12,7 @@ def build_from_openfermion(OF_qubitops):
     """
 
     qforte_ops = qforte.QuantumOperator()
+
     #for term, coeff in sorted(OF_qubitops.terms.items()):
     for term, coeff in OF_qubitops.terms.items():
         circ_term = qforte.QuantumCircuit()
