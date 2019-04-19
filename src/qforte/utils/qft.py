@@ -18,9 +18,26 @@ def qft_circuit(n, direct):
         for k in range(2, n+1-j):
             phase = 2.0*numpy.pi/(2**k)
             if direct == 'forward':
-                qft_circ.add_gate(qforte.make_gate('cR', j, j+k-1, phase))
+                # implemented with fictional gates
+                #qft_circ.add_gate(qforte.make_gate('cR', j, j+k-1, phase))
+
+                # implemented with physical gates (decomposed form)
+                qft_circ.add_gate(qforte.make_gate('CNOT', j, j+k-1))
+                qft_circ.add_gate(qforte.make_gate('Rz', j, j, -0.50*phase))
+                qft_circ.add_gate(qforte.make_gate('CNOT', j, j+k-1))
+                qft_circ.add_gate(qforte.make_gate('Rz', j, j, 0.5*phase))
+                qft_circ.add_gate(qforte.make_gate('R', j+k-1, j+k-1, 0.5*phase))
+                
             if direct == 'reverse':
-                qft_circ.add_gate(qforte.make_gate('cR', j, j+k-1, (-1)*phase))
+                # implemented with fictional gates
+                #qft_circ.add_gate(qforte.make_gate('cR', j, j+k-1, (-1)*phase))
+
+                # implemented with physical gates (decomposed form)
+                qft_circ.add_gate(qforte.make_gate('CNOT', j, j+k-1))
+                qft_circ.add_gate(qforte.make_gate('Rz', j, j, 0.5*phase))
+                qft_circ.add_gate(qforte.make_gate('CNOT', j, j+k-1))
+                qft_circ.add_gate(qforte.make_gate('Rz', j, j, -0.5*phase))
+                qft_circ.add_gate(qforte.make_gate('R', j+k-1, j+k-1, -0.5*phase))
 
     # Build reversing circuit
     if n % 2 == 0:

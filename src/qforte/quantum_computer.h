@@ -85,6 +85,9 @@ class QuantumCircuit {
     /// set the reversed gates 
     void set_reversed_gates();
 
+    /// add another circuit to this (on the end)
+    void add_circuit(const QuantumCircuit& circ);
+
     /// reset the circuit with a new set of parameters
     void set_rev_copy();
 

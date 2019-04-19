@@ -68,6 +68,12 @@ void QuantumCircuit::set_reversed_gates() {
     std::reverse(std::begin(rev_copy_), std::end(rev_copy_));
 }
 
+void QuantumCircuit::add_circuit(const QuantumCircuit& circ) {
+    for (auto& gate : circ.gates()) {
+        gates_.push_back(gate);
+    }
+}
+
 std::vector<std::string> QuantumCircuit::str() const {
     std::vector<std::string> s;
     for (const auto& gate : gates_) {

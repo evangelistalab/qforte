@@ -12,6 +12,7 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<QuantumCircuit>(m, "QuantumCircuit")
         .def(py::init<>())
         .def("add_gate", &QuantumCircuit::add_gate)
+        .def("add_circuit", &QuantumCircuit::add_circuit)
         .def("gates", &QuantumCircuit::gates)
         .def("reversed_gates", &QuantumCircuit::reversed_gates)
         .def("set_parameters", &QuantumCircuit::set_parameters)
