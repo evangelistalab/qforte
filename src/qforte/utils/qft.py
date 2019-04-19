@@ -8,7 +8,11 @@ def qft_circuit(n, direct):
     Quantum Fourier Transformation implemented in a efficient
     approach.
 
-    :param n: the number of qubits
+    :param n: a integer that tells the number of qubits
+    that the transformation will work on
+
+    :param direct: a indicator of the direction of the 
+    transformation, direct or reverse
     """
 
     # Build qft circuit
@@ -38,12 +42,13 @@ def qft(qc_state, n):
     qft is a function that performs a Quantum Fourier
     Transformation on QuantumComputer states
 
+    :param n: a integer that tells the number of qubits
+    that the transformation will work on
+
     :param qc_state: the input QuantumComputer state
     """
 
-    if isinstance(qc_state, qforte.QuantumComputer):
-        print('')
-    else:
+    if not isinstance(qc_state, qforte.QuantumComputer):
         return NotImplemented
 
     # Apply qft circuits
@@ -63,12 +68,13 @@ def rev_qft(qc_state, n):
     qft is a function that performs a inversed Quantum 
     Fourier Transformation on QuantumComputer states
 
+    :param n: a integer that tells the number of qubits
+    that the transformation will work on
+
     :param qc_state: the input QuantumComputer state
     """
 
-    if isinstance(qc_state, qforte.QuantumComputer):
-        print('')
-    else:
+    if not isinstance(qc_state, qforte.QuantumComputer):
         return NotImplemented
     
     # Apply qft circuits
