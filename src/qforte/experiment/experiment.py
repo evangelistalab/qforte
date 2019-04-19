@@ -11,13 +11,13 @@ class Experiment(object):
     Experimant is a class that exemplifies two quantum computational tasks:
     (1) state preparation from a 'generator' circuit which may or may not be
     parameterized, and (2) to measure operators to produce approximate
-    expectaion values.
+    expectation values.
 
     Experiment object constructor.
 
     :param n_qubits: the number of qubits for the quantum experiment.
 
-    :param generator: the perameterized state preparation circuit.
+    :param generator: the parameterized state preparation circuit.
 
     :param operator: the qubit operator to be measured.
 
