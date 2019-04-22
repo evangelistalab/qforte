@@ -66,7 +66,7 @@ void QuantumCircuit::set_parameters(const std::vector<double>& params) {
 QuantumCircuit QuantumCircuit::adjoint() {
     QuantumCircuit qcirc_adjoint;
     for (auto& gate : gates_){
-        qcirc_adjoint.add_gate(gate.adjoint())
+        qcirc_adjoint.add_gate(gate.adjoint());
     }
     std::reverse(std::begin(qcirc_adjoint.gates_), std::end(qcirc_adjoint.gates_));
     return qcirc_adjoint;

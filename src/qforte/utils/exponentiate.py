@@ -13,7 +13,7 @@ def exponentiate_single_term(param, term):
     :param term: (QuantumCircuit) the circuit to be exponentiated
     """
 
-    # TODO: exit procedure if non imaginary parameter 
+    # TODO: exit procedure if non imaginary parameter
 
     if not numpy.isclose(numpy.imag(param), 0.0):
         param *= 1.0j
@@ -49,7 +49,7 @@ def exponentiate_single_term(param, term):
 
     #gate that actually contains the parameterization for the term
     z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0*numpy.real(param))
-    cX_circ.set_reversed_gates();
+    # cX_circ.set_reversed_gates();
 
     # qforte.smart_print(to_z)
     # qforte.smart_print(to_original)
@@ -63,7 +63,10 @@ def exponentiate_single_term(param, term):
 
     exponential.add_gate(z_rot)
 
-    for gate in cX_circ.reversed_gates():
+    # for gate in cX_circ.reversed_gates():
+    #     exponential.add_gate(gate)
+
+    for gate in reversed(cX_circ.gates()):
         exponential.add_gate(gate)
     for gate in to_original.gates():
         exponential.add_gate(gate)

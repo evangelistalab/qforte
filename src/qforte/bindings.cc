@@ -13,9 +13,10 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<>())
         .def("add_gate", &QuantumCircuit::add_gate)
         .def("gates", &QuantumCircuit::gates)
-        .def("reversed_gates", &QuantumCircuit::reversed_gates)
+        // .def("reversed_gates", &QuantumCircuit::reversed_gates)
+        .def("adjoint", &QuantumCircuit::adjoint)
         .def("set_parameters", &QuantumCircuit::set_parameters)
-        .def("set_reversed_gates", &QuantumCircuit::set_reversed_gates)
+        // .def("set_reversed_gates", &QuantumCircuit::set_reversed_gates)
         .def("str", &QuantumCircuit::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
@@ -56,6 +57,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("target", &QuantumGate::target)
         .def("control", &QuantumGate::control)
         .def("gate_id", &QuantumGate::gate_id)
+        .def("adjoint", &QuantumGate::adjoint)
         .def("__str__", &QuantumGate::str);
 
     m.def("make_gate", &make_gate, "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
