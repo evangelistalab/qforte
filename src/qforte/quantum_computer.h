@@ -153,6 +153,8 @@ class QuantumComputer {
     /// measure the state of the quanum computer in pre-rotated basis of circuit
     std::vector<double> measure_rotated_circuit(const QuantumCircuit& rot_qc, size_t n_measurements);
 
+    std::vector<double> measure_qubit(const QuantumBasis& basis, size_t target, size_t control, size_t n_measurements)
+
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
     std::complex<double> direct_op_exp_val(const QuantumOperator& qo);

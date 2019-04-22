@@ -214,6 +214,9 @@ std::vector<double> QuantumComputer::measure_rotated_circuit(const QuantumCircui
     return results;
 }
 
+std::vector<double> QuantumComputer::measure_qubit(const QuantumCircuit& qc, size_t target, size_t control, size_t n_measurements) {
+}
+
 void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
     size_t target = qg.target();
     const auto& gate = qg.gate();
