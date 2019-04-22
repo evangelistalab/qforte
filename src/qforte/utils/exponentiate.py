@@ -5,18 +5,15 @@ Functions for exponentiation of qubit operator terms (circuits)
 import qforte
 import numpy
 
+"""
+returns a circuit equivilant to exponentiated input_circuit mulitplied by a parameter
+
+:param term: (QuantumCircuit) the circuit to be exponentiated
+"""
 
 def exponentiate_single_term(param, term):
-    """
-    A function which returns an exponentiated version of a single (param * term)
-    from a parameterized qubit state preparation circuit.
-
-    :param term: the term to be exponentiated
-    """
 
     # TODO: look into multiplication by 1.0j? (Nick)
-    # TODO: This code is very similar to that used in PyQuil,
-    # make sure this is ok (Nick)
 
     if not numpy.isclose(numpy.imag(param), 0.0):
         param *= 1.0j

@@ -68,7 +68,8 @@ class QuantumGate {
 };
 
 /// Create a quantum gate
-QuantumGate make_gate(std::string type, size_t target, size_t control,
-                              double parameter = 0.0, bool mirror = false);
+// QuantumGate make_gate(std::string type, size_t target, size_t control,
+//                               double parameter = 0.0, bool mirror = false);
+QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter = 0.0);                            
 
 #endif // _quantum_gate_h_
