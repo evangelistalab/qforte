@@ -63,10 +63,25 @@ void QuantumCircuit::set_parameters(const std::vector<double>& params) {
     }
 }
 
-void QuantumCircuit::set_reversed_gates() {
-    rev_copy_ = gates_;
-    std::reverse(std::begin(rev_copy_), std::end(rev_copy_));
+QuantumCircuit QuantumCircuit::adjoint() {
+    QuantumCircuit qcirc_adjoint;
+    for (auto& gate : gates_){
+        qcirc_adjoint.add_gate(gate.adjoint())
+    }
+    std::reverse(std::begin(qcirc_adjoint.gates_), std::end(qcirc_adjoint.gates_));
+    return qcirc_adjoint;
 }
+
+// void QuantumCircuit::set_reversed_gates() {
+//     rev_copy_ = gates_;
+//     std::reverse(std::begin(rev_copy_), std::end(rev_copy_));
+// }
+
+// std::vector<QuantumGate> reversed_gates() const {
+//     std::vector<QuantumGate>rev_copy = gates_;
+//     std::reverse(std::begin(rev_copy), std::end(rev_copy));
+//     return rev_copy;
+// }
 
 std::vector<std::string> QuantumCircuit::str() const {
     std::vector<std::string> s;
@@ -123,9 +138,9 @@ void QuantumComputer::apply_gate(const QuantumGate& qg) {
 }
 
 std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, size_t n_measurements) {
-    // initialize a "Mirror" QC to represent the corresponding change
+    // initialize a "Basis_rotator" QC to represent the corresponding change
     // of basis
-    QuantumCircuit Mirror;
+    QuantumCircuit Basis_rotator;
 
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
@@ -139,21 +154,20 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, s
         std::string gate_id = gate.gate_id();
         if ( gate_id == "Z" ) {
             QuantumGate temp = make_gate("I", target_qubit, target_qubit);
-            Mirror.add_gate(temp);
+            Basis_rotator.add_gate(temp);
         } else if ( gate_id == "X" ) {
             QuantumGate temp = make_gate("H", target_qubit, target_qubit);
-            Mirror.add_gate(temp);
+            Basis_rotator.add_gate(temp);
         } else if (gate_id == "Y"){
             QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
-            Mirror.add_gate(temp);
+            Basis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             //std::cout<<'unrecognized gate in operator!'<<std::endl;
         }
     }
-    // apply Mirror circuit to 'trick' qcomputer into measureing in non Z basis
 
-
-    apply_circuit(Mirror);
+    // apply Basis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
+    apply_circuit(Basis_rotator);
     std::vector<double> probs(nbasis_);
     for (size_t k = 0; k < nbasis_; k++) { probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]); }
 
@@ -170,34 +184,6 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc, s
         size_t measurement = dd(gen);
         double value = 1.;
         for(const QuantumGate& gate : qc.gates()){
-            size_t target_qubit = gate.target();
-            value *= 1. - 2. * static_cast<double>(basis_[measurement].get_bit(target_qubit));
-        }
-        results[k] = value;
-    }
-
-    coeff_ = old_coeff;
-    return results;
-}
-
-std::vector<double> QuantumComputer::measure_rotated_circuit(const QuantumCircuit& rot_qc, size_t n_measurements) {
-
-    std::vector<std::complex<double>> old_coeff = coeff_;
-
-    apply_circuit(rot_qc);
-    std::vector<double> probs(nbasis_);
-    for (size_t k = 0; k < nbasis_; k++) { probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]); }
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-
-    std::discrete_distribution<> dd(std::begin(probs), std::end(probs));
-    std::vector<double> results(n_measurements);
-
-    for(size_t k = 0; k < n_measurements; k++){
-        size_t measurement = dd(gen);
-        double value = 1.;
-        for(const QuantumGate& gate : rot_qc.gates()){
             size_t target_qubit = gate.target();
             value *= 1. - 2. * static_cast<double>(basis_[measurement].get_bit(target_qubit));
         }

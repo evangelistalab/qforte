@@ -1,16 +1,18 @@
 import qforte
 import numpy
 
-"""
-generates a circuit for Quantum Fourier Transformation
 
-:param n: (int) the number of qubits
-
-:param direct: (string) the direction of the Fourier Transform
-can be 'forward' or 'reverse'
-"""
 
 def qft_circuit(n, direct):
+
+    """
+    generates a circuit for Quantum Fourier Transformation
+
+    :param n: (int) the number of qubits
+
+    :param direct: (string) the direction of the Fourier Transform
+    can be 'forward' or 'reverse'
+    """
 
     # Build qft circuit
     qft_circ = qforte.QuantumCircuit()
@@ -33,19 +35,17 @@ def qft_circuit(n, direct):
 
     return qft_circ
 
-"""
-performs a Quantum Fourier Transformation on QuantumComputer states
-
-:param qc_state: (QuantumComputer) the input QuantumComputer state
-
-:param n: (int) the number of qubits
-"""
-
 def qft(qc_state, n):
 
-    if isinstance(qc_state, qforte.QuantumComputer):
-        print('')
-    else:
+    """
+    performs a Quantum Fourier Transformation on QuantumComputer states
+
+    :param qc_state: (QuantumComputer) the input QuantumComputer state
+
+    :param n: (int) the number of qubits
+    """
+
+    if not isinstance(qc_state, qforte.QuantumComputer):
         return NotImplemented
 
     # Apply qft circuits
@@ -59,19 +59,17 @@ def qft(qc_state, n):
 
     return qc_state
 
-"""
-performs a inversed QuantumFourier Transformation on QuantumComputer states
-
-:param qc_state: (QuantumComputer) the input QuantumComputer
-
-:param n: (int) the number of qubits
-"""
-
 def rev_qft(qc_state, n):
 
-    if isinstance(qc_state, qforte.QuantumComputer):
-        print('')
-    else:
+    """
+    performs a inversed QuantumFourier Transformation on QuantumComputer states
+
+    :param qc_state: (QuantumComputer) the input QuantumComputer
+
+    :param n: (int) the number of qubits
+    """
+
+    if not isinstance(qc_state, qforte.QuantumComputer):
         return NotImplemented
 
     # Apply qft circuits

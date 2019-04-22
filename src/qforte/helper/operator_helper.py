@@ -5,10 +5,10 @@ import numpy as np
 def build_from_openfermion(OF_qubitops):
 
     """
-    build_from_openfermion is a function that build a QuantumOperator instance in
+    builds a QuantumOperator instance in
     qforte from a openfermion QubitOperator instance
 
-    :param OF_qubitops: the QubitOperator instance from openfermion.
+    :param OF_qubitops: (QubitOperator) the QubitOperator instance from openfermion.
     """
 
     qforte_ops = qforte.QuantumOperator()
