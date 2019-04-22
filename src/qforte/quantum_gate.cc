@@ -40,6 +40,23 @@ std::string QuantumGate::str() const {
 
 size_t QuantumGate::nqubits() const { return (target_ == control_ ? 1 : 2); }
 
+QuantumGate adjoint() const {
+    std::complex<double> gate[4][4] adj_gate;
+    bool self_adjoint = true;
+    for (const auto& i : index2) {
+        for (const auto& j : index2) {
+            adj_gate[j][i] = std::conj(gate[i][j]);
+            if (std::norm(adj_gate[j][i]-gate[i][j]) > 1.0e-12) {
+                self_adjoint = false;
+            }
+        }
+    }
+    if (not self_adjoint){
+      return QuantumGate("adj(" + label_ + ")", target_, control_, adj_gate);
+    }
+    return QuantumGate(label_, target_, control_, adj_gate);
+}
+
 const std::vector<std::pair<size_t, size_t>>& QuantumGate::two_qubits_basis() {
     return two_qubits_basis_;
 }

@@ -39,6 +39,9 @@ class QuantumGate {
 
     static const std::vector<std::pair<size_t, size_t>>& two_qubits_basis();
 
+    // Return the adjoint of this gate
+    QuantumGate adjoint() const;
+
   private:
     /// the label of this gate
     std::string label_;
