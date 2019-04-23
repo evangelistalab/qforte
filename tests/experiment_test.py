@@ -58,7 +58,7 @@ class ExperimentTests(unittest.TestCase):
 
         # self.assertEqual(1,1)
 
-        self.assertLess(experimental_error, 1e-4)
+        self.assertLess(experimental_error, 2.0e-4)
 
 if __name__ == '__main__':
     unittest.main()
