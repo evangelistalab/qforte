@@ -4,25 +4,9 @@
 
 #include "quantum_gate.h"
 
-QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter, bool mirror) {
+QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter) {
     using namespace std::complex_literals;
     if (target == control) {
-        if(mirror) {
-            if (type == "X") {
-                type = "H";
-            }
-            else if (type == "Y") {
-                type = "Rzy";
-            }
-            else if (type == "Z") {
-                type = "I";
-            } else {
-                std::string msg =
-                    fmt::format("Mirror gate\ntype = {} can only be of type X, Y or Z,", type);
-                throw std::invalid_argument(msg);
-            }
-        }
-
         if (type == "X") {
             std::complex<double> gate[4][4]{
                 {0.0, 1.0},

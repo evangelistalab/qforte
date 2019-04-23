@@ -5,18 +5,15 @@ Functions for exponentiation of qubit operator terms (circuits)
 import qforte
 import numpy
 
-
 def exponentiate_single_term(param, term):
-    """
-    A function which returns an exponentiated version of a single (param * term)
-    from a parameterized qubit state preparation circuit.
 
-    :param term: the term to be exponentiated
+    """
+    returns a circuit equivilant to exponentiated input_circuit mulitplied by a parameter
+
+    :param term: (QuantumCircuit) the circuit to be exponentiated
     """
 
-    # TODO: look into multiplication by 1.0j? (Nick)
-    # TODO: This code is very similar to that used in PyQuil,
-    # make sure this is ok (Nick)
+    # TODO: exit procedure if non imaginary parameter
 
     if not numpy.isclose(numpy.imag(param), 0.0):
         param *= 1.0j
@@ -52,7 +49,7 @@ def exponentiate_single_term(param, term):
 
     #gate that actually contains the parameterization for the term
     z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0*numpy.real(param))
-    cX_circ.set_reversed_gates();
+    # cX_circ.set_reversed_gates();
 
     # qforte.smart_print(to_z)
     # qforte.smart_print(to_original)
@@ -66,7 +63,10 @@ def exponentiate_single_term(param, term):
 
     exponential.add_gate(z_rot)
 
-    for gate in cX_circ.reversed_gates():
+    # for gate in cX_circ.reversed_gates():
+    #     exponential.add_gate(gate)
+
+    for gate in reversed(cX_circ.gates()):
         exponential.add_gate(gate)
     for gate in to_original.gates():
         exponential.add_gate(gate)

@@ -1,18 +1,17 @@
 import qforte
 import numpy
 
+
+
 def qft_circuit(n, direct):
 
     """
-    qft_circuit is a function that generates circuit for
-    Quantum Fourier Transformation implemented in a efficient
-    approach.
+    generates a circuit for Quantum Fourier Transformation
 
-    :param n: a integer that tells the number of qubits
-    that the transformation will work on
+    :param n: (int) the number of qubits
 
-    :param direct: a indicator of the direction of the 
-    transformation, direct or reverse
+    :param direct: (string) the direction of the Fourier Transform
+    can be 'forward' or 'reverse'
     """
 
     # Build qft circuit
@@ -39,13 +38,11 @@ def qft_circuit(n, direct):
 def qft(qc_state, n):
 
     """
-    qft is a function that performs a Quantum Fourier
-    Transformation on QuantumComputer states
+    performs a Quantum Fourier Transformation on QuantumComputer states
 
-    :param n: a integer that tells the number of qubits
-    that the transformation will work on
+    :param qc_state: (QuantumComputer) the input QuantumComputer state
 
-    :param qc_state: the input QuantumComputer state
+    :param n: (int) the number of qubits
     """
 
     if not isinstance(qc_state, qforte.QuantumComputer):
@@ -65,18 +62,16 @@ def qft(qc_state, n):
 def rev_qft(qc_state, n):
 
     """
-    qft is a function that performs a inversed Quantum 
-    Fourier Transformation on QuantumComputer states
+    performs a inversed QuantumFourier Transformation on QuantumComputer states
 
-    :param n: a integer that tells the number of qubits
-    that the transformation will work on
+    :param qc_state: (QuantumComputer) the input QuantumComputer
 
-    :param qc_state: the input QuantumComputer state
+    :param n: (int) the number of qubits
     """
 
     if not isinstance(qc_state, qforte.QuantumComputer):
         return NotImplemented
-    
+
     # Apply qft circuits
     circ = qft_circuit(n, 'reverse')
     circ.reversed_gates()
@@ -87,4 +82,4 @@ def rev_qft(qc_state, n):
     for a in coeff_:
         a *= 1.0/numpy.sqrt(2)
 
-    return qc_state          
+    return qc_state

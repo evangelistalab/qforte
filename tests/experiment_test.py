@@ -43,10 +43,12 @@ class ExperimentTests(unittest.TestCase):
         for i in range(len(circ_vec)):
             H2_qubit_hamiltonian.add_term(coef_vec[i], circ_vec[i])
 
-        #A dummy circuit to apply (would be some sort of excitatio operator in practice)
+        # circuit for making HF state
         circ = qforte.QuantumCircuit()
+        circ.add_gate(qforte.make_gate('X', 0, 0))
+        circ.add_gate(qforte.make_gate('X', 1, 1))
 
-        TestExperiment = qforte.Experiment(4, 2, circ, H2_qubit_hamiltonian, 1000000)
+        TestExperiment = qforte.Experiment(4, circ, H2_qubit_hamiltonian, 1000000)
         params2 = []
         avg_energy = TestExperiment.experimental_avg(params2)
         print('Measured H2 Experimental Avg. Energy')
@@ -55,8 +57,6 @@ class ExperimentTests(unittest.TestCase):
         print(E_hf)
 
         experimental_error = abs(avg_energy - E_hf)
-
-        # self.assertEqual(1,1)
 
         self.assertLess(experimental_error, 2.0e-4)
 

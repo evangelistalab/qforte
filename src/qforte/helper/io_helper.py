@@ -3,14 +3,17 @@ import qforte
 def smart_print(Inputobj, print_type='compact'):
 
     """
-    smart_print is a function that formatted and print instances of 
+    formatts and prints instances of
     several classes, including QuantumOperator, QuantumCircuit, and
     QuantumnComputer
 
-    :param Inputobj: the input instance one want to print.
-    :param print_type: print format, full or compact
+    :param Inputobj: (QuantumOperator, QuantumCircuit, or
+    QuantumnComputer) the input instance one want to print.
+
+    :param print_type: (QuantumOperator, QuantumCircuit, or
+    QuantumnComputer) print format, full or compact
     """
-    
+
     if isinstance(Inputobj, qforte.QuantumOperator):
         print('\n Quantum operator:')
 
@@ -90,15 +93,14 @@ def smart_print(Inputobj, print_type='compact'):
         print('\n Quantum Computer:')
         print('\n'.join(Inputobj.str()))
 
+"""
+builds a QuantumCircuit conveniently from string based input
+
+:param Inputstr: (string) the circuit to build, format:
+['Action string']_['Target']_['Control(if needed)']_['Parameter(if needed)']
+"""
+
 def build_circuit(Inputstr):
-
-    """
-    build_circuit is a function that build a QuantumCircuit 
-    conveniently from input
-
-    :param Inputstr: the circuit to build, format:
-    ['Action string']_['Target']_['Control(if needed)']_['Parameter']
-    """
 
     circ = qforte.QuantumCircuit()
     sepstr = Inputstr.split() #Separate string to a list by space
@@ -112,23 +114,23 @@ def build_circuit(Inputstr):
                 circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1]), float(inputgate[2])))
             else:
                 circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[2])))
-        
+
     return circ
-           
+
+"""
+builds a QuantumCircuit
+conveniently from input
+
+:param Inputstr: (string) the operator to build, format:
+['coeff1, circ1; coeff2, circ2, ...']
+"""
+
 def build_operator(Inputstr):
-
-    """
-    build_operator is a function that build a QuantumCircuit
-    conveniently from input
-
-    :param Inputstr: the operator to build, format:
-    ['coeff1, circ1; coeff2, circ2, ...']
-    """
 
     ops = qforte.QuantumOperator()
     sepstr = Inputstr.split(';')
     for i in range(len(sepstr)):
         inputterm = sepstr[i].split(',')
         ops.add_term(complex(inputterm[0]), qforte.build_circuit(inputterm[1]))
-    
+
     return ops
