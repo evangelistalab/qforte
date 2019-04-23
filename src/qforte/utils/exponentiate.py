@@ -66,7 +66,8 @@ def exponentiate_single_term(param, term):
     # for gate in cX_circ.reversed_gates():
     #     exponential.add_gate(gate)
 
-    for gate in reversed(cX_circ.gates()):
+    adj_gates = cX_circ.adjoint()
+    for gate in reversed(adj_gates):
         exponential.add_gate(gate)
     for gate in to_original.gates():
         exponential.add_gate(gate)

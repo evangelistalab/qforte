@@ -72,17 +72,6 @@ QuantumCircuit QuantumCircuit::adjoint() {
     return qcirc_adjoint;
 }
 
-// void QuantumCircuit::set_reversed_gates() {
-//     rev_copy_ = gates_;
-//     std::reverse(std::begin(rev_copy_), std::end(rev_copy_));
-// }
-
-// std::vector<QuantumGate> reversed_gates() const {
-//     std::vector<QuantumGate>rev_copy = gates_;
-//     std::reverse(std::begin(rev_copy), std::end(rev_copy));
-//     return rev_copy;
-// }
-
 std::vector<std::string> QuantumCircuit::str() const {
     std::vector<std::string> s;
     for (const auto& gate : gates_) {

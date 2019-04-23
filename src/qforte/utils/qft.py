@@ -74,8 +74,8 @@ def rev_qft(qc_state, n):
 
     # Apply qft circuits
     circ = qft_circuit(n, 'reverse')
-    circ.reversed_gates()
-    qc_state.apply_circuit(circ)
+    adj_circ = circ.adjoint()
+    qc_state.apply_circuit(adj_circ)
 
     # Normalize coeffs
     coeff_ = qc_state.get_coeff_vec()

@@ -76,20 +76,11 @@ class QuantumCircuit {
     /// return a vector of gates
     const std::vector<QuantumGate>& gates() const { return gates_; }
 
-    /// return a vector of reversed gates
-    // const std::vector<QuantumGate>& reversed_gates() const { return rev_copy_; }
-
-    /// set and return a vector of reversed gates_
-    // std::vector<QuantumGate> reversed_gates() const;
-
-    /// return a Quantum Circuit that is the adjoint of gates_
+    /// return the adjoint (conjugate transpose) of this QuantumCircuit
     QuantumCircuit adjoint();
 
     /// reset the circuit with a new set of parameters
     void set_parameters(const std::vector<double>& params);
-
-    /// set the reversed gates
-    // void set_reversed_gates();
 
     /// return a vector of string representing this circuit
     std::vector<std::string> str() const;
