@@ -5,19 +5,23 @@ Functions for exponentiation of qubit operator terms (circuits)
 import qforte
 import numpy
 
-def exponentiate_single_term(param, term):
-
+def exponentiate_single_term(factor, term):
     """
-    returns a circuit equivilant to exponentiated input_circuit mulitplied by a parameter
+    returns the exponential of an string of Pauli operators multiplied by an imaginary factor
 
-    :param term: (QuantumCircuit) the circuit to be exponentiated
+        exp(factor * term)
+
+    Parameters
+    ----------
+    :param factor: float
+        an imaginary factor that multiplies the Pauli string
+    :param term: QuantumCircuit
+        a Pauli string to be exponentiated
     """
 
-    # TODO: exit procedure if non imaginary parameter
-
-    if not numpy.isclose(numpy.imag(param), 0.0):
-        param *= 1.0j
-        print('warning: term had imaginary parameter so multipled by i')
+    # This function assume
+    if not numpy.isclose(numpy.imag(factor), 0.0):
+        raise SystemExit('exponentiate_single_term() called with a real factor')
 
     exponential = qforte.QuantumCircuit()
     to_z = qforte.QuantumCircuit()
@@ -32,13 +36,13 @@ def exponentiate_single_term(param, term):
         target = gate.target()
         control = gate.control()
 
-        if ('X' == id):
+        if (id == 'X'):
             to_z.add_gate(qforte.make_gate('H', target, control))
             to_original.add_gate(qforte.make_gate('H', target, control))
-        elif ('Y' == id):
+        elif (id == 'Y'):
             to_z.add_gate(qforte.make_gate('Rx', target, control, numpy.pi/2.0))
             to_original.add_gate(qforte.make_gate('Rx', target, control, -numpy.pi/2.0))
-        elif ('I' == id):
+        elif (id == 'I'):
             continue
 
         if (prev_target is not None):
@@ -48,12 +52,7 @@ def exponentiate_single_term(param, term):
         max_target = target
 
     #gate that actually contains the parameterization for the term
-    z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0*numpy.real(param))
-    # cX_circ.set_reversed_gates();
-
-    # qforte.smart_print(to_z)
-    # qforte.smart_print(to_original)
-    # qforte.smart_print(cX_circ)
+    z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0 * numpy.real(factor))
 
     #assemble the actual exponential
     for gate in to_z.gates():
@@ -62,9 +61,6 @@ def exponentiate_single_term(param, term):
         exponential.add_gate(gate)
 
     exponential.add_gate(z_rot)
-
-    # for gate in cX_circ.reversed_gates():
-    #     exponential.add_gate(gate)
 
     adj_gates = cX_circ.adjoint().gates()
     for gate in reversed(adj_gates):
