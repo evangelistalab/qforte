@@ -1,3 +1,4 @@
+
 #ifndef _quantum_gate_h_
 #define _quantum_gate_h_
 
@@ -31,9 +32,15 @@ class QuantumGate {
 
     std::string str() const;
 
+    /// Return the string specifying what type of gate [X, Y , CNOT, ...]
+    std::string gate_id() const;
+
     size_t nqubits() const;
 
     static const std::vector<std::pair<size_t, size_t>>& two_qubits_basis();
+
+    // Return the adjoint of this gate
+    QuantumGate adjoint() const;
 
   private:
     /// the label of this gate
@@ -64,7 +71,8 @@ class QuantumGate {
 };
 
 /// Create a quantum gate
-QuantumGate make_gate(std::string type, size_t target, size_t control,
-                              double parameter = 0.0);
+// QuantumGate make_gate(std::string type, size_t target, size_t control,
+//                               double parameter = 0.0, bool mirror = false);
+QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter = 0.0);                            
 
 #endif // _quantum_gate_h_

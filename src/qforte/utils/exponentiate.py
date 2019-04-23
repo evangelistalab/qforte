@@ -1,0 +1,71 @@
+"""
+Functions for exponentiation of qubit operator terms (circuits)
+"""
+
+import qforte
+import numpy
+
+def exponentiate_single_term(factor, term):
+    """
+    returns the exponential of an string of Pauli operators multiplied by an imaginary factor
+
+        exp(factor * term)
+
+    Parameters
+    ----------
+    :param factor: float
+        an imaginary factor that multiplies the Pauli string
+    :param term: QuantumCircuit
+        a Pauli string to be exponentiated
+    """
+
+    # This function assume
+    if not numpy.isclose(numpy.imag(factor), 0.0):
+        raise SystemExit('exponentiate_single_term() called with a real factor')
+
+    exponential = qforte.QuantumCircuit()
+    to_z = qforte.QuantumCircuit()
+    to_original = qforte.QuantumCircuit()
+    cX_circ = qforte.QuantumCircuit()
+
+    prev_target = None
+    max_target = None
+
+    for gate in term.gates():
+        id = gate.gate_id()
+        target = gate.target()
+        control = gate.control()
+
+        if (id == 'X'):
+            to_z.add_gate(qforte.make_gate('H', target, control))
+            to_original.add_gate(qforte.make_gate('H', target, control))
+        elif (id == 'Y'):
+            to_z.add_gate(qforte.make_gate('Rx', target, control, numpy.pi/2.0))
+            to_original.add_gate(qforte.make_gate('Rx', target, control, -numpy.pi/2.0))
+        elif (id == 'I'):
+            continue
+
+        if (prev_target is not None):
+            cX_circ.add_gate(qforte.make_gate('cX', target, prev_target))
+
+        prev_target = target
+        max_target = target
+
+    #gate that actually contains the parameterization for the term
+    z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0 * numpy.real(factor))
+
+    #assemble the actual exponential
+    for gate in to_z.gates():
+        exponential.add_gate(gate)
+    for gate in cX_circ.gates():
+        exponential.add_gate(gate)
+
+    exponential.add_gate(z_rot)
+
+    adj_gates = cX_circ.adjoint().gates()
+    for gate in reversed(adj_gates):
+        exponential.add_gate(gate)
+    for gate in to_original.gates():
+        exponential.add_gate(gate)
+
+    return exponential

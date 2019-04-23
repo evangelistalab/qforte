@@ -76,18 +76,34 @@ class QuantumCircuit {
     /// return a vector of gates
     const std::vector<QuantumGate>& gates() const { return gates_; }
 
+    /// return the adjoint (conjugate transpose) of this QuantumCircuit
+    QuantumCircuit adjoint();
+
+    /// reset the circuit with a new set of parameters
+    void set_parameters(const std::vector<double>& params);
+
     /// return a vector of string representing this circuit
     std::vector<std::string> str() const;
 
   private:
     /// the list of gates
     std::vector<QuantumGate> gates_;
+
+    /// reversed list of gates
+    std::vector<QuantumGate> rev_copy_;
 };
 
 class QuantumOperator {
   public:
     /// default constructor: creates an empty quantum operator
     QuantumOperator() {}
+
+    /// build from a string of open fermion qubit operators
+    void build_from_openferm_str(std::string op) {}
+
+    /// build from an openfermion qubit operator directly
+    /// might make this a python function?
+    void build_from_openferm(std::string op) {}
 
     /// add a circuit as a term in the quantum operator
     void add_term(std::complex<double> circ_coeff ,const QuantumCircuit& circuit) {
@@ -103,6 +119,7 @@ class QuantumOperator {
   private:
     /// the list of circuits
     std::vector<std::pair<std::complex<double>,QuantumCircuit>> terms_;
+
 };
 
 class QuantumComputer {
@@ -115,6 +132,9 @@ class QuantumComputer {
 
     /// apply a gate to the quantum computer
     void apply_gate(const QuantumGate& qg);
+
+    /// measure the state of the quanum computer in basis of circuit
+    std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
 
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
@@ -148,6 +168,8 @@ class QuantumComputer {
     /// where this information is passed as a vectors of pairs
     ///  [(basis_1, c_1), (basis_2, c_2), ...]
     void set_state(std::vector<std::pair<QuantumBasis, double_c>> state);
+
+    void zero_state();
 
   private:
     /// the number of qubits
