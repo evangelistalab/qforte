@@ -4,17 +4,31 @@ import unittest
 class QFTTests(unittest.TestCase):
     def test_qft(self):
         trial_state = QuantumComputer(4)
-        trial_circ = build_circuit('X_1')
+        trial_circ = build_circuit('X_0 X_1')
         trial_state.apply_circuit(trial_circ)
 
+        # verify direct transformation
         qft(trial_state, 4)
 
-        a1_dag_a2 = qforte.build_operator('0.0-0.25j, X_2 Y_1; 0.25, Y_2 Y_1; \
-        0.25, X_2 X_1; 0.0+0.25j, Y_2 X_1')
-
+        a1_dag_a2 = qforte.build_operator('1.0, Z_0')
         exp = trial_state.direct_op_exp_val(a1_dag_a2)
-        self.assertAlmostEqual(exp, -0.2499999999999999 + 0.0j)
-        
+        self.assertAlmostEqual(exp, 0.0 + 0.0j)
+
+        # test unitarity
+        qft(trial_state, 3)
+        rev_qft(trial_state, 3)
+
+        a1_dag_a2 = qforte.build_operator('1.0, Z_0')
+        exp = trial_state.direct_op_exp_val(a1_dag_a2)
+        self.assertAlmostEqual(exp, 0.0 + 0.0j)
+
+        # test reverse transformation
+        qft(trial_state, 4)
+
+        a1_dag_a2 = qforte.build_operator('1.0, Z_0')
+        exp = trial_state.direct_op_exp_val(a1_dag_a2)
+        self.assertAlmostEqual(exp, 1.0 + 0.0j)
+
 if __name__ == '__main__':
     unittest.main()
 
