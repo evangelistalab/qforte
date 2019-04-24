@@ -31,11 +31,8 @@ def qft_circuit(n, direct):
             qft_circ.add_gate(qforte.make_gate('SWAP', i, n-1-i))
 
     if direct == 'forward':
-        qforte.smart_print(qft_circ)
         return qft_circ
     if direct == 'reverse':
-        qforte.smart_print(qft_circ)
-        qforte.smart_print(qft_circ.adjoint())
         return qft_circ.adjoint()
 
     return qft_circ
