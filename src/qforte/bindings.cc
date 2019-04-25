@@ -12,6 +12,7 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<QuantumCircuit>(m, "QuantumCircuit")
         .def(py::init<>())
         .def("add_gate", &QuantumCircuit::add_gate)
+        .def("add_circuit", &QuantumCircuit::add_circuit)
         .def("gates", &QuantumCircuit::gates)
         .def("size", &QuantumCircuit::size)
         .def("adjoint", &QuantumCircuit::adjoint)
@@ -22,7 +23,6 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<>())
         .def("add_term", &QuantumOperator::add_term)
         .def("terms", &QuantumOperator::terms);
-        //.def("str", &QuantumOperator::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")

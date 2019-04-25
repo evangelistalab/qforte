@@ -73,6 +73,9 @@ class QuantumCircuit {
     /// add a gate
     void add_gate(const QuantumGate& gate) { gates_.push_back(gate); }
 
+    /// add a circuit
+    void add_circuit(const QuantumCircuit& circ);
+
     /// return a vector of gates
     const std::vector<QuantumGate>& gates() const { return gates_; }
 
