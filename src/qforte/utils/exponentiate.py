@@ -19,9 +19,13 @@ def exponentiate_single_term(factor, term):
         a Pauli string to be exponentiated
     """
 
-    # This function assume
+    # This function assumes that the factor is imaginary. The following tests for it.
     if not numpy.isclose(numpy.imag(factor), 0.0):
         raise SystemExit('exponentiate_single_term() called with a real factor')
+
+    # If the Pauli string has no terms this is just a phase factor
+    if term.size() == 0:
+        return (qforte.QuantumCircuit(), numpy.exp(factor))
 
     exponential = qforte.QuantumCircuit()
     to_z = qforte.QuantumCircuit()
@@ -68,4 +72,4 @@ def exponentiate_single_term(factor, term):
     for gate in to_original.gates():
         exponential.add_gate(gate)
 
-    return exponential
+    return (exponential, 1.0)

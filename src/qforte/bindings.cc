@@ -13,6 +13,7 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<>())
         .def("add_gate", &QuantumCircuit::add_gate)
         .def("gates", &QuantumCircuit::gates)
+        .def("size", &QuantumCircuit::size)
         .def("adjoint", &QuantumCircuit::adjoint)
         .def("set_parameters", &QuantumCircuit::set_parameters)
         .def("str", &QuantumCircuit::str);

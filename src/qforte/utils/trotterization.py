@@ -26,13 +26,15 @@ def trotterize(operator, trotter_number=1, trotter_order=1):
     if(trotter_number > 1) or (trotter_number <= 0):
         raise ValueError("trotterization currently only supports trotter number = 1")
 
+    total_phase = 1.0
     troterized_operator = qforte.QuantumCircuit()
 
-    if(trotter_order == 1):
-        if(trotter_number == 1):
-            #loop over terms in operator
-            for term in operator.terms():
-                term_generator = qforte.exponentiate_single_term(term[0],term[1])
-                for gate in term_generator.gates():
-                    troterized_operator.add_gate(gate)
-        return troterized_operator
+    if (trotter_order == 1) and (trotter_number == 1):
+        #loop over terms in operator
+        for term in operator.terms():
+            term_generator, phase = qforte.exponentiate_single_term(term[0],term[1])
+            for gate in term_generator.gates():
+                troterized_operator.add_gate(gate)
+            total_phase *= phase
+
+    return (troterized_operator, total_phase)

@@ -13,7 +13,7 @@ class ExperimentTests(unittest.TestCase):
             generator.add_term(coef_vec[i], circ_vec[i])
 
         # exponentiate the operator
-        troterized_gen = qforte.trotterization.trotterize(generator)
+        troterized_gen, phase = qforte.trotterization.trotterize(generator)
 
         # initalize a quantum computer
         qc = qforte.QuantumComputer(2)
