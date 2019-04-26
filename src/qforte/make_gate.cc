@@ -100,8 +100,8 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             std::complex<double> c = 1.0 / std::sqrt(2.0);
             std::complex<double> c_i = 1.0i / std::sqrt(2.0);
             std::complex<double> gate[4][4]{
-                {+c, +c},
-                {+c_i, -c_i},
+                {+c_i, +c},
+                {+c, +c_i},
             };
             return QuantumGate(type, target, control, gate);
         }

@@ -23,7 +23,7 @@ class QuantumBasis {
     QuantumBasis(size_t n = static_cast<basis_t>(0)) { state_ = n; }
 
     /// a mask for bit in position pos
-    static constexpr basis_t maskbit(size_t pos) { return (static_cast<basis_t>(1)) << pos; }
+    static constexpr basis_t maskbit(size_t pos) { return static_cast<basis_t>(1) << pos; }
 
     /// get the value of bit pos
     bool get_bit(size_t pos) const { return state_ & maskbit(pos); }
