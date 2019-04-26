@@ -4,87 +4,12 @@
 
 #include "fmt/format.h"
 
+#include "quantum_basis.h"
+#include "quantum_circuit.h"
 #include "quantum_gate.h"
+#include "quantum_operator.h"
+
 #include "quantum_computer.h"
-
-std::string QuantumBasis::str(size_t nqubit) const {
-    std::string s;
-    s += "|";
-    for (int i = 0; i < nqubit; ++i) {
-        if (get_bit(i)) {
-            s += "1";
-        } else {
-            s += "0";
-        }
-    }
-    s += ">";
-    return s;
-}
-
-void QuantumBasis::set(basis_t state) { state_ = state; }
-
-QuantumBasis& QuantumBasis::insert(size_t pos) {
-    basis_t temp(state_);
-    state_ = state_ << 1;
-    basis_t mask = (1 << pos) - 1;
-    state_ = state_ ^ ((state_ ^ temp) & mask);
-    return *this;
-}
-
-// std::vector<double> QuantumCircuit::get_parameters() {
-//     // need a loop over only gates in state preparation circuit that
-//     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
-//     // TODO: make a indexing funciton using a map (Nick)
-//     size_t param_idx = 0;
-//     std::vector<double> params
-//     for (auto& gate : gates_) {
-//         std::string gate_id = gate.gate_id();
-//         if (gate_id == "Rz") {
-//
-//             double param = gate.gate()[][];
-//             gate = make_gate(gate_id, target_qubit, target_qubit, params[param_idx]);
-//             param_idx++;
-//         }
-//     }
-// }
-
-void QuantumCircuit::set_parameters(const std::vector<double>& params) {
-    // need a loop over only gates in state preparation circuit that
-    // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
-    // TODO: make a indexing funciton using a map (Nick)
-    size_t param_idx = 0;
-    for (auto& gate : gates_) {
-        std::string gate_id = gate.gate_id();
-        if (gate_id == "Rz") {
-            size_t target_qubit = gate.target();
-            gate = make_gate(gate_id, target_qubit, target_qubit, params[param_idx]);
-            param_idx++;
-        }
-    }
-}
-
-void QuantumCircuit::add_circuit(const QuantumCircuit& circ) {
-    for (const auto gate : circ.gates()) {
-        gates_.push_back(gate);
-    }
-}
-
-QuantumCircuit QuantumCircuit::adjoint() {
-    QuantumCircuit qcirc_adjoint;
-    for (auto& gate : gates_) {
-        qcirc_adjoint.add_gate(gate.adjoint());
-    }
-    std::reverse(std::begin(qcirc_adjoint.gates_), std::end(qcirc_adjoint.gates_));
-    return qcirc_adjoint;
-}
-
-std::vector<std::string> QuantumCircuit::str() const {
-    std::vector<std::string> s;
-    for (const auto& gate : gates_) {
-        s.push_back(gate.str());
-    }
-    return s;
-}
 
 QuantumComputer::QuantumComputer(int nqubit) : nqubit_(nqubit) {
     nbasis_ = std::pow(2, nqubit_);
@@ -207,27 +132,8 @@ void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
             }
         }
     }
-}
 
-void QuantumComputer::apply_1qubit_gate_insertion(const QuantumGate& qg) {
-    size_t target = qg.target();
-    const auto& gate = qg.gate();
-
-    QuantumBasis basis_I, basis_J, basis_K;
-    size_t nbasis_minus1 = std::pow(2, nqubit_ - 1);
-    for (size_t i = 0; i < 2; i++) {
-        for (size_t j = 0; j < 2; j++) {
-            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
-                for (size_t K = 0; K < nbasis_minus1; K++) {
-                    basis_K.set(K);
-                    basis_I = basis_J = basis_K.insert(target);
-                    basis_I.set_bit(target, i);
-                    basis_J.set_bit(target, j);
-                    new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
-                }
-            }
-        }
-    }
+    none_ops_++;
 }
 
 void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
@@ -255,6 +161,8 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
             }
         }
     }
+
+    ntwo_ops_++;
 }
 
 std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& qo) {

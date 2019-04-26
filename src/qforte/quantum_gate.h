@@ -1,4 +1,3 @@
-
 #ifndef _quantum_gate_h_
 #define _quantum_gate_h_
 
@@ -12,7 +11,7 @@ using complex_4_4_mat = std::array<std::array<std::complex<double>, 4>, 4>;
 
 class QuantumGate {
   public:
-  /**
+    /**
      * @brief QuantumGate
      * @param label the label for this operator (e.g, "X", "cZ")
      * @param target the target qubit
@@ -30,7 +29,11 @@ class QuantumGate {
 
     const complex_4_4_mat& gate() const;
 
+    /// Return a string representation of the gate
     std::string str() const;
+
+    /// Return a string representation of the gate for debugging
+    std::string repr() const;
 
     /// Return the string specifying what type of gate [X, Y , CNOT, ...]
     std::string gate_id() const;
@@ -73,6 +76,6 @@ class QuantumGate {
 /// Create a quantum gate
 // QuantumGate make_gate(std::string type, size_t target, size_t control,
 //                               double parameter = 0.0, bool mirror = false);
-QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter = 0.0);                            
+QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter = 0.0);
 
 #endif // _quantum_gate_h_

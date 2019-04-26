@@ -33,32 +33,7 @@ def smart_print(Inputobj, print_type='compact'):
                 else:
                     print("+", end=" ")
                 print(term[0], end="")
-                strp = term[1].str()
-                trigger = 0 # A flag for anormallies
-                print('[', end="")
-                subfirst = True
-                for termstr in strp:
-                    tmpstr = termstr.split('\n')
-                    tmp_a = tmpstr[0].split()
-                    if subfirst:
-                        subfirst = False
-                    else:
-                        print("", end=" ")
-                    print(tmp_a[0], end="") #Print the action string (X, Y, Z, cX, R, ...)
-                    if str(tmp_a[0]) == 'R':
-                        trigger = 1
-                    tmp_b = tmpstr[0].split(':')
-                    control = tmp_b[2]
-                    tmp_c = tmp_b[1].split(',')
-                    target = tmp_c[0]
-                    if target == control: #Print the target and control(if necessary)
-                        print(target, end="")
-                    else:
-                        print(target, end="-")
-                        print(control, end="")
-                print(']')
-                if trigger == 1:
-                    print('R gate presented, use \'full\' print to see the matrix! \n')
+                print("[{}]".format(" ".join(term[1].str())))
 
     if isinstance(Inputobj, qforte.QuantumCircuit):
         print('\n Quantum circuit:')

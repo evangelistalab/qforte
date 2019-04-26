@@ -26,11 +26,18 @@ const complex_4_4_mat& QuantumGate::gate() const { return gate_; }
 std::string QuantumGate::gate_id() const { return label_; }
 
 std::string QuantumGate::str() const {
+    if (target_ == control_) {
+        return fmt::format("{}{}", label_, target_);
+    }
+    return fmt::format("{}{}_{}", label_, target_, control_);
+}
+
+std::string QuantumGate::repr() const {
     std::string s =
         fmt::format("{} gate, target qubit:{}, contol qubit:{}\n", label_, target_, control_);
     const std::vector<size_t>& index = (nqubits() == 1 ? index1 : index2);
-    for (const auto& i : index2) {
-        for (const auto& j : index2) {
+    for (const auto& i : index) {
+        for (const auto& j : index) {
             s += fmt::format("  {:+f} {:+f} i", std::real(gate_[i][j]), std::imag(gate_[i][j]));
         }
         s += '\n';
@@ -46,13 +53,13 @@ QuantumGate QuantumGate::adjoint() const {
     for (const auto& i : index2) {
         for (const auto& j : index2) {
             adj_gate[j][i] = std::conj(gate_[i][j]);
-            if (std::norm(adj_gate[j][i]-gate_[j][i]) > 1.0e-12) {
+            if (std::norm(adj_gate[j][i] - gate_[j][i]) > 1.0e-12) {
                 self_adjoint = false;
             }
         }
     }
-    if (not self_adjoint){
-      return QuantumGate("adj(" + label_ + ")", target_, control_, adj_gate);
+    if (not self_adjoint) {
+        return QuantumGate("adj(" + label_ + ")", target_, control_, adj_gate);
     }
     return QuantumGate(label_, target_, control_, adj_gate);
 }

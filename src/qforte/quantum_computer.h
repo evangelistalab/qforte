@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <numeric>
 
 #include "qforte-def.h" // double_c
 
@@ -14,120 +13,9 @@ template <class T> std::complex<T> complex_prod(std::complex<T> a, std::complex<
 template <class T> std::complex<T> add_c(std::complex<T> a, std::complex<T> b) { return a + b; }
 
 class QuantumGate;
-
-/**
- * @brief The QuantumBasis class
- *
- * This class represents an element of the Hilbert space basis:
- *   |q_1 q_2 ... q_n> with q_i = {0, 1}
- *
- *   for example:
- *
- *   |1010>, |0000>, |1110>
- */
-class QuantumBasis {
-  public:
-    /// the type used to represent a quantum state (a 64 bit unsigned long)
-    using basis_t = uint64_t;
-
-    /// the maximum number of qubits
-    static constexpr size_t max_qubits_ = 8 * sizeof(basis_t);
-
-    /// constructor
-    QuantumBasis(size_t n = static_cast<basis_t>(0)) { state_ = n; }
-
-    /// a mask for bit in position pos
-    static constexpr basis_t maskbit(size_t pos) { return (static_cast<basis_t>(1)) << pos; }
-
-    /// get the value of bit pos
-    bool get_bit(size_t pos) const { return state_ & maskbit(pos); }
-
-    /// set bit in position 'pos' to the boolean val
-    basis_t& set_bit(size_t pos, bool val) {
-        if (val)
-            state_ |= maskbit(pos);
-        else
-            state_ &= ~maskbit(pos);
-        return state_;
-    }
-
-    void set(basis_t state);
-    void zero() { state_ = static_cast<basis_t>(0); }
-
-    QuantumBasis& insert(size_t pos);
-
-    size_t add() const { return state_; }
-
-    std::string str(size_t nqubit) const;
-
-  private:
-    /// the state
-    basis_t state_;
-};
-
-class QuantumCircuit {
-  public:
-    /// default constructor: creates an empty circuit
-    QuantumCircuit() {}
-
-    /// add a gate
-    void add_gate(const QuantumGate& gate) { gates_.push_back(gate); }
-
-    /// add a circuit
-    void add_circuit(const QuantumCircuit& circ);
-
-    /// return a vector of gates
-    const std::vector<QuantumGate>& gates() const { return gates_; }
-
-    /// return the number of gates
-    size_t size() const { return gates_.size(); }
-
-    /// return the adjoint (conjugate transpose) of this QuantumCircuit
-    QuantumCircuit adjoint();
-
-    /// reset the circuit with a new set of parameters
-    void set_parameters(const std::vector<double>& params);
-
-    /// return a vector of string representing this circuit
-    std::vector<std::string> str() const;
-
-  private:
-    /// the list of gates
-    std::vector<QuantumGate> gates_;
-
-    /// reversed list of gates
-    std::vector<QuantumGate> rev_copy_;
-};
-
-class QuantumOperator {
-  public:
-    /// default constructor: creates an empty quantum operator
-    QuantumOperator() {}
-
-    /// build from a string of open fermion qubit operators
-    void build_from_openferm_str(std::string op) {}
-
-    /// build from an openfermion qubit operator directly
-    /// might make this a python function?
-    void build_from_openferm(std::string op) {}
-
-    /// add a circuit as a term in the quantum operator
-    void add_term(std::complex<double> circ_coeff, const QuantumCircuit& circuit) {
-        terms_.push_back(std::make_pair(circ_coeff, circuit));
-    }
-
-    /// return a vector of terms and thier coeficients
-    const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& terms() const {
-        return terms_;
-    }
-
-    /// return a vector of string representing this quantum operator
-    std::vector<std::string> str() const;
-
-  private:
-    /// the list of circuits
-    std::vector<std::pair<std::complex<double>, QuantumCircuit>> terms_;
-};
+class QuantumBasis;
+class QuantumCircuit;
+class QuantumOperator;
 
 class QuantumComputer {
   public:
@@ -170,6 +58,12 @@ class QuantumComputer {
     /// return the number of basis states
     size_t get_nbasis() const { return nbasis_; }
 
+    /// return the number of one-qubit operations
+    size_t none_ops() const { return none_ops_; }
+
+    /// return the number of two-qubit operations
+    size_t ntwo_ops() const { return ntwo_ops_; }
+
     /// set the quantum computer to the state
     /// basis_1 * c_1 + basis_2 * c_2 + ...
     /// where this information is passed as a vectors of pairs
@@ -189,6 +83,10 @@ class QuantumComputer {
     std::vector<std::complex<double>> coeff_;
     /// the coefficients of the tensor product basis
     std::vector<std::complex<double>> new_coeff_;
+    /// the number of one-qubit operations
+    size_t none_ops_ = 0;
+    /// the number of two-qubit operations
+    size_t ntwo_ops_ = 0;
 
     /// the threshold for priting a determinant
     double print_threshold_ = 0.0;
@@ -196,8 +94,6 @@ class QuantumComputer {
     double compute_threshold_ = 1.0e-16;
 
     void apply_1qubit_gate(const QuantumGate& qg);
-
-    void apply_1qubit_gate_insertion(const QuantumGate& qg);
 
     void apply_2qubit_gate(const QuantumGate& qg);
 };

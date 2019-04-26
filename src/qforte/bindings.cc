@@ -2,8 +2,11 @@
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
 
+#include "quantum_basis.h"
+#include "quantum_circuit.h"
 #include "quantum_gate.h"
 #include "quantum_computer.h"
+#include "quantum_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -57,7 +60,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("control", &QuantumGate::control)
         .def("gate_id", &QuantumGate::gate_id)
         .def("adjoint", &QuantumGate::adjoint)
-        .def("__str__", &QuantumGate::str);
+        .def("__str__", &QuantumGate::str)
+        .def("__repr__", &QuantumGate::repr);
 
     m.def("make_gate", &make_gate, "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
 }
