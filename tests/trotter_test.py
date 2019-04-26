@@ -5,7 +5,7 @@ class ExperimentTests(unittest.TestCase):
     def test_trotterization(self):
 
         circ_vec = [qforte.build_circuit('Y_0 X_1'), qforte.build_circuit('X_0 Y_1')]
-        coef_vec = [-1.0719145972781818+0j, 1.0719145972781818+0j]
+        coef_vec = [-1.0719145972781818j, 1.0719145972781818j]
 
         # the operator to be exponentiated
         generator = qforte.QuantumOperator()
@@ -13,7 +13,7 @@ class ExperimentTests(unittest.TestCase):
             generator.add_term(coef_vec[i], circ_vec[i])
 
         # exponentiate the operator
-        troterized_gen = qforte.trotterization.trotterize(generator)
+        troterized_gen, phase = qforte.trotterization.trotterize(generator)
 
         # initalize a quantum computer
         qc = qforte.QuantumComputer(2)

@@ -7,11 +7,11 @@
 
 #include "qforte-def.h" // double_c
 
-template<class T>
-std::complex< T > complex_prod(std::complex< T > a, std::complex< T > b) { return std::conj<T>(a)*b; }
+template <class T> std::complex<T> complex_prod(std::complex<T> a, std::complex<T> b) {
+    return std::conj<T>(a) * b;
+}
 
-template<class T>
-std::complex< T > add_c(std::complex< T > a, std::complex< T > b) { return a+b; }
+template <class T> std::complex<T> add_c(std::complex<T> a, std::complex<T> b) { return a + b; }
 
 class QuantumGate;
 
@@ -73,8 +73,14 @@ class QuantumCircuit {
     /// add a gate
     void add_gate(const QuantumGate& gate) { gates_.push_back(gate); }
 
+    /// add a circuit
+    void add_circuit(const QuantumCircuit& circ);
+
     /// return a vector of gates
     const std::vector<QuantumGate>& gates() const { return gates_; }
+
+    /// return the number of gates
+    size_t size() const { return gates_.size(); }
 
     /// return the adjoint (conjugate transpose) of this QuantumCircuit
     QuantumCircuit adjoint();
@@ -106,20 +112,21 @@ class QuantumOperator {
     void build_from_openferm(std::string op) {}
 
     /// add a circuit as a term in the quantum operator
-    void add_term(std::complex<double> circ_coeff ,const QuantumCircuit& circuit) {
+    void add_term(std::complex<double> circ_coeff, const QuantumCircuit& circuit) {
         terms_.push_back(std::make_pair(circ_coeff, circuit));
     }
 
     /// return a vector of terms and thier coeficients
-    const std::vector<std::pair<std::complex<double>,QuantumCircuit>>& terms() const { return terms_; }
+    const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& terms() const {
+        return terms_;
+    }
 
     /// return a vector of string representing this quantum operator
     std::vector<std::string> str() const;
 
   private:
     /// the list of circuits
-    std::vector<std::pair<std::complex<double>,QuantumCircuit>> terms_;
-
+    std::vector<std::pair<std::complex<double>, QuantumCircuit>> terms_;
 };
 
 class QuantumComputer {
