@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "quantum_gate.h"
 
 #include "quantum_circuit.h"
