@@ -18,9 +18,8 @@ def exponentiate_single_term(factor, term):
     :param term: QuantumCircuit
         a Pauli string to be exponentiated
     """
-
     # This function assumes that the factor is imaginary. The following tests for it.
-    if not numpy.isclose(numpy.imag(factor), 0.0):
+    if numpy.real(factor) != 0.0:
         raise SystemExit('exponentiate_single_term() called with a real factor')
 
     # If the Pauli string has no terms this is just a phase factor
@@ -56,7 +55,7 @@ def exponentiate_single_term(factor, term):
         max_target = target
 
     #gate that actually contains the parameterization for the term
-    z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0 * numpy.real(factor))
+    z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0 * numpy.imag(factor))
 
     #assemble the actual exponential
     for gate in to_z.gates():
@@ -67,7 +66,7 @@ def exponentiate_single_term(factor, term):
     exponential.add_gate(z_rot)
 
     adj_gates = cX_circ.adjoint().gates()
-    for gate in reversed(adj_gates):
+    for gate in adj_gates:
         exponential.add_gate(gate)
     for gate in to_original.gates():
         exponential.add_gate(gate)
