@@ -53,7 +53,7 @@ QuantumGate QuantumGate::adjoint() const {
     for (const auto& i : index2) {
         for (const auto& j : index2) {
             adj_gate[j][i] = std::conj(gate_[i][j]);
-            if (std::norm(adj_gate[j][i] - gate_[j][i]) > 1.0e-12) {
+            if (std::norm(adj_gate[j][i] - gate_[i][j]) > 1.0e-12) {
                 self_adjoint = false;
             }
         }
