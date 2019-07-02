@@ -1,6 +1,7 @@
 #include <algorithm>
-#include "quantum_gate.h"
 
+#include "helpers.h"
+#include "quantum_gate.h"
 #include "quantum_circuit.h"
 
 void QuantumCircuit::set_parameters(const std::vector<double>& params) {
@@ -33,12 +34,12 @@ QuantumCircuit QuantumCircuit::adjoint() {
     return qcirc_adjoint;
 }
 
-std::vector<std::string> QuantumCircuit::str() const {
+std::string QuantumCircuit::str() const {
     std::vector<std::string> s;
     for (const auto& gate : gates_) {
         s.push_back(gate.str());
     }
-    return s;
+    return "[" + join(s, " ") + "]";
 }
 
 // std::vector<double> QuantumCircuit::get_parameters() {

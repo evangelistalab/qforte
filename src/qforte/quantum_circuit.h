@@ -29,7 +29,7 @@ class QuantumCircuit {
     void set_parameters(const std::vector<double>& params);
 
     /// return a vector of string representing this circuit
-    std::vector<std::string> str() const;
+    std::string str() const;
 
   private:
     /// the list of gates

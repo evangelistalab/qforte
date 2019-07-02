@@ -43,8 +43,10 @@ def exponentiate_single_term(factor, term):
             to_z.add_gate(qforte.make_gate('H', target, control))
             to_original.add_gate(qforte.make_gate('H', target, control))
         elif (id == 'Y'):
-            to_z.add_gate(qforte.make_gate('Rx', target, control, numpy.pi/2.0))
-            to_original.add_gate(qforte.make_gate('Rx', target, control, -numpy.pi/2.0))
+            to_z.add_gate(qforte.make_gate('Rzy', target, control))
+            to_original.add_gate(qforte.make_gate('Rzy', target, control))
+#            to_z.add_gate(qforte.make_gate('Rx', target, control, numpy.pi/2.0))
+#            to_original.add_gate(qforte.make_gate('Rx', target, control, -numpy.pi/2.0))
         elif (id == 'I'):
             continue
 
@@ -58,17 +60,13 @@ def exponentiate_single_term(factor, term):
     z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0 * numpy.imag(factor))
 
     #assemble the actual exponential
-    for gate in to_z.gates():
-        exponential.add_gate(gate)
-    for gate in cX_circ.gates():
-        exponential.add_gate(gate)
-
+    exponential.add_circuit(to_z)
+    exponential.add_circuit(cX_circ)
     exponential.add_gate(z_rot)
 
-    adj_gates = cX_circ.adjoint().gates()
-    for gate in adj_gates:
-        exponential.add_gate(gate)
-    for gate in to_original.gates():
-        exponential.add_gate(gate)
+    adj_cX_circ = cX_circ.adjoint()
+    exponential.add_circuit(adj_cX_circ)
+    adj_to_z = to_z.adjoint()
+    exponential.add_circuit(adj_to_z)
 
     return (exponential, 1.0)

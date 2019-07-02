@@ -24,7 +24,7 @@ class QuantumOperator {
     const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& terms() const;
 
     /// return a vector of string representing this quantum operator
-    std::vector<std::string> str() const;
+    std::string str() const;
 
   private:
     /// the list of circuits
