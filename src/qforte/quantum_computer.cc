@@ -115,6 +115,75 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc,
     return results;
 }
 
+double QuantumComputer::perfect_measure_circuit(const QuantumCircuit& qc) {
+    // initialize a "Basis_rotator" QC to represent the corresponding change
+    // of basis
+    QuantumCircuit Basis_rotator;
+
+    // copy old coefficients
+    std::vector<std::complex<double>> old_coeff = coeff_;
+
+    // TODO: make code more readable (Nick)
+    // TODO: add gate lable not via enum? (Nick)
+    // TODO: Acount for case where gate is only the identity
+
+    for (const QuantumGate& gate : qc.gates()) {
+        size_t target_qubit = gate.target();
+        std::string gate_id = gate.gate_id();
+        if (gate_id == "Z") {
+            QuantumGate temp = make_gate("I", target_qubit, target_qubit);
+            Basis_rotator.add_gate(temp);
+        } else if (gate_id == "X") {
+            QuantumGate temp = make_gate("H", target_qubit, target_qubit);
+            Basis_rotator.add_gate(temp);
+        } else if (gate_id == "Y") {
+            QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Basis_rotator.add_gate(temp);
+        } else if (gate_id != "I") {
+            // std::cout<<'unrecognized gate in operator!'<<std::endl;
+        }
+    }
+
+    // apply Basis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
+    apply_circuit(Basis_rotator);
+    // std::vector<double> probs(nbasis_);
+    // for (size_t k = 0; k < nbasis_; k++) {
+    //     probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]);
+    // }
+
+    // random number device
+    // std::random_device rd;
+    // std::mt19937 gen(rd());
+
+    // 'pick' an index from the discrete_distribution!
+    // std::discrete_distribution<> dd(std::begin(probs), std::end(probs));
+
+    // std::vector<double> results(n_measurements);
+
+    // for (size_t k = 0; k < n_measurements; k++) {
+    //     size_t measurement = dd(gen);
+    //     double value = 1.;
+    //     for (const QuantumGate& gate : qc.gates()) {
+    //         size_t target_qubit = gate.target();
+    //         value *= 1. - 2. * static_cast<double>(basis_[measurement].get_bit(target_qubit));
+    //     }
+    //     results[k] = value;
+    // }
+
+    double sum = 0.0;
+    for (size_t k = 0; k < nbasis_; k++){
+        double value = 1.0;
+        for (const QuantumGate& gate : qc.gates()) {
+            size_t target_qubit = gate.target();
+            value *= 1. - 2. * static_cast<double>(basis_[k].get_bit(target_qubit));
+        }
+        sum += std::real(value * coeff(basis_[k]) * std::conj(coeff(basis_[k])));
+    }
+
+    coeff_ = old_coeff;
+    return sum;
+}
+
 void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
     size_t target = qg.target();
     const auto& gate = qg.gate();
