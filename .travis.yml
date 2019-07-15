@@ -33,7 +33,6 @@ script:
 - conda info -a
 - conda create -q -n qforte python=$PYTHON_VER numpy cmake
 - source activate qforte
-- python -m pip install --user openfermion
 - python -V
 - cd ${TRAVIS_BUILD_DIR}
 - export CXX=${CXX_COMPILER}
