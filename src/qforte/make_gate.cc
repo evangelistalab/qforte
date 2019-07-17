@@ -154,51 +154,6 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             };
             return QuantumGate(type, target, control, gate);
         }
-        if (type == "cRx") {
-            std::complex<double> a = std::cos(0.5 * parameter);
-            std::complex<double> b = 1.0i * std::sin(0.5 * parameter);
-            std::complex<double> gate[4][4]{
-                {1.0, 0.0, 0.0, 0.0},
-                {0.0, 1.0, 0.0, 0.0},
-                {0.0, 0.0, +a, -b},
-                {0.0, 0.0, -b, +a},
-            };
-            return QuantumGate(type, target, control, gate);
-        }
-        if (type == "cRy") {
-            std::complex<double> a = std::cos(0.5 * parameter);
-            std::complex<double> b = std::sin(0.5 * parameter);
-            std::complex<double> gate[4][4]{
-                {1.0, 0.0, 0.0, 0.0},
-                {0.0, 1.0, 0.0, 0.0},
-                {0.0, 0.0, +a, -b},
-                {0.0, 0.0, +b, +a},
-            };
-            return QuantumGate(type, target, control, gate);
-        }
-        if (type == "cRz") {
-            std::complex<double> tmp_a = -1.0i * 0.5 * parameter;
-            std::complex<double> a = std::exp(tmp_a);
-            std::complex<double> tmp_b = 1.0i * 0.5 * parameter;
-            std::complex<double> b = std::exp(tmp_b);
-            std::complex<double> gate[4][4]{
-                {1.0, 0.0, 0.0, 0.0},
-                {0.0, 1.0, 0.0, 0.0},
-                {0.0, 0.0, a, 0.0},
-                {0.0, 0.0, 0.0, b},
-            };
-            return QuantumGate(type, target, control, gate);
-        }
-        if (type == "cH") {
-            std::complex<double> c = 1.0 / std::sqrt(2.0);
-            std::complex<double> gate[4][4]{
-                {1.0, 0.0, 0.0, 0.0},
-                {0.0, 1.0, 0.0, 0.0},
-                {0.0, 0.0, +c, +c},
-                {0.0, 0.0, +c, -c},
-            };
-            return QuantumGate(type, target, control, gate);
-        }
         if (type == "cV") {
             std::complex<double> a = 1.0i * 0.5 + 0.5;
             std::complex<double> b = -1.0i * 0.5 + 0.5;
