@@ -64,4 +64,5 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", &QuantumGate::repr);
 
     m.def("make_gate", &make_gate, "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
+    m.def("make_control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);
 }
