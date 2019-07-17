@@ -238,6 +238,11 @@ QuantumGate make_control_gate(size_t control, QuantumGate& U) {
     using namespace std::complex_literals;
     std::string type = "cU";
     size_t target = U.target();
+    if (target == control) {
+        std::string msg =
+            fmt::format("Cannot create Control-U where targer == control !");
+        throw std::invalid_argument(msg);
+    }
     std::complex<double> a = U.gate()[0][0];
     std::complex<double> b = U.gate()[0][1];
     std::complex<double> c = U.gate()[1][0];
