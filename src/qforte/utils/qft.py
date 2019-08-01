@@ -34,8 +34,12 @@ def qft_circuit(na, nb, direct):
 
     if direct == 'forward':
         return qft_circ
-    if direct == 'reverse':
-        return qft_circ.adjoint()
+    else:
+        if direct == 'reverse':
+            return qft_circ.adjoint()
+        else:
+            raise SystemExit('QFT directions can only be "forward" or "reverse"')
+            
 
     return qft_circ
 
