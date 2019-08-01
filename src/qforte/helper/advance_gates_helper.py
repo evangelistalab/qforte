@@ -49,7 +49,6 @@ def Toffoli(i,j,k):
 
 def Fredkin(i,j,k):
 
-
     """
     builds a circuit to simulate a three-qubit Fredkin gate
     (Controled-SWAP, CSWAP gate).
@@ -74,15 +73,4 @@ def Fredkin(i,j,k):
     F_circ.add_gate(C12)
 
     return F_circ
-
-
-
-
-
-
-
-
-
-
-
 
