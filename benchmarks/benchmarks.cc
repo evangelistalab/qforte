@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream> // std::filebuf
 
-#include "hayai/hayai.hpp"
+//#include "hayai/hayai.hpp"
 //#include "hayai/hayai_main.hpp"
 
 #include "quantum_basis.h"
@@ -10,176 +10,85 @@
 #include "quantum_gate.h"
 
 QuantumBasis qb;
-size_t acc;
-constexpr int nqbits = 16;
-QuantumComputer qc(nqbits);
-QuantumCircuit qcirc;
-QuantumGate qg = make_gate("X", 15,15);
+
+QuantumComputer qc_4(4);
+QuantumComputer qc_8(8);
+QuantumComputer qc_16(16);
+QuantumComputer qc_18(18);
+
+QuantumCircuit qcirc_4;
+QuantumCircuit qcirc_8;
+QuantumCircuit qcirc_16;
+QuantumCircuit qcirc_18;
+
+QuantumGate qg = make_gate("X", 7, 7);
+
+std::vector<QuantumComputer> computers;
 
 void prepare_circ(QuantumCircuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end; i++) {
         qcirc.add_gate(make_gate("X", i, i));
-        //        qcirc.add_gate(make_gate("Y", i, i));
-        //        qcirc.add_gate(make_gate("Z", i, i));
     }
 }
 
-int main(int argc, char* argv[]) {
-    for (int i = 0; i < nqbits; i++) {
-        qc.apply_gate(make_gate("H", i, i));
-    }
-    prepare_circ(qcirc, 0, nqbits);
-    hayai::ConsoleOutputter consoleOutputter;
-    hayai::Benchmarker::AddOutputter(consoleOutputter);
-    hayai::Benchmarker::RunAllTests();
-    std::cout << acc;
-    return 0;
+// prepare_circ(qcirc_8, 0, 8);
+// prepare_circ(qcirc_16, 0, 16);
+// prepare_circ(qcirc_18, 0, 18);
 
-    //    std::filebuf fb;
-    //    fb.open("bench.json", std::ios::out);
-    //    std::ostream json(&fb);
+#include <string>
+#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+#include <catch.hpp>
 
-    //    // Set up the main runner.
-    //    hayai::MainRunner runner;
+using namespace std;
 
-    //    // Parse the arguments.
-    //    int result = runner.ParseArgs(argc, argv);
-    //    if (result)
-    //        return result;
+TEST_CASE("QuantumComputer", "[benchmark]") {
+    prepare_circ(qcirc_4, 0, 4);
+    prepare_circ(qcirc_8, 0, 8);
+    prepare_circ(qcirc_16, 0, 16);
+    prepare_circ(qcirc_18, 0, 18);
 
-    //    //    hayai::ConsoleOutputter consoleOutputter;
-    //    //    hayai::JsonOutputter JSONOutputter(json);
+    BENCHMARK("qc_4_apply_circuit") { qc_4.apply_circuit(qcirc_4); }
 
-    //    //    hayai::Benchmarker::AddOutputter(consoleOutputter);
-    //    //    hayai::Benchmarker::AddOutputter(JSONOutputter);
-    //    //    hayai::Benchmarker::RunAllTests();
+    BENCHMARK("qc_8_apply_circuit") { qc_8.apply_circuit(qcirc_8); }
 
-    //    // Execute based on the selected mode.
-    //    auto return_value = runner.Run();
-    //    fb.close();
-    //    return return_value;
+    BENCHMARK("qc_16_apply_circuit") { qc_16.apply_circuit(qcirc_16); }
+
+    BENCHMARK("qc_18_apply_circuit") { qc_18.apply_circuit(qcirc_18); }
 }
 
-BENCHMARK(QuantumBasis, set_bit, 10, 100000) {
-    for (int i = 0; i < 64; ++i) {
-        acc += qb.set_bit(i, true);
-        acc += qb.set_bit(i, false);
-    }
-}
+// int main(int argc, char* argv[]) {
+//    prepare_circ(qcirc_8, 0, 8);
+//    prepare_circ(qcirc_16, 0, 16);
+//    prepare_circ(qcirc_18, 0, 18);
 
-BENCHMARK(QuantumBasis, set_bit2, 10, 100000) {
-    for (int i = 0; i < 64; ++i) {
-        qb.set_bit2(i, true);
-        qb.set_bit2(i, false);
-    }
-}
+//    // Set up the main runner.
+//    hayai::MainRunner runner;
 
-BENCHMARK(QuantumBasis, set_bit3, 10, 100000) {
-    for (int i = 0; i < 64; ++i) {
-        qb.set_bit3(i, true);
-        qb.set_bit3(i, false);
-    }
-}
+//    // Parse the arguments.
+//    int result = runner.ParseArgs(argc, argv);
+//    if (result)
+//        return result;
 
-BENCHMARK(QuantumComputer, apply_gate, 10, 1000) { qc.apply_gate(qg); }
-
-BENCHMARK(QuantumComputer, apply_gate_fast, 10, 1000) { qc.apply_gate_fast(qg); }
-
-// BENCHMARK(QuantumComputer, apply_circuit, 100, 1000) { qc.apply_circuit(qcirc); }
-
-// BENCHMARK(QuantumComputer, apply_circuit, 100, 1000) { qc.apply_circuit(qcirc); }
-
-// BENCHMARK(Determinant128, get_bit 10, 100)
-//{
-//    det32_a.get_bit(19);
+//    // Execute based on the selected mode.
+//    return runner.Run();
+//    //    hayai::ConsoleOutputter consoleOutputter;
+//    //    hayai::Benchmarker::AddOutputter(consoleOutputter);
+//    //    hayai::Benchmarker::RunAllTests();
+//    return 0;
 //}
 
-// BENCHMARK_P(Determinant128, get_alfa_bit, 10, 1000000, (std::size_t n)) {
-//    acc1 += det128_a.get_alfa_bit(n);
-//}
-// BENCHMARK_P_INSTANCE(Determinant128, get_alfa_bit, (2));
-
-// BENCHMARK_P(Determinant128, get_bit, 10, 1000000, (std::size_t n)) { det128_a.get_bit(n); }
-// BENCHMARK_P_INSTANCE(Determinant128, get_bit, (2));
-
-// BENCHMARK_P(Determinant128, get_alfa_bit, 10, 1000000, (std::size_t n)) { acc1 +=
-// det128_a.get_alfa_bit(n); } BENCHMARK_P_INSTANCE(Determinant128, get_alfa_bit, (2));
-
-// BENCHMARK_P(Determinant128, get_beta_bit, 10, 1000000, (std::size_t n)) {
-// det128_a.get_beta_bit(n); } BENCHMARK_P_INSTANCE(Determinant128, get_beta_bit, (2));
-
-// BENCHMARK(Determinant128, compare, 10, 1000000)
-//{ det128_a == det128_b; }
-
-// BENCHMARK(Determinant128, allocate, 10, 100000)
-//{ Determinant<128> d; }
-
-// Determinant<1024> det1024_a;
-// Determinant<1024> det1024_b = det1024_a;
-
-// BENCHMARK(Determinant1024, compare, 10, 1000000)
-//{ det1024_a == det1024_b; }
-
-// BENCHMARK(Determinant1024, allocate, 10, 100000)
-//{ Determinant<1024> d; }
-
-// BENCHMARK(UI64Determinant, count, 10, 1000) {
-//    det_test.count_alfa();
-//    det_test.count_beta();
-//}
-
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (2));
-
-// BENCHMARK_P(UI64Determinant, sign_a, 10, 10000, (std::size_t n)) { det_test.slater_sign_a(n); }
-
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (2));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (16));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (32));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (63));
-
-// UI64Determinant make_det_from_string(std::string s_a, std::string s_b) {
-//    UI64Determinant d;
-//    if (s_a.size() == s_b.size()) {
-//        for (std::string::size_type i = 0; i < s_a.size(); ++i) {
-//            d.set_alfa_bit(i, s_a[i] == '0' ? 0 : 1);
-//            d.set_beta_bit(i, s_b[i] == '0' ? 0 : 1);
-//        }
-//    } else {
-//        std::cout << "\n\n  Function make_det_from_string called with strings of different size";
-//        exit(1);
+// BENCHMARK(QuantumBasis, set_bit, 10, 100000) {
+//    for (int i = 0; i < 64; ++i) {
+//        qb.set_bit(i, true);
+//        qb.set_bit(i, false);
 //    }
-//    return d;
 //}
 
-// UI64Determinant det_test =
-//    make_det_from_string("1001100000000000000000000000000000000000000000000000000000010000",
-//                         "0001000000000000001000000000000000000000000000000000000000000001");
+// BENCHMARK(QuantumComputer, qc_8_apply_gate, 100, 1) { qc_8.apply_circuit(qcirc_8); }
+// BENCHMARK(QuantumComputer, qc_16_apply_gate, 100, 1) { qc_16.apply_circuit(qcirc_16); }
+// BENCHMARK(QuantumComputer, qc_18_apply_gate, 100, 1) { qc_18.apply_circuit(qcirc_18); }
 
-// BENCHMARK(UI64Determinant, count, 10, 1000) {
-//    det_test.count_alfa();
-//    det_test.count_beta();
-//}
-
-// BENCHMARK_P(UI64Determinant, sign_a, 10, 10000, (std::size_t n)) { det_test.slater_sign_a(n); }
-
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (2));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (16));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (32));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_a, (63));
-
-// BENCHMARK_P(UI64Determinant, sign_aa, 10, 10000, (std::size_t m, std::size_t n)) {
-//    det_test.slater_sign_aa(m, n);
-//}
-
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_aa, (1, 2));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_aa, (8, 16));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_aa, (16, 32));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_aa, (32, 63));
-
-// BENCHMARK_P(UI64Determinant, sign_aaaa, 10, 10000, (int i, int j, int a, int b)) {
-//    det_test.slater_sign_aaaa(i, j, a, b);
-//}
-
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_aaaa, (1, 4, 32, 63));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_aaaa, (1, 4, 63, 32));
-// BENCHMARK_P_INSTANCE(UI64Determinant, sign_aaaa, (63, 32, 1, 4));
+// BENCHMARK(QuantumComputer, qc_8_apply_gate_fast, 100, 1) { qc_8.apply_circuit_fast(qcirc_8); }
+// BENCHMARK(QuantumComputer, qc_16_apply_gate_fast, 100, 1) { qc_16.apply_circuit_fast(qcirc_16); }
+// BENCHMARK(QuantumComputer, qc_18_apply_gate_fast, 100, 1) { qc_18.apply_circuit_fast(qcirc_18); }

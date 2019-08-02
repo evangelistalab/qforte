@@ -36,14 +36,15 @@ void QuantumComputer::set_state(std::vector<std::pair<QuantumBasis, double_c>> s
 void QuantumComputer::zero_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
 
 void QuantumComputer::apply_circuit(const QuantumCircuit& qc) {
-    const auto& gates = qc.gates();
-
-    for (size_t n = 0, nmax = gates.size(); n < nmax; n++) {
-        apply_gate(gates[n]);
+    for (const auto& gate : qc.gates()) {
+        apply_gate(gate);
     }
-    //    for (const auto& gate : gates) {
-    //        apply_gate(gate);
-    //    }
+}
+
+void QuantumComputer::apply_circuit_fast(const QuantumCircuit& qc) {
+    for (const auto& gate : qc.gates()) {
+        apply_gate_fast(gate);
+    }
 }
 
 void QuantumComputer::apply_gate(const QuantumGate& qg) {
@@ -161,14 +162,16 @@ void QuantumComputer::apply_1qubit_gate_fast(const QuantumGate& qg) {
     size_t target = qg.target();
     const auto& gate = qg.gate();
 
+    size_t block_size = std::pow(2, target);
+    size_t block_offset = 2 * block_size;
+
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
             // bit target goes from j -> i
             auto op_i_j = gate[i][j];
-            size_t block_start_j = j * std::pow(2, target);
-            size_t block_start_i = i * std::pow(2, target);
-            size_t block_end_j = block_start_j + std::pow(2, target);
-            size_t block_offset = std::pow(2, target + 1);
+            size_t block_start_j = j * block_size;
+            size_t block_start_i = i * block_size;
+            size_t block_end_j = block_start_j + block_size;
 
             for (; block_end_j < nbasis_;) {
                 for (size_t J = block_start_j, I = block_start_i; J < block_end_j; ++J, ++I) {

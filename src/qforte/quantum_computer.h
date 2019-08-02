@@ -24,11 +24,10 @@ class QuantumComputer {
 
     /// apply a quantum circuit to the current state
     void apply_circuit(const QuantumCircuit& qc);
+    void apply_circuit_fast(const QuantumCircuit& qc);
 
     /// apply a gate to the quantum computer
     void apply_gate(const QuantumGate& qg);
-
-    /// apply a gate to the quantum computer
     void apply_gate_fast(const QuantumGate& qg);
 
     /// measure the state of the quanum computer in basis of circuit
