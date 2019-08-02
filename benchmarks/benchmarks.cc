@@ -11,13 +11,13 @@
 
 QuantumBasis qb;
 size_t acc;
-constexpr int nqbits = 10;
+constexpr int nqbits = 16;
 QuantumComputer qc(nqbits);
 QuantumCircuit qcirc;
-QuantumGate qg = make_gate("X", 5, 5);
+QuantumGate qg = make_gate("X", 15,15);
 
-void prepare_circ(QuantumCircuit& qcirc, size_t nqbits) {
-    for (size_t i = 0; i < nqbits; i++) {
+void prepare_circ(QuantumCircuit& qcirc, size_t start, size_t end) {
+    for (size_t i = start; i < end; i++) {
         qcirc.add_gate(make_gate("X", i, i));
         //        qcirc.add_gate(make_gate("Y", i, i));
         //        qcirc.add_gate(make_gate("Z", i, i));
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < nqbits; i++) {
         qc.apply_gate(make_gate("H", i, i));
     }
-    prepare_circ(qcirc, 10);
+    prepare_circ(qcirc, 0, nqbits);
     hayai::ConsoleOutputter consoleOutputter;
     hayai::Benchmarker::AddOutputter(consoleOutputter);
     hayai::Benchmarker::RunAllTests();
@@ -81,10 +81,11 @@ BENCHMARK(QuantumBasis, set_bit3, 10, 100000) {
     }
 }
 
-BENCHMARK(QuantumComputer, apply_gate, 100, 1000) { qc.apply_gate(qg); }
-//BENCHMARK(QuantumComputer, apply_1qubit_gate, 100, 1000) { qc.apply_1qubit_gate(qg); }
+BENCHMARK(QuantumComputer, apply_gate, 10, 1000) { qc.apply_gate(qg); }
 
- BENCHMARK(QuantumComputer, apply_circuit, 100, 1000) { qc.apply_circuit(qcirc); }
+BENCHMARK(QuantumComputer, apply_gate_fast, 10, 1000) { qc.apply_gate_fast(qg); }
+
+// BENCHMARK(QuantumComputer, apply_circuit, 100, 1000) { qc.apply_circuit(qcirc); }
 
 // BENCHMARK(QuantumComputer, apply_circuit, 100, 1000) { qc.apply_circuit(qcirc); }
 

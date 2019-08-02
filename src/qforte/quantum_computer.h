@@ -28,6 +28,9 @@ class QuantumComputer {
     /// apply a gate to the quantum computer
     void apply_gate(const QuantumGate& qg);
 
+    /// apply a gate to the quantum computer
+    void apply_gate_fast(const QuantumGate& qg);
+
     /// measure the state of the quanum computer in basis of circuit
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
 
@@ -75,7 +78,7 @@ class QuantumComputer {
   private:
     /// the number of qubits
     size_t nqubit_;
-    /// the number of basis states
+    /// the number of basis states (2 ^ nqubit_)
     size_t nbasis_;
     /// the tensor product basis
     std::vector<QuantumBasis> basis_;
@@ -94,6 +97,8 @@ class QuantumComputer {
     double compute_threshold_ = 1.0e-16;
 
     void apply_1qubit_gate(const QuantumGate& qg);
+
+    void apply_1qubit_gate_fast(const QuantumGate& qg);
 
     void apply_2qubit_gate(const QuantumGate& qg);
 };

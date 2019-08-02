@@ -60,6 +60,20 @@ void QuantumComputer::apply_gate(const QuantumGate& qg) {
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
 }
 
+void QuantumComputer::apply_gate_fast(const QuantumGate& qg) {
+    int nqubits = qg.nqubits();
+
+    if (nqubits == 1) {
+        apply_1qubit_gate_fast(qg);
+    }
+    if (nqubits == 2) {
+        apply_2qubit_gate(qg);
+    }
+
+    coeff_ = new_coeff_;
+    std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
+}
+
 std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc,
                                                      size_t n_measurements) {
     // initialize a "Basis_rotator" QC to represent the corresponding change
@@ -120,45 +134,54 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc,
     return results;
 }
 
+#include <iostream>
+
 void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
     size_t target = qg.target();
     const auto& gate = qg.gate();
 
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
-            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
-                for (const QuantumBasis& basis_J : basis_) {
-                    if (basis_J.get_bit(target) == j) {
-                        QuantumBasis basis_I = basis_J;
-                        basis_I.set_bit(target, i);
-                        new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
-                    }
+            auto op_i_j = gate[i][j];
+            //            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
+            for (const QuantumBasis& basis_J : basis_) {
+                if (basis_J.get_bit(target) == j) {
+                    QuantumBasis basis_I = basis_J;
+                    basis_I.set_bit(target, i);
+                    new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
                 }
+                //                }
             }
         }
     }
     none_ops_++;
 }
 
-//void QuantumComputer::apply_1qubit_gate_fast(const QuantumGate& qg) {
-//    size_t target = qg.target();
-//    const auto& gate = qg.gate();
+void QuantumComputer::apply_1qubit_gate_fast(const QuantumGate& qg) {
+    size_t target = qg.target();
+    const auto& gate = qg.gate();
 
-//    for (size_t i = 0; i < 2; i++) {
-//        for (size_t j = 0; j < 2; j++) {
-//            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
-////                for (const QuantumBasis& basis_J : basis_) {
-////                    if (basis_J.get_bit(target) == j) {
-////                        QuantumBasis basis_I = basis_J;
-////                        basis_I.set_bit(target, i);
-////                        new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
-////                    }
-////                }
-//            }
-//        }
-//    }
-//    none_ops_++;
-//}
+    for (size_t i = 0; i < 2; i++) {
+        for (size_t j = 0; j < 2; j++) {
+            // bit target goes from j -> i
+            auto op_i_j = gate[i][j];
+            size_t block_start_j = j * std::pow(2, target);
+            size_t block_start_i = i * std::pow(2, target);
+            size_t block_end_j = block_start_j + std::pow(2, target);
+            size_t block_offset = std::pow(2, target + 1);
+
+            for (; block_end_j < nbasis_;) {
+                for (size_t J = block_start_j, I = block_start_i; J < block_end_j; ++J, ++I) {
+                    new_coeff_[I] += op_i_j * coeff_[J];
+                }
+                block_start_j += block_offset;
+                block_start_i += block_offset;
+                block_end_j += block_offset;
+            }
+        }
+    }
+    none_ops_++;
+}
 
 void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
     const auto& two_qubits_basis = QuantumGate::two_qubits_basis();
