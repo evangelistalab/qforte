@@ -8,22 +8,22 @@ class QFTTests(unittest.TestCase):
         trial_state.apply_circuit(trial_circ)
 
         # verify direct transformation
-        qft(trial_state, 4)
+        qft(trial_state, 0, 3)
 
         a1_dag_a2 = qforte.build_operator('1.0, Z_0')
         exp = trial_state.direct_op_exp_val(a1_dag_a2)
         self.assertAlmostEqual(exp, 0.0 + 0.0j)
 
         # test unitarity
-        qft(trial_state, 3)
-        rev_qft(trial_state, 3)
+        qft(trial_state, 0, 2)
+        rev_qft(trial_state, 0, 2)
 
         a1_dag_a2 = qforte.build_operator('1.0, Z_0')
         exp = trial_state.direct_op_exp_val(a1_dag_a2)
         self.assertAlmostEqual(exp, 0.0 + 0.0j)
 
         # test reverse transformation
-        qft(trial_state, 4)
+        qft(trial_state, 0, 3)
 
         a1_dag_a2 = qforte.build_operator('1.0, Z_0')
         exp = trial_state.direct_op_exp_val(a1_dag_a2)
