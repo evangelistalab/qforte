@@ -33,6 +33,16 @@ class QuantumBasis {
         return (val ? (state_ |= maskbit(pos)) : state_ &= ~maskbit(pos));
     }
 
+    void set_bit2(size_t pos, bool val) {
+        state_ ^= (-val ^ state_) & maskbit(pos);
+//        return state_;
+    }
+
+    void set_bit3(size_t pos, bool val) {
+        pos = maskbit(pos);
+        state_ = (state_ & ~pos) | (-val & pos);
+    }
+
     void set(basis_t state);
 
     void zero() { state_ = static_cast<basis_t>(0); }
