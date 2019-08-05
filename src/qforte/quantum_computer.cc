@@ -47,6 +47,12 @@ void QuantumComputer::apply_circuit_fast(const QuantumCircuit& qc) {
     }
 }
 
+void QuantumComputer::apply_circuit_fast2(const QuantumCircuit& qc) {
+    for (const auto& gate : qc.gates()) {
+        apply_gate_fast2(gate);
+    }
+}
+
 void QuantumComputer::apply_gate(const QuantumGate& qg) {
     int nqubits = qg.nqubits();
 
@@ -73,6 +79,17 @@ void QuantumComputer::apply_gate_fast(const QuantumGate& qg) {
 
     coeff_ = new_coeff_;
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
+}
+
+void QuantumComputer::apply_gate_fast2(const QuantumGate& qg) {
+    int nqubits = qg.nqubits();
+
+    if (nqubits == 1) {
+        apply_1qubit_gate_fast(qg);
+    }
+    if (nqubits == 2) {
+        apply_2qubit_gate(qg);
+    }
 }
 
 std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc,
@@ -169,17 +186,76 @@ void QuantumComputer::apply_1qubit_gate_fast(const QuantumGate& qg) {
         for (size_t j = 0; j < 2; j++) {
             // bit target goes from j -> i
             auto op_i_j = gate[i][j];
-            size_t block_start_j = j * block_size;
-            size_t block_start_i = i * block_size;
-            size_t block_end_j = block_start_j + block_size;
+            if (std::abs(op_i_j) > compute_threshold_) {
+                size_t block_start_j = j * block_size;
+                size_t block_start_i = i * block_size;
+                size_t block_end_j = block_start_j + block_size;
 
-            for (; block_end_j < nbasis_;) {
-                for (size_t J = block_start_j, I = block_start_i; J < block_end_j; ++J, ++I) {
-                    new_coeff_[I] += op_i_j * coeff_[J];
+                for (; block_end_j <= nbasis_;) {
+                    for (size_t J = block_start_j, I = block_start_i; J < block_end_j; ++J, ++I) {
+                        new_coeff_[I] += op_i_j * coeff_[J];
+                    }
+                    block_start_j += block_offset;
+                    block_start_i += block_offset;
+                    block_end_j += block_offset;
                 }
-                block_start_j += block_offset;
-                block_start_i += block_offset;
-                block_end_j += block_offset;
+            }
+        }
+    }
+    none_ops_++;
+}
+
+void QuantumComputer::apply_1qubit_gate_fast2(const QuantumGate& qg) {
+    size_t target = qg.target();
+    const auto& gate = qg.gate();
+
+    size_t block_size = std::pow(2, target);
+    size_t block_offset = 2 * block_size;
+
+    // bit target goes from j -> i
+    auto op_0_0 = gate[0][0];
+    auto op_0_1 = gate[0][1];
+    auto op_1_0 = gate[1][0];
+    auto op_1_1 = gate[1][1];
+
+    if (std::abs(op_0_1) + std::abs(op_1_0) > compute_threshold_) {
+        // Case I: this matrix has off-diagonal elements. Apply standard algorithm
+        size_t block_start_0 = 0;
+        size_t block_start_1 = block_size;
+        size_t block_end_0 = block_start_0 + block_size;
+        for (; block_end_0 <= nbasis_;) {
+            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                auto x0 = coeff_[I0];
+                auto x1 = coeff_[I1];
+                coeff_[I0] = op_0_0 * x0 + op_0_1 * x1;
+                coeff_[I1] = op_1_0 * x0 + op_1_1 * x1;
+            }
+            block_start_0 += block_offset;
+            block_start_1 += block_offset;
+            block_end_0 += block_offset;
+        }
+    } else {
+        // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
+        if (op_0_0 != 1.0) {
+            size_t block_start_0 = 0;
+            size_t block_end_0 = block_start_0 + block_size;
+            for (; block_end_0 <= nbasis_;) {
+                for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
+                    coeff_[I0] = op_0_0 * coeff_[I0];
+                }
+                block_start_0 += block_offset;
+                block_end_0 += block_offset;
+            }
+        }
+        if (op_1_1 != 1.0) {
+            size_t block_start_1 = block_size;
+            size_t block_end_1 = block_start_1 + block_size;
+            for (; block_end_1 <= nbasis_;) {
+                for (size_t I1 = block_start_1; I1 < block_end_1; ++I1) {
+                    coeff_[I1] = op_1_1 * coeff_[I1];
+                }
+                block_start_1 += block_offset;
+                block_end_1 += block_offset;
             }
         }
     }
@@ -201,7 +277,7 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
             const auto j_t = two_qubits_basis[j].second;
             auto op_i_j = gate[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
-                //            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
+                // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
                 for (const QuantumBasis& basis_J : basis_) {
                     if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
                         QuantumBasis basis_I = basis_J;

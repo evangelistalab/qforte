@@ -25,10 +25,12 @@ class QuantumComputer {
     /// apply a quantum circuit to the current state
     void apply_circuit(const QuantumCircuit& qc);
     void apply_circuit_fast(const QuantumCircuit& qc);
+    void apply_circuit_fast2(const QuantumCircuit& qc);
 
     /// apply a gate to the quantum computer
     void apply_gate(const QuantumGate& qg);
     void apply_gate_fast(const QuantumGate& qg);
+    void apply_gate_fast2(const QuantumGate& qg);
 
     /// measure the state of the quanum computer in basis of circuit
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
@@ -98,6 +100,8 @@ class QuantumComputer {
     void apply_1qubit_gate(const QuantumGate& qg);
 
     void apply_1qubit_gate_fast(const QuantumGate& qg);
+
+    void apply_1qubit_gate_fast2(const QuantumGate& qg);
 
     void apply_2qubit_gate(const QuantumGate& qg);
 };
