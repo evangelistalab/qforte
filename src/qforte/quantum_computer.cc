@@ -199,7 +199,9 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
         for (size_t j = 0; j < 4; j++) {
             const auto j_c = two_qubits_basis[j].first;
             const auto j_t = two_qubits_basis[j].second;
-            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
+            auto op_i_j = gate[i][j];
+            if (std::abs(op_i_j) > compute_threshold_) {
+                //            if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) {
                 for (const QuantumBasis& basis_J : basis_) {
                     if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
                         QuantumBasis basis_I = basis_J;
