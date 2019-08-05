@@ -28,7 +28,7 @@ std::vector<QuantumComputer> computers;
 
 void prepare_circ(QuantumCircuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end; i++) {
-        qcirc.add_gate(make_gate("Z", i, i));
+        qcirc.add_gate(make_gate("H", i, i));
         //        qcirc.add_gate(make_gate("Y", i, i));
         //        qcirc.add_gate(make_gate("Y", i, i));
     }
