@@ -88,9 +88,7 @@ void QuantumComputer::apply_gate_fast2(const QuantumGate& qg) {
         apply_1qubit_gate_fast2(qg);
     }
     if (nqubits == 2) {
-        apply_2qubit_gate(qg);
-        coeff_ = new_coeff_;
-        std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
+        apply_2qubit_gate_fast2(qg);
     }
 }
 
@@ -330,99 +328,251 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
     ntwo_ops_++;
 }
 
-void QuantumComputer::apply_1qubit_gate_fast2(const QuantumGate& qg) {
-    size_t target = qg.target();
+void QuantumComputer::apply_2qubit_gate_fast2(const QuantumGate& qg) {
+    const size_t target = qg.target();
+    const size_t control = qg.control();
+
+    // size_t inner_bit = std::min(target,control)
+    // size_t outer_bit = std::max(target,control)
+
     const auto& gate = qg.gate();
 
+    // bit target goes from j -> i
+    const auto op_2_2 = gate[2][2];
+    const auto op_2_3 = gate[2][3];
+    const auto op_3_2 = gate[3][2];
+    const auto op_3_3 = gate[3][3];
+
     if(std::abs(gate[0][1]) + std::abs(gate[1][0]) < compute_threshold_ ){
-    // Case I:
+    // Case I: 2qubit gate is a control gate
+        if(target < control){
+        // Case I-A: control bit is larger than target
+            const size_t outer_block_size = std::pow(2, control);
+            const size_t outer_block_offset = 2 * outer_block_size;
 
-        const size_t block_size = std::pow(2, target);
-        const size_t block_offset = 2 * block_size;
+            const size_t block_size = std::pow(2, target);
+            const size_t block_offset = 2 * block_size;
 
-        // bit target goes from j -> i
-        const auto op_2_2 = gate[2][2];
-        const auto op_2_3 = gate[2][3];
-        const auto op_3_2 = gate[3][2];
-        const auto op_3_3 = gate[3][3];
 
-        if ((std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) and
-            (std::abs(op_2_3) + std::abs(op_3_2) > compute_threshold_)) {
-            // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
-            size_t block_start_0 = 0;
-            size_t block_start_1 = block_size;
-            size_t block_end_0 = block_start_0 + block_size;
-            for (; block_end_0 <= nbasis_;) {
-                for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
-                    const auto x0 = coeff_[I0];
-                    const auto x1 = coeff_[I1];
-                    coeff_[I0] = op_2_2 * x0 + op_2_3 * x1;
-                    coeff_[I1] = op_3_2 * x0 + op_3_3 * x1;
-                }
-                block_start_0 += block_offset;
-                block_start_1 += block_offset;
-                block_end_0 += block_offset;
-            }
-        } else if (std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) {
-            // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
-            if (op_2_2 != 1.0) {
-            // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
-                size_t block_start_0 = 0;
-                size_t block_end_0 = block_start_0 + block_size;
-                for (; block_end_0 <= nbasis_;) {
-                    for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
-                        coeff_[I0] = op_2_2 * coeff_[I0];
+            // if ((std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) and
+            //     (std::abs(op_2_3) + std::abs(op_3_2) > compute_threshold_)) {
+                // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
+                size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
+
+                size_t block_start_0 = outer_block_size;
+                size_t block_start_1 = outer_block_size + block_size;
+                size_t block_end_0 = outer_block_size + block_size;
+
+                for (; outer_block_end <= nbasis_;){
+
+                    for (; block_end_0 <= outer_block_end;) {
+                        for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                            const auto x0 = coeff_[I0];
+                            const auto x1 = coeff_[I1];
+                            coeff_[I0] = op_2_2 * x0 + op_2_3 * x1;
+                            coeff_[I1] = op_3_2 * x0 + op_3_3 * x1;
+                        }
+                        block_start_0 += block_offset;
+                        block_start_1 += block_offset;
+                        block_end_0 += block_offset;
                     }
-                    block_start_0 += block_offset;
-                    block_end_0 += block_offset;
+                    block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
+                    block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
+                    block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                    outer_block_end += outer_block_offset;
                 }
-            }
-            if (op_3_3 != 1.0) {
-                // Case II-B: changes portion of coeff_ only if g_11 is not 1.0
-                size_t block_start_1 = block_size;
-                size_t block_end_1 = block_start_1 + block_size;
-                for (; block_end_1 <= nbasis_;) {
-                    for (size_t I1 = block_start_1; I1 < block_end_1; ++I1) {
-                        coeff_[I1] = op_3_3 * coeff_[I1];
+            // } else if (std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) {
+            //     // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
+            //     if (op_2_2 != 1.0) {
+            //     // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
+            //         size_t block_start_0 = 0;
+            //         size_t block_end_0 = block_start_0 + block_size;
+            //         for (; block_end_0 <= nbasis_;) {
+            //             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
+            //                 coeff_[I0] = op_2_2 * coeff_[I0];
+            //             }
+            //             block_start_0 += block_offset;
+            //             block_end_0 += block_offset;
+            //         }
+            //     }
+            //     if (op_3_3 != 1.0) {
+            //         // Case II-B: changes portion of coeff_ only if g_11 is not 1.0
+            //         size_t block_start_1 = block_size;
+            //         size_t block_end_1 = block_start_1 + block_size;
+            //         for (; block_end_1 <= nbasis_;) {
+            //             for (size_t I1 = block_start_1; I1 < block_end_1; ++I1) {
+            //                 coeff_[I1] = op_3_3 * coeff_[I1];
+            //             }
+            //             block_start_1 += block_offset;
+            //             block_end_1 += block_offset;
+            //         }
+            //     }
+            // } else {
+            //     // Case III: this matrix has only off-diagonal elements.
+            //     if (op_2_3 == op_3_2 == 1.0) {
+            //         // Case III-A: Apply optimized algorithm for X gate
+            //         size_t block_start_0 = 0;
+            //         size_t block_end_0 = block_start_0 + block_size;
+            //         for (; block_end_0 <= nbasis_;) {
+            //             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
+            //                 // std::cout << "\n" << std::endl;
+            //                 std::swap(coeff_[I0], coeff_[I0 + block_size]);
+            //                 // std::cout << "I0: " << I0 << std::endl;
+            //                 // std::cout << "I1: " << I0 + block_size << std::endl;
+            //             }
+            //             block_start_0 += block_offset;
+            //             block_end_0 += block_offset;
+            //         }
+            //     } else {
+            //         // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
+            //         size_t block_start_0 = 0;
+            //         // size_t block_start_1 = block_size;
+            //         size_t block_end_0 = block_start_0 + block_size;
+            //         for (; block_end_0 <= nbasis_;) {
+            //             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
+            //                 const auto x0 = coeff_[I0];
+            //                 coeff_[I0] = op_2_3 * coeff_[I0 + block_size];
+            //                 coeff_[I0 + block_size] = op_3_2 * x0;
+            //             }
+            //             block_start_0 += block_offset;
+            //             // block_start_1 += block_offset;
+            //             block_end_0 += block_offset;
+            //         }
+            //     }
+            // }
+            ntwo_ops_++;
+        }/* end if t < c */
+        if(control < target) {
+        // Case I-A: target bit idx is larger than control bit idx
+            const size_t outer_block_size = std::pow(2, target);
+            const size_t outer_block_offset = 2 * outer_block_size;
+
+            const size_t block_size = std::pow(2, control);
+            const size_t block_offset = 2 * block_size;
+
+
+            // if ((std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) and
+            //     (std::abs(op_2_3) + std::abs(op_3_2) > compute_threshold_)) {
+                // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
+                size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
+
+                size_t block_start_0 = block_size;
+                size_t block_start_1 = outer_block_size + block_size;
+                size_t block_end_0 = block_offset;
+
+                // std::cout << "\n" << std::endl;
+
+                for (; outer_block_end <= nbasis_;){
+
+                    for (; block_end_0 < outer_block_end;) {
+                        for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                            const auto x0 = coeff_[I0];
+                            const auto x1 = coeff_[I1];
+                            coeff_[I0] = op_2_2 * x0 + op_2_3 * x1;
+                            coeff_[I1] = op_3_2 * x0 + op_3_3 * x1;
+                            // std::cout << "I0: " << I0 << "    I1: " << I1 << std::endl;
+                        }
+                        block_start_0 += block_offset;
+                        block_start_1 += block_offset;
+                        block_end_0 += block_offset;
+                        // std::cout << "bs0: " << block_start_0 << "    be0: " << block_end_0 << std::endl;
                     }
-                    block_start_1 += block_offset;
-                    block_end_1 += block_offset;
+                    block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
+                    block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
+                    block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                    outer_block_end += outer_block_offset;
                 }
-            }
-        } else {
-            // Case III: this matrix has only off-diagonal elements.
-            if (op_2_3 == op_3_2 == 1.0) {
-                // Case III-A: Apply optimized algorithm for X gate
-                size_t block_start_0 = 0;
-                size_t block_end_0 = block_start_0 + block_size;
-                for (; block_end_0 <= nbasis_;) {
-                    for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
-                        // std::cout << "\n" << std::endl;
-                        std::swap(coeff_[I0], coeff_[I0 + block_size]);
-                        // std::cout << "I0: " << I0 << std::endl;
-                        // std::cout << "I1: " << I0 + block_size << std::endl;
+            // } else if (std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) {
+            //     // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
+            //     if (op_2_2 != 1.0) {
+            //     // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
+            //         size_t block_start_0 = 0;
+            //         size_t block_end_0 = block_start_0 + block_size;
+            //         for (; block_end_0 <= nbasis_;) {
+            //             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
+            //                 coeff_[I0] = op_2_2 * coeff_[I0];
+            //             }
+            //             block_start_0 += block_offset;
+            //             block_end_0 += block_offset;
+            //         }
+            //     }
+            //     if (op_3_3 != 1.0) {
+            //         // Case II-B: changes portion of coeff_ only if g_11 is not 1.0
+            //         size_t block_start_1 = block_size;
+            //         size_t block_end_1 = block_start_1 + block_size;
+            //         for (; block_end_1 <= nbasis_;) {
+            //             for (size_t I1 = block_start_1; I1 < block_end_1; ++I1) {
+            //                 coeff_[I1] = op_3_3 * coeff_[I1];
+            //             }
+            //             block_start_1 += block_offset;
+            //             block_end_1 += block_offset;
+            //         }
+            //     }
+            // } else {
+            //     // Case III: this matrix has only off-diagonal elements.
+            //     if (op_2_3 == op_3_2 == 1.0) {
+            //         // Case III-A: Apply optimized algorithm for X gate
+            //         size_t block_start_0 = 0;
+            //         size_t block_end_0 = block_start_0 + block_size;
+            //         for (; block_end_0 <= nbasis_;) {
+            //             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
+            //                 // std::cout << "\n" << std::endl;
+            //                 std::swap(coeff_[I0], coeff_[I0 + block_size]);
+            //                 // std::cout << "I0: " << I0 << std::endl;
+            //                 // std::cout << "I1: " << I0 + block_size << std::endl;
+            //             }
+            //             block_start_0 += block_offset;
+            //             block_end_0 += block_offset;
+            //         }
+            //     } else {
+            //         // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
+            //         size_t block_start_0 = 0;
+            //         // size_t block_start_1 = block_size;
+            //         size_t block_end_0 = block_start_0 + block_size;
+            //         for (; block_end_0 <= nbasis_;) {
+            //             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
+            //                 const auto x0 = coeff_[I0];
+            //                 coeff_[I0] = op_2_3 * coeff_[I0 + block_size];
+            //                 coeff_[I0 + block_size] = op_3_2 * x0;
+            //             }
+            //             block_start_0 += block_offset;
+            //             // block_start_1 += block_offset;
+            //             block_end_0 += block_offset;
+            //         }
+            //     }
+            // }
+            ntwo_ops_++;
+        } // end if c < t
+    } // end if controlled unitary
+    else{
+    // Case II: 2qubit gate is a not a control gate, use standard algorithm
+        const auto& two_qubits_basis = QuantumGate::two_qubits_basis();
+
+        // size_t target = qg.target();
+        // size_t control = qg.control();
+        // const auto& gate = qg.gate();
+
+        for (size_t i = 0; i < 4; i++) {
+            const auto i_c = two_qubits_basis[i].first;
+            const auto i_t = two_qubits_basis[i].second;
+            for (size_t j = 0; j < 4; j++) {
+                const auto j_c = two_qubits_basis[j].first;
+                const auto j_t = two_qubits_basis[j].second;
+                auto op_i_j = gate[i][j];
+                if (std::abs(op_i_j) > compute_threshold_) {
+                    // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
+                    for (const QuantumBasis& basis_J : basis_) {
+                        if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
+                            QuantumBasis basis_I = basis_J;
+                            basis_I.set_bit(control, i_c);
+                            basis_I.set_bit(target, i_t);
+                            new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
+                        }
                     }
-                    block_start_0 += block_offset;
-                    block_end_0 += block_offset;
-                }
-            } else {
-                // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
-                size_t block_start_0 = 0;
-                // size_t block_start_1 = block_size;
-                size_t block_end_0 = block_start_0 + block_size;
-                for (; block_end_0 <= nbasis_;) {
-                    for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
-                        const auto x0 = coeff_[I0];
-                        coeff_[I0] = op_2_3 * coeff_[I0 + block_size];
-                        coeff_[I0 + block_size] = op_3_2 * x0;
-                    }
-                    block_start_0 += block_offset;
-                    // block_start_1 += block_offset;
-                    block_end_0 += block_offset;
                 }
             }
         }
-        none_ops_++;
+        ntwo_ops_++;
     }
 }
 

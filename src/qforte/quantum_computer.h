@@ -104,6 +104,8 @@ class QuantumComputer {
     void apply_1qubit_gate_fast2(const QuantumGate& qg);
 
     void apply_2qubit_gate(const QuantumGate& qg);
+
+    void apply_2qubit_gate_fast2(const QuantumGate& qg);
 };
 
 #endif // _quantum_computer_h_
