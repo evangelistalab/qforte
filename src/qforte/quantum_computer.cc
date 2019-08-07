@@ -58,9 +58,11 @@ void QuantumComputer::apply_gate(const QuantumGate& qg) {
 
     if (nqubits == 1) {
         apply_1qubit_gate(qg);
+        // apply_1qubit_gate_fast2(qg);
     }
     if (nqubits == 2) {
         apply_2qubit_gate(qg);
+        // apply_2qubit_gate_fast2(qg);
     }
 
     coeff_ = new_coeff_;
@@ -343,7 +345,8 @@ void QuantumComputer::apply_2qubit_gate_fast2(const QuantumGate& qg) {
     const auto op_3_2 = gate[3][2];
     const auto op_3_3 = gate[3][3];
 
-    if(std::abs(gate[0][1]) + std::abs(gate[1][0]) < compute_threshold_ ){
+    if(( std::abs(gate[0][1]) + std::abs(gate[1][0]) < compute_threshold_ ) and
+       ( gate[0][0] == 1.0 ) and ( gate[1][1] == 1.0 ) ) {
     // Case I: 2qubit gate is a control gate
         if(target < control){
         // Case I-A: control bit is larger than target
@@ -573,7 +576,10 @@ void QuantumComputer::apply_2qubit_gate_fast2(const QuantumGate& qg) {
             }
         }
         ntwo_ops_++;
+        coeff_ = new_coeff_;
+        std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
     }
+
 }
 
 std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& qo) {
