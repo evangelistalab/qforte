@@ -74,6 +74,15 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             };
             return QuantumGate(type, target, control, gate);
         }
+        if (type == "V") {
+            std::complex<double> a = 1.0i * 0.5 + 0.5;
+            std::complex<double> b = -1.0i * 0.5 + 0.5;
+            std::complex<double> gate[4][4]{
+                {+a, +b},
+                {+b, +a},
+            };
+            return QuantumGate(type, target, control, gate);
+        }
         if (type == "S") {
             std::complex<double> gate[4][4]{
                 {1.0, 0.0},
@@ -145,6 +154,17 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
             };
             return QuantumGate(type, target, control, gate);
         }
+        if (type == "cV") {
+            std::complex<double> a = 1.0i * 0.5 + 0.5;
+            std::complex<double> b = -1.0i * 0.5 + 0.5;
+            std::complex<double> gate[4][4]{
+                {1.0, 0.0, 0.0, 0.0},
+                {0.0, 1.0, 0.0, 0.0},
+                {0.0, 0.0, +a, +b},
+                {0.0, 0.0, +b, +a},
+            };
+            return QuantumGate(type, target, control, gate);
+        }
         if (type == "SWAP") {
             std::complex<double> gate[4][4]{
                 {1.0, 0.0, 0.0, 0.0},
@@ -166,5 +186,27 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, double pa
         {0.0, 0.0, 1.0, 0.0},
         {0.0, 0.0, 0.0, 1.0},
     };
+    return QuantumGate(type, target, control, gate);
+}
+
+QuantumGate make_control_gate(size_t control, QuantumGate& U) {
+    using namespace std::complex_literals;
+    std::string type = "cU";
+    size_t target = U.target();
+    if (target == control) {
+        std::string msg =
+            fmt::format("Cannot create Control-U where targer == control !");
+        throw std::invalid_argument(msg);
+    }
+    std::complex<double> a = U.gate()[0][0];
+    std::complex<double> b = U.gate()[0][1];
+    std::complex<double> c = U.gate()[1][0];
+    std::complex<double> d = U.gate()[1][1];
+    std::complex<double> gate[4][4]{
+            {1.0, 0.0, 0.0, 0.0},
+            {0.0, 1.0, 0.0, 0.0},
+            {0.0, 0.0, a, b},
+            {0.0, 0.0, c, d},
+        };
     return QuantumGate(type, target, control, gate);
 }
