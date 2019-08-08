@@ -28,15 +28,11 @@ class QuantumComputer {
     /// apply a quantum circuit to the current state with optimized algorithm
     void apply_circuit(const QuantumCircuit& qc);
 
-    // void apply_circuit_fast2(const QuantumCircuit& qc);
-
     /// apply a gate to the quantum computer with standard algorithm
     void apply_gate_safe(const QuantumGate& qg);
 
     /// apply a gate to the quantum computer with optemized algorithm
     void apply_gate(const QuantumGate& qg);
-
-    // void apply_gate_fast2(const QuantumGate& qg);
 
     /// measure the state of the quanum computer in basis of circuit
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
@@ -107,8 +103,6 @@ class QuantumComputer {
 
     /// apply a 1qubit gate to the quantum computer with optemized algorithm
     void apply_1qubit_gate(const QuantumGate& qg);
-
-    // void apply_1qubit_gate_fast2(const QuantumGate& qg);
 
     /// apply a 2qubit gate to the quantum computer with standard algorithm
     void apply_2qubit_gate_safe(const QuantumGate& qg);

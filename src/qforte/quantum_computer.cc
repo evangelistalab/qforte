@@ -47,12 +47,6 @@ void QuantumComputer::apply_circuit_safe(const QuantumCircuit& qc) {
     }
 }
 
-// void QuantumComputer::apply_circuit_fast2(const QuantumCircuit& qc) {
-//     for (const auto& gate : qc.gates()) {
-//         apply_gate_fast2(gate);
-//     }
-// }
-
 void QuantumComputer::apply_gate(const QuantumGate& qg) {
     int nqubits = qg.nqubits();
 
@@ -77,17 +71,6 @@ void QuantumComputer::apply_gate_safe(const QuantumGate& qg) {
     coeff_ = new_coeff_;
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
 }
-
-// void QuantumComputer::apply_gate_fast2(const QuantumGate& qg) {
-//     int nqubits = qg.nqubits();
-//
-//     if (nqubits == 1) {
-//         apply_1qubit_gate_fast2(qg);
-//     }
-//     if (nqubits == 2) {
-//         apply_2qubit_gate_fast2(qg);
-//     }
-// }
 
 std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc,
                                                      size_t n_measurements) {
@@ -217,7 +200,7 @@ void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
 
     if ((std::abs(op_0_0) + std::abs(op_1_1) > compute_threshold_) and
         (std::abs(op_0_1) + std::abs(op_1_0) > compute_threshold_)) {
-        // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
+    // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
         size_t block_start_0 = 0;
         size_t block_start_1 = block_size;
         size_t block_end_0 = block_start_0 + block_size;
@@ -233,7 +216,7 @@ void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
             block_end_0 += block_offset;
         }
     } else if (std::abs(op_0_0) + std::abs(op_1_1) > compute_threshold_) {
-        // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
+    // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
         if (op_0_0 != 1.0) {
         // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
             size_t block_start_0 = 0;
@@ -259,25 +242,21 @@ void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
             }
         }
     } else {
-        // Case III: this matrix has only off-diagonal elements.
+    // Case III: this matrix has only off-diagonal elements.
         if (op_0_1 == op_1_0 == 1.0) {
-            // Case III-A: Apply optimized algorithm for X gate
+        // Case III-A: Apply optimized algorithm for X gate
             size_t block_start_0 = 0;
             size_t block_end_0 = block_start_0 + block_size;
             for (; block_end_0 <= nbasis_;) {
                 for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
-                    // // std::cout << "\n" << std::endl;
                     std::swap(coeff_[I0], coeff_[I0 + block_size]);
-                    // // std::cout << "I0: " << I0 << std::endl;
-                    // // std::cout << "I1: " << I0 + block_size << std::endl;
                 }
                 block_start_0 += block_offset;
                 block_end_0 += block_offset;
             }
         } else {
-            // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
+        // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
             size_t block_start_0 = 0;
-            // size_t block_start_1 = block_size;
             size_t block_end_0 = block_start_0 + block_size;
             for (; block_end_0 <= nbasis_;) {
                 for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
@@ -286,7 +265,6 @@ void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
                     coeff_[I0 + block_size] = op_1_0 * x0;
                 }
                 block_start_0 += block_offset;
-                // block_start_1 += block_offset;
                 block_end_0 += block_offset;
             }
         }
@@ -328,7 +306,6 @@ void QuantumComputer::apply_2qubit_gate_safe(const QuantumGate& qg) {
 void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
     const size_t target = qg.target();
     const size_t control = qg.control();
-
     const auto& gate = qg.gate();
 
     // bit target goes from j -> i
@@ -340,24 +317,17 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
     if(( std::abs(gate[0][1]) + std::abs(gate[1][0]) < compute_threshold_ ) and
        ( gate[0][0] == 1.0 ) and ( gate[1][1] == 1.0 ) ) {
     // Case 1: 2qubit gate is a control gate
-    // std::cout<< "Is Controll:" << std::endl;
         if(target < control){
         // Case I-A: target bit index is smaller than control bit index
-        // std::cout<< "  t<c: " << target << " < " << control << std::endl;
-
             const size_t outer_block_size = std::pow(2, control);
             const size_t outer_block_offset = 2 * outer_block_size;
-
             const size_t block_size = std::pow(2, target);
             const size_t block_offset = 2 * block_size;
-
 
             if ((std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) and
                 (std::abs(op_2_3) + std::abs(op_3_2) > compute_threshold_)) {
                 // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
-                // std::cout<< "    Case I: diagonal and off-diagonal elements" << std::endl;
-                size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
-
+                size_t outer_block_end = outer_block_offset;
                 size_t block_start_0 = outer_block_size;
                 size_t block_start_1 = outer_block_size + block_size;
                 size_t block_end_0 = outer_block_size + block_size;
@@ -374,18 +344,16 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
                         block_start_1 += block_offset;
                         block_end_0 += block_offset;
                     }
-                    block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
-                    block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
-                    block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                    block_start_0 += outer_block_size;
+                    block_start_1 += outer_block_size;
+                    block_end_0 += outer_block_size;
                     outer_block_end += outer_block_offset;
                 }
             } else if (std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) {
                 // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
-                // std::cout<< "    Case II: diagonal only" << std::endl;
                 if (op_2_2 != 1.0) {
                 // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
-                    size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
-
+                    size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = outer_block_size;
                     size_t block_end_0 = outer_block_size + block_size;
 
@@ -397,17 +365,17 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
                             block_start_0 += block_offset;
                             block_end_0 += block_offset;
                         }
-                        block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                        block_start_0 += outer_block_size;
+                        block_end_0 += outer_block_size;
                         outer_block_end += outer_block_offset;
                     }
                 }
                 if (op_3_3 != 1.0) {
                     // Case II-B: changes portion of coeff_ only if g_11 is not 1.0
                     size_t outer_block_end = outer_block_offset;
-
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_1 = block_start_1 + block_size;
+
                     for(; outer_block_end <= nbasis_;){
                         for (; block_end_1 <= outer_block_end;) {
                             for (size_t I1 = block_start_1; I1 < block_end_1; ++I1) {
@@ -416,47 +384,41 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
                             block_start_1 += block_offset;
                             block_end_1 += block_offset;
                         }
-                        block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_end_1 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                        block_start_1 += outer_block_size;
+                        block_end_1 += outer_block_size;
                         outer_block_end += outer_block_offset;
                     }
                 }
             } else {
                 // Case III: this matrix has only off-diagonal elements.
-                // std::cout<< "    Case III: off-diagonal only" << std::endl;
                 if (op_2_3 == op_3_2 == 1.0) {
                     // Case III-A: Apply optimized algorithm for X gate
-                    // std::cout<< "      Case III-A: is X gate" << std::endl;
-                    size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
-
+                    size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = outer_block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = outer_block_size + block_size;
+
                     for (; outer_block_end <= nbasis_;){
                         for (; block_end_0 <= outer_block_end;) {
                             for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
-                                // // std::cout << "\n" << std::endl;
                                 std::swap(coeff_[I0], coeff_[I1]);
-                                // // std::cout << "I0: " << I0 << std::endl;
-                                // // std::cout << "I1: " << I0 + block_size << std::endl;
                             }
                             block_start_0 += block_offset;
                             block_start_1 += block_offset;
                             block_end_0 += block_offset;
                         }
-                        block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                        block_start_0 += outer_block_size;
+                        block_start_1 += outer_block_size;
+                        block_end_0 += outer_block_size;
                         outer_block_end += outer_block_offset;
                     }
                 } else {
                     // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
-                    // std::cout<< "      Case III-B: is not X gate" << std::endl;
-                    size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
-
+                    size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = outer_block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = outer_block_size + block_size;
+
                     for (; outer_block_end <= nbasis_;){
                         for (; block_end_0 <= outer_block_end;) {
                             for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
@@ -468,9 +430,9 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
                             block_start_1 += block_offset;
                             block_end_0 += block_offset;
                         }
-                        block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                        block_start_0 += outer_block_size;
+                        block_start_1 += outer_block_size;
+                        block_end_0 += outer_block_size;
                         outer_block_end += outer_block_offset;
                     }
                 }
@@ -479,56 +441,45 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
         }/* end if t < c */
         if(control < target) {
         // Case 1-B: control bit idx is smaller than target bit idx
-        // std::cout<< "  c<t: " << control << " < " << target << std::endl;
             const size_t outer_block_size = std::pow(2, target);
             const size_t outer_block_offset = 2 * outer_block_size;
-
             const size_t block_size = std::pow(2, control);
             const size_t block_offset = 2 * block_size;
-
 
             if ((std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) and
                 (std::abs(op_2_3) + std::abs(op_3_2) > compute_threshold_)) {
                 // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
-                // std::cout<< "    Case I: diagonal and off-diagonal elements" << std::endl;
-                size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
-
+                size_t outer_block_end = outer_block_offset;
                 size_t block_start_0 = block_size;
                 size_t block_start_1 = outer_block_size + block_size;
                 size_t block_end_0 = block_offset;
 
-                // // std::cout << "\n" << std::endl;
-
                 for (; outer_block_end <= nbasis_;){
-
                     for (; block_end_0 < outer_block_end;) {
                         for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
                             const auto x0 = coeff_[I0];
                             const auto x1 = coeff_[I1];
                             coeff_[I0] = op_2_2 * x0 + op_2_3 * x1;
                             coeff_[I1] = op_3_2 * x0 + op_3_3 * x1;
-                            // // std::cout << "I0: " << I0 << "    I1: " << I1 << std::endl;
                         }
                         block_start_0 += block_offset;
                         block_start_1 += block_offset;
                         block_end_0 += block_offset;
-                        // // std::cout << "bs0: " << block_start_0 << "    be0: " << block_end_0 << std::endl;
                     }
-                    block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
-                    block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
-                    block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                    block_start_0 += outer_block_size;
+                    block_start_1 += outer_block_size;
+                    block_end_0 += outer_block_size;
                     outer_block_end += outer_block_offset;
                 }
             } else if (std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) {
                 // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
-                // std::cout<< "    Case II: diagonal only" << std::endl;
                 if (op_2_2 != 1.0) {
                 // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
-                    size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
-
+                    size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = block_offset;
+
                     for(; outer_block_end <= nbasis_;){
                         for (; block_end_0 < outer_block_end;) {
                             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
@@ -537,17 +488,17 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
                             block_start_0 += block_offset;
                             block_end_0 += block_offset;
                         }
-                        block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                        block_start_0 += outer_block_size;
+                        block_end_0 += outer_block_size;
                         outer_block_end += outer_block_offset;
                     }
                 }
                 if (op_3_3 != 1.0) {
                     // Case II-B: changes portion of coeff_ only if g_11 is not 1.0
                     size_t outer_block_end = outer_block_offset;
-
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_1 = block_start_1 + block_size;
+
                     for(; outer_block_end <= nbasis_;){
                         for (; block_end_1 <= outer_block_end;) {
                             for (size_t I1 = block_start_1; I1 < block_end_1; ++I1) {
@@ -556,44 +507,37 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
                             block_start_1 += block_offset;
                             block_end_1 += block_offset;
                         }
-                        block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_end_1 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                        block_start_1 += outer_block_size;
+                        block_end_1 += outer_block_size;
                         outer_block_end += outer_block_offset;
                     }
                 }
             } else {
                 // Case III: this matrix has only off-diagonal elements.
-                // std::cout<< "    Case III: off-diagonal only" << std::endl;
                 if (op_2_3 == op_3_2 == 1.0) {
                     // Case III-A: Apply optimized algorithm for X gate
-                    // std::cout<< "      Case III-A: is X gate" << std::endl;
-                    size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
-
+                    size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = block_offset;
+
                     for (; outer_block_end <= nbasis_;){
                         for (; block_end_0 < outer_block_end;) {
                             for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
-                                // // std::cout << "\n" << std::endl;
                                 std::swap(coeff_[I0], coeff_[I1]);
-                                // // std::cout << "I0: " << I0 << std::endl;
-                                // // std::cout << "I1: " << I0 + block_size << std::endl;
                             }
                             block_start_0 += block_offset;
                             block_start_1 += block_offset;
                             block_end_0 += block_offset;
                         }
-                        block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                        block_start_0 += outer_block_size;
+                        block_start_1 += outer_block_size;
+                        block_end_0 += outer_block_size;
                         outer_block_end += outer_block_offset;
                     }
                 } else {
                     // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
-                    // std::cout<< "      Case III-B: is not X gate" << std::endl;
-                    size_t outer_block_end = outer_block_offset; // end of the 1st active outer block
-
+                    size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = block_offset;
@@ -609,9 +553,9 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
                             block_start_1 += block_offset;
                             block_end_0 += block_offset;
                         }
-                        block_start_0 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_start_1 += outer_block_size; // skip inactive control section |q_c> = |0>
-                        block_end_0 += outer_block_size;   // skip inactive control section |q_c> = |0>
+                        block_start_0 += outer_block_size;
+                        block_start_1 += outer_block_size;
+                        block_end_0 += outer_block_size;
                         outer_block_end += outer_block_offset;
                     }
                 }
@@ -620,12 +564,8 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
         } // end if c < t
     } // end if controlled unitary
     else{
-    // Case II: 2qubit gate is a not a control gate, use standard algorithm
+    // Case 2: 2qubit gate is a not a control gate, use standard algorithm
         const auto& two_qubits_basis = QuantumGate::two_qubits_basis();
-
-        // size_t target = qg.target();
-        // size_t control = qg.control();
-        // const auto& gate = qg.gate();
 
         for (size_t i = 0; i < 4; i++) {
             const auto i_c = two_qubits_basis[i].first;
