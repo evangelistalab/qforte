@@ -22,15 +22,21 @@ class QuantumComputer {
     /// default constructor: create a quantum computer with nqubit qubits
     QuantumComputer(int nqubit);
 
-    /// apply a quantum circuit to the current state
-    void apply_circuit(const QuantumCircuit& qc);
-    void apply_circuit_fast(const QuantumCircuit& qc);
-    void apply_circuit_fast2(const QuantumCircuit& qc);
+    /// apply a quantum circuit to the current state with standard algorithm
+    void apply_circuit_safe(const QuantumCircuit& qc);
 
-    /// apply a gate to the quantum computer
+    /// apply a quantum circuit to the current state with optimized algorithm
+    void apply_circuit(const QuantumCircuit& qc);
+
+    // void apply_circuit_fast2(const QuantumCircuit& qc);
+
+    /// apply a gate to the quantum computer with standard algorithm
+    void apply_gate_safe(const QuantumGate& qg);
+
+    /// apply a gate to the quantum computer with optemized algorithm
     void apply_gate(const QuantumGate& qg);
-    void apply_gate_fast(const QuantumGate& qg);
-    void apply_gate_fast2(const QuantumGate& qg);
+
+    // void apply_gate_fast2(const QuantumGate& qg);
 
     /// measure the state of the quanum computer in basis of circuit
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
@@ -44,7 +50,7 @@ class QuantumComputer {
     std::complex<double> direct_circ_exp_val(const QuantumCircuit& qc);
 
     /// get the expectation value of a single 1qubit gate directly
-    /// (ie without simulated measurement)
+    /// (without simulated measurement)
     std::complex<double> direct_gate_exp_val(const QuantumGate& qg);
 
     /// return a vector of strings representing the state of the computer
@@ -91,21 +97,24 @@ class QuantumComputer {
     size_t none_ops_ = 0;
     /// the number of two-qubit operations
     size_t ntwo_ops_ = 0;
-
     /// the threshold for priting a determinant
     double print_threshold_ = 0.0;
-
+    /// the threshold for doing operations with elemets of gate matricies
     double compute_threshold_ = 1.0e-16;
 
+    /// apply a 1qubit gate to the quantum computer with standard algorithm
+    void apply_1qubit_gate_safe(const QuantumGate& qg);
+
+    /// apply a 1qubit gate to the quantum computer with optemized algorithm
     void apply_1qubit_gate(const QuantumGate& qg);
 
-    void apply_1qubit_gate_fast(const QuantumGate& qg);
+    // void apply_1qubit_gate_fast2(const QuantumGate& qg);
 
-    void apply_1qubit_gate_fast2(const QuantumGate& qg);
+    /// apply a 2qubit gate to the quantum computer with standard algorithm
+    void apply_2qubit_gate_safe(const QuantumGate& qg);
 
+    /// apply a 2qubit gate to the quantum computer with optemized algorithm
     void apply_2qubit_gate(const QuantumGate& qg);
-
-    void apply_2qubit_gate_fast2(const QuantumGate& qg);
 };
 
 #endif // _quantum_computer_h_
