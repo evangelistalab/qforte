@@ -37,6 +37,9 @@ class QuantumComputer {
     /// measure the state of the quanum computer with respect to qc
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
 
+    /// perfectly measure the state of the quanum computer in basis of circuit
+    double perfect_measure_circuit(const QuantumCircuit& qc);
+
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
     std::complex<double> direct_op_exp_val(const QuantumOperator& qo);

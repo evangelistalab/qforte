@@ -5,7 +5,7 @@ Functions for exponentiation of qubit operator terms (circuits)
 import qforte
 import numpy
 
-def exponentiate_single_term(factor, term):
+def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_open_cRz=False):
     """
     returns the exponential of an string of Pauli operators multiplied by an imaginary factor
 
@@ -57,12 +57,24 @@ def exponentiate_single_term(factor, term):
         max_target = target
 
     #gate that actually contains the parameterization for the term
-    z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0 * numpy.imag(factor))
+    # TODO(Nick): investigate real/imaginary usage of 'factor' in below expression
+
+    if(Use_cRz):
+        z_rot = qforte.make_gate('cRz', max_target, ancilla_idx, 2.0 * numpy.imag(factor))
+    else:
+        z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0 * numpy.imag(factor))
 
     #assemble the actual exponential
     exponential.add_circuit(to_z)
     exponential.add_circuit(cX_circ)
+
+    if(Use_open_cRz):
+        exponential.add_gate(qforte.make_gate('X', ancilla_idx, ancilla_idx))
+
     exponential.add_gate(z_rot)
+
+    if(Use_open_cRz):
+        exponential.add_gate(qforte.make_gate('X', ancilla_idx, ancilla_idx))
 
     adj_cX_circ = cX_circ.adjoint()
     exponential.add_circuit(adj_cX_circ)

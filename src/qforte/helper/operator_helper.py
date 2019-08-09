@@ -2,7 +2,7 @@ import qforte
 from openfermion.ops import QubitOperator
 import numpy as np
 
-def build_from_openfermion(OF_qubitops):
+def build_from_openfermion(OF_qubitops, time_evo_factor = 1.0):
 
     """
     builds a QuantumOperator instance in
@@ -29,6 +29,6 @@ def build_from_openfermion(OF_qubitops):
             circ_term.add_gate(gate_this)
 
         #Add this term to operator
-        qforte_ops.add_term(coeff, circ_term)
+        qforte_ops.add_term(coeff*time_evo_factor, circ_term)
 
     return qforte_ops
