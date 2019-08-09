@@ -34,7 +34,7 @@ class QuantumComputer {
     /// apply a gate to the quantum computer with optemized algorithm
     void apply_gate(const QuantumGate& qg);
 
-    /// measure the state of the quanum computer in basis of circuit
+    /// measure the state of the quanum computer with respect to qc
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
 
     /// get the expectation value of the sum of many circuits directly

@@ -12,7 +12,7 @@ Nengkun Yu, Mingsheng Ying, arXiv:1301.3727 (2013)
 def Toffoli(i,j,k):
 
     """
-    builds a circuit to simulate a three-qubit Toffoli gate 
+    builds a circuit to simulate a three-qubit Toffoli gate
     (Control-Control-NOT, CCNOT gate).
 
     :param i: control qubit 1
@@ -27,7 +27,7 @@ def Toffoli(i,j,k):
     C13 = qforte.make_gate('cX', k, i)
     C23 = qforte.make_gate('cX', k, j)
     H3 = qforte.make_gate('H', k, k)
-    
+
     T_circ = qforte.QuantumCircuit()
     T_circ.add_gate(H3)
     T_circ.add_gate(C23)
@@ -44,7 +44,7 @@ def Toffoli(i,j,k):
     T_circ.add_gate(T1)
     T_circ.add_gate(T2.adjoint())
     T_circ.add_gate(C12)
-    
+
     return T_circ
 
 def Fredkin(i,j,k):
@@ -73,4 +73,3 @@ def Fredkin(i,j,k):
     F_circ.add_gate(C12)
 
     return F_circ
-
