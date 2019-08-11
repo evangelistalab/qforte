@@ -155,36 +155,6 @@ void QuantumComputer::apply_1qubit_gate_safe(const QuantumGate& qg) {
     none_ops_++;
 }
 
-// void QuantumComputer::apply_1qubit_gate_fast(const QuantumGate& qg) {
-//     size_t target = qg.target();
-//     const auto& gate = qg.gate();
-//
-//     size_t block_size = std::pow(2, target);
-//     size_t block_offset = 2 * block_size;
-//
-//     for (size_t i = 0; i < 2; i++) {
-//         for (size_t j = 0; j < 2; j++) {
-//             // bit target goes from j -> i
-//             auto op_i_j = gate[i][j];
-//             if (std::abs(op_i_j) > compute_threshold_) {
-//                 size_t block_start_j = j * block_size;
-//                 size_t block_start_i = i * block_size;
-//                 size_t block_end_j = block_start_j + block_size;
-//
-//                 for (; block_end_j <= nbasis_;) {
-//                     for (size_t J = block_start_j, I = block_start_i; J < block_end_j; ++J, ++I) {
-//                         new_coeff_[I] += op_i_j * coeff_[J];
-//                     }
-//                     block_start_j += block_offset;
-//                     block_start_i += block_offset;
-//                     block_end_j += block_offset;
-//                 }
-//             }
-//         }
-//     }
-//     none_ops_++;
-// }
-
 void QuantumComputer::apply_1qubit_gate(const QuantumGate& qg) {
     size_t target = qg.target();
     const auto& gate = qg.gate();

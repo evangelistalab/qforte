@@ -31,7 +31,7 @@ class QuantumComputer {
     /// apply a gate to the quantum computer with standard algorithm
     void apply_gate_safe(const QuantumGate& qg);
 
-    /// apply a gate to the quantum computer with optemized algorithm
+    /// apply a gate to the quantum computer with optimized algorithm
     void apply_gate(const QuantumGate& qg);
 
     /// measure the state of the quanum computer with respect to qc
@@ -95,19 +95,19 @@ class QuantumComputer {
     size_t ntwo_ops_ = 0;
     /// the threshold for priting a determinant
     double print_threshold_ = 0.0;
-    /// the threshold for doing operations with elemets of gate matricies
+    /// the threshold for doing operations with elements of gate matricies
     double compute_threshold_ = 1.0e-16;
 
     /// apply a 1qubit gate to the quantum computer with standard algorithm
     void apply_1qubit_gate_safe(const QuantumGate& qg);
 
-    /// apply a 1qubit gate to the quantum computer with optemized algorithm
+    /// apply a 1qubit gate to the quantum computer with optimized algorithm
     void apply_1qubit_gate(const QuantumGate& qg);
 
     /// apply a 2qubit gate to the quantum computer with standard algorithm
     void apply_2qubit_gate_safe(const QuantumGate& qg);
 
-    /// apply a 2qubit gate to the quantum computer with optemized algorithm
+    /// apply a 2qubit gate to the quantum computer with optimized algorithm
     void apply_2qubit_gate(const QuantumGate& qg);
 };
 
