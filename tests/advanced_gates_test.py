@@ -3,6 +3,7 @@ from qforte import *
 
 class AdvGateTests(unittest.TestCase):
     def test_advanced_gates(self):
+        print('\n')
         trial_state = QuantumComputer(4)
         trial_circ = build_circuit('X_0 X_1')
         trial_state.apply_circuit(trial_circ)
@@ -19,6 +20,7 @@ class AdvGateTests(unittest.TestCase):
         F_circ = Fredkin(1, 2, 3)
         print(F_circ.str())
         trial_state.apply_circuit(F_circ) # This should turn the state to 1101
+        # trial_state.apply_circuit_safe(F_circ) # This should turn the state to 1101
         a1_dag_a2 = build_operator('1.0, Z_2')
         exp = trial_state.direct_op_exp_val(a1_dag_a2)
         self.assertAlmostEqual(exp, 0.9999999999999991+0j) # Measure qubit 2 should give +1

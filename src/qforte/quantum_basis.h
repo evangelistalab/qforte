@@ -29,9 +29,7 @@ class QuantumBasis {
     bool get_bit(size_t pos) const { return state_ & maskbit(pos); }
 
     /// set bit in position 'pos' to the boolean val
-    basis_t& set_bit(size_t pos, bool val) {
-        return (val ? (state_ |= maskbit(pos)) : state_ &= ~maskbit(pos));
-    }
+    void set_bit(size_t pos, bool val) { state_ ^= (-val ^ state_) & maskbit(pos); }
 
     void set(basis_t state);
 

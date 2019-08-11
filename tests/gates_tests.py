@@ -190,9 +190,10 @@ class GatesTests(unittest.TestCase):
 
 
     def test_computer(self):
+        print('\n')
         # test that 1 - 1 = 0
 
-#        print('\n'.join(qc.str()))
+        # print('\n'.join(qc.str()))
         X = qforte.make_gate('X',0,0);
         print(X)
         Y = qforte.make_gate('Y',0,0);
@@ -213,25 +214,25 @@ class GatesTests(unittest.TestCase):
         print(cY)
         cZ = qforte.make_gate('cZ',0,1);
         print(cZ)
-#        qcircuit = qforte.QuantumCircuit()
-#        qcircuit.add_gate(qg)
-#        qcircuit.add_gate(qforte.QuantumGate(qforte.QuantumGateType.Hgate,1,1));
-#        print('\n'.join(qcircuit.str()))
-#        self.assertEqual(qforte.subtract(1, 1), 0)
+       # qcircuit = qforte.QuantumCircuit()
+       # qcircuit.add_gate(qg)
+       # qcircuit.add_gate(qforte.QuantumGate(qforte.QuantumGateType.Hgate,1,1));
+       # print('\n'.join(qcircuit.str()))
+       # self.assertEqual(qforte.subtract(1, 1), 0)
 
         computer = qforte.QuantumComputer(16)
-#        print(repr(computer))
-#        circuit = qforte.QuantumCircuit()
-#        circuit.add_gate(X)
+       # print(repr(computer))
+       # circuit = qforte.QuantumCircuit()
+       # circuit.add_gate(X)
         for i in range(3000):
             computer.apply_gate(X)
             computer.apply_gate(Y)
             computer.apply_gate(Z)
             computer.apply_gate(H)
-#        print(repr(computer))
+       # print(repr(computer))
 
     def test_op_exp_val_1(self):
-        #test direct expectation value measurement
+        # test direct expectation value measurement
         trial_state = qforte.QuantumComputer(4)
 
         trial_prep = [None]*5
