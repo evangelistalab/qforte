@@ -4,7 +4,7 @@
 
 #include "quantum_gate.h"
 
-QuantumGate make_gate(std::string type, size_t target, size_t control, double parameter) {
+QuantumGate make_gate(std::string type, size_t target, size_t control, std::complex<double> parameter) {
     using namespace std::complex_literals;
     if (target == control) {
         if (type == "X") {
