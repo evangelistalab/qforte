@@ -140,10 +140,6 @@ double QuantumComputer::perfect_measure_circuit(const QuantumCircuit& qc) {
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
 
-    // TODO: make code more readable (Nick)
-    // TODO: add gate lable not via enum? (Nick)
-    // TODO: Acount for case where gate is only the identity
-
     for (const QuantumGate& gate : qc.gates()) {
         size_t target_qubit = gate.target();
         std::string gate_id = gate.gate_id();
@@ -163,29 +159,6 @@ double QuantumComputer::perfect_measure_circuit(const QuantumCircuit& qc) {
 
     // apply Basis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
     apply_circuit(Basis_rotator);
-    // std::vector<double> probs(nbasis_);
-    // for (size_t k = 0; k < nbasis_; k++) {
-    //     probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]);
-    // }
-
-    // random number device
-    // std::random_device rd;
-    // std::mt19937 gen(rd());
-
-    // 'pick' an index from the discrete_distribution!
-    // std::discrete_distribution<> dd(std::begin(probs), std::end(probs));
-
-    // std::vector<double> results(n_measurements);
-
-    // for (size_t k = 0; k < n_measurements; k++) {
-    //     size_t measurement = dd(gen);
-    //     double value = 1.;
-    //     for (const QuantumGate& gate : qc.gates()) {
-    //         size_t target_qubit = gate.target();
-    //         value *= 1. - 2. * static_cast<double>(basis_[measurement].get_bit(target_qubit));
-    //     }
-    //     results[k] = value;
-    // }
 
     double sum = 0.0;
     for (size_t k = 0; k < nbasis_; k++){
