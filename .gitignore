@@ -31,11 +31,7 @@
 *.out
 *.app
 
-build/
-src/qforte.egg-info/
-*/__pycache__/
-src/qforte/__pycache__/
-src/qforte/experiment/__pycache__/
-src/qforte/helper/__pycache__/
-src/qforte/utils/__pycache__/
-tests/bin/
+**build/
+**qforte.egg-info/
+**__pycache__/
+**bin/

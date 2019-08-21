@@ -8,10 +8,10 @@ import numpy
 
 class Experiment(object):
 
-    def __init__(self, n_qubits, generator, operator, N_samples, prepare_each_time = False):
+    def __init__(self, n_qubits, generator, operator, N_samples=100, prepare_each_time = False):
 
         """
-        Experimant is a class that exemplifies two quantum computational tasks:
+        Experiment is a class that exemplifies two quantum computational tasks:
         (1) state preparation from a 'generator' circuit which may or may not be
         parameterized, and (2) to measure operators to produce approximate
         expectation values.
@@ -71,7 +71,7 @@ class Experiment(object):
         elif(self.prepare_each_time_==True):
             raise Exception('No support yet for measurement with multiple state preparations')
 
-    def perfect_experimental_avg(self, params):
+    def perfect_experimental_avg(self):
 
         """
         calculates the exact experimental result of the operator the Experiment object was initialized with
