@@ -32,8 +32,10 @@ script:
 - conda update -q conda
 - conda info -a
 - conda create -q -n qforte python=$PYTHON_VER numpy cmake
+- python -m conda install psi4
 - source activate qforte
 - python -m pip install --user openfermion
+- python -m pip install --user openfermionpsi4
 - python -V
 - cd ${TRAVIS_BUILD_DIR}
 - export CXX=${CXX_COMPILER}
