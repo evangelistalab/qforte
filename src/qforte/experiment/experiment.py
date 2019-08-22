@@ -51,7 +51,7 @@ class Experiment(object):
             qc = qforte.QuantumComputer(self.n_qubits_)
 
             #2 build/update generator with params
-            self.generator_.set_parameters(params)
+            # self.generator_.set_parameters(params)
 
             #3 apply generator (once if prepare_each_time = False, N_sample times if)
             qc.apply_circuit(self.generator_)
@@ -65,6 +65,37 @@ class Experiment(object):
                 term_sum += self.operator_.terms()[k][0] * sum(measured)
 
             term_sum /= self.N_samples_
+
+            return numpy.real(term_sum)
+
+        elif(self.prepare_each_time_==True):
+            raise Exception('No support yet for measurement with multiple state preparations')
+
+    def perfect_experimental_avg(self, params):
+
+        """
+        calculates the exact experimental result of the operator the Experiment object was initialized with
+
+        :param params: (list) the list of parameters for the state preparation ansatz.
+
+        """
+
+        if(self.prepare_each_time_==False):
+            #1 initialize a quantum computer
+            qc = qforte.QuantumComputer(self.n_qubits_)
+
+            #2 build/update generator with params
+            # self.generator_.set_parameters(params)
+
+            #3 apply generator (once if prepare_each_time = False, N_sample times if)
+            qc.apply_circuit(self.generator_)
+
+            #4 measure operator
+            n_terms = len(self.operator_.terms())
+            term_sum = 0.0
+
+            for k in range(n_terms):
+                term_sum += self.operator_.terms()[k][0] * qc.perfect_measure_circuit(self.operator_.terms()[k][1]);
 
             return numpy.real(term_sum)
 
