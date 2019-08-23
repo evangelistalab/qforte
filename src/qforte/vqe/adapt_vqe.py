@@ -2,7 +2,7 @@ import openfermion
 from openfermion.ops import FermionOperator
 from openfermion.transforms import jordan_wigner, get_fermion_operator
 from openfermion.utils import hermitian_conjugated, commutator, normal_ordered
-from openfermionpsi4 import *
+import openfermionpsi4
 import numpy as np 
 import scipy
 import qforte
@@ -29,7 +29,7 @@ def runPsi4(geometry, kwargs):
 
     molecule = openfermion.hamiltonians.MolecularData(geometry, basis, multiplicity, charge, description)
 
-    molecule = run_psi4(molecule,
+    molecule = openfermionpsi4.run_psi4(molecule,
                         run_scf=kwargs.get('run_scf', 1),
                         run_mp2=kwargs.get('run_mp2', 0),
                         run_cisd=kwargs.get('run_cisd', 0),
