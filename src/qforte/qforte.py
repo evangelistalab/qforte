@@ -4,7 +4,6 @@ qforte.py
 The core module of my example project
 """
 
-import experiment
 
 def about_me(your_name):
     """
