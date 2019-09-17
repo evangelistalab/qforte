@@ -19,30 +19,21 @@ class UCCVQE(object):
     via a gradient free algorithm such as nelder-mead simplex algroithm.
     VQE object constructor.
     :param n_qubits: the number of qubits for the quantum experiment.
-    :param generator: the perameterized state preparation circuit (has already been exponenitated).
     :param operator: the qubit operator to be measured.
     :param N_samples: the number of measurements made for each term in the operator
     :param many_preps: do a state preparation for every measurement (like a physical
         quantum computer would need to do).
     """
 
-    # TODO: Replace 'generator' with VQE tpye (i.e. UCCSD, ADAPT, etc...) for
-    # for flexablity, for now 'generator' circuit needs to initiated outside of
-    # the class
-
     def __init__(self, ref, Top, operator, N_samples, alredy_anti_herm=False , many_preps = False, optimizer='nelder-mead'):
-        # self._n_qubits_ = n_qubits
-        # self._n_elec_ = n_elec
         self._ref = ref
         self._Top = Top
-        # self._generator_ = generator
         self._operator = operator
         self._N_samples = N_samples
         self._alredy_anti_herm = alredy_anti_herm
         self._many_preps = many_preps
         self._optimizer = optimizer
 
-        # self._experiment_ = qforte.Experiment(n_qubits, n_elec ,generator, operator, N_samples)
 
     """
     Optemizes the params of the generator by minimization of the
@@ -83,19 +74,9 @@ class UCCVQE(object):
 
         # Unpack arguments
         T_sq = self.repack_args(x, args)
-
-        # Make jw_organizer
         T_organizer = get_ucc_jw_organizer(T_sq, already_anti_herm=self._alredy_anti_herm)
-        print('\nT_org: ', T_organizer)
-
-
-        # Build circuit
         A = organizer_to_circuit(T_organizer)
-        # print('\nA: \n', A.str())
-        qforte.smart_print(A)
 
-
-        # Exponentiate and flip sign
         temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
         for t in A.terms():
             c, op = t
@@ -118,13 +99,9 @@ class UCCVQE(object):
         params = [1.0]
         Energy = uccsd_exp.perfect_experimental_avg(params)
 
-
-        # Retrun energy
         return Energy
 
-    def do_vqe(self, maxiter=100):
-
-        print('I get here')
+    def do_vqe(self, maxiter=20000):
 
         # Set options dict
         opts = {}
@@ -132,17 +109,13 @@ class UCCVQE(object):
         opts['ftol'] = 1e-5
         opts['disp'] = True
         opts['maxiter'] = maxiter
+        # opts['maxfev'] = 1
 
-
-        # Unpack args for initialization
         x0, sq_args = self.unpack_args()
-
-        #3 run the optemize the wfn via minimization of the 'experimental_avg' function
+        self._inital_guess_energy = self.expecation_val_func(x0, *sq_args)
         self._result = minimize(self.expecation_val_func, x0,
             args=sq_args,  method=self._optimizer,
             options=opts)
-
-
 
     def get_result(self):
         return self._result
@@ -153,6 +126,7 @@ class UCCVQE(object):
         else:
             print('\nresult:', self._result)
             # raise ValueError('Minimum energy invalid, optemization did not converge')
-            return 0
+            return self._result.fun
 
-    # def_get_final_amps(self):
+    def get_inital_guess_energy(self):
+        return self._inital_guess_energy
