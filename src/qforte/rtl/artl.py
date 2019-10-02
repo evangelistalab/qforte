@@ -1,5 +1,6 @@
 import qforte
 from qforte.rtl import rtl_helpers
+from qforte.rtl import artl_helpers
 # from qforte.utils import transforms
 # from qforte.utils import trotterization as trot
 
@@ -13,104 +14,21 @@ from scipy import linalg
     # as controlled-unitaries                                                              #
     ########################################################################################
 
+def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, initial_Nrefs=4, inital_dt=1.0, fast=False, var_dt=False,
+                        nstates_per_ref=2, print_mats=True, return_all_eigs=False,
+                        return_S=False, return_Hbar=False):
 
-def rtl_energy(mol, ref, dt, nstates, fast=False, print_mats=True, return_all_eigs=False, return_S=False, return_Hbar=False):
+    if(Nrefs != initial_Nrefs):
+        raise ValueError('Currently must use same number of reffs as generated in initial guess.')
 
-    #NOTE: need get nqubits from Molecule class attribute instead of ref list length
-    # Also true for UCC functions
-    nqubits = len(ref)
-
-    h_mat = np.zeros((nstates,nstates), dtype=complex)
-    s_mat = np.zeros((nstates,nstates), dtype=complex)
-
-    if(fast):
-        for p in range(nstates):
-            for q in range(p, nstates):
-                # print('p: ', p, ' q: ', q)
-
-                h_mat[p][q] = rtl_helpers.matrix_element_fast(ref, dt, p, q, mol.get_hamiltonian(),
-                                                nqubits, mol.get_hamiltonian())
-
-                h_mat[q][p] = np.conj(h_mat[p][q])
-
-                s_mat[p][q] = rtl_helpers.matrix_element_fast(ref, dt, p, q, mol.get_hamiltonian(),
-                                                nqubits)
-
-                s_mat[q][p] = np.conj(s_mat[p][q])
-
-    else:
-        for p in range(nstates):
-            for q in range(p, nstates):
-                # print('p: ', p, ' q: ', q)
-
-                h_mat[p][q] = rtl_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
-                                                nqubits, mol.get_hamiltonian())
-
-                h_mat[q][p] = np.conj(h_mat[p][q])
-
-                s_mat[p][q] = rtl_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
-                                                nqubits)
-
-                s_mat[q][p] = np.conj(s_mat[p][q])
-
-
-
-    if(print_mats):
-        print('------------------------------------------------')
-        print('     Matricies for Quantum Real-Time Lanczos')
-        print('------------------------------------------------')
-        print('Nsteps  : ', nstates)
-        print('delta t :     ', dt)
-        print("\nS:\n")
-        rtl_helpers.matprint(s_mat)
-
-        print("\nHbar:\n")
-        rtl_helpers.matprint(h_mat)
-
-
-    evals, evecs = linalg.eig(h_mat,s_mat)
-
-    print('\nRTLanczos (unsorted!) evals from measuring ancilla:\n', evals)
-    # print('type of evals list: ', type(evals))
-
-    evals_sorted = np.sort(evals)
-
-    if(np.abs(np.imag(evals_sorted[0])) < 1.0e-3):
-        Eo = np.real(evals_sorted[0])
-    elif(np.abs(np.imag(evals_sorted[1])) < 1.0e-3):
-        print('Warning: problem may be ill condidtiond, evals have imaginary components')
-        Eo = np.real(evals_sorted[1])
-    else:
-        print('Warding: problem may be extremely ill conditioned, check evals and k(S)')
-        Eo = 0.0
-
-    if(return_all_eigs or return_S or return_Hbar):
-        return_list = [Eo]
-        if(return_all_eigs):
-            return_list.append(evals)
-        if(return_S):
-            return_list.append(s_mat)
-        if(return_Hbar):
-            return_list.append(h_mat)
-
-        return return_list
-
-    return Eo
-
-
-def mr_rtl_energy(mol, ref_lst, C_ref_lst, fast=False, const_dt=None, nstates_per_ref=1, print_mats=True, return_all_eigs=False, return_S=False, return_Hbar=False):
-
-    # if(nstates_per_ref != 1):
-    #     raise ValueError('Using multiple time evolutions for each reference determinant is not yet supported.')
-
-    if(len(ref_lst) != len(C_ref_lst)):
-        raise ValueError('need same number of C guesses as references provided.')
+    # Below instructions will be executed by a function that returns a vector of reffs.
+    ref_lst = artl_helpers.get_init_ref_lst(initial_ref, initial_Nrefs, inital_dt,
+                                            mol, target_root=target_root, fast=True)
 
     #NOTE: need get nqubits from Molecule class attribute instead of ref list length
     # Also true for UCC functions
-    num_refs = len(ref_lst)
+    num_refs = Nrefs
     num_tot_basis = num_refs * nstates_per_ref
-
     nqubits = len(ref_lst[0])
 
     h_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
@@ -118,55 +36,32 @@ def mr_rtl_energy(mol, ref_lst, C_ref_lst, fast=False, const_dt=None, nstates_pe
 
     # Build list of dt values to be used
     dt_lst = []
-
-    if(const_dt):
-        for i in range(len(ref_lst)):
-            dt_lst.append(const_dt)
-
-    else:
-        for C in C_ref_lst:
-            dt_lst.append( (2*np.pi * (1.0 - C*np.conj(C))) )
+    for i in range(Nrefs):
+        dt_lst.append(mr_dt)
 
     # print('dt_lst: ', dt_lst)
-
     if(fast):
         # Fast algorimth doesn't use measurement
         for I in range(num_refs):
             for J in range(num_refs):
                 for m in range(nstates_per_ref):
                     for n in range(nstates_per_ref):
-
                         p = I*nstates_per_ref + m
                         q = J*nstates_per_ref + n
-
                         if(q>=p):
-
-                            # print('I: ', I)
-                            # print(' J: ', J)
-                            # print('  m: ', m)
-                            # print('   n: ', n)
-                            # print('    p: ', p, ' q: ', q)
-
-
                             ref_I = ref_lst[I]
                             ref_J = ref_lst[J]
-
                             dt_I = dt_lst[I]
                             dt_J = dt_lst[J]
-                            # print('    ref_I:',  ref_I, '  ref_J: ', ref_J)
-                            # print('     dt_I: ', dt_I,  '   dt_J: ', dt_J)
-
 
                             h_mat[p][q] = rtl_helpers.mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
                                                                         nqubits, mol.get_hamiltonian())
-
                             h_mat[q][p] = np.conj(h_mat[p][q])
 
                             s_mat[p][q] = rtl_helpers.mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
                                                                         nqubits)
-
                             s_mat[q][p] = np.conj(s_mat[p][q])
 
     else:
@@ -175,38 +70,22 @@ def mr_rtl_energy(mol, ref_lst, C_ref_lst, fast=False, const_dt=None, nstates_pe
             for J in range(num_refs):
                 for m in range(nstates_per_ref):
                     for n in range(nstates_per_ref):
-
                         p = I*nstates_per_ref + m
                         q = J*nstates_per_ref + n
-
                         if(q>=p):
-
-                            # print('I: ', I)
-                            # print(' J: ', J)
-                            # print('  m: ', m)
-                            # print('   n: ', n)
-                            # print('    p: ', p, ' q: ', q)
-
-
                             ref_I = ref_lst[I]
                             ref_J = ref_lst[J]
-
                             dt_I = dt_lst[I]
                             dt_J = dt_lst[J]
-                            # print('    ref_I:',  ref_I, '  ref_J: ', ref_J)
-                            # print('     dt_I: ', dt_I,  '   dt_J: ', dt_J)
-
 
                             h_mat[p][q] = rtl_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
                                                                         nqubits, mol.get_hamiltonian())
-
                             h_mat[q][p] = np.conj(h_mat[p][q])
 
                             s_mat[p][q] = rtl_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
                                                                         nqubits)
-
                             s_mat[q][p] = np.conj(s_mat[p][q])
 
 
@@ -232,7 +111,6 @@ def mr_rtl_energy(mol, ref_lst, C_ref_lst, fast=False, const_dt=None, nstates_pe
 
 
     evals, evecs = linalg.eig(h_mat,s_mat)
-
     print('\nRTLanczos (unsorted!) evals from measuring ancilla:\n', evals)
     # print('type of evals list: ', type(evals))
 
