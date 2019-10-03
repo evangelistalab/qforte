@@ -41,28 +41,34 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, initia
 
     # print('dt_lst: ', dt_lst)
     if(fast):
+        print('using faster fast algorithm lol')
+        s_mat, h_mat = rtl_helpers.get_mr_mats_fast(ref_lst, nstates_per_ref,
+                                                    dt_lst, mol.get_hamiltonian(),
+                                                    nqubits)
+
+        # print('using slower fast algorithm lol')
         # Fast algorimth doesn't use measurement
-        for I in range(num_refs):
-            for J in range(num_refs):
-                for m in range(nstates_per_ref):
-                    for n in range(nstates_per_ref):
-                        p = I*nstates_per_ref + m
-                        q = J*nstates_per_ref + n
-                        if(q>=p):
-                            ref_I = ref_lst[I]
-                            ref_J = ref_lst[J]
-                            dt_I = dt_lst[I]
-                            dt_J = dt_lst[J]
-
-                            h_mat[p][q] = rtl_helpers.mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J,
-                                                                        m, n, mol.get_hamiltonian(),
-                                                                        nqubits, mol.get_hamiltonian())
-                            h_mat[q][p] = np.conj(h_mat[p][q])
-
-                            s_mat[p][q] = rtl_helpers.mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J,
-                                                                        m, n, mol.get_hamiltonian(),
-                                                                        nqubits)
-                            s_mat[q][p] = np.conj(s_mat[p][q])
+        # for I in range(num_refs):
+        #     for J in range(num_refs):
+        #         for m in range(nstates_per_ref):
+        #             for n in range(nstates_per_ref):
+        #                 p = I*nstates_per_ref + m
+        #                 q = J*nstates_per_ref + n
+        #                 if(q>=p):
+        #                     ref_I = ref_lst[I]
+        #                     ref_J = ref_lst[J]
+        #                     dt_I = dt_lst[I]
+        #                     dt_J = dt_lst[J]
+        #
+        #                     h_mat[p][q] = rtl_helpers.mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J,
+        #                                                                 m, n, mol.get_hamiltonian(),
+        #                                                                 nqubits, mol.get_hamiltonian())
+        #                     h_mat[q][p] = np.conj(h_mat[p][q])
+        #
+        #                     s_mat[p][q] = rtl_helpers.mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J,
+        #                                                                 m, n, mol.get_hamiltonian(),
+        #                                                                 nqubits)
+        #                     s_mat[q][p] = np.conj(s_mat[p][q])
 
     else:
         # Most basic to ensure things are working

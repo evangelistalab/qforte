@@ -1,9 +1,8 @@
 import qforte
-# from qforte.utils import transforms
 from qforte.utils import trotterization as trot
 
 import numpy as np
-# from scipy import linalg
+
 
 def matprint(mat, fmt="g"):
     col_maxes = [max([len(("{:"+fmt+"}").format(x)) for x in col]) for col in mat.T]
@@ -172,9 +171,95 @@ def matrix_element(ref, dt, m, n, H, nqubits, A = None):
 
     return value
 
-def matrix_element_fast(ref, dt, m, n, H, nqubits, A = None):
+# def matrix_element_fast(ref, dt, m, n, H, nqubits, A = None):
+#     """
+#     This functio returns a single matrix element M_bk based on the evolutio of
+#     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
+#     reference state |Phi_o>. This is done WITHOUT measuring any operators,
+#     but rather computes the expecation value directly using a priori knowlege of
+#     the wavefunction coefficients
+#
+#     :param ref: a list representing the referende state |Phi_o>
+#     :param dt: a double representing the real time step
+#     :param m: the intager number of time steps for the Ub evolution
+#     :param n: the intager number of time steps for the Uk evolution
+#     :param H: the QuantumOperator to time evolove under
+#     :param nqubits: the intager number of qubits
+#     :param A: (optional) the overal operator to measure with respect to
+#     """
+#     value = 0.0
+#
+#     # Prepare the right circuit exp(-i n dt H) prod_j X_j
+#     Uk = qforte.QuantumCircuit()
+#     # 1. Add all the X gates (proj_j X_j) that define the reference
+#     for j in range(nqubits):
+#         if ref[j] == 1:
+#             Uk.add_gate(qforte.make_gate('X', j, j))
+#
+#     # 2. prod_l exp(-i n dt h_l P_l)
+#     temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
+#     for t in H.terms():
+#         c, op = t
+#         phase = -1.0j * n * dt * c
+#         temp_op1.add_term(phase, op)
+#
+#     expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
+#
+#     for gate in expn_op1.gates():
+#         Uk.add_gate(gate)
+#
+#     # Prepare the left circuit exp(-i n dt H) prod_j X_j
+#     Ub = qforte.QuantumCircuit()
+#     # 1. rev_prod_k exp(i n dt h_k P_k)
+#     temp_op2 = qforte.QuantumOperator()
+#     for t in reversed(H.terms()):
+#         c, op = t
+#         phase = 1.0j * m * dt * c
+#         temp_op2.add_term(phase, op)
+#
+#     expn_op2, phase2 = qforte.trotterization.trotterize(temp_op2)
+#
+#     for gate in expn_op2.gates():
+#         Ub.add_gate(gate)
+#
+#     # 2. Add all the X gates that define the reference
+#     for j in range(nqubits):
+#         if ref[j] == 1:
+#             Ub.add_gate(qforte.make_gate('X', j, j))
+#
+#     if A == None:
+#         cir = qforte.QuantumCircuit()
+#         cir.add_circuit(Uk)
+#         cir.add_circuit(Ub)
+#
+#         # Projection approach <0| (XPX |0>)
+#         zero_state = qforte.QuantumBasis()
+#         qc = qforte.QuantumComputer(nqubits)
+#         qc.apply_circuit(cir)
+#         value = qc.coeff(zero_state) * phase1 * phase2
+#
+#     else:
+#         for t in A.terms():
+#             c, op = t
+#             cir = qforte.QuantumCircuit()
+#             cir.add_circuit(Uk)
+#             cir.add_circuit(op)
+#             cir.add_circuit(Ub)
+#
+#             # Projection approach <0| (XPX |0>)
+#             zero_state = qforte.QuantumBasis()
+#             qc = qforte.QuantumComputer(nqubits)
+#             qc.apply_circuit(cir)
+#             element = qc.coeff(zero_state) * phase1 * phase2
+#             value += c * element
+#
+#             #append to use measurement
+#
+#     return value
+
+def get_sr_mats_fast(ref, dt, nstates, H, nqubits):
     """
-    This functio returns a single matrix element M_bk based on the evolutio of
+    This function returns a single matrix element M_bk based on the evolutio of
     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
     reference state |Phi_o>. This is done WITHOUT measuring any operators,
     but rather computes the expecation value directly using a priori knowlege of
@@ -182,81 +267,67 @@ def matrix_element_fast(ref, dt, m, n, H, nqubits, A = None):
 
     :param ref: a list representing the referende state |Phi_o>
     :param dt: a double representing the real time step
-    :param m: the intager number of time steps for the Ub evolution
-    :param n: the intager number of time steps for the Uk evolution
     :param H: the QuantumOperator to time evolove under
     :param nqubits: the intager number of qubits
     :param A: (optional) the overal operator to measure with respect to
     """
-    value = 0.0
 
-    # Prepare the right circuit exp(-i n dt H) prod_j X_j
-    Uk = qforte.QuantumCircuit()
-    # 1. Add all the X gates (proj_j X_j) that define the reference
-    for j in range(nqubits):
-        if ref[j] == 1:
-            Uk.add_gate(qforte.make_gate('X', j, j))
+    ############################################################################
 
-    # 2. prod_l exp(-i n dt h_l P_l)
-    temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
-    for t in H.terms():
-        c, op = t
-        phase = -1.0j * n * dt * c
-        temp_op1.add_term(phase, op)
+    #Initialize arrays for Hbar and S
+    h_mat = np.zeros((nstates,nstates), dtype=complex)
+    s_mat = np.zeros((nstates,nstates), dtype=complex)
 
-    expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
+    #Build |Ωn> and |H Ωn> Vectors
+    omega_lst = []
+    Homega_lst = []
+    for n in range(nstates):
 
-    for gate in expn_op1.gates():
-        Uk.add_gate(gate)
+        Un = qforte.QuantumCircuit()
+        for j in range(nqubits):
+            if ref[j] == 1:
+                Un.add_gate(qforte.make_gate('X', j, j))
+                phase1 = 1.0
 
-    # Prepare the left circuit exp(-i n dt H) prod_j X_j
-    Ub = qforte.QuantumCircuit()
-    # 1. rev_prod_k exp(i n dt h_k P_k)
-    temp_op2 = qforte.QuantumOperator()
-    for t in reversed(H.terms()):
-        c, op = t
-        phase = 1.0j * m * dt * c
-        temp_op2.add_term(phase, op)
+        if(n>0):
+            temp_op1 = qforte.QuantumOperator()
+            for t in H.terms():
+                c, op = t
+                phase = -1.0j * n * dt * c
+                temp_op1.add_term(phase, op)
 
-    expn_op2, phase2 = qforte.trotterization.trotterize(temp_op2)
+            expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
+            Un.add_circuit(expn_op1)
 
-    for gate in expn_op2.gates():
-        Ub.add_gate(gate)
+        QC = qforte.QuantumComputer(nqubits)
+        QC.apply_circuit(Un)
+        QC.apply_constant(phase1)
+        omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
-    # 2. Add all the X gates that define the reference
-    for j in range(nqubits):
-        if ref[j] == 1:
-            Ub.add_gate(qforte.make_gate('X', j, j))
+        Homega = np.zeros((2**nqubits), dtype=complex)
 
-    if A == None:
-        cir = qforte.QuantumCircuit()
-        cir.add_circuit(Uk)
-        cir.add_circuit(Ub)
+        for k in range(len(H.terms())):
+            QCk = qforte.QuantumComputer(nqubits)
+            QCk.set_coeff_vec(QC.get_coeff_vec())
 
-        # Projection approach <0| (XPX |0>)
-        zero_state = qforte.QuantumBasis()
-        qc = qforte.QuantumComputer(nqubits)
-        qc.apply_circuit(cir)
-        value = qc.coeff(zero_state) * phase1 * phase2
+            if(H.terms()[k][1] is not None):
+                QCk.apply_circuit(H.terms()[k][1])
+            if(H.terms()[k][0] is not None):
+                QCk.apply_constant(H.terms()[k][0])
 
-    else:
-        for t in A.terms():
-            c, op = t
-            cir = qforte.QuantumCircuit()
-            cir.add_circuit(Uk)
-            cir.add_circuit(op)
-            cir.add_circuit(Ub)
+            Homega = np.add(Homega, np.asarray(QCk.get_coeff_vec(), dtype=complex))
 
-            # Projection approach <0| (XPX |0>)
-            zero_state = qforte.QuantumBasis()
-            qc = qforte.QuantumComputer(nqubits)
-            qc.apply_circuit(cir)
-            element = qc.coeff(zero_state) * phase1 * phase2
-            value += c * element
+        Homega_lst.append(Homega)
 
-            #append to use measurement
+    for p in range(nstates):
+        for q in range(p, nstates):
+            h_mat[p][q] = np.vdot(omega_lst[p], Homega_lst[q])
+            h_mat[q][p] = np.conj(h_mat[p][q])
+            s_mat[p][q] = np.vdot(omega_lst[p], omega_lst[q])
+            s_mat[q][p] = np.conj(s_mat[p][q])
 
-    return value
+    return s_mat, h_mat
+
 
 def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None):
     """
@@ -416,9 +487,93 @@ def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None):
 
     return value
 
-def mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None):
+# def mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None):
+#     """
+#     This functio returns a single matrix element M_bk based on the evolutio of
+#     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
+#     reference state |Phi_o>. This is done WITHOUT measuring any operators,
+#     but rather computes the expecation value directly using a priori knowlege of
+#     the wavefunction coefficients
+#
+#     :param ref: a list representing the referende state |Phi_o>
+#     :param dt: a double representing the real time step
+#     :param m: the intager number of time steps for the Ub evolution
+#     :param n: the intager number of time steps for the Uk evolution
+#     :param H: the QuantumOperator to time evolove under
+#     :param nqubits: the intager number of qubits
+#     :param A: (optional) the overal operator to measure with respect to
+#     """
+#     value = 0.0
+#
+#     # Prepare the right circuit exp(-i n dt H) prod_j X_j
+#     Uk = qforte.QuantumCircuit()
+#     # 1. Add all the X gates (proj_j X_j) that define the reference
+#     for j in range(nqubits):
+#         if ref_I[j] == 1:
+#             Uk.add_gate(qforte.make_gate('X', j, j))
+#
+#     # 2. prod_l exp(-i n dt h_l P_l)
+#     temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
+#     for t in H.terms():
+#         c, op = t
+#         phase = -1.0j * m * dt_I * c
+#         temp_op1.add_term(phase, op)
+#
+#     expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
+#
+#     for gate in expn_op1.gates():
+#         Uk.add_gate(gate)
+#
+#     # Prepare the left circuit exp(-i n dt H) prod_j X_j
+#     Ub = qforte.QuantumCircuit()
+#     # 1. rev_prod_k exp(i n dt h_k P_k)
+#     temp_op2 = qforte.QuantumOperator()
+#     for t in reversed(H.terms()):
+#         c, op = t
+#         phase = 1.0j * n * dt_J * c
+#         temp_op2.add_term(phase, op)
+#
+#     expn_op2, phase2 = qforte.trotterization.trotterize(temp_op2)
+#
+#     for gate in expn_op2.gates():
+#         Ub.add_gate(gate)
+#
+#     # 2. Add all the X gates that define the reference
+#     for j in range(nqubits):
+#         if ref_J[j] == 1:
+#             Ub.add_gate(qforte.make_gate('X', j, j))
+#
+#     if A == None:
+#         cir = qforte.QuantumCircuit()
+#         cir.add_circuit(Uk)
+#         cir.add_circuit(Ub)
+#
+#         # Projection approach <0| (XPX |0>)
+#         zero_state = qforte.QuantumBasis()
+#         qc = qforte.QuantumComputer(nqubits)
+#         qc.apply_circuit(cir)
+#         value = qc.coeff(zero_state) * phase1 * phase2
+#
+#     else:
+#         for t in A.terms():
+#             c, op = t
+#             cir = qforte.QuantumCircuit()
+#             cir.add_circuit(Uk)
+#             cir.add_circuit(op)
+#             cir.add_circuit(Ub)
+#
+#             # Projection approach <0| (XPX |0>)
+#             zero_state = qforte.QuantumBasis()
+#             qc = qforte.QuantumComputer(nqubits)
+#             qc.apply_circuit(cir)
+#             element = qc.coeff(zero_state) * phase1 * phase2
+#             value += c * element
+#
+#     return value
+
+def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits):
     """
-    This functio returns a single matrix element M_bk based on the evolutio of
+    This function returns a single matrix element M_bk based on the evolutio of
     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
     reference state |Phi_o>. This is done WITHOUT measuring any operators,
     but rather computes the expecation value directly using a priori knowlege of
@@ -426,76 +581,73 @@ def mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None)
 
     :param ref: a list representing the referende state |Phi_o>
     :param dt: a double representing the real time step
-    :param m: the intager number of time steps for the Ub evolution
-    :param n: the intager number of time steps for the Uk evolution
     :param H: the QuantumOperator to time evolove under
     :param nqubits: the intager number of qubits
     :param A: (optional) the overal operator to measure with respect to
     """
-    value = 0.0
 
-    # Prepare the right circuit exp(-i n dt H) prod_j X_j
-    Uk = qforte.QuantumCircuit()
-    # 1. Add all the X gates (proj_j X_j) that define the reference
-    for j in range(nqubits):
-        if ref_I[j] == 1:
-            Uk.add_gate(qforte.make_gate('X', j, j))
+    num_tot_basis = len(ref_lst) * nstates_per_ref
 
-    # 2. prod_l exp(-i n dt h_l P_l)
-    temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
-    for t in H.terms():
-        c, op = t
-        phase = -1.0j * m * dt_I * c
-        temp_op1.add_term(phase, op)
+    #Initialize arrays for Hbar and S
+    h_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
+    s_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
 
-    expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
+    #Build |Ωn> and |H Ωn> Vectors
+    omega_lst = []
+    Homega_lst = []
 
-    for gate in expn_op1.gates():
-        Uk.add_gate(gate)
+    for i, ref in enumerate(ref_lst):
+        dt = dt_lst[i]
+        for n in range(nstates_per_ref):
 
-    # Prepare the left circuit exp(-i n dt H) prod_j X_j
-    Ub = qforte.QuantumCircuit()
-    # 1. rev_prod_k exp(i n dt h_k P_k)
-    temp_op2 = qforte.QuantumOperator()
-    for t in reversed(H.terms()):
-        c, op = t
-        phase = 1.0j * n * dt_J * c
-        temp_op2.add_term(phase, op)
+            Un = qforte.QuantumCircuit()
+            for j in range(nqubits):
+                if ref[j] == 1:
+                    Un.add_gate(qforte.make_gate('X', j, j))
+                    phase1 = 1.0
 
-    expn_op2, phase2 = qforte.trotterization.trotterize(temp_op2)
+            if(n>0):
+                temp_op1 = qforte.QuantumOperator()
+                for t in H.terms():
+                    c, op = t
+                    phase = -1.0j * n * dt * c
+                    temp_op1.add_term(phase, op)
 
-    for gate in expn_op2.gates():
-        Ub.add_gate(gate)
+                expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
+                Un.add_circuit(expn_op1)
 
-    # 2. Add all the X gates that define the reference
-    for j in range(nqubits):
-        if ref_J[j] == 1:
-            Ub.add_gate(qforte.make_gate('X', j, j))
+            QC = qforte.QuantumComputer(nqubits)
+            QC.apply_circuit(Un)
+            QC.apply_constant(phase1)
+            omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
-    if A == None:
-        cir = qforte.QuantumCircuit()
-        cir.add_circuit(Uk)
-        cir.add_circuit(Ub)
+            Homega = np.zeros((2**nqubits), dtype=complex)
 
-        # Projection approach <0| (XPX |0>)
-        zero_state = qforte.QuantumBasis()
-        qc = qforte.QuantumComputer(nqubits)
-        qc.apply_circuit(cir)
-        value = qc.coeff(zero_state) * phase1 * phase2
+            for k in range(len(H.terms())):
+                QCk = qforte.QuantumComputer(nqubits)
+                QCk.set_coeff_vec(QC.get_coeff_vec())
 
-    else:
-        for t in A.terms():
-            c, op = t
-            cir = qforte.QuantumCircuit()
-            cir.add_circuit(Uk)
-            cir.add_circuit(op)
-            cir.add_circuit(Ub)
+                if(H.terms()[k][1] is not None):
+                    QCk.apply_circuit(H.terms()[k][1])
+                if(H.terms()[k][0] is not None):
+                    QCk.apply_constant(H.terms()[k][0])
 
-            # Projection approach <0| (XPX |0>)
-            zero_state = qforte.QuantumBasis()
-            qc = qforte.QuantumComputer(nqubits)
-            qc.apply_circuit(cir)
-            element = qc.coeff(zero_state) * phase1 * phase2
-            value += c * element
+                Homega = np.add(Homega, np.asarray(QCk.get_coeff_vec(), dtype=complex))
 
-    return value
+            Homega_lst.append(Homega)
+
+    for p in range(num_tot_basis):
+        for q in range(p, num_tot_basis):
+            h_mat[p][q] = np.vdot(omega_lst[p], Homega_lst[q])
+            h_mat[q][p] = np.conj(h_mat[p][q])
+            s_mat[p][q] = np.vdot(omega_lst[p], omega_lst[q])
+            s_mat[q][p] = np.conj(s_mat[p][q])
+
+    return s_mat, h_mat
+
+# def canonical_geig_solve(s_mat, h_mat):
+#
+#
+#
+#
+#     return evals, evecs

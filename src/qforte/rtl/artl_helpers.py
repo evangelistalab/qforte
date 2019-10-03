@@ -14,11 +14,14 @@ def matprint(mat, fmt="g"):
         print("")
 
 
-def sorted_largest_idxs(array, rev=True):
+def sorted_largest_idxs(array, use_real=False, rev=True):
         temp = np.empty((len(array)), dtype=object )
         for i, val in enumerate(array):
             temp[i] = (val, i)
-        sorted_temp = sorted(temp, key=lambda factor: factor[0], reverse=rev)
+        if(use_real):
+            sorted_temp = sorted(temp, key=lambda factor: np.real(factor[0]), reverse=rev)
+        else:
+            sorted_temp = sorted(temp, key=lambda factor: factor[0], reverse=rev)
         return sorted_temp
 
 def intiger_to_ref(n, nqubits):
@@ -44,15 +47,21 @@ def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
     s_mat = np.zeros((Ninitial_refs,Ninitial_refs), dtype=complex)
 
     if(fast):
-        for p in range(Ninitial_refs):
-            for q in range(p, Ninitial_refs):
-                h_mat[p][q] = rtl_helpers.matrix_element_fast(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
-                                                nqubits, mol.get_hamiltonian())
-                h_mat[q][p] = np.conj(h_mat[p][q])
+        print('using faster fast algorithm lol')
+        s_mat, h_mat = rtl_helpers.get_sr_mats_fast(initial_ref, inital_dt,
+                                                    Ninitial_refs, mol.get_hamiltonian(),
+                                                    nqubits)
 
-                s_mat[p][q] = rtl_helpers.matrix_element_fast(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
-                                                nqubits)
-                s_mat[q][p] = np.conj(s_mat[p][q])
+        # print('using slower fast algorithm lol')
+        # for p in range(Ninitial_refs):
+        #     for q in range(p, Ninitial_refs):
+        #         h_mat[p][q] = rtl_helpers.matrix_element_fast(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
+        #                                         nqubits, mol.get_hamiltonian())
+        #         h_mat[q][p] = np.conj(h_mat[p][q])
+        #
+        #         s_mat[p][q] = rtl_helpers.matrix_element_fast(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
+        #                                         nqubits)
+        #         s_mat[q][p] = np.conj(s_mat[p][q])
 
 
     else:
@@ -66,22 +75,41 @@ def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
                                                 nqubits)
                 s_mat[q][p] = np.conj(s_mat[p][q])
 
+    print("\nS initial:\n")
+    rtl_helpers.matprint(s_mat)
 
+    print("\nHbar: initial\n")
+    rtl_helpers.matprint(h_mat)
 
     if(np.linalg.cond(s_mat) > 1.0e7):
         raise ValueError('cond(S) > 1e7, matrix is possibly ill conditioned, use larger inital_dt.')
 
     evals, evecs = linalg.eig(h_mat,s_mat)
 
-    print('\nARTLanczos (unsorted!) initial evals:\n\n', evals)
-    print('\nARTLanczos initial evecs:\n')
-    matprint(evecs)
+    # print('\nARTLanczos (unsorted!) initial evals:\n\n', evals)
+    # print('\nARTLanczos initial evecs:\n')
+    # matprint(evecs)
+
+    # need to make sorted evals and evecs...
+    # use sorted_largest_idxs()
+    sorted_evals_idxs = sorted_largest_idxs(evals, use_real=True, rev=False)
+    sorted_evals = np.zeros((Ninitial_refs), dtype=complex)
+    sorted_evecs = np.zeros((Ninitial_refs,Ninitial_refs), dtype=complex)
+    for n in range(Ninitial_refs):
+        old_idx = sorted_evals_idxs[n][1]
+        sorted_evals[n]   = evals[old_idx]
+        sorted_evecs[:,n] = evecs[:,old_idx]
+
+    print('\nARTLanczos (sorted!) initial evals:\n\n', sorted_evals)
+    print('\nARTLanczos initial sorted evecs:\n')
+    matprint(sorted_evecs)
+
 
     sq_mod_evecs = np.zeros((Ninitial_refs,Ninitial_refs), dtype=complex)
 
     for p in range(Ninitial_refs):
         for q in range(Ninitial_refs):
-            sq_mod_evecs[p][q] = evecs[p][q] * np.conj(evecs[p][q])
+            sq_mod_evecs[p][q] = sorted_evecs[p][q] * np.conj(sorted_evecs[p][q])
 
     print('\nARTLanczos initial evecs square modulous:\n')
     matprint(sq_mod_evecs)
@@ -112,24 +140,37 @@ def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
         else:
             raise ValueError('Measurement-based selection of new refs not yet implemented.')
 
+
+    # Actual Values
+    basis_coeff_mat = np.array(basis_coeff_vec_lst)
+    Cprime = (sorted_evecs.transpose()).dot(basis_coeff_mat)
+    for n in range(Ninitial_refs):
+        for i, val in enumerate(Cprime[n]):
+            Cprime[n][i] *= np.conj(val)
+
+
+    # Now using the approximation
     for n in range(Ninitial_refs):
         for i, val in enumerate(basis_coeff_vec_lst[n]):
             basis_coeff_vec_lst[n][i] *= np.conj(val)
 
-    basis_coeff_mat = np.array(basis_coeff_vec_lst)
-    Cprime = (sq_mod_evecs).dot(basis_coeff_mat)
 
+    Cprime_sq_mod = (sq_mod_evecs.transpose()).dot(basis_coeff_mat)
+
+    true_idx_lst = []
     idx_lst = []
-
     if(target_root is not None):
         print('\nTargeting refs for root ', target_root)
-        sorted_idxs = sorted_largest_idxs(Cprime[target_root,:])
+        true_sorted_idxs = sorted_largest_idxs(Cprime[target_root,:])
+        sorted_idxs = sorted_largest_idxs(Cprime_sq_mod[target_root,:])
         for n in range(Ninitial_refs):
             idx_lst.append( sorted_idxs[n][1] )
+            true_idx_lst.append( true_sorted_idxs[n][1] )
 
     else:
         for n in range(Ninitial_refs):
-            sorted_idxs = sorted_largest_idxs(Cprime[n,:])
+            true_sorted_idxs = sorted_largest_idxs(Cprime[target_root,:])
+            sorted_idxs = sorted_largest_idxs(Cprime_sq_mod[n,:])
             if(sorted_idxs[0][1] in idx_lst):
                 k = 1
                 while(sorted_idxs[k][1] in idx_lst):
@@ -137,12 +178,29 @@ def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
                     if(k == 2**nqubits):
                         raise ValueError('Selection of inital determinant references unsucessful.')
 
+                l = 1
+                while(true_sorted_idxs[k][1] in true_idx_lst):
+                    l += 1
+                    if(l == 2**nqubits):
+                        raise ValueError('Selection of inital determinant references unsucessful.')
+
+                true_idx_lst.append( true_sorted_idxs[k][1] )
                 idx_lst.append( sorted_idxs[k][1] )
 
+
             else:
+                true_idx_lst.append( true_sorted_idxs[0][1] )
                 idx_lst.append( sorted_idxs[0][1] )
 
-    print('\nInitial ref guesses:\n')
+    print('\nMost important determinats (no approximation):\n')
+    print('root               dominant determinant  ')
+    print('----------------------------------------')
+    for i, idx in enumerate(true_idx_lst):
+        basis = qforte.QuantumBasis(idx)
+        print('  ', i, '                ', basis.str(nqubits))
+
+
+    print('\nInitial ref guesses (using approximation):\n')
     print('root               dominant determinant  ')
     print('----------------------------------------')
     for i, idx in enumerate(idx_lst):

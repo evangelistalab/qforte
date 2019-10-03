@@ -24,25 +24,25 @@ def rtl_energy(mol, ref, dt, nstates, fast=False, print_mats=True, return_all_ei
     s_mat = np.zeros((nstates,nstates), dtype=complex)
 
     if(fast):
-        for p in range(nstates):
-            for q in range(p, nstates):
-                # print('p: ', p, ' q: ', q)
-
-                h_mat[p][q] = rtl_helpers.matrix_element_fast(ref, dt, p, q, mol.get_hamiltonian(),
-                                                nqubits, mol.get_hamiltonian())
-
-                h_mat[q][p] = np.conj(h_mat[p][q])
-
-                s_mat[p][q] = rtl_helpers.matrix_element_fast(ref, dt, p, q, mol.get_hamiltonian(),
-                                                nqubits)
-
-                s_mat[q][p] = np.conj(s_mat[p][q])
+        print('using faster fast algorithm lol')
+        s_mat, h_mat = rtl_helpers.get_sr_mats_fast(ref, dt,
+                                                    nstates, mol.get_hamiltonian(),
+                                                    nqubits)
+        # for p in range(nstates):
+        #     for q in range(p, nstates):
+        #         h_mat[p][q] = rtl_helpers.matrix_element_fast(ref, dt, p, q, mol.get_hamiltonian(),
+        #                                         nqubits, mol.get_hamiltonian())
+        #
+        #         h_mat[q][p] = np.conj(h_mat[p][q])
+        #
+        #         s_mat[p][q] = rtl_helpers.matrix_element_fast(ref, dt, p, q, mol.get_hamiltonian(),
+        #                                         nqubits)
+        #
+        #         s_mat[q][p] = np.conj(s_mat[p][q])
 
     else:
         for p in range(nstates):
             for q in range(p, nstates):
-                # print('p: ', p, ' q: ', q)
-
                 h_mat[p][q] = rtl_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
                                                 nqubits, mol.get_hamiltonian())
 
