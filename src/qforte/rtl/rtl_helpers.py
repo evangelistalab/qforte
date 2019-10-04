@@ -2,7 +2,7 @@ import qforte
 from qforte.utils import trotterization as trot
 
 import numpy as np
-
+from scipy import linalg
 
 def matprint(mat, fmt="g"):
     col_maxes = [max([len(("{:"+fmt+"}").format(x)) for x in col]) for col in mat.T]
@@ -10,6 +10,16 @@ def matprint(mat, fmt="g"):
         for i, y in enumerate(x):
             print(("{:"+str(col_maxes[i])+fmt+"}").format(y), end="  ")
         print("")
+
+def sorted_largest_idxs(array, use_real=False, rev=True):
+        temp = np.empty((len(array)), dtype=object )
+        for i, val in enumerate(array):
+            temp[i] = (val, i)
+        if(use_real):
+            sorted_temp = sorted(temp, key=lambda factor: np.real(factor[0]), reverse=rev)
+        else:
+            sorted_temp = sorted(temp, key=lambda factor: factor[0], reverse=rev)
+        return sorted_temp
 
 def matrix_element(ref, dt, m, n, H, nqubits, A = None):
     """
@@ -164,98 +174,11 @@ def matrix_element(ref, dt, m, n, H, nqubits, A = None):
             x_value = X_exp.perfect_experimental_avg(params)
             y_value = Y_exp.perfect_experimental_avg(params)
 
-
             # <Psi_o|Ub V_l Uk|Psi_o> = <2* sigma_+> = <Psi_f|X|Psi_f> + * i * <Psi_f|Y|Psi_f>
             element = (x_value + 1.0j * y_value) * phase1 * np.conj(phase2)
             value += c * element
 
     return value
-
-# def matrix_element_fast(ref, dt, m, n, H, nqubits, A = None):
-#     """
-#     This functio returns a single matrix element M_bk based on the evolutio of
-#     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
-#     reference state |Phi_o>. This is done WITHOUT measuring any operators,
-#     but rather computes the expecation value directly using a priori knowlege of
-#     the wavefunction coefficients
-#
-#     :param ref: a list representing the referende state |Phi_o>
-#     :param dt: a double representing the real time step
-#     :param m: the intager number of time steps for the Ub evolution
-#     :param n: the intager number of time steps for the Uk evolution
-#     :param H: the QuantumOperator to time evolove under
-#     :param nqubits: the intager number of qubits
-#     :param A: (optional) the overal operator to measure with respect to
-#     """
-#     value = 0.0
-#
-#     # Prepare the right circuit exp(-i n dt H) prod_j X_j
-#     Uk = qforte.QuantumCircuit()
-#     # 1. Add all the X gates (proj_j X_j) that define the reference
-#     for j in range(nqubits):
-#         if ref[j] == 1:
-#             Uk.add_gate(qforte.make_gate('X', j, j))
-#
-#     # 2. prod_l exp(-i n dt h_l P_l)
-#     temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
-#     for t in H.terms():
-#         c, op = t
-#         phase = -1.0j * n * dt * c
-#         temp_op1.add_term(phase, op)
-#
-#     expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
-#
-#     for gate in expn_op1.gates():
-#         Uk.add_gate(gate)
-#
-#     # Prepare the left circuit exp(-i n dt H) prod_j X_j
-#     Ub = qforte.QuantumCircuit()
-#     # 1. rev_prod_k exp(i n dt h_k P_k)
-#     temp_op2 = qforte.QuantumOperator()
-#     for t in reversed(H.terms()):
-#         c, op = t
-#         phase = 1.0j * m * dt * c
-#         temp_op2.add_term(phase, op)
-#
-#     expn_op2, phase2 = qforte.trotterization.trotterize(temp_op2)
-#
-#     for gate in expn_op2.gates():
-#         Ub.add_gate(gate)
-#
-#     # 2. Add all the X gates that define the reference
-#     for j in range(nqubits):
-#         if ref[j] == 1:
-#             Ub.add_gate(qforte.make_gate('X', j, j))
-#
-#     if A == None:
-#         cir = qforte.QuantumCircuit()
-#         cir.add_circuit(Uk)
-#         cir.add_circuit(Ub)
-#
-#         # Projection approach <0| (XPX |0>)
-#         zero_state = qforte.QuantumBasis()
-#         qc = qforte.QuantumComputer(nqubits)
-#         qc.apply_circuit(cir)
-#         value = qc.coeff(zero_state) * phase1 * phase2
-#
-#     else:
-#         for t in A.terms():
-#             c, op = t
-#             cir = qforte.QuantumCircuit()
-#             cir.add_circuit(Uk)
-#             cir.add_circuit(op)
-#             cir.add_circuit(Ub)
-#
-#             # Projection approach <0| (XPX |0>)
-#             zero_state = qforte.QuantumBasis()
-#             qc = qforte.QuantumComputer(nqubits)
-#             qc.apply_circuit(cir)
-#             element = qc.coeff(zero_state) * phase1 * phase2
-#             value += c * element
-#
-#             #append to use measurement
-#
-#     return value
 
 def get_sr_mats_fast(ref, dt, nstates, H, nqubits):
     """
@@ -487,90 +410,6 @@ def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None):
 
     return value
 
-# def mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None):
-#     """
-#     This functio returns a single matrix element M_bk based on the evolutio of
-#     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
-#     reference state |Phi_o>. This is done WITHOUT measuring any operators,
-#     but rather computes the expecation value directly using a priori knowlege of
-#     the wavefunction coefficients
-#
-#     :param ref: a list representing the referende state |Phi_o>
-#     :param dt: a double representing the real time step
-#     :param m: the intager number of time steps for the Ub evolution
-#     :param n: the intager number of time steps for the Uk evolution
-#     :param H: the QuantumOperator to time evolove under
-#     :param nqubits: the intager number of qubits
-#     :param A: (optional) the overal operator to measure with respect to
-#     """
-#     value = 0.0
-#
-#     # Prepare the right circuit exp(-i n dt H) prod_j X_j
-#     Uk = qforte.QuantumCircuit()
-#     # 1. Add all the X gates (proj_j X_j) that define the reference
-#     for j in range(nqubits):
-#         if ref_I[j] == 1:
-#             Uk.add_gate(qforte.make_gate('X', j, j))
-#
-#     # 2. prod_l exp(-i n dt h_l P_l)
-#     temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
-#     for t in H.terms():
-#         c, op = t
-#         phase = -1.0j * m * dt_I * c
-#         temp_op1.add_term(phase, op)
-#
-#     expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
-#
-#     for gate in expn_op1.gates():
-#         Uk.add_gate(gate)
-#
-#     # Prepare the left circuit exp(-i n dt H) prod_j X_j
-#     Ub = qforte.QuantumCircuit()
-#     # 1. rev_prod_k exp(i n dt h_k P_k)
-#     temp_op2 = qforte.QuantumOperator()
-#     for t in reversed(H.terms()):
-#         c, op = t
-#         phase = 1.0j * n * dt_J * c
-#         temp_op2.add_term(phase, op)
-#
-#     expn_op2, phase2 = qforte.trotterization.trotterize(temp_op2)
-#
-#     for gate in expn_op2.gates():
-#         Ub.add_gate(gate)
-#
-#     # 2. Add all the X gates that define the reference
-#     for j in range(nqubits):
-#         if ref_J[j] == 1:
-#             Ub.add_gate(qforte.make_gate('X', j, j))
-#
-#     if A == None:
-#         cir = qforte.QuantumCircuit()
-#         cir.add_circuit(Uk)
-#         cir.add_circuit(Ub)
-#
-#         # Projection approach <0| (XPX |0>)
-#         zero_state = qforte.QuantumBasis()
-#         qc = qforte.QuantumComputer(nqubits)
-#         qc.apply_circuit(cir)
-#         value = qc.coeff(zero_state) * phase1 * phase2
-#
-#     else:
-#         for t in A.terms():
-#             c, op = t
-#             cir = qforte.QuantumCircuit()
-#             cir.add_circuit(Uk)
-#             cir.add_circuit(op)
-#             cir.add_circuit(Ub)
-#
-#             # Projection approach <0| (XPX |0>)
-#             zero_state = qforte.QuantumBasis()
-#             qc = qforte.QuantumComputer(nqubits)
-#             qc.apply_circuit(cir)
-#             element = qc.coeff(zero_state) * phase1 * phase2
-#             value += c * element
-#
-#     return value
-
 def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits):
     """
     This function returns a single matrix element M_bk based on the evolutio of
@@ -645,9 +484,67 @@ def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits):
 
     return s_mat, h_mat
 
-# def canonical_geig_solve(s_mat, h_mat):
-#
-#
-#
-#
-#     return evals, evecs
+def canonical_geig_solve(S, H, print_mats=False):
+
+    THRESHOLD = 1e-7
+    s, U = linalg.eig(S)
+    s_prime = []
+
+    for sii in s:
+        if(np.imag(sii) > 1e-12):
+            raise ValueError('S may not be hermetian, large imag. eval component.')
+        if(np.real(sii) > THRESHOLD):
+            s_prime.append(np.real(sii))
+
+    X_prime = np.zeros((len(s), len(s_prime)), dtype=complex)
+    for i in range(len(s)):
+        for j in range(len(s_prime)):
+            X_prime[i][j] = U[i][j] / np.sqrt(s_prime[j])
+
+    H_prime = (((X_prime.conjugate()).transpose()).dot(H)).dot(X_prime)
+    e_prime, C_prime = linalg.eig(H_prime)
+
+    sorted_e_prime_idxs = sorted_largest_idxs(e_prime, use_real=True, rev=False)
+    sorted_e_prime = np.zeros((len(e_prime)), dtype=complex)
+    sorted_C_prime = np.zeros((len(e_prime),len(e_prime)), dtype=complex)
+    sorted_X_prime = np.zeros((len(s),len(e_prime)), dtype=complex)
+    for n in range(len(e_prime)):
+        old_idx = sorted_e_prime_idxs[n][1]
+        sorted_e_prime[n]   = e_prime[old_idx]
+        sorted_C_prime[:,n] = C_prime[:,old_idx]
+        sorted_X_prime[:,n] = X_prime[:,old_idx]
+
+    C = X_prime.dot(C_prime)
+    # sorted_C = sorted_X_prime.dot(sorted_C_prime)
+
+    if(print_mats):
+        print('\n----------------------------')
+        print('    Printing GEVS Mats      ')
+        print('----------------------------')
+
+        I_prime = (((C.conjugate()).transpose()).dot(S)).dot(C)
+
+        print('\ns:\n')
+        print(s)
+        print('\nU:\n')
+        matprint(U)
+        print('\nX_prime:\n')
+        matprint(X_prime)
+        print('\nH_prime:\n')
+        matprint(H_prime)
+        print('\ne_prime:\n')
+        print(e_prime)
+        print('\nC_prime:\n')
+        matprint(C_prime)
+        print('\ne_prime_sorted:\n')
+        print(sorted_e_prime)
+        print('\nC:\n')
+        matprint(C)
+        print('\nIprime:\n')
+        matprint(I_prime)
+
+        print('\n----------------------------')
+        print('    Printing GEVS Mats End    ')
+        print('----------------------------')
+
+    return e_prime, C

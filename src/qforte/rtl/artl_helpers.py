@@ -2,6 +2,7 @@ import qforte
 # from qforte.utils import transforms
 from qforte.utils import trotterization as trot
 from qforte.rtl import rtl_helpers
+from qforte.rtl.rtl_helpers import sorted_largest_idxs
 
 import numpy as np
 from scipy import linalg
@@ -13,17 +14,6 @@ def matprint(mat, fmt="g"):
             print(("{:"+str(col_maxes[i])+fmt+"}").format(y), end="  ")
         print("")
 
-
-def sorted_largest_idxs(array, use_real=False, rev=True):
-        temp = np.empty((len(array)), dtype=object )
-        for i, val in enumerate(array):
-            temp[i] = (val, i)
-        if(use_real):
-            sorted_temp = sorted(temp, key=lambda factor: np.real(factor[0]), reverse=rev)
-        else:
-            sorted_temp = sorted(temp, key=lambda factor: factor[0], reverse=rev)
-        return sorted_temp
-
 def intiger_to_ref(n, nqubits):
     qb = qforte.QuantumBasis(n)
     ref = []
@@ -34,7 +24,7 @@ def intiger_to_ref(n, nqubits):
             ref.append(0)
     return ref
 
-def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
+def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
                     mol, target_root=None, fast=True):
 
     initial_ref_lst = []
@@ -43,30 +33,20 @@ def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
     # Also true for UCC functions
     nqubits = len(initial_ref)
 
-    h_mat = np.zeros((Ninitial_refs,Ninitial_refs), dtype=complex)
-    s_mat = np.zeros((Ninitial_refs,Ninitial_refs), dtype=complex)
+    h_mat = np.zeros((Ninitial_states,Ninitial_states), dtype=complex)
+    s_mat = np.zeros((Ninitial_states,Ninitial_states), dtype=complex)
+
+    Nis_untruncated = Ninitial_states
 
     if(fast):
         print('using faster fast algorithm lol')
         s_mat, h_mat = rtl_helpers.get_sr_mats_fast(initial_ref, inital_dt,
-                                                    Ninitial_refs, mol.get_hamiltonian(),
+                                                    Ninitial_states, mol.get_hamiltonian(),
                                                     nqubits)
 
-        # print('using slower fast algorithm lol')
-        # for p in range(Ninitial_refs):
-        #     for q in range(p, Ninitial_refs):
-        #         h_mat[p][q] = rtl_helpers.matrix_element_fast(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
-        #                                         nqubits, mol.get_hamiltonian())
-        #         h_mat[q][p] = np.conj(h_mat[p][q])
-        #
-        #         s_mat[p][q] = rtl_helpers.matrix_element_fast(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
-        #                                         nqubits)
-        #         s_mat[q][p] = np.conj(s_mat[p][q])
-
-
     else:
-        for p in range(Ninitial_refs):
-            for q in range(p, Ninitial_refs):
+        for p in range(Ninitial_states):
+            for q in range(p, Ninitial_states):
                 h_mat[p][q] = rtl_helpers.matrix_element(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
                                                 nqubits, mol.get_hamiltonian())
                 h_mat[q][p] = np.conj(h_mat[p][q])
@@ -78,24 +58,38 @@ def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
     print("\nS initial:\n")
     rtl_helpers.matprint(s_mat)
 
+    print('cond(S):', np.linalg.cond(s_mat))
+
     print("\nHbar: initial\n")
     rtl_helpers.matprint(h_mat)
 
-    if(np.linalg.cond(s_mat) > 1.0e7):
-        raise ValueError('cond(S) > 1e7, matrix is possibly ill conditioned, use larger inital_dt.')
+    # if(np.linalg.cond(s_mat) > 1.0e7):
+    #     raise ValueError('cond(S) > 1e7, matrix is possibly ill conditioned, use larger inital_dt.')
 
-    evals, evecs = linalg.eig(h_mat,s_mat)
+    ####################################
+    #   Test canonical GEV solver      #
+    ####################################
 
-    # print('\nARTLanczos (unsorted!) initial evals:\n\n', evals)
-    # print('\nARTLanczos initial evecs:\n')
-    # matprint(evecs)
+    evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
+
+    ####################################
+
+    # evals, evecs = linalg.eig(h_mat,s_mat)
+
+    if(Ninitial_states > len(evals)):
+        print('\n', Ninitial_states, ' initial states requested, but SR-RTQL produced ',
+                    len(evals), ' stable roots.\n Using ', len(evals),
+                    'intial states instead.')
+
+        Ninitial_states = len(evals)
+
 
     # need to make sorted evals and evecs...
     # use sorted_largest_idxs()
     sorted_evals_idxs = sorted_largest_idxs(evals, use_real=True, rev=False)
-    sorted_evals = np.zeros((Ninitial_refs), dtype=complex)
-    sorted_evecs = np.zeros((Ninitial_refs,Ninitial_refs), dtype=complex)
-    for n in range(Ninitial_refs):
+    sorted_evals = np.zeros((Ninitial_states), dtype=complex)
+    sorted_evecs = np.zeros((Nis_untruncated,Ninitial_states), dtype=complex)
+    for n in range(Ninitial_states):
         old_idx = sorted_evals_idxs[n][1]
         sorted_evals[n]   = evals[old_idx]
         sorted_evecs[:,n] = evecs[:,old_idx]
@@ -105,17 +99,17 @@ def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
     matprint(sorted_evecs)
 
 
-    sq_mod_evecs = np.zeros((Ninitial_refs,Ninitial_refs), dtype=complex)
+    sorted_sq_mod_evecs = np.zeros((Nis_untruncated,Ninitial_states), dtype=complex)
 
-    for p in range(Ninitial_refs):
-        for q in range(Ninitial_refs):
-            sq_mod_evecs[p][q] = sorted_evecs[p][q] * np.conj(sorted_evecs[p][q])
+    for p in range(Nis_untruncated):
+        for q in range(Ninitial_states):
+            sorted_sq_mod_evecs[p][q] = sorted_evecs[p][q] * np.conj(sorted_evecs[p][q])
 
-    print('\nARTLanczos initial evecs square modulous:\n')
-    matprint(sq_mod_evecs)
+    print('\nARTLanczos initial sorted evecs square modulous:\n')
+    matprint(sorted_sq_mod_evecs)
 
     basis_coeff_vec_lst = []
-    for n in range(Ninitial_refs):
+    for n in range(Nis_untruncated):
         if(fast):
 
             Uk = qforte.QuantumCircuit()
@@ -140,35 +134,45 @@ def get_init_ref_lst(initial_ref, Ninitial_refs, inital_dt,
         else:
             raise ValueError('Measurement-based selection of new refs not yet implemented.')
 
-
     # Actual Values
     basis_coeff_mat = np.array(basis_coeff_vec_lst)
+
     Cprime = (sorted_evecs.transpose()).dot(basis_coeff_mat)
-    for n in range(Ninitial_refs):
+    print('\nshape Cprime: ', np.shape(Cprime))
+    for n in range(Ninitial_states):
         for i, val in enumerate(Cprime[n]):
             Cprime[n][i] *= np.conj(val)
 
-
     # Now using the approximation
-    for n in range(Ninitial_refs):
+    for n in range(Ninitial_states):
         for i, val in enumerate(basis_coeff_vec_lst[n]):
             basis_coeff_vec_lst[n][i] *= np.conj(val)
 
-
-    Cprime_sq_mod = (sq_mod_evecs.transpose()).dot(basis_coeff_mat)
+    Cprime_sq_mod = (sorted_sq_mod_evecs.transpose()).dot(basis_coeff_mat)
 
     true_idx_lst = []
     idx_lst = []
     if(target_root is not None):
         print('\nTargeting refs for root ', target_root)
+
+        # ###########
+        #
+        # print('approx ground state wvfn sq mod')
+        # print(Cprime[target_root,:])
+        #
+        # ###########
+
         true_sorted_idxs = sorted_largest_idxs(Cprime[target_root,:])
         sorted_idxs = sorted_largest_idxs(Cprime_sq_mod[target_root,:])
-        for n in range(Ninitial_refs):
+        for n in range(Nrefs):
             idx_lst.append( sorted_idxs[n][1] )
             true_idx_lst.append( true_sorted_idxs[n][1] )
 
     else:
-        for n in range(Ninitial_refs):
+        raise ValueError("psudo-state avaraged selection approach not yet functional")
+        if(Nrefs > Ninitial_states):
+            raise ValueError("Can't get more refs than states for psudo-state avaraged approach")
+        for n in range(Nrefs):
             true_sorted_idxs = sorted_largest_idxs(Cprime[target_root,:])
             sorted_idxs = sorted_largest_idxs(Cprime_sq_mod[n,:])
             if(sorted_idxs[0][1] in idx_lst):

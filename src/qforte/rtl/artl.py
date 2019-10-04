@@ -14,15 +14,12 @@ from scipy import linalg
     # as controlled-unitaries                                                              #
     ########################################################################################
 
-def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, initial_Nrefs=4, inital_dt=1.0, fast=False, var_dt=False,
+def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, Ninitial_states=4, inital_dt=1.0, fast=False, var_dt=False,
                         nstates_per_ref=2, print_mats=True, return_all_eigs=False,
                         return_S=False, return_Hbar=False):
 
-    if(Nrefs != initial_Nrefs):
-        raise ValueError('Currently must use same number of reffs as generated in initial guess.')
-
     # Below instructions will be executed by a function that returns a vector of reffs.
-    ref_lst = artl_helpers.get_init_ref_lst(initial_ref, initial_Nrefs, inital_dt,
+    ref_lst = artl_helpers.get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
                                             mol, target_root=target_root, fast=True)
 
     #NOTE: need get nqubits from Molecule class attribute instead of ref list length
@@ -34,44 +31,17 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, initia
     h_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
     s_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
 
-    # Build list of dt values to be used
     dt_lst = []
     for i in range(Nrefs):
         dt_lst.append(mr_dt)
 
-    # print('dt_lst: ', dt_lst)
     if(fast):
         print('using faster fast algorithm lol')
         s_mat, h_mat = rtl_helpers.get_mr_mats_fast(ref_lst, nstates_per_ref,
                                                     dt_lst, mol.get_hamiltonian(),
                                                     nqubits)
 
-        # print('using slower fast algorithm lol')
-        # Fast algorimth doesn't use measurement
-        # for I in range(num_refs):
-        #     for J in range(num_refs):
-        #         for m in range(nstates_per_ref):
-        #             for n in range(nstates_per_ref):
-        #                 p = I*nstates_per_ref + m
-        #                 q = J*nstates_per_ref + n
-        #                 if(q>=p):
-        #                     ref_I = ref_lst[I]
-        #                     ref_J = ref_lst[J]
-        #                     dt_I = dt_lst[I]
-        #                     dt_J = dt_lst[J]
-        #
-        #                     h_mat[p][q] = rtl_helpers.mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J,
-        #                                                                 m, n, mol.get_hamiltonian(),
-        #                                                                 nqubits, mol.get_hamiltonian())
-        #                     h_mat[q][p] = np.conj(h_mat[p][q])
-        #
-        #                     s_mat[p][q] = rtl_helpers.mr_matrix_element_fast(ref_I, ref_J, dt_I, dt_J,
-        #                                                                 m, n, mol.get_hamiltonian(),
-        #                                                                 nqubits)
-        #                     s_mat[q][p] = np.conj(s_mat[p][q])
-
     else:
-        # Most basic to ensure things are working
         for I in range(num_refs):
             for J in range(num_refs):
                 for m in range(nstates_per_ref):
@@ -116,7 +86,8 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, initia
         print('\nk(Hbar): ', np.linalg.cond(h_mat))
 
 
-    evals, evecs = linalg.eig(h_mat,s_mat)
+    # evals, evecs = linalg.eig(h_mat,s_mat)
+    evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
     print('\nRTLanczos (unsorted!) evals from measuring ancilla:\n', evals)
     # print('type of evals list: ', type(evals))
 
