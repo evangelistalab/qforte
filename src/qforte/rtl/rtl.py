@@ -74,7 +74,7 @@ def rtl_energy(mol, ref, dt, nstates, fast=False, print_mats=True, return_all_ei
     if(return_all_eigs or return_S or return_Hbar):
         return_list = [Eo]
         if(return_all_eigs):
-            return_list.append(evals)
+            return_list.append(evals_sorted)
         if(return_S):
             return_list.append(s_mat)
         if(return_Hbar):
@@ -237,7 +237,7 @@ def mr_rtl_energy(mol, ref_lst, C_ref_lst, fast=False, const_dt=None, nstates_pe
     if(return_all_eigs or return_S or return_Hbar):
         return_list = [Eo]
         if(return_all_eigs):
-            return_list.append(evals)
+            return_list.append(evals_sorted)
         if(return_S):
             return_list.append(s_mat)
         if(return_Hbar):

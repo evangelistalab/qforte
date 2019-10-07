@@ -484,7 +484,7 @@ def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits):
 
     return s_mat, h_mat
 
-def canonical_geig_solve(S, H, print_mats=False):
+def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
 
     THRESHOLD = 1e-7
     s, U = linalg.eig(S)
@@ -503,24 +503,12 @@ def canonical_geig_solve(S, H, print_mats=False):
 
     H_prime = (((X_prime.conjugate()).transpose()).dot(H)).dot(X_prime)
     e_prime, C_prime = linalg.eig(H_prime)
-
-    sorted_e_prime_idxs = sorted_largest_idxs(e_prime, use_real=True, rev=False)
-    sorted_e_prime = np.zeros((len(e_prime)), dtype=complex)
-    sorted_C_prime = np.zeros((len(e_prime),len(e_prime)), dtype=complex)
-    sorted_X_prime = np.zeros((len(s),len(e_prime)), dtype=complex)
-    for n in range(len(e_prime)):
-        old_idx = sorted_e_prime_idxs[n][1]
-        sorted_e_prime[n]   = e_prime[old_idx]
-        sorted_C_prime[:,n] = C_prime[:,old_idx]
-        sorted_X_prime[:,n] = X_prime[:,old_idx]
-
     C = X_prime.dot(C_prime)
-    # sorted_C = sorted_X_prime.dot(sorted_C_prime)
 
     if(print_mats):
-        print('\n----------------------------')
-        print('    Printing GEVS Mats      ')
-        print('----------------------------')
+        print('\n      -----------------------------')
+        print('      Printing GEVS Mats (unsorted)')
+        print('      -----------------------------')
 
         I_prime = (((C.conjugate()).transpose()).dot(S)).dot(C)
 
@@ -536,15 +524,30 @@ def canonical_geig_solve(S, H, print_mats=False):
         print(e_prime)
         print('\nC_prime:\n')
         matprint(C_prime)
-        print('\ne_prime_sorted:\n')
-        print(sorted_e_prime)
+        print('\ne_prime:\n')
+        print(e_prime)
         print('\nC:\n')
         matprint(C)
         print('\nIprime:\n')
         matprint(I_prime)
 
-        print('\n----------------------------')
-        print('    Printing GEVS Mats End    ')
-        print('----------------------------')
+        print('\n      ------------------------------')
+        print('          Printing GEVS Mats End    ')
+        print('      ------------------------------')
 
-    return e_prime, C
+    if(sort_ret_vals):
+        sorted_e_prime_idxs = sorted_largest_idxs(e_prime, use_real=True, rev=False)
+        sorted_e_prime = np.zeros((len(e_prime)), dtype=complex)
+        sorted_C_prime = np.zeros((len(e_prime),len(e_prime)), dtype=complex)
+        sorted_X_prime = np.zeros((len(s),len(e_prime)), dtype=complex)
+        for n in range(len(e_prime)):
+            old_idx = sorted_e_prime_idxs[n][1]
+            sorted_e_prime[n]   = e_prime[old_idx]
+            sorted_C_prime[:,n] = C_prime[:,old_idx]
+            sorted_X_prime[:,n] = X_prime[:,old_idx]
+
+        sorted_C = sorted_X_prime.dot(sorted_C_prime)
+        return sorted_e_prime, sorted_C
+
+    else:
+        return e_prime, C

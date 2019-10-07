@@ -105,7 +105,7 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, Niniti
     if(return_all_eigs or return_S or return_Hbar):
         return_list = [Eo]
         if(return_all_eigs):
-            return_list.append(evals)
+            return_list.append(evals_sorted)
         if(return_S):
             return_list.append(s_mat)
         if(return_Hbar):

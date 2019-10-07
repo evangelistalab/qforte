@@ -137,7 +137,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     # Actual Values
     basis_coeff_mat = np.array(basis_coeff_vec_lst)
 
-    Cprime = (sorted_evecs.transpose()).dot(basis_coeff_mat)
+    Cprime = (np.conj(sorted_evecs.transpose())).dot(basis_coeff_mat)
     print('\nshape Cprime: ', np.shape(Cprime))
     for n in range(Ninitial_states):
         for i, val in enumerate(Cprime[n]):
