@@ -25,12 +25,14 @@ class UCCVQE(object):
         quantum computer would need to do).
     """
 
-    def __init__(self, ref, Top, operator, N_samples, alredy_anti_herm=False , many_preps = False, optimizer='nelder-mead'):
+    def __init__(self, ref, Top, operator, N_samples, alredy_anti_herm=False,
+                 use_symmetric_amps = False, many_preps = False, optimizer='nelder-mead'):
         self._ref = ref
         self._Top = Top
         self._operator = operator
         self._N_samples = N_samples
         self._alredy_anti_herm = alredy_anti_herm
+        self._use_symmetric_amps = use_symmetric_amps
         self._many_preps = many_preps
         self._optimizer = optimizer
 
@@ -62,11 +64,17 @@ class UCCVQE(object):
         # sq_op => [ [ (i,j), t_ij ], [], ... ]
         # x => [t_ij, ...]
         # args => [(i,j), ...]
-
         sq_op = []
-        for i in range(len(x)):
-            #NOTE: would be a good place to flip sign?
-            sq_op.append([args[i], x[i]])
+        if(self._use_symmetric_amps):
+            for i in range(len(x)):
+                #NOTE: would be a good place to flip sign?
+                #NOTE: will not currently support tripple or higher order excitation
+                sq_op.append([args[i], x[i]])
+
+        else:
+            for i in range(len(x)):
+                #NOTE: would be a good place to flip sign?
+                sq_op.append([args[i], x[i]])
 
         return sq_op
 
@@ -74,6 +82,7 @@ class UCCVQE(object):
 
         # Unpack arguments
         T_sq = self.repack_args(x, args)
+        # Counts on operatron NOT being anti hermitian already
         T_organizer = get_ucc_jw_organizer(T_sq, already_anti_herm=self._alredy_anti_herm)
         A = organizer_to_circuit(T_organizer)
 

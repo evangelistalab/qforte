@@ -1,5 +1,7 @@
 import qforte
 
+# NOTE: elimenate general ccsd or ucc stuff
+
 def get_ucc_zeros_lists(nocc, nvir, order=2, make_anti_herm=True):
 
     norb = nocc + nvir
@@ -249,18 +251,18 @@ def get_singlet_ucc_zeros_lists(nocc, nvir, order=2, make_anti_herm=True):
                 sq_excitations.extend( list( chain.from_iterable(
                                         ( [(a, b, j, i), 0.0], [(i, j, b, a), -0.0] )
                                             for i in range(nocc)
-                                            for j in range (i+1, nocc)
+                                            for j in range (nocc) if (j!=i)
                                             for a in range(nocc, norb)
-                                            for b in range (a+1, norb)
+                                            for b in range (nocc, norb) if (b!=a)
                                             if cse((a, b, j, i)) ) ) )
 
 
             else:
                 sq_excitations.extend( [ [(a, b, j, i), 0.0 ]
                                         for i in range(nocc)
-                                        for j in range (i+1, nocc)
+                                        for j in range (nocc) if (j!=i)
                                         for a in range(nocc, norb)
-                                        for b in range (a+1, norb)
+                                        for b in range (nocc, norb) if (b!=a)
                                         if cse((a, b, j, i)) ] )
 
             if(order > 2):
@@ -268,20 +270,20 @@ def get_singlet_ucc_zeros_lists(nocc, nvir, order=2, make_anti_herm=True):
                     sq_excitations.extend( list( chain.from_iterable(
                                             ( [(a, b, c, k, j, i), 0.0], [(i, j, k, c, b, a), -0.0] )
                                                 for i in range(nocc)
-                                                for j in range (i+1, nocc)
-                                                for k in range (j+j, nocc)
+                                                for j in range (nocc) if (j!=i)
+                                                for k in range (nocc) if ((k!=j) and (k!=i))
                                                 for a in range(nocc, norb)
-                                                for b in range (a+1, norb)
-                                                for c in range (b+1, norb)
+                                                for b in range (nocc, norb) if (b!=a)
+                                                for c in range (nocc, norb) if ((c!=b) and (c!=a))
                                                 if cse((a, b, c, k, j, i)) ) ) )
                 else:
                     sq_excitations.extend( [ [(a, b, c, k, j, i), 0.0 ]
                                             for i in range(nocc)
-                                            for j in range (i+1, nocc)
-                                            for k in range (j+j, nocc)
+                                            for j in range (nocc) if (j!=i)
+                                            for k in range (nocc) if ((k!=j) and (k!=i))
                                             for a in range(nocc, norb)
-                                            for b in range (a+1, norb)
-                                            for c in range (b+1, norb)
+                                            for b in range (nocc, norb) if (b!=a)
+                                            for c in range (nocc, norb) if ((c!=b) and (c!=a))
                                             if cse((a, b, c, k, j, i)) ] )
                 if(order > 3):
                     raise ValueError("QForte currently only supports up to CCSDT")
