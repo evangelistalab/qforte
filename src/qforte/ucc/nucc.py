@@ -1,3 +1,10 @@
+"""
+nucc.py
+=================================================
+A module for calculating the energies of quantum-
+mechanical systems with a unitary coupled cluster
+ansatz.
+"""
 import qforte
 from qforte.utils import transforms
 from qforte.ucc import ucc_helpers

@@ -1,3 +1,9 @@
+"""
+ucc_helpers.py
+=================================================
+A module to help build operator listst for
+unitary coupled cluster.
+"""
 import qforte
 
 def get_ucc_zeros_lists(nocc, nvir, order=2, make_anti_herm=True):
