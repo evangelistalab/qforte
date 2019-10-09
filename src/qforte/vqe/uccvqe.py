@@ -6,6 +6,7 @@ import qforte
 from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.ucc.ucc_helpers import *
+import numpy as np
 import scipy
 from scipy.optimize import minimize
 
@@ -28,6 +29,8 @@ class UCCVQE(object):
     def __init__(self, ref, Top, operator, N_samples, alredy_anti_herm=False,
                  use_symmetric_amps = False, many_preps = False, optimizer='nelder-mead'):
         self._ref = ref
+        #TODO: Elimenate getting info about nqubits in this fashion
+        self._nqubtis = len(ref)
         self._Top = Top
         self._operator = operator
         self._N_samples = N_samples
@@ -107,24 +110,78 @@ class UCCVQE(object):
         uccsd_exp = qforte.Experiment(len(self._ref), cir, self._operator, 100)
         params = [1.0]
         Energy = uccsd_exp.perfect_experimental_avg(params)
+        #TODO: implement with finite measurement
 
         return Energy
 
-    def do_vqe(self, maxiter=20000):
+    def expecation_val_func_fast(self, x, *args):
 
-        # Set options dict
+        # Unpack arguments
+        T_sq = self.repack_args(x, args)
+        # Counts on operatron NOT being anti hermitian already
+        T_organizer = get_ucc_jw_organizer(T_sq, already_anti_herm=self._alredy_anti_herm)
+        A = organizer_to_circuit(T_organizer)
+
+        temp_op1 = qforte.QuantumOperator()
+        for t in A.terms():
+            c, op = t
+            phase =  -c
+            temp_op1.add_term(phase, op)
+
+        U, phase1 = qforte.trotterization.trotterize(temp_op1)
+
+        # Prep the reference state
+        cir = qforte.QuantumCircuit()
+        for j in range(len(self._ref)):
+            if self._ref[j] == 1:
+                cir.add_gate(qforte.make_gate('X', j, j))
+
+        # Add unitary coupled cluster operator
+        cir.add_circuit(U)
+
+        QC = qforte.QuantumComputer(self._nqubtis)
+        QC.apply_circuit(cir)
+        QC.apply_constant(phase1)
+
+        omega = np.asarray(QC.get_coeff_vec(), dtype=complex)
+
+        Homega = np.zeros((2**self._nqubtis), dtype=complex)
+
+        for k in range(len(self._operator.terms())):
+            QCk = qforte.QuantumComputer(self._nqubtis)
+            QCk.set_coeff_vec(QC.get_coeff_vec())
+
+            if(self._operator.terms()[k][1] is not None):
+                QCk.apply_circuit(self._operator.terms()[k][1])
+            if(self._operator.terms()[k][0] is not None):
+                QCk.apply_constant(self._operator.terms()[k][0])
+
+            Homega = np.add(Homega, np.asarray(QCk.get_coeff_vec(), dtype=complex))
+
+        Energy = np.vdot(omega, Homega)
+
+        return np.real(Energy)
+
+    def do_vqe(self, fast=False, maxiter=20000):
+
         opts = {}
         opts['xtol'] = 1e-4
         opts['ftol'] = 1e-5
         opts['disp'] = True
         opts['maxiter'] = maxiter
-        # opts['maxfev'] = 1
 
         x0, sq_args = self.unpack_args()
-        self._inital_guess_energy = self.expecation_val_func(x0, *sq_args)
-        self._result = minimize(self.expecation_val_func, x0,
-            args=sq_args,  method=self._optimizer,
-            options=opts)
+        if(fast):
+            self._inital_guess_energy = self.expecation_val_func_fast(x0, *sq_args)
+            self._result = minimize(self.expecation_val_func_fast, x0,
+                args=sq_args,  method=self._optimizer,
+                options=opts)
+
+        else:
+            self._inital_guess_energy = self.expecation_val_func(x0, *sq_args)
+            self._result = minimize(self.expecation_val_func, x0,
+                args=sq_args,  method=self._optimizer,
+                options=opts)
 
     def get_result(self):
         return self._result
@@ -134,7 +191,6 @@ class UCCVQE(object):
             return self._result.fun
         else:
             print('\nresult:', self._result)
-            # raise ValueError('Minimum energy invalid, optemization did not converge')
             return self._result.fun
 
     def get_inital_guess_energy(self):
