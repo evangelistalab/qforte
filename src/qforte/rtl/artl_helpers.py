@@ -164,8 +164,11 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 
         true_sorted_idxs = sorted_largest_idxs(Cprime[target_root,:])
         sorted_idxs = sorted_largest_idxs(Cprime_sq_mod[target_root,:])
+        # idx_lst.append( initial_ref )
         for n in range(Nrefs):
+            # if(sorted_idxs[n][1]!=0):
             idx_lst.append( sorted_idxs[n][1] )
+
             true_idx_lst.append( true_sorted_idxs[n][1] )
 
     else:
@@ -213,5 +216,9 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 
     for idx in idx_lst:
         initial_ref_lst.append(intiger_to_ref(idx, nqubits))
+
+    if(initial_ref not in initial_ref_lst):
+        print('\nAdding initial referance determinant\n')
+        initial_ref_lst[0] = initial_ref    
 
     return initial_ref_lst
