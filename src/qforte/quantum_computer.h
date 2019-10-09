@@ -34,6 +34,11 @@ class QuantumComputer {
     /// apply a gate to the quantum computer with optimized algorithm
     void apply_gate(const QuantumGate& qg);
 
+    /// apply a constant to the quantum computer (WARNING, this opperation
+    /// is not physical as it does not represent a unitary opperation). Only
+    /// Exists for 'fast' version of the algorithm for efficiency reasons
+    void apply_constant(const std::complex<double> a);
+
     /// measure the state of the quanum computer with respect to qc
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
 
@@ -72,6 +77,9 @@ class QuantumComputer {
 
     /// return the number of two-qubit operations
     size_t ntwo_ops() const { return ntwo_ops_; }
+
+    // set the coefficient vector directly from another coefficient vector
+    void set_coeff_vec(const std::vector<double_c> c_vec) { coeff_ = c_vec; }
 
     /// set the quantum computer to the state
     /// basis_1 * c_1 + basis_2 * c_2 + ...

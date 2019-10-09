@@ -1,6 +1,7 @@
 #include <map>
 #include <random>
 #include <algorithm>
+#include <functional>
 
 #include "fmt/format.h"
 
@@ -70,6 +71,12 @@ void QuantumComputer::apply_gate_safe(const QuantumGate& qg) {
 
     coeff_ = new_coeff_;
     std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
+}
+
+void QuantumComputer::apply_constant(const std::complex<double> a) {
+    std::transform(coeff_.begin(), coeff_.end(), coeff_.begin(),
+                   std::bind(std::multiplies<std::complex<double>>(),
+                   std::placeholders::_1, a));
 }
 
 std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc,

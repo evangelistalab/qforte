@@ -7,5 +7,6 @@ from qforte.adapters import *
 from qforte.helper import *
 from qforte.experiment import *
 from qforte.system import *
-#from qforte.vqe import *
+from qforte.vqe import *
+from qforte.ucc import * 
 from qforte.utils import *
