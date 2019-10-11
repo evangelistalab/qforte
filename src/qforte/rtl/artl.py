@@ -85,11 +85,8 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, Niniti
 
         print('\nk(Hbar): ', np.linalg.cond(h_mat))
 
-
-    # evals, evecs = linalg.eig(h_mat,s_mat)
     evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
     print('\nRTLanczos (unsorted!) evals from measuring ancilla:\n', evals)
-    # print('type of evals list: ', type(evals))
 
     evals_sorted = np.sort(evals)
 

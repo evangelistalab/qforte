@@ -219,6 +219,9 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 
     if(initial_ref not in initial_ref_lst):
         print('\nAdding initial referance determinant\n')
-        initial_ref_lst[0] = initial_ref    
+        for i in range(len(initial_ref_lst) - 1):
+            initial_ref_lst[i+1] = initial_ref_lst[i]
+
+        initial_ref_lst[0] = initial_ref
 
     return initial_ref_lst
