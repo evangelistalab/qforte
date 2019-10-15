@@ -1,9 +1,7 @@
 import qforte
+from qforte import vqe
 from qforte.rtl import rtl_helpers
 from qforte.rtl import artl_helpers
-# from qforte.utils import transforms
-# from qforte.utils import trotterization as trot
-
 import numpy as np
 from scipy import linalg
 
@@ -111,3 +109,22 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref, target_root=None, Niniti
         return return_list
 
     return Eo
+
+def adaptive_rtlvqe_energy(mol, Nrefs, mr_dt, initial_ref, maxiter=100,
+                            target_root=0, Ninitial_states=4, inital_dt=1.0,
+                            fast=False, nstates_per_ref=2,
+                            print_mats=True, return_all_eigs=False,
+                            return_S=False, return_Hbar=False, optemizer = 'nelder-mead'):
+
+    # Below instructions will be executed by a function that returns a vector of reffs.
+    ref_lst = artl_helpers.get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
+                                            mol, target_root=target_root, fast=True)
+
+
+    myVQE = vqe.RTLVQE(ref_lst, nstates_per_ref, mol.get_hamiltonian(), fast=True,
+                        N_samples = 100, optimizer=optemizer)
+    myVQE.do_vqe(mr_dt, maxiter=maxiter)
+    Energy = myVQE.get_energy()
+    initial_Energy = myVQE.get_inital_guess_energy()
+
+    return Energy, initial_Energy
