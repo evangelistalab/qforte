@@ -21,6 +21,11 @@ def sorted_largest_idxs(array, use_real=False, rev=True):
             sorted_temp = sorted(temp, key=lambda factor: factor[0], reverse=rev)
         return sorted_temp
 
+def ref_to_basis_idx(ref):
+    temp = ref.copy()
+    temp.reverse()
+    return int("".join(str(x) for x in temp), 2)
+
 def matrix_element(ref, dt, m, n, H, nqubits, A = None):
     """
     This function returns a single matrix element M_bk based on the evolutio of
@@ -481,6 +486,177 @@ def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits):
             h_mat[q][p] = np.conj(h_mat[p][q])
             s_mat[p][q] = np.vdot(omega_lst[p], omega_lst[q])
             s_mat[q][p] = np.conj(s_mat[p][q])
+
+    return s_mat, h_mat
+
+# def update_mr_mats_fast(s_mat, h_mat, ref_lst, nstates_per_ref, dt_lst, H, nqubits):
+#     """
+#     This function updates the S and H matricies with a new reference and guesses a new one.
+#
+#     :param ref: a list representing the referende state |Phi_o>
+#     :param dt: a double representing the real time step
+#     :param H: the QuantumOperator to time evolove under
+#     :param nqubits: the intager number of qubits
+#     :param A: (optional) the overal operator to measure with respect to
+#     """
+#     start_idx = (len(ref_lst)-1) * nstates_per_ref
+#     end_idx = len(ref_lst) * nstates_per_ref
+#     # num_tot_basis = len(ref_lst) * nstates_per_ref
+#
+#     #Initialize arrays for Hbar and S
+#     # h_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
+#     # s_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
+#
+#     #Build |Ωn> and |H Ωn> Vectors
+#     omega_lst = []
+#     Homega_lst = []
+#
+#     for i, ref in enumerate(ref_lst):
+#         dt = dt_lst[i]
+#         for n in range(nstates_per_ref):
+#
+#             Un = qforte.QuantumCircuit()
+#             for j in range(nqubits):
+#                 if ref[j] == 1:
+#                     Un.add_gate(qforte.make_gate('X', j, j))
+#                     phase1 = 1.0
+#
+#             if(n>0):
+#                 temp_op1 = qforte.QuantumOperator()
+#                 for t in H.terms():
+#                     c, op = t
+#                     phase = -1.0j * n * dt * c
+#                     temp_op1.add_term(phase, op)
+#
+#                 expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
+#                 Un.add_circuit(expn_op1)
+#
+#             QC = qforte.QuantumComputer(nqubits)
+#             QC.apply_circuit(Un)
+#             QC.apply_constant(phase1)
+#             omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
+#
+#             Homega = np.zeros((2**nqubits), dtype=complex)
+#
+#             for k in range(len(H.terms())):
+#                 QCk = qforte.QuantumComputer(nqubits)
+#                 QCk.set_coeff_vec(QC.get_coeff_vec())
+#
+#                 if(H.terms()[k][1] is not None):
+#                     QCk.apply_circuit(H.terms()[k][1])
+#                 if(H.terms()[k][0] is not None):
+#                     QCk.apply_constant(H.terms()[k][0])
+#
+#                 Homega = np.add(Homega, np.asarray(QCk.get_coeff_vec(), dtype=complex))
+#
+#             Homega_lst.append(Homega)
+#
+#     for p in range(num_tot_basis):
+#         for q in range(p, num_tot_basis):
+#             h_mat[p][q] = np.vdot(omega_lst[p], Homega_lst[q])
+#             h_mat[q][p] = np.conj(h_mat[p][q])
+#             s_mat[p][q] = np.vdot(omega_lst[p], omega_lst[q])
+#             s_mat[q][p] = np.conj(s_mat[p][q])
+#
+#     return s_mat, h_mat
+
+def get_sa_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits):
+    """
+    This function returns a single matrix element
+
+    :param ref: a list representing the referende state |Phi_o>
+    :param dt: a double representing the real time step
+    :param H: the QuantumOperator to time evolove under
+    :param nqubits: the intager number of qubits
+    :param A: (optional) the overal operator to measure with respect to
+    """
+
+    num_tot_basis = len(ref_lst) * nstates_per_ref
+
+    #Initialize arrays for Hbar and S
+    h_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
+    s_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
+
+    #Build |Ωn> and |H Ωn> Vectors
+    omega_lst = []
+    Homega_lst = []
+
+    print('\nref_list:')
+    print(ref_lst)
+
+    for i, ref in enumerate(ref_lst):
+        dt = dt_lst[i]
+        for n in range(nstates_per_ref):
+
+            Un = qforte.QuantumCircuit()
+            # for j in range(nqubits):
+            #     if ref[j] == 1:
+            #         Un.add_gate(qforte.make_gate('X', j, j))
+
+            phase1 = 1.0
+
+            if(n>0):
+                temp_op1 = qforte.QuantumOperator()
+                for t in H.terms():
+                    c, op = t
+                    phase = -1.0j * n * dt * c
+                    temp_op1.add_term(phase, op)
+
+                expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1)
+                Un.add_circuit(expn_op1)
+
+            QC = qforte.QuantumComputer(nqubits)
+
+            ############################################
+            # put QC in referece state without using gates...
+            state_prep_lst = []
+            for term in ref:
+                coeff = term[0]
+                det = term[1]
+                # print('det: ', det)
+                # print('coeff: ', coeff)
+                idx = ref_to_basis_idx(det)
+                state = qforte.QuantumBasis(idx)
+                state_prep_lst.append( (state, coeff) )
+
+
+            ############################################
+            QC.set_state(state_prep_lst)
+            # print('\n')
+            # qforte.smart_print(QC)
+            QC.apply_circuit(Un)
+            QC.apply_constant(phase1)
+            omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
+
+            Homega = np.zeros((2**nqubits), dtype=complex)
+
+            # print('\n')
+            # qforte.smart_print(QC)
+
+            # counter = 0
+            for k in range(len(H.terms())):
+
+                QCk = qforte.QuantumComputer(nqubits)
+                QCk.set_coeff_vec(QC.get_coeff_vec())
+                if(H.terms()[k][1] is not None):
+                    QCk.apply_circuit(H.terms()[k][1])
+
+                if(H.terms()[k][0] is not None):
+                    QCk.apply_constant(H.terms()[k][0])
+
+
+                Homega = np.add(Homega, np.asarray(QCk.get_coeff_vec(), dtype=complex))
+
+            Homega_lst.append(Homega)
+
+    for p in range(num_tot_basis):
+        for q in range(p, num_tot_basis):
+            h_mat[p][q] = np.vdot(omega_lst[p], Homega_lst[q])
+            h_mat[q][p] = np.conj(h_mat[p][q])
+            s_mat[p][q] = np.vdot(omega_lst[p], omega_lst[q])
+            s_mat[q][p] = np.conj(s_mat[p][q])
+
+
 
     return s_mat, h_mat
 
