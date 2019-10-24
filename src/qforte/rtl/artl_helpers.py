@@ -7,6 +7,8 @@ from qforte.rtl.rtl_helpers import sorted_largest_idxs
 import numpy as np
 from scipy import linalg
 
+import collections
+
 def matprint(mat, fmt="g"):
     col_maxes = [max([len(("{:"+fmt+"}").format(x)) for x in col]) for col in mat.T]
     for x in mat:
@@ -392,6 +394,17 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
         print(ref)
     print('')
 
+    print('\n\nPossible repeats in pre_sa_ref_list!')
+    _size = len(pre_sa_ref_lst)
+    repeated = []
+    for i in range(_size):
+        k = i + 1
+        for j in range(k, _size):
+            if pre_sa_ref_lst[i] == pre_sa_ref_lst[j] and pre_sa_ref_lst[i] not in repeated:
+                repeated.append(pre_sa_ref_lst[i])
+    for ref in repeated:
+        print(ref)
+
     # Now we need to create a CI with these dets
     # NOTE: again, stop getting the number of qubits this way...
     nqubits = len(pre_sa_ref_lst[0])
@@ -400,17 +413,20 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
                                                 dt_lst, mol.get_hamiltonian(),
                                                 nqubits)
 
-    print('\noverlap for pre spin adapted configuration determination:')
-    matprint(s_mat)
+    print('\n\ncondition number of pure CI (sould be 1.0):')
+    print(np.linalg.cond(s_mat))
 
-    print('\nhamiltonian for pre spin adapted configuration determination:')
-    matprint(h_mat)
+    # print('\noverlap for pre spin adapted configuration determination:')
+    # matprint(s_mat)
+
+    # print('\nhamiltonian for pre spin adapted configuration determination:')
+    # matprint(h_mat)
 
     evals, evecs = linalg.eig(h_mat)
 
     print('\nevals from pre_sa_list', evals)
-    print('\nevecs from pre_sa_list:')
-    matprint(evecs)
+    # print('\nevecs from pre_sa_list:')
+    # matprint(evecs)
 
     #Sort Evals and Evecs
     sorted_evals_idxs = sorted_largest_idxs(evals, use_real=True, rev=False)
@@ -422,10 +438,28 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
         sorted_evecs[:,n] = np.real(evecs[:,old_idx])
 
     print('\nsorted evals from pre_sa_list', sorted_evals)
-    print('\nsorted evecs from pre_sa_list:')
-    matprint(sorted_evecs)
+    print('\nsorted evecs from pre_sa_list[root 0]: \n', sorted_evecs[:,0])
+
+    print('\nsorted evecs from pre_sa_list[root 1]: \n', sorted_evecs[:,1])
+
+    print('\nsorted evecs from pre_sa_list[root 2]: \n', sorted_evecs[:,2])
+
+    print('\nsorted evecs from pre_sa_list[root 3]: \n', sorted_evecs[:,3])
+    # matprint(sorted_evecs)
 
     # Make Coeff and determinats lists
+    if(np.abs(sorted_evecs[:,0][0]) < 1.0e-6):
+        print('Small CI ground state likely of wrong symmetry, trying other roots!')
+        max = len(sorted_evals)
+        adjusted_root = 0
+        Co_val = 0.0
+        while (Co_val < 1.0e-6):
+            adjusted_root += 1
+            Co_val = np.abs(sorted_evecs[:,adjusted_root][0])
+
+
+        target_root = adjusted_root
+        print('now using small CI root: ', target_root)
 
     target_state = sorted_evecs[:,target_root]
     basis_coeff_lst = []
@@ -476,8 +510,8 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
             basis_vec.append( temp )
         sa_ref_lst.append(basis_vec)
 
-    print('\n\nsa_ref_lst:')
-    print(sa_ref_lst)
+    # print('\n\nsa_ref_lst:')
+    # print(sa_ref_lst)
 
 
     # For now just returning regular ref list

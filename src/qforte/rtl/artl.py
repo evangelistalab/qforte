@@ -31,7 +31,7 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
         print('\n\nsa_ref list:')
         print('----------------------------')
         for ref in sa_ref_lst:
-            print(ref)
+            print('  \n', ref)
         print('')
         ##-##
         nqubits = len(sa_ref_lst[0][0][1])

@@ -672,6 +672,9 @@ def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
         if(np.real(sii) > THRESHOLD):
             s_prime.append(np.real(sii))
 
+    print('\n\ns is of inital rank:    ', len(s))
+    print('\n\ns is of truncated rank: ', len(s_prime))
+
     X_prime = np.zeros((len(s), len(s_prime)), dtype=complex)
     for i in range(len(s)):
         for j in range(len(s_prime)):
