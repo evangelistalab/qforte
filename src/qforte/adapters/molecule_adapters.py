@@ -13,7 +13,7 @@ from qforte.utils import transforms as tf
 from openfermion.ops import FermionOperator, QubitOperator
 from openfermion.hamiltonians import MolecularData
 from openfermion.transforms import get_fermion_operator, jordan_wigner
-from openfermion.utils import hermitian_conjugated, normal_ordered
+from openfermion.utils import hermitian_conjugated, normal_ordered, freeze_orbitals
 
 from openfermionpsi4 import run_psi4
 
@@ -108,6 +108,8 @@ class OpenFermionMolAdapter(MolAdapter):
         kwargs.setdefault('run_fci', 0)
         kwargs.setdefault('store_uccsd_amps', False)
         kwargs.setdefault('buld_uccsd_circ_from_ccsd', False)
+        kwargs.setdefault('frozen_indicies', None)
+        kwargs.setdefault('virtual_indicies', None)
 
         skeleton_mol = MolecularData(geometry = self._mol_geometry,
                                      basis = self._basis,
@@ -127,7 +129,14 @@ class OpenFermionMolAdapter(MolAdapter):
 
         # Set qforte hamiltonian from openfermion
         molecular_hamiltonian = openfermion_mol.get_molecular_hamiltonian()
-        fermion_hamiltonian = normal_ordered(get_fermion_operator(molecular_hamiltonian))
+
+        if(kwargs['frozen_indicies'] is not None):
+            fermion_hamiltonian = normal_ordered(
+                freeze_orbitals(get_fermion_operator(molecular_hamiltonian),
+                                kwargs['frozen_indicies'],
+                                unoccupied=kwargs['virtual_indicies']))
+        else:
+            fermion_hamiltonian = normal_ordered(get_fermion_operator(molecular_hamiltonian))
 
         if(kwargs['order_sq_ham'] or kwargs['order_jw_ham']):
 
