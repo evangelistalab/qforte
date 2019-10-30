@@ -4,6 +4,7 @@ Functions for trotterization of qubit operators
 
 import qforte
 import numpy
+import copy
 
 
 def trotterize(operator, trotter_number=1, trotter_order=1):
@@ -21,10 +22,10 @@ def trotterize(operator, trotter_number=1, trotter_order=1):
     :param trotter_order: (int) the order of the troterization approximation, can be 1 or 2
     """
 
-    if(trotter_order > 1) or (trotter_order <= 0):
-        raise ValueError("trotterization currently only supports trotter order = 1")
-    if(trotter_number > 1) or (trotter_number <= 0):
-        raise ValueError("trotterization currently only supports trotter number = 1")
+    # if(trotter_order > 1) or (trotter_order <= 0):
+    #     raise ValueError("trotterization currently only supports trotter order = 1")
+    # if(trotter_number > 1) or (trotter_number <= 0):
+    #     raise ValueError("trotterization currently only supports trotter number = 1")
 
     total_phase = 1.0
     troterized_operator = qforte.QuantumCircuit()
@@ -36,6 +37,25 @@ def trotterize(operator, trotter_number=1, trotter_order=1):
             for gate in term_generator.gates():
                 troterized_operator.add_gate(gate)
             total_phase *= phase
+
+
+    else:
+        print('\nusing higher order trotter!')
+        # First make new higher order operator
+        # operator = copy.deepcopy(operator)
+        ho_op = qforte.QuantumOperator()
+        for k in range(1, trotter_order+1):
+            k = float(k)
+            for term in operator.terms():
+                ho_op.add_term( term[0] / float(trotter_order) , term[1])
+
+        #loop over terms in operator
+        for term in ho_op.terms():
+            term_generator, phase = qforte.exponentiate_single_term(term[0],term[1])
+            for gate in term_generator.gates():
+                troterized_operator.add_gate(gate)
+            total_phase *= phase
+
 
     return (troterized_operator, total_phase)
 
@@ -62,13 +82,14 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, Use_open_cRz=False, trotter_nu
     :param trotter_order: (int) the order of the troterization approximation, can be 1 or 2
     """
 
-    if(trotter_order > 1) or (trotter_order <= 0):
-        raise ValueError("trotterization currently only supports trotter order = 1")
-    if(trotter_number > 1) or (trotter_number <= 0):
-        raise ValueError("trotterization currently only supports trotter number = 1")
+    # if(trotter_order > 1) or (trotter_order <= 0):
+    #     raise ValueError("trotterization currently only supports trotter order = 1")
+    # if(trotter_number > 1) or (trotter_number <= 0):
+    #     raise ValueError("trotterization currently only supports trotter number = 1")
 
     total_phase = 1.0
     troterized_operator = qforte.QuantumCircuit()
+
 
     if (trotter_order == 1) and (trotter_number == 1):
         #loop over terms in operator
@@ -80,6 +101,30 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, Use_open_cRz=False, trotter_nu
                 total_phase *= phase
         else:
             for term in operator.terms():
+                term_generator, phase = qforte.exponentiate_single_term(term[0],term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx)
+                for gate in term_generator.gates():
+                    troterized_operator.add_gate(gate)
+                total_phase *= phase
+
+    else:
+        print('\nusing higher order trotter for cRz construction!')
+        # First make new higher order operator
+        # operator = copy.deepcopy(operator)
+        ho_op = qforte.QuantumOperator()
+        for k in range(1, trotter_order+1):
+            k = float(k)
+            for term in operator.terms():
+                ho_op.add_term( term[0] / float(trotter_order) , term[1])
+
+        #loop over terms in ho_op
+        if(Use_open_cRz):
+            for term in ho_op.terms():
+                term_generator, phase = qforte.exponentiate_single_term(term[0],term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx, Use_open_cRz=True)
+                for gate in term_generator.gates():
+                    troterized_operator.add_gate(gate)
+                total_phase *= phase
+        else:
+            for term in ho_op.terms():
                 term_generator, phase = qforte.exponentiate_single_term(term[0],term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx)
                 for gate in term_generator.gates():
                     troterized_operator.add_gate(gate)

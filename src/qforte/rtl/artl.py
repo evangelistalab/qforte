@@ -13,6 +13,7 @@ from scipy import linalg
     ########################################################################################
 
 def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
+                        trot_order = 1,
                         use_phase_based_selection=False,
                         use_spin_adapted_refs=False,
                         target_root=None, Ninitial_states=4, inital_dt=1.0, fast=False, var_dt=False,
@@ -70,14 +71,14 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
             # raise NotImplementedError('Still in template for get_sa_mr_mats_fast().')
             s_mat, h_mat = rtl_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,
                                                         dt_lst, mol.get_hamiltonian(),
-                                                        nqubits)
+                                                        nqubits, trot_order=trot_order)
             # s_mat, h_mat = rtl_helpers.get_mr_mats_fast(sa_ref_lst, nstates_per_ref,
             #                                             dt_lst, mol.get_hamiltonian(),
             #                                             nqubits)
         else:
             s_mat, h_mat = rtl_helpers.get_mr_mats_fast(ref_lst, nstates_per_ref,
                                                         dt_lst, mol.get_hamiltonian(),
-                                                        nqubits)
+                                                        nqubits, trot_order=trot_order)
 
     else:
         if(use_phase_based_selection or use_spin_adapted_refs or use_adapt_selection):
@@ -96,12 +97,14 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
 
                             h_mat[p][q] = rtl_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
-                                                                        nqubits, mol.get_hamiltonian())
+                                                                        nqubits, mol.get_hamiltonian(),
+                                                                        trot_order=trot_order)
                             h_mat[q][p] = np.conj(h_mat[p][q])
 
                             s_mat[p][q] = rtl_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
-                                                                        nqubits)
+                                                                        nqubits,
+                                                                        trot_order=trot_order)
                             s_mat[q][p] = np.conj(s_mat[p][q])
 
 
