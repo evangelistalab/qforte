@@ -14,6 +14,9 @@ from scipy import linalg
 
 def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
                         trot_order = 1,
+                        use_cas_refs = False,
+                        a_el = None,
+                        a_sorb = None,
                         use_phase_based_selection=False,
                         use_spin_adapted_refs=False,
                         target_root=None, Ninitial_states=4, inital_dt=1.0, fast=False, var_dt=False,
@@ -21,34 +24,43 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
                         return_S=False, return_Hbar=False):
 
 
-
-    if(use_spin_adapted_refs):
-        # raise NotImplementedError('Still in template for get_sa_init_ref_lst().')
-        sa_ref_lst = artl_helpers.get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
-                                           mol, target_root=target_root, fast=True,
-                                           use_phase_based_selection=use_phase_based_selection)
-
-        ##-##
-        print('\n\nsa_ref list:')
-        print('----------------------------')
-        for ref in sa_ref_lst:
-            print('  \n', ref)
-        print('')
-        ##-##
+    if(use_cas_refs):
+        sa_ref_lst = artl_helpers.get_cas_ref_lst(initial_ref, a_el, a_sorb, mol)
         nqubits = len(sa_ref_lst[0][0][1])
-    else:
-        ref_lst = artl_helpers.get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
-                                            mol, target_root=target_root, fast=True,
-                                            use_phase_based_selection=use_phase_based_selection)
 
-        ##-##
-        print('\n\nref list:')
-        print('----------------------------')
-        for ref in ref_lst:
-            print(ref)
-        print('')
-        ##-##
-        nqubits = len(ref_lst[0])
+    else:
+        if(use_spin_adapted_refs):
+            if(use_cas_refs):
+                raise ValueError("Can't use spin adaptaded ref selection and CASCI selection.")
+            # raise NotImplementedError('Still in template for get_sa_init_ref_lst().')
+            sa_ref_lst = artl_helpers.get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
+                                               mol, target_root=target_root, fast=True,
+                                               use_phase_based_selection=use_phase_based_selection)
+
+            ##-##
+            print('\n\nsa_ref list:')
+            print('----------------------------')
+            for ref in sa_ref_lst:
+                print('  \n', ref)
+            print('')
+            ##-##
+            nqubits = len(sa_ref_lst[0][0][1])
+
+        else:
+            if(use_cas_refs):
+                raise ValueError("Can't use adaptaded ref selection and CASCI selection.")
+            ref_lst = artl_helpers.get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
+                                                mol, target_root=target_root, fast=True,
+                                                use_phase_based_selection=use_phase_based_selection)
+
+            ##-##
+            print('\n\nref list:')
+            print('----------------------------')
+            for ref in ref_lst:
+                print(ref)
+            print('')
+            ##-##
+            nqubits = len(ref_lst[0])
 
     #NOTE: need get nqubits from Molecule class attribute instead of ref list length
     # Also true for UCC functions
@@ -63,11 +75,16 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
     for i in range(Nrefs):
         dt_lst.append(mr_dt)
 
+    if(use_cas_refs):
+        dt_lst = []
+        for i in range(len(sa_ref_lst)):
+            dt_lst.append(mr_dt)
+
 
 
     if(fast):
         print('using faster fast algorithm lol')
-        if(use_spin_adapted_refs):
+        if(use_spin_adapted_refs or use_cas_refs):
             # raise NotImplementedError('Still in template for get_sa_mr_mats_fast().')
             s_mat, h_mat = rtl_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,
                                                         dt_lst, mol.get_hamiltonian(),
@@ -81,7 +98,7 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
                                                         nqubits, trot_order=trot_order)
 
     else:
-        if(use_phase_based_selection or use_spin_adapted_refs or use_adapt_selection):
+        if(use_phase_based_selection or use_spin_adapted_refs or use_adapt_selection or use_cas_refs):
             raise NotImplementedError("Can't use spin adapted refs or adaptive selection with slow alogrithm.")
         for I in range(num_refs):
             for J in range(num_refs):

@@ -344,6 +344,200 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 #
 #         return initial_ref_lst
 
+def get_cas_ref_lst(initial_ref, a_el, a_sorb, mol, target_root=0, fast=True):
+    na_el = len(a_el)
+    na_orb = int(len(a_sorb)/2)
+    multiplicity = mol.multiplicity
+    spin = int((multiplicity/2) - 1)
+    if(spin != 0):
+        raise ValueError('Non singlet CAS calculations are not yet tested.')
+
+    print('\nUsing CASCI reference generation with CAS (', na_el, 'e, ', na_orb,'o)')
+
+    # build pre_ref_lst list with CASCI
+    N = int( 2**len(a_sorb) )
+    act_ref_lst = []
+    for k in range(N):
+        act_temp = intiger_to_ref(k, len(a_sorb))
+        if((sum(act_temp) == na_el) and correct_spin(act_temp, spin) ):
+            act_ref_lst.append(act_temp)
+
+    print('\nActive space dets:')
+    print('-------------------')
+    for i, act_ref in enumerate(act_ref_lst):
+        print(act_ref)
+
+    ref_lst = []
+
+    for act_ref in act_ref_lst:
+        temp = initial_ref.copy()
+        for j in range(len(a_sorb)):
+            orb_idx = a_sorb[j]
+            temp[orb_idx] = act_ref[j]
+        ref_lst.append(temp)
+
+    print('\nTrial space dets:')
+    print('-------------------')
+    for i, ref in enumerate(ref_lst):
+        print(ref)
+
+    ### Begin Redundant section for spin adapting determinants ###
+
+    print('\nspin adapting guess reference list\n')
+
+    # first build ref list for consturction of Htilde
+    pre_sa_ref_lst = []
+    num_refs_per_config = []
+    # Might also need to build list for indexes of eqivilant dets
+
+    for ref in ref_lst:
+        print('  ref:', ref)
+        for other_ref in pre_sa_ref_lst:
+            print('    ref_in_pre_sa_lst:', other_ref)
+        if(ref not in pre_sa_ref_lst):
+            if(open_shell(ref)):
+                temp = build_eq_dets(ref)
+                pre_sa_ref_lst = pre_sa_ref_lst + temp
+                num_refs_per_config.append(len(temp))
+            else:
+                pre_sa_ref_lst.append(ref)
+                num_refs_per_config.append(1)
+
+    print('\nlen(pre_sa_ref_lst):', len(pre_sa_ref_lst))
+    print('\nsum(num_refs_per_config):', sum(num_refs_per_config))
+
+    print('\npre_sa_ref_lst:', pre_sa_ref_lst)
+    print('\nnum_refs_per_config:', num_refs_per_config)
+    # At this point pre_sa_ref_lst contains correct spin combos
+
+    print('\n\npre_sa_ref list:')
+    print('----------------------------')
+    for ref in pre_sa_ref_lst:
+        print(ref)
+    print('')
+
+    print('\n\nPossible repeats in pre_sa_ref_list!')
+    _size = len(pre_sa_ref_lst)
+    repeated = []
+    for i in range(_size):
+        k = i + 1
+        for j in range(k, _size):
+            if pre_sa_ref_lst[i] == pre_sa_ref_lst[j] and pre_sa_ref_lst[i] not in repeated:
+                repeated.append(pre_sa_ref_lst[i])
+    for ref in repeated:
+        print(ref)
+
+    # Now we need to create a CI with these dets
+    # NOTE: again, stop getting the number of qubits this way...
+    nqubits = len(pre_sa_ref_lst[0])
+    dt_lst = np.zeros(len(pre_sa_ref_lst))
+    s_mat, h_mat = rtl_helpers.get_mr_mats_fast(pre_sa_ref_lst, 1,
+                                                dt_lst, mol.get_hamiltonian(),
+                                                nqubits)
+
+    print('\n\ncondition number of pure CI (sould be 1.0):')
+    print(np.linalg.cond(s_mat))
+
+    # print('\noverlap for pre spin adapted configuration determination:')
+    # matprint(s_mat)
+
+    # print('\nhamiltonian for pre spin adapted configuration determination:')
+    # matprint(h_mat)
+
+    evals, evecs = linalg.eig(h_mat)
+
+    print('\nevals from pre_sa_list', evals)
+    # print('\nevecs from pre_sa_list:')
+    # matprint(evecs)
+
+    #Sort Evals and Evecs
+    sorted_evals_idxs = sorted_largest_idxs(evals, use_real=True, rev=False)
+    sorted_evals = np.zeros((len(evals)), dtype=float)
+    sorted_evecs = np.zeros(np.shape(evecs), dtype=float)
+    for n in range(len(evals)):
+        old_idx = sorted_evals_idxs[n][1]
+        sorted_evals[n]   = np.real(evals[old_idx])
+        sorted_evecs[:,n] = np.real(evecs[:,old_idx])
+
+    print('\nsorted evals from pre_sa_list', sorted_evals)
+    print('\nsorted evecs from pre_sa_list[root 0]: \n', sorted_evecs[:,0])
+
+    print('\nsorted evecs from pre_sa_list[root 1]: \n', sorted_evecs[:,1])
+
+    # print('\nsorted evecs from pre_sa_list[root 2]: \n', sorted_evecs[:,2])
+    #
+    # print('\nsorted evecs from pre_sa_list[root 3]: \n', sorted_evecs[:,3])
+    # matprint(sorted_evecs)
+
+    # Make Coeff and determinats lists
+    if(np.abs(sorted_evecs[:,0][0]) < 1.0e-6):
+        print('Small CI ground state likely of wrong symmetry, trying other roots!')
+        max = len(sorted_evals)
+        adjusted_root = 0
+        Co_val = 0.0
+        while (Co_val < 1.0e-6):
+            adjusted_root += 1
+            Co_val = np.abs(sorted_evecs[:,adjusted_root][0])
+
+
+        target_root = adjusted_root
+        print('now using small CI root: ', target_root)
+
+    target_state = sorted_evecs[:,target_root]
+    basis_coeff_lst = []
+    norm_basis_coeff_lst = []
+    det_lst = []
+    coeff_idx = 0
+    for num_refs in num_refs_per_config:
+        start = coeff_idx
+        end = coeff_idx + num_refs
+
+        summ = 0.0
+        for val in target_state[start:end]:
+            summ += val * val
+            # print('\nval: ', val, ' sum ', summ)
+        temp = [x / np.sqrt(summ) for x in target_state[start:end]]
+        norm_basis_coeff_lst.append(temp)
+
+        basis_coeff_lst.append(target_state[start:end])
+        det_lst.append(pre_sa_ref_lst[start:end])
+        coeff_idx += num_refs
+
+    print('\nbasis coefficient list:')
+    for i, coeff in enumerate(basis_coeff_lst):
+        print(norm_basis_coeff_lst[i])
+        print(coeff)
+        print(det_lst[i])
+
+    # wil be used to sort the final sa_ref_lst and basis_coeff_lst
+    basis_importnace_lst = []
+    for basis_coeff in basis_coeff_lst:
+        for coeff in basis_coeff:
+            val = 0.0
+            val += coeff*coeff
+        basis_importnace_lst.append(val)
+
+    print('\nbasis importance list:')
+    print(basis_importnace_lst)
+    sorted_basis_importnace_lst = sorted_largest_idxs(basis_importnace_lst, use_real=True, rev=True)
+
+    # Construct final ref list, of form
+    # [ [ (coeff, [1100]) ], [ (coeff, [1001]), (coeff, [0110]) ], ... ]
+    sa_ref_lst = []
+    for i in range(len(sorted_basis_importnace_lst)):
+        old_idx = sorted_basis_importnace_lst[i][1]
+        basis_vec = []
+        for k in range( len(basis_coeff_lst[old_idx]) ):
+            temp = ( norm_basis_coeff_lst[old_idx][k], det_lst[old_idx][k] )
+            basis_vec.append( temp )
+        if(sorted_basis_importnace_lst[i][0] > 1e-11):
+            sa_ref_lst.append(basis_vec)
+
+    ### End Redundant section for spin adapting determinants ###
+
+    print('\n\nFinal number of reference states: ', len(sa_ref_lst))
+
+    return sa_ref_lst
 
 def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
                     mol, target_root=None, fast=True,
@@ -442,9 +636,9 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 
     print('\nsorted evecs from pre_sa_list[root 1]: \n', sorted_evecs[:,1])
 
-    print('\nsorted evecs from pre_sa_list[root 2]: \n', sorted_evecs[:,2])
-
-    print('\nsorted evecs from pre_sa_list[root 3]: \n', sorted_evecs[:,3])
+    # print('\nsorted evecs from pre_sa_list[root 2]: \n', sorted_evecs[:,2])
+    #
+    # print('\nsorted evecs from pre_sa_list[root 3]: \n', sorted_evecs[:,3])
     # matprint(sorted_evecs)
 
     # Make Coeff and determinats lists
