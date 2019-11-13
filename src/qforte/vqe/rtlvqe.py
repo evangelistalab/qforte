@@ -63,7 +63,7 @@ class RTLVQE(object):
         dt_lst = x
 
         if(self._fast):
-            print('using faster fast algorithm lol')
+            print("\n      ====> Using fast version of algorithm. <====")
             s_mat, h_mat = rtl_helpers.get_mr_mats_fast(self._ref_lst, self._nstates_per_ref,
                                                         dt_lst, self._operator,
                                                         nqubits)

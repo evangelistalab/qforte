@@ -118,7 +118,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     Nis_untruncated = Ninitial_states
 
     if(fast):
-        print('using faster fast algorithm lol')
+        print("\n      ====> Using fast version of algorithm. <====")
         s_mat, h_mat = rtl_helpers.get_sr_mats_fast(initial_ref, inital_dt,
                                                     Ninitial_states, mol.get_hamiltonian(),
                                                     nqubits)

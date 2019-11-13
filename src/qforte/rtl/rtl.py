@@ -24,7 +24,7 @@ def rtl_energy(mol, ref, dt, nstates, fast=False, print_mats=True, return_all_ei
     s_mat = np.zeros((nstates,nstates), dtype=complex)
 
     if(fast):
-        print('using faster fast algorithm lol')
+        print("\n      ====> Using fast version of algorithm. <====")
         s_mat, h_mat = rtl_helpers.get_sr_mats_fast(ref, dt,
                                                     nstates, mol.get_hamiltonian(),
                                                     nqubits)

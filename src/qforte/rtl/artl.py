@@ -23,6 +23,30 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
                         nstates_per_ref=2, print_mats=True, return_all_eigs=False,
                         return_S=False, return_Hbar=False):
 
+    print('\n-----------------------------------------------------')
+    print('        Multreference Selected Quantum Krylov   ')
+    print('-----------------------------------------------------')
+
+    nqubits = len(initial_ref)
+    init_basis_idx = rtl_helpers.ref_to_basis_idx(initial_ref)
+    init_basis = qforte.QuantumBasis(init_basis_idx)
+
+    print('\n\n                   ==> MRSQK options <==')
+    print('-----------------------------------------------------------')
+    print('Initial reference:                       ',  init_basis.str(nqubits))
+    print('Dimension of reference space (d):        ',  Nrefs)
+    print('Time evolutions per reference (s):       ',  nstates_per_ref-1)
+    print('Dimension of Krylov space (N):           ',  Nrefs*nstates_per_ref)
+    print('Delta t (in a.u.):                       ',  mr_dt)
+    print('Target root:                             ',  str(target_root))
+    print('Use spin adapted references:             ',  str(use_spin_adapted_refs))
+    print('Use fast version of algorithm:           ',  str(fast))
+
+    print('\n\n     ==> Initial QK options (for ref. selection)  <==')
+    print('-----------------------------------------------------------')
+    print('Number of initial time evolutions (s_o): ',  Ninitial_states-1)
+    print('Dimension of inital Krylov space (N_o):  ',  Ninitial_states)
+    print('Initial delta t_o (in a.u.):             ',  inital_dt)
 
     if(use_cas_refs):
         sa_ref_lst = artl_helpers.get_cas_ref_lst(initial_ref, a_el, a_sorb, mol)
@@ -83,7 +107,7 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
 
 
     if(fast):
-        print('using faster fast algorithm lol')
+        print("\n      ====> Using fast version of algorithm. <====")
         if(use_spin_adapted_refs or use_cas_refs):
             # raise NotImplementedError('Still in template for get_sa_mr_mats_fast().')
             s_mat, h_mat = rtl_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,
@@ -226,7 +250,7 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
 #         dt_lst.append(mr_dt)
 #
 #     if(fast):
-#         print('using faster fast algorithm lol')
+#         print("\n      ====> Using fast version of algorithm. <====")
 #         if(use_spin_adapted_refs):
 #             raise NotImplementedError('Still in template for get_sa_mr_mats_fast().')
 #             # s_mat, h_mat = rtl_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,
