@@ -1,3 +1,10 @@
+"""
+transforms.py
+=================================================
+A module for operator transform functions,
+from second quantization -> qubit representation.
+"""
+
 import qforte
 import numpy as np
 import copy
@@ -42,9 +49,21 @@ def fermop_to_sq_excitation(fermop):
     return sq_excitations
 
 def organizer_to_circuit(op_organizer):
-    #loop through organizer and build circuit
-    operator = qforte.QuantumOperator()
+    """Builds a QuantumCircuit from a operator orgainizer.
 
+    Parameters
+    ----------
+    op_organizer : list
+        An object to organize what the coefficient and Pauli operators in terms
+        of the QuantumOperator will be.
+
+        The orginzer is of the form
+        [[coeff_a, [ ("X", i), ("Z", j),  ("Y", k), ...  ] ], [...] ...]
+        where X, Y, Z are strings that indicate Pauli opterators;
+        i, j, k index qubits and coeff_a indicates the coefficient for the ath
+        term in the QuantumOperator.
+    """
+    operator = qforte.QuantumOperator()
     for coeff, word in op_organizer:
         circ = qforte.QuantumCircuit()
         for letter in word:
@@ -81,7 +100,7 @@ def get_ucc_jw_organizer(sq_excitations, already_anti_herm=False):
     return T_organizer
 
 def combine_like_terms(op_organizer):
-    # A very slow implementation, could absolutely be improved
+    #TODO: A very slow implementation, could absolutely be improved
     term_coeff_dict = {}
     combined_op_organizer = []
     threshold = 1.0e-10

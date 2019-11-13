@@ -31,5 +31,5 @@
 *.out
 *.app
 
-# Build Files
+# Local Build Files
 build/*
