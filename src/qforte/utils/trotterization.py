@@ -40,7 +40,7 @@ def trotterize(operator, trotter_number=1, trotter_order=1):
 
 
     else:
-        print('\nusing higher order trotter!')
+        # print('\nusing higher order trotter!')
         # First make new higher order operator
         # operator = copy.deepcopy(operator)
         ho_op = qforte.QuantumOperator()

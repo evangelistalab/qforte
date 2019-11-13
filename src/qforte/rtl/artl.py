@@ -38,7 +38,9 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
     print('Time evolutions per reference (s):       ',  nstates_per_ref-1)
     print('Dimension of Krylov space (N):           ',  Nrefs*nstates_per_ref)
     print('Delta t (in a.u.):                       ',  mr_dt)
+    print('Trotter number (m):                      ',  trot_order)
     print('Target root:                             ',  str(target_root))
+    print('Use det. selection with sign:            ',  str(use_phase_based_selection))
     print('Use spin adapted references:             ',  str(use_spin_adapted_refs))
     print('Use fast version of algorithm:           ',  str(fast))
 
@@ -62,11 +64,11 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
                                                use_phase_based_selection=use_phase_based_selection)
 
             ##-##
-            print('\n\nsa_ref list:')
-            print('----------------------------')
-            for ref in sa_ref_lst:
-                print('  \n', ref)
-            print('')
+            # print('\n\nsa_ref list:')
+            # print('----------------------------')
+            # for ref in sa_ref_lst:
+            #     print('  \n', ref)
+            # print('')
             ##-##
             nqubits = len(sa_ref_lst[0][0][1])
 
@@ -78,11 +80,11 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
                                                 use_phase_based_selection=use_phase_based_selection)
 
             ##-##
-            print('\n\nref list:')
-            print('----------------------------')
-            for ref in ref_lst:
-                print(ref)
-            print('')
+            # print('\n\nref list:')
+            # print('----------------------------')
+            # for ref in ref_lst:
+            #     print(ref)
+            # print('')
             ##-##
             nqubits = len(ref_lst[0])
 
@@ -107,7 +109,7 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
 
 
     if(fast):
-        print("\n      ====> Using fast version of algorithm. <====")
+        #print("\n      ====> Using fast version of algorithm. <====")
         if(use_spin_adapted_refs or use_cas_refs):
             # raise NotImplementedError('Still in template for get_sa_mr_mats_fast().')
             s_mat, h_mat = rtl_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,
@@ -151,26 +153,18 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
 
 
     if(print_mats):
-        print('------------------------------------------------')
-        print('   Matricies for MR Quantum Real-Time Lanczos')
-        print('------------------------------------------------')
-        print('Nrefs:             ', num_refs)
-        print('Nevos per ref:     ', nstates_per_ref)
-        print('Ntot states  :     ', num_tot_basis)
-        print('Delta t list :     ', dt_lst)
+        print('\n\n                ==> MRSQK matricies <==')
+        print('-----------------------------------------------------------')
 
         print("\nS:\n")
         rtl_helpers.matprint(s_mat)
-
         print('\nk(S): ', np.linalg.cond(s_mat))
 
         print("\nHbar:\n")
         rtl_helpers.matprint(h_mat)
 
-        print('\nk(Hbar): ', np.linalg.cond(h_mat))
-
     evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
-    print('\nRTLanczos (unsorted!) evals from measuring ancilla:\n', evals)
+    # print('\nRTLanczos (unsorted!) evals from measuring ancilla:\n', evals)
 
     evals_sorted = np.sort(evals)
 
@@ -182,6 +176,12 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
     else:
         print('Warding: problem may be extremely ill conditioned, check evals and k(S)')
         Eo = 0.0
+
+    print('\n\n                   ==> MRSQK summary <==')
+    print('-----------------------------------------------------------')
+    cs_str = '{:.2e}'.format(np.linalg.cond(s_mat))
+    print('Condition number of overlap mat k(S):     ', cs_str)
+    print('Final MRSQK Energy:                      ', round(Eo, 10))
 
     if(return_all_eigs or return_S or return_Hbar):
         return_list = [Eo]
@@ -250,7 +250,7 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
 #         dt_lst.append(mr_dt)
 #
 #     if(fast):
-#         print("\n      ====> Using fast version of algorithm. <====")
+#         #print("\n      ====> Using fast version of algorithm. <====")
 #         if(use_spin_adapted_refs):
 #             raise NotImplementedError('Still in template for get_sa_mr_mats_fast().')
 #             # s_mat, h_mat = rtl_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,

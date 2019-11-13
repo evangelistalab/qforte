@@ -581,8 +581,8 @@ def get_sa_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_order
     omega_lst = []
     Homega_lst = []
 
-    print('\nref_list:')
-    print(ref_lst)
+    # print('\nref_list:')
+    # print(ref_lst)
 
     for i, ref in enumerate(ref_lst):
         dt = dt_lst[i]
@@ -672,8 +672,10 @@ def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
         if(np.real(sii) > THRESHOLD):
             s_prime.append(np.real(sii))
 
-    print('\n\ns is of inital rank:    ', len(s))
-    print('\n\ns is of truncated rank: ', len(s_prime))
+    if((len(s) - len(s_prime)) != 0):
+        print('\nGeneralized eigenvalue probelm rank was reduced, matrix may be ill conditioned!')
+        print('  s is of inital rank:    ', len(s))
+        print('  s is of truncated rank: ', len(s_prime))
 
     X_prime = np.zeros((len(s), len(s_prime)), dtype=complex)
     for i in range(len(s)):

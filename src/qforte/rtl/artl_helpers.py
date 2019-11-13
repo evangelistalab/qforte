@@ -79,8 +79,8 @@ def build_eq_dets(open_shell_ref):
 
     eq_ref_lst1 = [open_shell_ref]
 
-    print('\nbefore addtion:\n')
-    print(eq_ref_lst1)
+    # print('\nbefore addtion:\n')
+    # print(eq_ref_lst1)
 
     for ref in eq_ref_lst1:
         for orb in one_e_orbs:
@@ -88,8 +88,8 @@ def build_eq_dets(open_shell_ref):
             if(temp not in eq_ref_lst1):
                 eq_ref_lst1.append(temp)
 
-    print('\nall dets after addition:\n')
-    print(eq_ref_lst1)
+    # print('\nall dets after addition:\n')
+    # print(eq_ref_lst1)
 
     eq_ref_lst2 = []
     for ref in eq_ref_lst1:
@@ -118,7 +118,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     Nis_untruncated = Ninitial_states
 
     if(fast):
-        print("\n      ====> Using fast version of algorithm. <====")
+        #print("\n      ====> Using fast version of algorithm. <====")
         s_mat, h_mat = rtl_helpers.get_sr_mats_fast(initial_ref, inital_dt,
                                                     Ninitial_states, mol.get_hamiltonian(),
                                                     nqubits)
@@ -134,13 +134,18 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
                                                 nqubits)
                 s_mat[q][p] = np.conj(s_mat[p][q])
 
+    print('\n\n    ==> Initial QK Matricies (for ref. selection)  <==')
+    print('-----------------------------------------------------------')
+
     print("\nS initial:\n")
     rtl_helpers.matprint(s_mat)
 
-    print('cond(S):', np.linalg.cond(s_mat))
-
-    print("\nHbar: initial\n")
+    print("\nH initial:\n")
     rtl_helpers.matprint(h_mat)
+
+    cs_str = '{:.2e}'.format(np.linalg.cond(s_mat))
+    print('\nCondition number of overlap mat k(S):   ', cs_str)
+
 
     evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
 
@@ -149,7 +154,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     # evals, evecs = linalg.eig(h_mat,s_mat)
 
     if(Ninitial_states > len(evals)):
-        print('\n', Ninitial_states, ' initial states requested, but SR-RTQL produced ',
+        print('\n', Ninitial_states, ' initial states requested, but QK produced ',
                     len(evals), ' stable roots.\n Using ', len(evals),
                     'intial states instead.')
 
@@ -166,10 +171,9 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
         sorted_evals[n]   = evals[old_idx]
         sorted_evecs[:,n] = evecs[:,old_idx]
 
-    print('\nARTLanczos (sorted!) initial evals:\n\n', sorted_evals)
-    print('\nARTLanczos initial sorted evecs:\n')
-    matprint(sorted_evecs)
-
+    # print('\nARTLanczos (sorted!) initial evals:\n\n', sorted_evals)
+    # print('\nARTLanczos initial sorted evecs:\n')
+    # matprint(sorted_evecs)
 
     sorted_sq_mod_evecs = np.zeros((Nis_untruncated,Ninitial_states), dtype=complex)
 
@@ -177,8 +181,8 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
         for q in range(Ninitial_states):
             sorted_sq_mod_evecs[p][q] = sorted_evecs[p][q] * np.conj(sorted_evecs[p][q])
 
-    print('\nARTLanczos initial sorted evecs square modulous:\n')
-    matprint(sorted_sq_mod_evecs)
+    # print('\nARTLanczos initial sorted evecs square modulous:\n')
+    # matprint(sorted_sq_mod_evecs)
 
     basis_coeff_vec_lst = []
     for n in range(Nis_untruncated):
@@ -210,7 +214,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     basis_coeff_mat = np.array(basis_coeff_vec_lst)
 
     Cprime = (np.conj(sorted_evecs.transpose())).dot(basis_coeff_mat)
-    print('\nshape Cprime: ', np.shape(Cprime))
+    # print('\nshape Cprime: ', np.shape(Cprime))
     for n in range(Ninitial_states):
         for i, val in enumerate(Cprime[n]):
             Cprime[n][i] *= np.conj(val)
@@ -225,8 +229,9 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     true_idx_lst = []
     idx_lst = []
     if(target_root is not None):
-        print('\nTargeting refs for root ', target_root)
+        # print('\nTargeting refs for root ', target_root)
 
+        ### I AM HERE ###
         # ###########
         #
         # print('approx ground state wvfn sq mod')
@@ -243,6 +248,8 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 
             true_idx_lst.append( true_sorted_idxs[n][1] )
 
+
+    #NOTE: think this below section can be removed...
     else:
         raise ValueError("psudo-state avaraged selection approach not yet functional")
         if(Nrefs > Ninitial_states):
@@ -271,20 +278,24 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
                 true_idx_lst.append( true_sorted_idxs[0][1] )
                 idx_lst.append( sorted_idxs[0][1] )
 
-    print('\nMost important determinats (no approximation):\n')
-    print('root               dominant determinant  ')
-    print('----------------------------------------')
-    for i, idx in enumerate(true_idx_lst):
-        basis = qforte.QuantumBasis(idx)
-        print('  ', i, '                ', basis.str(nqubits))
+    print('\n\n      ==> Initial QK Determinat selection summary  <==')
+    print('-----------------------------------------------------------')
 
+    if(use_phase_based_selection):
+        print('\nMost important determinats:\n')
+        print('index                     determinant  ')
+        print('----------------------------------------')
+        for i, idx in enumerate(true_idx_lst):
+            basis = qforte.QuantumBasis(idx)
+            print('  ', i+1, '                ', basis.str(nqubits))
 
-    print('\nInitial ref guesses (using approximation):\n')
-    print('root               dominant determinant  ')
-    print('----------------------------------------')
-    for i, idx in enumerate(idx_lst):
-        basis = qforte.QuantumBasis(idx)
-        print('  ', i, '                ', basis.str(nqubits))
+    else:
+        print('\nMost important determinats:\n')
+        print('index                     determinant  ')
+        print('----------------------------------------')
+        for i, idx in enumerate(idx_lst):
+            basis = qforte.QuantumBasis(idx)
+            print('  ', i+1, '                ', basis.str(nqubits))
 
 
 
@@ -292,7 +303,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
         true_initial_ref_lst.append(intiger_to_ref(idx, nqubits))
 
     if(initial_ref not in true_initial_ref_lst):
-        print('\nAdding initial referance determinant\n')
+        print('\n***Adding initial referance determinant!***\n')
         for i in range(len(true_initial_ref_lst) - 1):
             true_initial_ref_lst[i+1] = true_initial_ref_lst[i]
 
@@ -310,7 +321,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     ### ###
 
     if(initial_ref not in initial_ref_lst):
-        print('\nAdding initial referance determinant\n')
+        print('\n***Adding initial referance determinant!***\n')
         staggard_initial_ref_lst = [initial_ref]
         for i in range(len(initial_ref_lst) - 1):
             # initial_ref_lst[i+1] = initial_ref_lst[i].copy()
@@ -326,7 +337,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     ### ###
 
     if(use_phase_based_selection):
-        print('\nusing phase based reference selection!\n')
+        # print('\nusing phase based reference selection!\n')
         return true_initial_ref_lst
 
     else:
@@ -555,7 +566,7 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     # print(ref_lst)
 
 
-    print('\nspin adapting guess reference list\n')
+    # print('\n==> Spin adapting reference list. <==\n')
 
     # first build ref list for consturction of Htilde
     pre_sa_ref_lst = []
@@ -563,9 +574,9 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     # Might also need to build list for indexes of eqivilant dets
 
     for ref in ref_lst:
-        print('  ref:', ref)
-        for other_ref in pre_sa_ref_lst:
-            print('    ref_in_pre_sa_lst:', other_ref)
+        # print('  ref:', ref)
+        # for other_ref in pre_sa_ref_lst:
+        #     print('    ref_in_pre_sa_lst:', other_ref)
         if(ref not in pre_sa_ref_lst):
             if(open_shell(ref)):
                 temp = build_eq_dets(ref)
@@ -575,20 +586,20 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
                 pre_sa_ref_lst.append(ref)
                 num_refs_per_config.append(1)
 
-    print('\nlen(pre_sa_ref_lst):', len(pre_sa_ref_lst))
-    print('\nsum(num_refs_per_config):', sum(num_refs_per_config))
+    # print('\nlen(pre_sa_ref_lst):', len(pre_sa_ref_lst))
+    # print('\nsum(num_refs_per_config):', sum(num_refs_per_config))
 
-    print('\npre_sa_ref_lst:', pre_sa_ref_lst)
-    print('\nnum_refs_per_config:', num_refs_per_config)
+    # print('\npre_sa_ref_lst:', pre_sa_ref_lst)
+    # print('\nnum_refs_per_config:', num_refs_per_config)
     # At this point pre_sa_ref_lst contains correct spin combos
 
-    print('\n\npre_sa_ref list:')
-    print('----------------------------')
-    for ref in pre_sa_ref_lst:
-        print(ref)
-    print('')
+    # print('\n\npre_sa_ref list:')
+    # print('----------------------------')
+    # for ref in pre_sa_ref_lst:
+    #     print(ref)
+    # print('')
 
-    print('\n\nPossible repeats in pre_sa_ref_list!')
+    # print('\n\nPossible repeats in pre_sa_ref_list!')
     _size = len(pre_sa_ref_lst)
     repeated = []
     for i in range(_size):
@@ -597,18 +608,22 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
             if pre_sa_ref_lst[i] == pre_sa_ref_lst[j] and pre_sa_ref_lst[i] not in repeated:
                 repeated.append(pre_sa_ref_lst[i])
     for ref in repeated:
+        print('Repeat in reference list!')
         print(ref)
+        raise ValueError("Can't be repeats in reference space! Will cause severe linear dependancy.")
 
     # Now we need to create a CI with these dets
     # NOTE: again, stop getting the number of qubits this way...
+
+
     nqubits = len(pre_sa_ref_lst[0])
     dt_lst = np.zeros(len(pre_sa_ref_lst))
     s_mat, h_mat = rtl_helpers.get_mr_mats_fast(pre_sa_ref_lst, 1,
                                                 dt_lst, mol.get_hamiltonian(),
                                                 nqubits)
 
-    print('\n\ncondition number of pure CI (sould be 1.0):')
-    print(np.linalg.cond(s_mat))
+    # print('\n\ncondition number of pure CI (sould be 1.0):')
+    # print(np.linalg.cond(s_mat))
 
     # print('\noverlap for pre spin adapted configuration determination:')
     # matprint(s_mat)
@@ -618,7 +633,7 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 
     evals, evecs = linalg.eig(h_mat)
 
-    print('\nevals from pre_sa_list', evals)
+    # print('\nevals from pre_sa_list', evals)
     # print('\nevecs from pre_sa_list:')
     # matprint(evecs)
 
@@ -631,10 +646,10 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
         sorted_evals[n]   = np.real(evals[old_idx])
         sorted_evecs[:,n] = np.real(evecs[:,old_idx])
 
-    print('\nsorted evals from pre_sa_list', sorted_evals)
-    print('\nsorted evecs from pre_sa_list[root 0]: \n', sorted_evecs[:,0])
-
-    print('\nsorted evecs from pre_sa_list[root 1]: \n', sorted_evecs[:,1])
+    # print('\nsorted evals from pre_sa_list', sorted_evals)
+    # print('\nsorted evecs from pre_sa_list[root 0]: \n', sorted_evecs[:,0])
+    #
+    # print('\nsorted evecs from pre_sa_list[root 1]: \n', sorted_evecs[:,1])
 
     # print('\nsorted evecs from pre_sa_list[root 2]: \n', sorted_evecs[:,2])
     #
@@ -653,7 +668,7 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 
 
         target_root = adjusted_root
-        print('now using small CI root: ', target_root)
+        print('Now using small CI root: ', target_root)
 
     target_state = sorted_evecs[:,target_root]
     basis_coeff_lst = []
@@ -675,11 +690,24 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
         det_lst.append(pre_sa_ref_lst[start:end])
         coeff_idx += num_refs
 
-    print('\nbasis coefficient list:')
-    for i, coeff in enumerate(basis_coeff_lst):
-        print(norm_basis_coeff_lst[i])
-        print(coeff)
-        print(det_lst[i])
+    print('\n\n      ==> Small CI with spin adapted dets summary <==')
+    print('-----------------------------------------------------------')
+    print('\nList augmented to included all spin \nconfigurations for open shells.')
+    print('\n  Coeff                    determinant  ')
+    print('----------------------------------------')
+    for i, det in enumerate(pre_sa_ref_lst):
+        qf_det_idx = rtl_helpers.ref_to_basis_idx(det)
+        basis = qforte.QuantumBasis(qf_det_idx)
+        if(target_state[i] > 0.0):
+            print('   ', round(target_state[i], 4), '                ', basis.str(nqubits))
+        else:
+            print('  ', round(target_state[i], 4), '                ', basis.str(nqubits))
+
+    # print('\nbasis coefficient list:')
+    # for i, coeff in enumerate(basis_coeff_lst):
+    #     print(norm_basis_coeff_lst[i])
+    #     print(coeff)
+    #     print(det_lst[i])
 
     # wil be used to sort the final sa_ref_lst and basis_coeff_lst
     basis_importnace_lst = []
@@ -689,19 +717,33 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
             val += coeff*coeff
         basis_importnace_lst.append(val)
 
-    print('\nbasis importance list:')
-    print(basis_importnace_lst)
+    # print('\nbasis importance list:')
+    # print(basis_importnace_lst)
     sorted_basis_importnace_lst = sorted_largest_idxs(basis_importnace_lst, use_real=True, rev=True)
 
     # Construct final ref list, of form
     # [ [ (coeff, [1100]) ], [ (coeff, [1001]), (coeff, [0110]) ], ... ]
+
+    print('\n\n        ==> Final MRSQK reference space summary <==')
+    print('-----------------------------------------------------------')
+
     sa_ref_lst = []
     for i in range(Nrefs):
+        print('\nRef ', i+1)
+        print('---------------------------')
         old_idx = sorted_basis_importnace_lst[i][1]
         basis_vec = []
         for k in range( len(basis_coeff_lst[old_idx]) ):
             temp = ( norm_basis_coeff_lst[old_idx][k], det_lst[old_idx][k] )
             basis_vec.append( temp )
+
+            qf_det_idx = rtl_helpers.ref_to_basis_idx(temp[1])
+            basis = qforte.QuantumBasis(qf_det_idx)
+            if(temp[0] > 0.0):
+                print('   ', round(temp[0], 4), '     ', basis.str(nqubits))
+            else:
+                print('  ', round(temp[0], 4), '     ', basis.str(nqubits))
+
         sa_ref_lst.append(basis_vec)
 
     # print('\n\nsa_ref_lst:')
