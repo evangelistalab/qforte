@@ -1,7 +1,6 @@
 import qforte
-from qforte import vqe
-from qforte.rtl import rtl_helpers
-from qforte.rtl import artl_helpers
+from qforte.qkd import qk_helpers
+from qforte.qkd import mrsqk_helpers
 import numpy as np
 from scipy import linalg
 
@@ -12,7 +11,7 @@ from scipy import linalg
     # as controlled-unitaries                                                              #
     ########################################################################################
 
-def adaptive_rtl_energy(mol, d, s, mr_dt, initial_ref,
+def mrsqk_energy(mol, d, s, mr_dt, initial_ref,
                         fast=False,
                         trot_order = 1,
                         target_root=0,
@@ -33,7 +32,7 @@ def adaptive_rtl_energy(mol, d, s, mr_dt, initial_ref,
     print('-----------------------------------------------------')
 
     nqubits = len(initial_ref)
-    init_basis_idx = rtl_helpers.ref_to_basis_idx(initial_ref)
+    init_basis_idx = qk_helpers.ref_to_basis_idx(initial_ref)
     init_basis = qforte.QuantumBasis(init_basis_idx)
 
     print('\n\n                   ==> MRSQK options <==')
@@ -57,14 +56,14 @@ def adaptive_rtl_energy(mol, d, s, mr_dt, initial_ref,
 
 
     if(use_spin_adapted_refs):
-        sa_ref_lst = artl_helpers.get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
+        sa_ref_lst = mrsqk_helpers.get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
                                            mol, target_root=target_root, fast=True,
                                            use_phase_based_selection=use_phase_based_selection)
 
         nqubits = len(sa_ref_lst[0][0][1])
 
     else:
-        ref_lst = artl_helpers.get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
+        ref_lst = mrsqk_helpers.get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
                                             mol, target_root=target_root, fast=True,
                                             use_phase_based_selection=use_phase_based_selection)
 
@@ -84,12 +83,12 @@ def adaptive_rtl_energy(mol, d, s, mr_dt, initial_ref,
 
     if(fast):
         if(use_spin_adapted_refs):
-            s_mat, h_mat = rtl_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,
+            s_mat, h_mat = qk_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,
                                                         dt_lst, mol.get_hamiltonian(),
                                                         nqubits, trot_order=trot_order)
 
         else:
-            s_mat, h_mat = rtl_helpers.get_mr_mats_fast(ref_lst, nstates_per_ref,
+            s_mat, h_mat = qk_helpers.get_mr_mats_fast(ref_lst, nstates_per_ref,
                                                         dt_lst, mol.get_hamiltonian(),
                                                         nqubits, trot_order=trot_order)
 
@@ -108,13 +107,13 @@ def adaptive_rtl_energy(mol, d, s, mr_dt, initial_ref,
                             dt_I = dt_lst[I]
                             dt_J = dt_lst[J]
 
-                            h_mat[p][q] = rtl_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
+                            h_mat[p][q] = qk_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
                                                                         nqubits, mol.get_hamiltonian(),
                                                                         trot_order=trot_order)
                             h_mat[q][p] = np.conj(h_mat[p][q])
 
-                            s_mat[p][q] = rtl_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
+                            s_mat[p][q] = qk_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
                                                                         nqubits,
                                                                         trot_order=trot_order)
@@ -127,13 +126,13 @@ def adaptive_rtl_energy(mol, d, s, mr_dt, initial_ref,
         print('-----------------------------------------------------------')
 
         print("\nS:\n")
-        rtl_helpers.matprint(s_mat)
+        qk_helpers.matprint(s_mat)
         print('\nk(S): ', np.linalg.cond(s_mat))
 
         print("\nHbar:\n")
-        rtl_helpers.matprint(h_mat)
+        qk_helpers.matprint(h_mat)
 
-    evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
+    evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
     evals_sorted = np.sort(evals)
 
     if(np.abs(np.imag(evals_sorted[0])) < 1.0e-3):

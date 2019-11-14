@@ -1,7 +1,7 @@
 import qforte
 from qforte.utils import trotterization as trot
-from qforte.rtl import rtl_helpers
-from qforte.rtl.rtl_helpers import sorted_largest_idxs
+from qforte.qkd import qk_helpers
+from qforte.qkd.qk_helpers import sorted_largest_idxs
 
 import numpy as np
 from scipy import linalg
@@ -106,18 +106,18 @@ def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
     Nis_untruncated = ninitial_states
 
     if(fast):
-        s_mat, h_mat = rtl_helpers.get_sr_mats_fast(initial_ref, inital_dt,
+        s_mat, h_mat = qk_helpers.get_sr_mats_fast(initial_ref, inital_dt,
                                                     ninitial_states, mol.get_hamiltonian(),
                                                     nqubits)
 
     else:
         for p in range(ninitial_states):
             for q in range(p, ninitial_states):
-                h_mat[p][q] = rtl_helpers.matrix_element(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
+                h_mat[p][q] = qk_helpers.matrix_element(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
                                                 nqubits, mol.get_hamiltonian())
                 h_mat[q][p] = np.conj(h_mat[p][q])
 
-                s_mat[p][q] = rtl_helpers.matrix_element(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
+                s_mat[p][q] = qk_helpers.matrix_element(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
                                                 nqubits)
                 s_mat[q][p] = np.conj(s_mat[p][q])
 
@@ -125,15 +125,15 @@ def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
     print('-----------------------------------------------------------')
 
     print("\nS initial:\n")
-    rtl_helpers.matprint(s_mat)
+    qk_helpers.matprint(s_mat)
 
     print("\nH initial:\n")
-    rtl_helpers.matprint(h_mat)
+    qk_helpers.matprint(h_mat)
 
     cs_str = '{:.2e}'.format(np.linalg.cond(s_mat))
     print('\nCondition number of overlap mat k(S):   ', cs_str)
 
-    evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
+    evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
 
     if(ninitial_states > len(evals)):
         print('\n', ninitial_states, ' initial states requested, but QK produced ',
@@ -282,7 +282,7 @@ def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
 
     nqubits = len(pre_sa_ref_lst[0])
     dt_lst = np.zeros(len(pre_sa_ref_lst))
-    s_mat, h_mat = rtl_helpers.get_mr_mats_fast(pre_sa_ref_lst, 1,
+    s_mat, h_mat = qk_helpers.get_mr_mats_fast(pre_sa_ref_lst, 1,
                                                 dt_lst, mol.get_hamiltonian(),
                                                 nqubits)
 
@@ -333,7 +333,7 @@ def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
     print('\n  Coeff                    determinant  ')
     print('----------------------------------------')
     for i, det in enumerate(pre_sa_ref_lst):
-        qf_det_idx = rtl_helpers.ref_to_basis_idx(det)
+        qf_det_idx = qk_helpers.ref_to_basis_idx(det)
         basis = qforte.QuantumBasis(qf_det_idx)
         if(target_state[i] > 0.0):
             print('   ', round(target_state[i], 4), '                ', basis.str(nqubits))
@@ -364,7 +364,7 @@ def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
             temp = ( norm_basis_coeff_lst[old_idx][k], det_lst[old_idx][k] )
             basis_vec.append( temp )
 
-            qf_det_idx = rtl_helpers.ref_to_basis_idx(temp[1])
+            qf_det_idx = qk_helpers.ref_to_basis_idx(temp[1])
             basis = qforte.QuantumBasis(qf_det_idx)
             if(temp[0] > 0.0):
                 print('   ', round(temp[0], 4), '     ', basis.str(nqubits))

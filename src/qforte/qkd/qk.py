@@ -1,5 +1,5 @@
 import qforte
-from qforte.rtl import rtl_helpers
+from qforte.qkd import qk_helpers
 
 import numpy as np
 from scipy import linalg
@@ -12,7 +12,7 @@ from scipy import linalg
     ########################################################################################
 
 
-def rtl_energy(mol, ref, dt, s, fast=False, print_mats=True, return_all_eigs=False, return_S=False, return_Hbar=False):
+def qk_energy(mol, ref, dt, s, fast=False, print_mats=True, return_all_eigs=False, return_S=False, return_Hbar=False):
 
     #NOTE: need get nqubits from Molecule class attribute instead of ref list length
     # Also true for UCC functions
@@ -23,38 +23,35 @@ def rtl_energy(mol, ref, dt, s, fast=False, print_mats=True, return_all_eigs=Fal
     s_mat = np.zeros((nstates,nstates), dtype=complex)
 
     if(fast):
-        s_mat, h_mat = rtl_helpers.get_sr_mats_fast(ref, dt,
+        s_mat, h_mat = qk_helpers.get_sr_mats_fast(ref, dt,
                                                     nstates, mol.get_hamiltonian(),
                                                     nqubits)
 
     else:
         for p in range(nstates):
             for q in range(p, nstates):
-                h_mat[p][q] = rtl_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
+                h_mat[p][q] = qk_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
                                                 nqubits, mol.get_hamiltonian())
 
                 h_mat[q][p] = np.conj(h_mat[p][q])
 
-                s_mat[p][q] = rtl_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
+                s_mat[p][q] = qk_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
                                                 nqubits)
 
                 s_mat[q][p] = np.conj(s_mat[p][q])
 
     if(print_mats):
         print('------------------------------------------------')
-        print('     Matricies for Quantum Real-Time Lanczos')
+        print('         Matricies for Quantum Krylov')
         print('------------------------------------------------')
-        print('Nsteps  : ', nstates)
-        print('delta t :     ', dt)
+
         print("\nS:\n")
-        rtl_helpers.matprint(s_mat)
+        qk_helpers.matprint(s_mat)
 
-        print("\nHbar:\n")
-        rtl_helpers.matprint(h_mat)
+        print("\nH:\n")
+        qk_helpers.matprint(h_mat)
 
-    evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
-
-    print('\nRTLanczos (unsorted!) evals from measuring ancilla:\n', evals)
+    evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
 
     evals_sorted = np.sort(evals)
 
