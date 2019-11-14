@@ -12,11 +12,12 @@ from scipy import linalg
     ########################################################################################
 
 
-def rtl_energy(mol, ref, dt, nstates, fast=False, print_mats=True, return_all_eigs=False, return_S=False, return_Hbar=False):
+def rtl_energy(mol, ref, dt, s, fast=False, print_mats=True, return_all_eigs=False, return_S=False, return_Hbar=False):
 
     #NOTE: need get nqubits from Molecule class attribute instead of ref list length
     # Also true for UCC functions
     nqubits = len(ref)
+    nstates = s+1
 
     h_mat = np.zeros((nstates,nstates), dtype=complex)
     s_mat = np.zeros((nstates,nstates), dtype=complex)
