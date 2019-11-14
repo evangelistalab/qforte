@@ -89,7 +89,7 @@ def build_eq_dets(open_shell_ref):
 
     return eq_ref_lst2
 
-def get_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
+def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
                     mol, target_root=None, fast=True,
                     use_phase_based_selection=False):
 
@@ -100,19 +100,19 @@ def get_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
     # Also true for UCC functions
     nqubits = len(initial_ref)
 
-    h_mat = np.zeros((Ninitial_states,Ninitial_states), dtype=complex)
-    s_mat = np.zeros((Ninitial_states,Ninitial_states), dtype=complex)
+    h_mat = np.zeros((ninitial_states,ninitial_states), dtype=complex)
+    s_mat = np.zeros((ninitial_states,ninitial_states), dtype=complex)
 
-    Nis_untruncated = Ninitial_states
+    Nis_untruncated = ninitial_states
 
     if(fast):
         s_mat, h_mat = rtl_helpers.get_sr_mats_fast(initial_ref, inital_dt,
-                                                    Ninitial_states, mol.get_hamiltonian(),
+                                                    ninitial_states, mol.get_hamiltonian(),
                                                     nqubits)
 
     else:
-        for p in range(Ninitial_states):
-            for q in range(p, Ninitial_states):
+        for p in range(ninitial_states):
+            for q in range(p, ninitial_states):
                 h_mat[p][q] = rtl_helpers.matrix_element(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
                                                 nqubits, mol.get_hamiltonian())
                 h_mat[q][p] = np.conj(h_mat[p][q])
@@ -135,25 +135,25 @@ def get_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
 
     evals, evecs = rtl_helpers.canonical_geig_solve(s_mat, h_mat)
 
-    if(Ninitial_states > len(evals)):
-        print('\n', Ninitial_states, ' initial states requested, but QK produced ',
+    if(ninitial_states > len(evals)):
+        print('\n', ninitial_states, ' initial states requested, but QK produced ',
                     len(evals), ' stable roots.\n Using ', len(evals),
                     'intial states instead.')
 
-        Ninitial_states = len(evals)
+        ninitial_states = len(evals)
 
     sorted_evals_idxs = sorted_largest_idxs(evals, use_real=True, rev=False)
-    sorted_evals = np.zeros((Ninitial_states), dtype=complex)
-    sorted_evecs = np.zeros((Nis_untruncated,Ninitial_states), dtype=complex)
-    for n in range(Ninitial_states):
+    sorted_evals = np.zeros((ninitial_states), dtype=complex)
+    sorted_evecs = np.zeros((Nis_untruncated,ninitial_states), dtype=complex)
+    for n in range(ninitial_states):
         old_idx = sorted_evals_idxs[n][1]
         sorted_evals[n]   = evals[old_idx]
         sorted_evecs[:,n] = evecs[:,old_idx]
 
-    sorted_sq_mod_evecs = np.zeros((Nis_untruncated,Ninitial_states), dtype=complex)
+    sorted_sq_mod_evecs = np.zeros((Nis_untruncated,ninitial_states), dtype=complex)
 
     for p in range(Nis_untruncated):
-        for q in range(Ninitial_states):
+        for q in range(ninitial_states):
             sorted_sq_mod_evecs[p][q] = sorted_evecs[p][q] * np.conj(sorted_evecs[p][q])
 
     basis_coeff_vec_lst = []
@@ -185,11 +185,11 @@ def get_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
     basis_coeff_mat = np.array(basis_coeff_vec_lst)
 
     Cprime = (np.conj(sorted_evecs.transpose())).dot(basis_coeff_mat)
-    for n in range(Ninitial_states):
+    for n in range(ninitial_states):
         for i, val in enumerate(Cprime[n]):
             Cprime[n][i] *= np.conj(val)
 
-    for n in range(Ninitial_states):
+    for n in range(ninitial_states):
         for i, val in enumerate(basis_coeff_vec_lst[n]):
             basis_coeff_vec_lst[n][i] *= np.conj(val)
 
@@ -255,7 +255,7 @@ def get_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
     else:
         return initial_ref_lst
 
-def get_sa_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
+def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
                     mol, target_root=None, fast=True,
                     use_phase_based_selection=False):
 
@@ -263,7 +263,7 @@ def get_sa_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
         raise NotImplementedError('Only fast algorithm avalible for get_sa_init_ref_lst')
 
 
-    ref_lst = get_init_ref_lst(initial_ref, 2*d, Ninitial_states, inital_dt,
+    ref_lst = get_init_ref_lst(initial_ref, 2*d, ninitial_states, inital_dt,
                                         mol, target_root=target_root, fast=True,
                                         use_phase_based_selection=use_phase_based_selection)
 
