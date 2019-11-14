@@ -89,7 +89,7 @@ def build_eq_dets(open_shell_ref):
 
     return eq_ref_lst2
 
-def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
+def get_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
                     mol, target_root=None, fast=True,
                     use_phase_based_selection=False):
 
@@ -201,7 +201,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
 
         true_sorted_idxs = sorted_largest_idxs(Cprime[target_root,:])
         sorted_idxs = sorted_largest_idxs(Cprime_sq_mod[target_root,:])
-        for n in range(Nrefs):
+        for n in range(d):
             idx_lst.append( sorted_idxs[n][1] )
             true_idx_lst.append( true_sorted_idxs[n][1] )
 
@@ -255,7 +255,7 @@ def get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     else:
         return initial_ref_lst
 
-def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
+def get_sa_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
                     mol, target_root=None, fast=True,
                     use_phase_based_selection=False):
 
@@ -263,7 +263,7 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
         raise NotImplementedError('Only fast algorithm avalible for get_sa_init_ref_lst')
 
 
-    ref_lst = get_init_ref_lst(initial_ref, 2*Nrefs, Ninitial_states, inital_dt,
+    ref_lst = get_init_ref_lst(initial_ref, 2*d, Ninitial_states, inital_dt,
                                         mol, target_root=target_root, fast=True,
                                         use_phase_based_selection=use_phase_based_selection)
 
@@ -355,7 +355,7 @@ def get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
     print('-----------------------------------------------------------')
 
     sa_ref_lst = []
-    for i in range(Nrefs):
+    for i in range(d):
         print('\nRef ', i+1)
         print('---------------------------')
         old_idx = sorted_basis_importnace_lst[i][1]

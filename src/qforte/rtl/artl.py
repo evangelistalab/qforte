@@ -12,15 +12,20 @@ from scipy import linalg
     # as controlled-unitaries                                                              #
     ########################################################################################
 
-def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
+def adaptive_rtl_energy(mol, d, mr_dt, initial_ref,
                         trot_order = 1,
-                        a_el = None,
-                        a_sorb = None,
                         use_phase_based_selection=False,
-                        use_spin_adapted_refs=False,
-                        target_root=None, Ninitial_states=4, inital_dt=1.0, fast=False, var_dt=False,
-                        nstates_per_ref=2, print_mats=True, return_all_eigs=False,
-                        return_S=False, return_Hbar=False):
+                        use_spin_adapted_refs=True,
+                        target_root=None,
+                        Ninitial_states=4,
+                        inital_dt=1.0,
+                        fast=False,
+                        var_dt=False,
+                        nstates_per_ref=2,
+                        print_mats=True,
+                        return_all_eigs=False,
+                        return_S=False,
+                        return_Hbar=False):
 
     print('\n-----------------------------------------------------')
     print('        Multreference Selected Quantum Krylov   ')
@@ -33,9 +38,9 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
     print('\n\n                   ==> MRSQK options <==')
     print('-----------------------------------------------------------')
     print('Initial reference:                       ',  init_basis.str(nqubits))
-    print('Dimension of reference space (d):        ',  Nrefs)
+    print('Dimension of reference space (d):        ',  d)
     print('Time evolutions per reference (s):       ',  nstates_per_ref-1)
-    print('Dimension of Krylov space (N):           ',  Nrefs*nstates_per_ref)
+    print('Dimension of Krylov space (N):           ',  d*nstates_per_ref)
     print('Delta t (in a.u.):                       ',  mr_dt)
     print('Trotter number (m):                      ',  trot_order)
     print('Target root:                             ',  str(target_root))
@@ -50,14 +55,14 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
     print('Initial delta t_o (in a.u.):             ',  inital_dt)
 
     if(use_spin_adapted_refs):
-        sa_ref_lst = artl_helpers.get_sa_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
+        sa_ref_lst = artl_helpers.get_sa_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
                                            mol, target_root=target_root, fast=True,
                                            use_phase_based_selection=use_phase_based_selection)
 
         nqubits = len(sa_ref_lst[0][0][1])
 
     else:
-        ref_lst = artl_helpers.get_init_ref_lst(initial_ref, Nrefs, Ninitial_states, inital_dt,
+        ref_lst = artl_helpers.get_init_ref_lst(initial_ref, d, Ninitial_states, inital_dt,
                                             mol, target_root=target_root, fast=True,
                                             use_phase_based_selection=use_phase_based_selection)
 
@@ -65,14 +70,14 @@ def adaptive_rtl_energy(mol, Nrefs, mr_dt, initial_ref,
 
     #NOTE: need get nqubits from Molecule class attribute instead of ref list length
     # Also true for UCC functions
-    num_refs = Nrefs
+    num_refs = d
     num_tot_basis = num_refs * nstates_per_ref
 
     h_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
     s_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
 
     dt_lst = []
-    for i in range(Nrefs):
+    for i in range(d):
         dt_lst.append(mr_dt)
 
     if(fast):
