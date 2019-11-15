@@ -12,12 +12,34 @@ from scipy import linalg
     ########################################################################################
 
 
-def qk_energy(mol, ref, dt, s, fast=False, print_mats=True, return_all_eigs=False, return_S=False, return_Hbar=False):
+def qk_energy(mol, ref, dt, s,
+                fast=False,
+                trot_number = 1,
+                print_mats=True,
+                return_all_eigs=False,
+                return_S=False,
+                return_Hbar=False):
 
     #NOTE: need get nqubits from Molecule class attribute instead of ref list length
     # Also true for UCC functions
+
+    print('\n-----------------------------------------------------')
+    print('           Single Reference Quantum Krylov   ')
+    print('-----------------------------------------------------')
+
     nqubits = len(ref)
     nstates = s+1
+    init_basis_idx = qk_helpers.ref_to_basis_idx(ref)
+    init_basis = qforte.QuantumBasis(init_basis_idx)
+
+    print('\n\n                     ==> QK options <==')
+    print('-----------------------------------------------------------')
+    print('Reference:                               ',  init_basis.str(nqubits))
+    print('Time evolutions per reference (s):       ',  s)
+    print('Dimension of Krylov space (N):           ',  nstates)
+    print('Delta t (in a.u.):                       ',  dt)
+    print('Trotter number (m):                      ',  trot_number)
+    print('Use fast version of algorithm:           ',  str(fast))
 
     h_mat = np.zeros((nstates,nstates), dtype=complex)
     s_mat = np.zeros((nstates,nstates), dtype=complex)
@@ -25,18 +47,18 @@ def qk_energy(mol, ref, dt, s, fast=False, print_mats=True, return_all_eigs=Fals
     if(fast):
         s_mat, h_mat = qk_helpers.get_sr_mats_fast(ref, dt,
                                                     nstates, mol.get_hamiltonian(),
-                                                    nqubits)
+                                                    nqubits, trot_number=trot_number)
 
     else:
         for p in range(nstates):
             for q in range(p, nstates):
                 h_mat[p][q] = qk_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
-                                                nqubits, mol.get_hamiltonian())
+                                                nqubits, mol.get_hamiltonian(), trot_number=trot_number)
 
                 h_mat[q][p] = np.conj(h_mat[p][q])
 
                 s_mat[p][q] = qk_helpers.matrix_element(ref, dt, p, q, mol.get_hamiltonian(),
-                                                nqubits)
+                                                nqubits, trot_number=trot_number)
 
                 s_mat[q][p] = np.conj(s_mat[p][q])
 
@@ -63,6 +85,12 @@ def qk_energy(mol, ref, dt, s, fast=False, print_mats=True, return_all_eigs=Fals
     else:
         print('Warding: problem may be extremely ill conditioned, check evals and k(S)')
         Eo = 0.0
+
+    print('\n\n                     ==> QK summary <==')
+    print('-----------------------------------------------------------')
+    cs_str = '{:.2e}'.format(np.linalg.cond(s_mat))
+    print('Condition number of overlap mat k(S):     ', cs_str)
+    print('Final QK Energy:                          ', round(Eo, 10))
 
     if(return_all_eigs or return_S or return_Hbar):
         return_list = [Eo]
