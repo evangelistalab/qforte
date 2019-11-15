@@ -1,3 +1,10 @@
+"""
+mrsqk.py
+=================================================
+A module for calculating the energies of quantum-
+mechanical systems the multireference selected
+quantum Krylov algorithm.
+"""
 import qforte
 from qforte.qkd import qk_helpers
 from qforte.qkd import mrsqk_helpers
@@ -23,6 +30,75 @@ def mrsqk_energy(mol, d, s, mr_dt, initial_ref,
                         return_all_eigs=False,
                         return_S=False,
                         return_Hbar=False):
+
+    """Executes the MRSQK algorithm and generates the energy.
+
+        Arguments
+        ---------
+        mol : Molecule
+            The Molecule object to use in MRSQK.
+
+        d : int
+            The dimenion of the reference space (number of references) to be used.
+
+        s : int
+            The number of time evolutions to perform on each reference.
+
+        mr_dt : float
+            The time step (delta t) to use for the evolutions of each reference.
+
+        initial_ref : list
+            The initial reference state given as a list of 1's and 0's
+            (e.g. the Hartree-Fock state).
+
+        fast : bool
+            Whether or not to use a faster version of the algorithm that bypasses
+            measurment (unphysical for quantum computer).
+
+        trot_number : int
+            The Trotter number for the calculation
+            (exact in the infinte limit)
+
+        target_root : int
+            Determines which state to return the energy for.
+
+        use_phase_based_selection : bool
+            Whether or not to account for sign discrepencaies when selecting important
+            determinants from initial QK procedure.
+
+        use_spin_adapted_refs : bool
+            Whether or not to spin adapt selected open shell determinants into a
+            single reference.
+
+        s_0 : int
+            The number of evolutions to perform in the initial (single reference)
+            QK calculation used to determine important references.
+
+        inital_dt : float
+            The time step (delta t) to use in the initial (single reference)
+            QK calculation used to determine important references.
+
+        print_mats : bool
+            Whether or not to print the MRSQK H and S matricies.
+
+        return_all_eigs : bool
+            Additionally retrun a list of all other
+            root energies.
+
+        return_S : ndarray
+            Additionally return a ndarray containing the overlap matrix S used in
+            MRSQK.
+
+        return_Hbar : ndarray
+            Additionally return a ndarray containing Hamiltonian H used in
+            MRSQK.
+
+        Retruns
+        -------
+        Eo : float
+            The energy of the specified root given by MRSQK.
+
+    """
 
     nstates_per_ref = s + 1
     ninitial_states = s_0 + 1
