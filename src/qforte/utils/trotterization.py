@@ -69,7 +69,7 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, Use_open_cRz=False, trotter_nu
     is the exponent (N) for to product of single term
     exponentals e^A ~ ( Product_i(e^(A_i/N)) )^N
 
-    :param trotter_number: (int) the order of the troterization approximation, can be 1 or 2
+    :param trotter_order: (int) the order of the troterization approximation, can be 1 or 2
     """
 
     total_phase = 1.0
@@ -91,6 +91,8 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, Use_open_cRz=False, trotter_nu
                 total_phase *= phase
 
     else:
+        if(trotter_order > 1):
+            raise NotImplementedError("Higher order trotterization is not yet implemented.")
         ho_op = qforte.QuantumOperator()
         for k in range(1, trotter_number+1):
             k = float(k)
