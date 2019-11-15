@@ -19,13 +19,13 @@ def trotterize(operator, trotter_number=1, trotter_order=1):
     is the exponent (N) for to product of single term
     exponentals e^A ~ ( Product_i(e^(A_i/N)) )^N
 
-    :param trotter_order: (int) the order of the troterization approximation, can be 1 or 2
+    :param trotter_number: (int) the order of the troterization approximation, can be 1 or 2
     """
 
     total_phase = 1.0
     troterized_operator = qforte.QuantumCircuit()
 
-    if (trotter_order == 1) and (trotter_number == 1):
+    if (trotter_number == 1) and (trotter_order == 1):
         #loop over terms in operator
         for term in operator.terms():
             term_generator, phase = qforte.exponentiate_single_term(term[0],term[1])
@@ -36,10 +36,10 @@ def trotterize(operator, trotter_number=1, trotter_order=1):
 
     else:
         ho_op = qforte.QuantumOperator()
-        for k in range(1, trotter_order+1):
+        for k in range(1, trotter_number+1):
             k = float(k)
             for term in operator.terms():
-                ho_op.add_term( term[0] / float(trotter_order) , term[1])
+                ho_op.add_term( term[0] / float(trotter_number) , term[1])
 
         for term in ho_op.terms():
             term_generator, phase = qforte.exponentiate_single_term(term[0],term[1])
@@ -69,13 +69,13 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, Use_open_cRz=False, trotter_nu
     is the exponent (N) for to product of single term
     exponentals e^A ~ ( Product_i(e^(A_i/N)) )^N
 
-    :param trotter_order: (int) the order of the troterization approximation, can be 1 or 2
+    :param trotter_number: (int) the order of the troterization approximation, can be 1 or 2
     """
 
     total_phase = 1.0
     troterized_operator = qforte.QuantumCircuit()
 
-    if (trotter_order == 1) and (trotter_number == 1):
+    if (trotter_number == 1) and (trotter_order == 1):
         #loop over terms in operator
         if(Use_open_cRz):
             for term in operator.terms():
@@ -92,10 +92,10 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, Use_open_cRz=False, trotter_nu
 
     else:
         ho_op = qforte.QuantumOperator()
-        for k in range(1, trotter_order+1):
+        for k in range(1, trotter_number+1):
             k = float(k)
             for term in operator.terms():
-                ho_op.add_term( term[0] / float(trotter_order) , term[1])
+                ho_op.add_term( term[0] / float(trotter_number) , term[1])
 
         if(Use_open_cRz):
             for term in ho_op.terms():

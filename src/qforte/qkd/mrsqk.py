@@ -13,7 +13,7 @@ from scipy import linalg
 
 def mrsqk_energy(mol, d, s, mr_dt, initial_ref,
                         fast=False,
-                        trot_order = 1,
+                        trot_number = 1,
                         target_root=0,
                         use_phase_based_selection=False,
                         use_spin_adapted_refs=True,
@@ -42,7 +42,7 @@ def mrsqk_energy(mol, d, s, mr_dt, initial_ref,
     print('Time evolutions per reference (s):       ',  s)
     print('Dimension of Krylov space (N):           ',  d*nstates_per_ref)
     print('Delta t (in a.u.):                       ',  mr_dt)
-    print('Trotter number (m):                      ',  trot_order)
+    print('Trotter number (m):                      ',  trot_number)
     print('Target root:                             ',  str(target_root))
     print('Use det. selection with sign:            ',  str(use_phase_based_selection))
     print('Use spin adapted references:             ',  str(use_spin_adapted_refs))
@@ -85,12 +85,12 @@ def mrsqk_energy(mol, d, s, mr_dt, initial_ref,
         if(use_spin_adapted_refs):
             s_mat, h_mat = qk_helpers.get_sa_mr_mats_fast(sa_ref_lst, nstates_per_ref,
                                                         dt_lst, mol.get_hamiltonian(),
-                                                        nqubits, trot_order=trot_order)
+                                                        nqubits, trot_number=trot_number)
 
         else:
             s_mat, h_mat = qk_helpers.get_mr_mats_fast(ref_lst, nstates_per_ref,
                                                         dt_lst, mol.get_hamiltonian(),
-                                                        nqubits, trot_order=trot_order)
+                                                        nqubits, trot_number=trot_number)
 
     else:
         if(use_phase_based_selection or use_spin_adapted_refs):
@@ -110,13 +110,13 @@ def mrsqk_energy(mol, d, s, mr_dt, initial_ref,
                             h_mat[p][q] = qk_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
                                                                         nqubits, mol.get_hamiltonian(),
-                                                                        trot_order=trot_order)
+                                                                        trot_number=trot_number)
                             h_mat[q][p] = np.conj(h_mat[p][q])
 
                             s_mat[p][q] = qk_helpers.mr_matrix_element(ref_I, ref_J, dt_I, dt_J,
                                                                         m, n, mol.get_hamiltonian(),
                                                                         nqubits,
-                                                                        trot_order=trot_order)
+                                                                        trot_number=trot_number)
                             s_mat[q][p] = np.conj(s_mat[p][q])
 
 

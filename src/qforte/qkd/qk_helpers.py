@@ -26,7 +26,7 @@ def ref_to_basis_idx(ref):
     temp.reverse()
     return int("".join(str(x) for x in temp), 2)
 
-def matrix_element(ref, dt, m, n, H, nqubits, A = None, trot_order=1):
+def matrix_element(ref, dt, m, n, H, nqubits, A = None, trot_number=1):
     """
     This function returns a single matrix element M_bk based on the evolutio of
     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
@@ -51,7 +51,7 @@ def matrix_element(ref, dt, m, n, H, nqubits, A = None, trot_order=1):
         phase = -1.0j * n * dt * c
         temp_op1.add_term(phase, op)
 
-    expn_op1, phase1 = qforte.trotterization.trotterize_w_cRz(temp_op1, ancilla_idx, trotter_order=trot_order)
+    expn_op1, phase1 = qforte.trotterization.trotterize_w_cRz(temp_op1, ancilla_idx, trotter_number=trot_number)
 
     for gate in expn_op1.gates():
         Uk.add_gate(gate)
@@ -64,7 +64,7 @@ def matrix_element(ref, dt, m, n, H, nqubits, A = None, trot_order=1):
         phase = -1.0j * m * dt * c
         temp_op2.add_term(phase, op)
 
-    expn_op2, phase2 = qforte.trotterization.trotterize_w_cRz(temp_op2, ancilla_idx, trotter_order=trot_order, Use_open_cRz=False)
+    expn_op2, phase2 = qforte.trotterization.trotterize_w_cRz(temp_op2, ancilla_idx, trotter_number=trot_number, Use_open_cRz=False)
 
     for gate in expn_op2.gates():
         Ub.add_gate(gate)
@@ -155,7 +155,7 @@ def matrix_element(ref, dt, m, n, H, nqubits, A = None, trot_order=1):
 
     return value
 
-def get_sr_mats_fast(ref, dt, nstates, H, nqubits, trot_order=1):
+def get_sr_mats_fast(ref, dt, nstates, H, nqubits, trot_number=1):
     """
     This function returns a single matrix element M_bk based on the evolutio of
     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
@@ -190,7 +190,7 @@ def get_sr_mats_fast(ref, dt, nstates, H, nqubits, trot_order=1):
                 phase = -1.0j * n * dt * c
                 temp_op1.add_term(phase, op)
 
-            expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1, trotter_order=trot_order)
+            expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1, trotter_number=trot_number)
             Un.add_circuit(expn_op1)
 
         QC = qforte.QuantumComputer(nqubits)
@@ -223,7 +223,7 @@ def get_sr_mats_fast(ref, dt, nstates, H, nqubits, trot_order=1):
     return s_mat, h_mat
 
 
-def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None, trot_order=1):
+def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None, trot_number=1):
     """
     This function returns a single matrix element M_bk based on the evolutio of
     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
@@ -251,7 +251,7 @@ def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None, trot
         phase = -1.0j * (m) * dt_I * c
         temp_op1.add_term(phase, op)
 
-    expn_op1, phase1 = qforte.trotterization.trotterize_w_cRz(temp_op1, ancilla_idx, trotter_order=trot_order)
+    expn_op1, phase1 = qforte.trotterization.trotterize_w_cRz(temp_op1, ancilla_idx, trotter_number=trot_number)
     for gate in expn_op1.gates():
         Uk.add_gate(gate)
 
@@ -266,7 +266,7 @@ def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None, trot
         phase = -1.0j * (n) * dt_J * c
         temp_op2.add_term(phase, op)
 
-    expn_op2, phase2 = qforte.trotterization.trotterize_w_cRz(temp_op2, ancilla_idx, trotter_order=trot_order, Use_open_cRz=False)
+    expn_op2, phase2 = qforte.trotterization.trotterize_w_cRz(temp_op2, ancilla_idx, trotter_number=trot_number, Use_open_cRz=False)
     for gate in expn_op2.gates():
         Ub.add_gate(gate)
 
@@ -344,7 +344,7 @@ def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None, trot
 
     return value
 
-def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_order=1):
+def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_number=1):
     """
     This function returns a single matrix element M_bk based on the evolutio of
     two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
@@ -384,7 +384,7 @@ def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_order=1)
                     phase = -1.0j * n * dt * c
                     temp_op1.add_term(phase, op)
 
-                expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1, trotter_order=trot_order)
+                expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1, trotter_number=trot_number)
                 Un.add_circuit(expn_op1)
 
             QC = qforte.QuantumComputer(nqubits)
@@ -416,7 +416,7 @@ def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_order=1)
 
     return s_mat, h_mat
 
-def get_sa_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_order=1):
+def get_sa_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_number=1):
     """
     This function returns a single matrix element
 
@@ -449,7 +449,7 @@ def get_sa_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_order
                     phase = -1.0j * n * dt * c
                     temp_op1.add_term(phase, op)
 
-                expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1, trotter_order=trot_order)
+                expn_op1, phase1 = qforte.trotterization.trotterize(temp_op1, trotter_number=trot_number)
                 Un.add_circuit(expn_op1)
 
             QC = qforte.QuantumComputer(nqubits)
