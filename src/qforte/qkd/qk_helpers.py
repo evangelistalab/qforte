@@ -1,3 +1,10 @@
+"""
+qk_helpers.py
+=================================================
+A module containing helper functions for quantum
+Krylov diagonalization approaches.
+"""
+
 import qforte
 from qforte.utils import trotterization as trot
 
@@ -5,6 +12,15 @@ import numpy as np
 from scipy import linalg
 
 def matprint(mat, fmt="g"):
+    """Prints (2 X 2) numpy arrays in an intelligable fashion.
+
+        Arguments
+        ---------
+
+        mat : ndarray
+            A real (or complex) 2 X 2 numpt array to be printed.
+
+    """
     col_maxes = [max([len(("{:"+fmt+"}").format(x)) for x in col]) for col in mat.T]
     for x in mat:
         for i, y in enumerate(x):
@@ -12,33 +28,103 @@ def matprint(mat, fmt="g"):
         print("")
 
 def sorted_largest_idxs(array, use_real=False, rev=True):
-        temp = np.empty((len(array)), dtype=object )
-        for i, val in enumerate(array):
-            temp[i] = (val, i)
-        if(use_real):
-            sorted_temp = sorted(temp, key=lambda factor: np.real(factor[0]), reverse=rev)
-        else:
-            sorted_temp = sorted(temp, key=lambda factor: factor[0], reverse=rev)
-        return sorted_temp
+    """Sorts the indexes of an array and stores the old indexes.
+
+        Arguments
+        ---------
+
+        array : ndarray
+            A real (or complex) numpy array to to be sorted.
+
+        use_real : bool
+            Whether or not to sort based only on the real portion of the array
+            values.
+
+        rev : bool
+            Whether to reverse the order of the retruned ndarray.
+
+        Returns
+        -------
+
+        sorted_temp : ndarray
+            A numpy array of pairs containing the sorted values and the oritional
+            index.
+
+    """
+    temp = np.empty((len(array)), dtype=object )
+    for i, val in enumerate(array):
+        temp[i] = (val, i)
+    if(use_real):
+        sorted_temp = sorted(temp, key=lambda factor: np.real(factor[0]), reverse=rev)
+    else:
+        sorted_temp = sorted(temp, key=lambda factor: factor[0], reverse=rev)
+    return sorted_temp
 
 def ref_to_basis_idx(ref):
+    """Turns a reference list into a intager representing its binary value.
+
+        Arguments
+        ---------
+
+        ref : list
+            The reference determinant (list of 1's and 0's) indicating the spin
+            orbtial occupation.
+
+        Returns
+        -------
+
+        idx_val : int
+            The value of the index.
+
+    """
     temp = ref.copy()
     temp.reverse()
-    return int("".join(str(x) for x in temp), 2)
+    idx_val = int("".join(str(x) for x in temp), 2)
+    return idx_val
 
 def matrix_element(ref, dt, m, n, H, nqubits, A = None, trot_number=1):
-    """
-    This function returns a single matrix element M_bk based on the evolutio of
-    two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
-    reference state |Phi_o>.
+    """Returns a single matrix element M_mn based on the evolutio of
+    two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt *H)
+    on a reference state |Phi_o>, (optionally) with respect to an operator A.
+    Specifically, M_mn is given by <Phi_o| Um^dag Un | Phi_o> or
+    (optionally if A is specified) <Phi_o| Um^dag A Un | Phi_o>.
 
-    :param ref: a list representing the referende state |Phi_o>
-    :param dt: a double representing the real time step
-    :param m: the intager number of time steps for the Ub evolution
-    :param n: the intager number of time steps for the Uk evolution
-    :param H: the QuantumOperator to time evolove under
-    :param nqubits: the intager number of qubits
-    :param A: (optional) the overal operator to measure with respect to
+        Arguments
+        ---------
+
+        ref : list
+            The the reference state |Phi_o>.
+
+        dt : float
+            The real time step value (delta t).
+
+        m : int
+            The number of time steps for the Um evolution.
+
+        n : int
+            The number of time steps for the Un evolution.
+
+        H : QuantumOperator
+            The operator to time evolove with respect to (usually the Hamiltonain).
+
+        nqubits : int
+            The number of qubits
+
+        A : QuantumOperator
+            The overal operator to measure with respect to (optional).
+
+        trot_number : int
+            The number of trotter steps (m) to perform when approximating the matrix
+            exponentials (Um or Un). For the exponential of two non commuting terms
+            e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
+            exact in the infinite m limit.
+
+        Returns
+        -------
+        value : complex
+            The outcome of measuring <X> and <Y> to determine <2*sigma_+>,
+            ultimately the value of the matrix elemet.
+
     """
     value = 0.0
     ancilla_idx = nqubits
@@ -156,18 +242,48 @@ def matrix_element(ref, dt, m, n, H, nqubits, A = None, trot_number=1):
     return value
 
 def get_sr_mats_fast(ref, dt, nstates, H, nqubits, trot_number=1):
-    """
-    This function returns a single matrix element M_bk based on the evolutio of
-    two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
-    reference state |Phi_o>. This is done WITHOUT measuring any operators,
-    but rather computes the expecation value directly using a priori knowlege of
-    the wavefunction coefficients
+    """Returns matrices P and Q with dim (nstats X nstates) based on the evolutio of
+    two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt *H)
+    on a reference state |Phi_o>, with (Q) and without (P) respect to
+    measuring the operator H.
+    Elements P_mn are given by <Phi_o| Um^dag Un | Phi_o>.
+    Elements Q_mn are given by <Phi_o| Um^dag H Un | Phi_o>.
+    This function builds P and Q in an efficient manor and gives the same result
+    as M built from 'matrix_element', but is unphysical for a quantum computer.
 
-    :param ref: a list representing the referende state |Phi_o>
-    :param dt: a double representing the real time step
-    :param H: the QuantumOperator to time evolove under
-    :param nqubits: the intager number of qubits
-    :param A: (optional) the overal operator to measure with respect to
+        Arguments
+        ---------
+
+        ref : list
+            The the reference state |Phi_o>.
+
+        dt : float
+            The real time step value (delta t).
+
+        nstates : int
+            The number of Krylov states to generate.
+
+        H : QuantumOperator
+            The operator to time evolove and measure with respect to
+            (usually the Hamiltonain).
+
+        nqubits : int
+            The number of qubits
+
+        trot_number : int
+            The number of trotter steps (m) to perform when approximating the matrix
+            exponentials (Um or Un). For the exponential of two non commuting terms
+            e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
+            exact in the infinite m limit.
+
+        Returns
+        -------
+        s_mat : ndarray
+            A numpy array containing the elements P_mn
+
+        h_mat : ndarray
+            A numpy array containing the elements Q_mn
+
     """
 
     h_mat = np.zeros((nstates,nstates), dtype=complex)
@@ -224,18 +340,49 @@ def get_sr_mats_fast(ref, dt, nstates, H, nqubits, trot_number=1):
 
 
 def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None, trot_number=1):
-    """
-    This function returns a single matrix element M_bk based on the evolutio of
-    two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
-    reference state |Phi_o>.
+    """Returns a single matrix element M_mn based on the evolutio of
+    two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt *H)
+    for two different references |Phi_I> and |Phi_J>,
+    with respect to the operator H.
+    Specifically, M_mn is given by <Phi_I| Um^dag Un | Phi_J>.
+    (optionally if A is specified) <Phi_I| Um^dag H Un | Phi_J>.
 
-    :param ref: a list representing the referende state |Phi_o>
-    :param dt: a double representing the real time step
-    :param m: the intager number of time steps for the Ub evolution
-    :param n: the intager number of time steps for the Uk evolution
-    :param H: the QuantumOperator to time evolove under
-    :param nqubits: the intager number of qubits
-    :param A: (optional) the overal operator to measure with respect to
+        Arguments
+        ---------
+
+        refI : list
+            The ket reference state <Phi_I|.
+
+        refI : list
+            The bra reference state |Phi_J>.
+
+        dt : float
+            The real time step value (delta t).
+
+        m : int
+            The number of time steps for the Um evolution.
+
+        n : int
+            The number of time steps for the Un evolution.
+
+        H : QuantumOperator
+            The operator to time evolove and measure with respect to
+            (usually the Hamiltonain).
+
+        nqubits : int
+            The number of qubits
+
+        trot_number : int
+            The number of trotter steps (m) to perform when approximating the matrix
+            exponentials (Um or Un). For the exponential of two non commuting terms
+            e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
+            exact in the infinite m limit.
+
+        Returns
+        -------
+        value : complex
+            The outcome of measuring <X> and <Y> to determine <2*sigma_+>,
+            ultimately the value of the matrix elemet.
     """
     value = 0.0
     ancilla_idx = nqubits
@@ -345,18 +492,52 @@ def mr_matrix_element(ref_I, ref_J, dt_I, dt_J, m, n, H, nqubits, A = None, trot
     return value
 
 def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_number=1):
-    """
-    This function returns a single matrix element M_bk based on the evolutio of
-    two unitary operators Ub = exp(-i * m * dt * H) and H_q = exp(-i * n * dt *H) on a
-    reference state |Phi_o>. This is done WITHOUT measuring any operators,
-    but rather computes the expecation value directly using a priori knowlege of
-    the wavefunction coefficients
+    """Returns matrices P and Q with dimension
+    (nstates_per_ref * len(ref_lst) X nstates_per_ref * len(ref_lst))
+    based on the evolution of two unitary operators Um = exp(-i * m * dt * H)
+    and Un = exp(-i * n * dt *H).
 
-    :param ref: a list representing the referende state |Phi_o>
-    :param dt: a double representing the real time step
-    :param H: the QuantumOperator to time evolove under
-    :param nqubits: the intager number of qubits
-    :param A: (optional) the overal operator to measure with respect to
+    This is done for all single determinant refrerences |Phi_K> in ref_lst,
+    with (Q) and without (P) measuring with respect to the operator H.
+    Elements P_mn are given by <Phi_I| Um^dag Un | Phi_J>.
+    Elements Q_mn are given by <Phi_I| Um^dag H Un | Phi_J>.
+    This function builds P and Q in an efficient manor and gives the same result
+    as M built from 'matrix_element', but is unphysical for a quantum computer.
+
+        Arguments
+        ---------
+
+        ref_lst : list of lists
+            A list containing all of the references |Phi_K> to perfrom evolutions on.
+
+        nstates_per_ref : int
+            The number of Krylov basis states to generate for each reference.
+
+        dt_lst : list
+            List of time steps to use for each reference (ususally the same for
+            all references).
+
+        H : QuantumOperator
+            The operator to time evolove and measure with respect to
+            (usually the Hamiltonain).
+
+        nqubits : int
+            The number of qubits
+
+        trot_number : int
+            The number of trotter steps (m) to perform when approximating the matrix
+            exponentials (Um or Un). For the exponential of two non commuting terms
+            e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
+            exact in the infinite m limit.
+
+        Returns
+        -------
+        s_mat : ndarray
+            A numpy array containing the elements P_mn
+
+        h_mat : ndarray
+            A numpy array containing the elements Q_mn
+
     """
 
     num_tot_basis = len(ref_lst) * nstates_per_ref
@@ -417,14 +598,56 @@ def get_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_number=1
     return s_mat, h_mat
 
 def get_sa_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_number=1):
-    """
-    This function returns a single matrix element
+    """Returns matrices P and Q with dimension
+    (nstates_per_ref * len(ref_lst) X nstates_per_ref * len(ref_lst))
+    based on the evolution of two unitary operators Um = exp(-i * m * dt * H)
+    and Un = exp(-i * n * dt *H).
 
-    :param ref: a list representing the referende state |Phi_o>
-    :param dt: a double representing the real time step
-    :param H: the QuantumOperator to time evolove under
-    :param nqubits: the intager number of qubits
-    :param A: (optional) the overal operator to measure with respect to
+    This is done for all spin adapted refrerences |Phi_K> in ref_lst,
+    with (Q) and without (P) measuring with respect to the operator H.
+    Elements P_mn are given by <Phi_I| Um^dag Un | Phi_J>.
+    Elements Q_mn are given by <Phi_I| Um^dag H Un | Phi_J>.
+    This function builds P and Q in an efficient manor and gives the same result
+    as M built from 'matrix_element', but is unphysical for a quantum computer.
+
+        Arguments
+        ---------
+
+        ref_lst : list of lists
+            A list containing all of the spin adapted references |Phi_K> to perfrom evolutions on.
+            Is specifically a list of lists of pairs containing coefficient vales
+            and a lists pertaning to single determinants.
+            As an example,
+            ref_lst = [ [ (1.0, [1,1,0,0]) ], [ (0.7071, [0,1,1,0]), (0.7071, [1,0,0,1]) ] ].
+
+        nstates_per_ref : int
+            The number of Krylov basis states to generate for each reference.
+
+        dt_lst : list
+            List of time steps to use for each reference (ususally the same for
+            all references).
+
+        H : QuantumOperator
+            The operator to time evolove and measure with respect to
+            (usually the Hamiltonain).
+
+        nqubits : int
+            The number of qubits
+
+        trot_number : int
+            The number of trotter steps (m) to perform when approximating the matrix
+            exponentials (Um or Un). For the exponential of two non commuting terms
+            e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
+            exact in the infinite m limit.
+
+        Returns
+        -------
+        s_mat : ndarray
+            A numpy array containing the elements P_mn
+
+        h_mat : ndarray
+            A numpy array containing the elements Q_mn
+
     """
 
     num_tot_basis = len(ref_lst) * nstates_per_ref
@@ -493,6 +716,36 @@ def get_sa_mr_mats_fast(ref_lst, nstates_per_ref, dt_lst, H, nqubits, trot_numbe
     return s_mat, h_mat
 
 def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
+    """Solves a generalized eigenvalue problem HC = SCe in a numerically stable
+    fashioin. See pq. 144 of "Modern Quantum Chemistry" by A. Szabo
+    and N. S. Ostlund beginning with Eq. (3.169).
+
+        Arguments
+        ---------
+
+        S : ndarray
+            A complex valued numpy array for the overlap matrix S.
+
+        S : ndarray
+            A complex valued numpy array for the matrix H.
+
+        print_mats : bool
+            Whether or not to print the intermediate matricies.
+
+        sort_ret_vals : bool
+            Whether or not to retrun the eivenvalues (and corresponding eigenvectors)
+            in order of increasing value
+            (meaning index 0 pertains to lowest eigenvalue).
+
+        Returns
+        -------
+        e_prime : ndarray
+            The energy eigenvalues.
+
+        C : ndarray
+            The eigenvectors.
+
+    """
 
     THRESHOLD = 1e-7
     s, U = linalg.eig(S)
