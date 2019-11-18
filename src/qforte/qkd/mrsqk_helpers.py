@@ -1,3 +1,11 @@
+"""
+qk_helpers.py
+=================================================
+A module containing helper functions for
+multireference features of quantum Krylov
+algorithms.
+"""
+
 import qforte
 from qforte.utils import trotterization as trot
 from qforte.qkd import qk_helpers
@@ -9,6 +17,15 @@ from scipy import linalg
 import collections
 
 def matprint(mat, fmt="g"):
+    """Prints (2 X 2) numpy arrays in an intelligable fashion.
+
+        Arguments
+        ---------
+
+        mat : ndarray
+            A real (or complex) 2 X 2 numpt array to be printed.
+
+    """
     col_maxes = [max([len(("{:"+fmt+"}").format(x)) for x in col]) for col in mat.T]
     for x in mat:
         for i, y in enumerate(x):
@@ -16,6 +33,26 @@ def matprint(mat, fmt="g"):
         print("")
 
 def intiger_to_ref(n, nqubits):
+    """Takes an intager pertaining to a biary number and returns the corresponding
+    determinant occupation list (reference).
+
+        Arguments
+        ---------
+
+        n : int
+            The index.
+
+        nqubits : int
+            The number of qubits (will be length of list).
+
+        Returns
+        -------
+
+        ref : list
+            A list of 1's and 0's representing spin orbital occupations for a
+            single Slater determinant.
+
+    """
     qb = qforte.QuantumBasis(n)
     ref = []
     for i in range(nqubits):
@@ -26,6 +63,17 @@ def intiger_to_ref(n, nqubits):
     return ref
 
 def open_shell(ref):
+    """Determines Wheter or not the reference is an open shell determinant.
+    Returns True if ref is open shell and False if not.
+
+        Arguments
+        ---------
+
+        ref : list
+            A list of 1's and 0's representing spin orbital occupations for a
+            single Slater determinant.
+
+    """
     norb = int(len(ref) / 2)
     for i in range(norb):
         i_alfa = 2*i
@@ -36,6 +84,23 @@ def open_shell(ref):
     return False
 
 def correct_spin(ref, abs_spin):
+    """Determines Wheter or not the reference has correct spin.
+    Returns True if ref is ref spin matches overall spin and False if not.
+
+        Arguments
+        ---------
+
+        ref : list
+            A list of 1's and 0's representing spin orbital occupations for a
+            single Slater determinant.
+
+        abs_spin : float
+            The targeted spin value.
+
+    """
+    if (abs_spin != 0):
+        raise NotImplementedError("MRSQK currently only supports singlet state calculations.")
+
     norb = int(len(ref) / 2)
     spin = 0.0
     for i in range(norb):
@@ -50,6 +115,30 @@ def correct_spin(ref, abs_spin):
         return False
 
 def flip_spin(ref, orb_idx):
+    """Takes in a single determinant reference and returns a determinant with
+    the spin of the spin of the specified spatial orbtital (orb_idx) flipped.
+    If the specified spatail orbital is doubly occupied, then the same
+    determinant is returned.
+
+        Arguments
+        ---------
+
+        ref : list
+            A list of 1's and 0's representing spin orbital occupations for a
+            single Slater determinant.
+
+        orb_idx : int
+            An index for the spatial orbtial of interest.
+
+        Retruns
+        -------
+
+        temp : list
+            A list of 1's and 0's representing spin orbital occupations for a
+            single Slater determinant, with the spin of the specified spatial
+            orbital flipped.
+
+    """
     temp = ref.copy()
     i_alfa = 2*orb_idx
     i_beta = (2*orb_idx) + 1
@@ -61,6 +150,25 @@ def flip_spin(ref, orb_idx):
     return temp
 
 def build_eq_dets(open_shell_ref):
+    """Builds a list of unique spin equivalent determinants from an open shell
+    determinant. For example, if [1,0,0,1] is given as in input, it will return
+    [[1,0,0,1], [0,1,1,0]].
+
+        Arguments
+        ---------
+
+        open_shell_ref : list
+            A list of 1's and 0's representing spin orbital occupations for a
+            single open-shell Slater determinant.
+
+        Returns
+        -------
+
+        eq_ref_lst2 : list of lists
+            A list of open-shell determinants which are spin equivalent to
+            open_shell_ref (including open_shell_ref).
+
+    """
     norb = int(len(open_shell_ref) / 2)
     one_e_orbs = []
     spin = 0.0
@@ -90,8 +198,53 @@ def build_eq_dets(open_shell_ref):
     return eq_ref_lst2
 
 def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
-                    mol, target_root=None, fast=True,
+                    mol, target_root=0, fast=True,
                     use_phase_based_selection=False):
+    """Builds a list of single determinant references to be used in the MRSQK
+    procedure.
+
+        Arguments
+        ---------
+
+        initial_ref : list
+            A list of 1's and 0's representing spin orbital occupations for a
+            single open-shell Slater determinant. It serves as the reference
+            for the initial quantum Krylov calculation used to pick additional
+            references.
+
+        d : int
+            The totoal number of references to find.
+
+        ninitial_states : int
+            The size of the inital quantum Krylov basis to use. Equal to the
+            number of inital time evolutions plus one (s_0 +1).
+
+        initial_dt : float
+            The time step (delta t) to use in the inital quantum Krylov
+            calculation.
+
+        mol : Molecule
+            The Molecule object to use in MRSQK.
+
+        target_root : int
+            Determines which state to return the energy for.
+
+        fast : bool
+            Whether or not to use a faster version of the algorithm that bypasses
+            measurment (unphysical for quantum computer).
+
+        use_phase_based_selection : bool
+            Whether or not to account for sign discrepencaies when selecting important
+            determinants from initial quantum Krylov procedure.
+
+        Returns
+        -------
+
+        initial_ref_lst : list of lists
+            A list of the most important single determinants according to the initial
+            quantum Krylov procedure.
+
+    """
 
     initial_ref_lst = []
     true_initial_ref_lst = []
@@ -256,8 +409,56 @@ def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
         return initial_ref_lst
 
 def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
-                    mol, target_root=None, fast=True,
+                    mol, target_root=0, fast=True,
                     use_phase_based_selection=False):
+    """Builds a list of spin adapted references to be used in the MRSQK procedure.
+
+        Arguments
+        ---------
+
+        initial_ref : list
+            A list of 1's and 0's representing spin orbital occupations for a
+            single open-shell Slater determinant. It serves as the reference
+            for the initial quantum Krylov calculation used to pick additional
+            references.
+
+        d : int
+            The totoal number of references to find.
+
+        ninitial_states : int
+            The size of the inital quantum Krylov basis to use. Equal to the
+            number of inital time evolutions plus one (s_0 +1).
+
+        initial_dt : float
+            The time step (delta t) to use in the inital quantum Krylov
+            calculation.
+
+        mol : Molecule
+            The Molecule object to use in MRSQK.
+
+        target_root : int
+            Determines which state to return the energy for.
+
+        fast : bool
+            Whether or not to use a faster version of the algorithm that bypasses
+            measurment (unphysical for quantum computer).
+
+        use_phase_based_selection : bool
+            Whether or not to account for sign discrepencaies when selecting important
+            determinants from initial quantum Krylov procedure.
+
+        Returns
+        -------
+
+        sa_ref_lst : list of lists
+            A list containing all of the spin adapted references selected in the
+            initial quantum Krylov procedure.
+            It is specifically a list of lists of pairs containing coefficient vales
+            and a lists pertaning to single determinants.
+            As an example,
+            ref_lst = [ [ (1.0, [1,1,0,0]) ], [ (0.7071, [0,1,1,0]), (0.7071, [1,0,0,1]) ] ].
+
+    """
 
     if(fast==False):
         raise NotImplementedError('Only fast algorithm avalible for get_sa_init_ref_lst')
