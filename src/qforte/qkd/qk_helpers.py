@@ -726,7 +726,7 @@ def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
         S : ndarray
             A complex valued numpy array for the overlap matrix S.
 
-        S : ndarray
+        H : ndarray
             A complex valued numpy array for the matrix H.
 
         print_mats : bool
@@ -747,7 +747,7 @@ def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
 
     """
 
-    THRESHOLD = 1e-7
+    THRESHOLD = 1e-15
     s, U = linalg.eig(S)
     s_prime = []
 
