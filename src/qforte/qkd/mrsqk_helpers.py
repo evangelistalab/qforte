@@ -98,8 +98,8 @@ def correct_spin(ref, abs_spin):
             The targeted spin value.
 
     """
-    if (abs_spin != 0):
-        raise NotImplementedError("MRSQK currently only supports singlet state calculations.")
+    # if (abs_spin != 0):
+    #     raise NotImplementedError("MRSQK currently only supports singlet state calculations.")
 
     norb = int(len(ref) / 2)
     spin = 0.0
@@ -223,8 +223,8 @@ def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
             The time step (delta t) to use in the inital quantum Krylov
             calculation.
 
-        H : Molecule
-            The Molecule object to use in MRSQK.
+        H : QuantumOperator
+            The QuantumOperator object to use in MRSQK.
 
         target_root : int
             Determines which state to return the energy for.
@@ -433,8 +433,8 @@ def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
             The time step (delta t) to use in the inital quantum Krylov
             calculation.
 
-        H : Molecule
-            The Molecule object to use in MRSQK.
+        H : QuantumOperator
+            The QuantumOperator object to use in MRSQK.
 
         target_root : int
             Determines which state to return the energy for.

@@ -4,8 +4,8 @@ from qforte import qforte
 from qforte.qkd import qk_helpers
 from qforte.qkd import mrsqk_helpers
 
-class QKDTests(unittest.TestCase):
-    def test_H4_fast_qkd(self):
+class PhysicalQKDTests(unittest.TestCase):
+    def test_H4_physical_qkd(self):
         print('\n'),
         # The FCI energy for H4 at 1.5 Angstrom in a sto-6g basis
         E_fci = -2.0126741263939656
@@ -391,70 +391,28 @@ class QKDTests(unittest.TestCase):
 
         ref = [1,1,1,1,0,0,0,0]
 
-        #code for fast qk (compared to FCI)
-        s_mat, h_mat = qk_helpers.get_sr_mats_fast(ref,
-                                                    1.0,
-                                                    10,
-                                                    H4_qubit_hamiltonian,
-                                                    len(ref),
-                                                    trot_number=100)
+        #test for pyysical qk
+
+        h_mat = np.zeros((3,3), dtype=complex)
+        s_mat = np.zeros((3,3), dtype=complex)
+
+        for p in range(3):
+            for q in range(p, 3):
+                h_mat[p][q] = qk_helpers.matrix_element(ref, 0.5, p, q, H4_qubit_hamiltonian,
+                                                len(ref), H4_qubit_hamiltonian, trot_number=2)
+
+                h_mat[q][p] = np.conj(h_mat[p][q])
+
+                s_mat[p][q] = qk_helpers.matrix_element(ref, 0.5, p, q, H4_qubit_hamiltonian,
+                                                len(ref), trot_number=2)
+
+                s_mat[q][p] = np.conj(s_mat[p][q])
+
 
         evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
         evals_sorted = np.sort(evals)
         E = np.real(evals_sorted[0])
-        self.assertLess(E-E_fci, 1.0e-5)
-
-        # test for fast mrsqk (non spin adapted) (compared to FCI)
-        ref_lst = mrsqk_helpers.get_init_ref_lst(ref,
-                                                    6,
-                                                    3,
-                                                    0.25,
-                                                    H4_qubit_hamiltonian,
-                                                    target_root=0,
-                                                    fast=True,
-                                                    use_phase_based_selection=False)
-
-        dt_lst = []
-        for i in range(len(ref_lst)):
-            dt_lst.append(1.0)
-
-        s_mat, h_mat = qk_helpers.get_mr_mats_fast(ref_lst,
-                                                    3,
-                                                    dt_lst,
-                                                    H4_qubit_hamiltonian,
-                                                    len(ref),
-                                                    trot_number=100)
-
-        evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
-        evals_sorted = np.sort(evals)
-        E = np.real(evals_sorted[0])
-        self.assertLess(E-E_fci, 1.0e-6)
-
-        # test for fast mrsqk (non spin adapted) (compared to FCI)
-        sa_ref_lst = mrsqk_helpers.get_sa_init_ref_lst(ref,
-                            3,
-                            3,
-                            0.25,
-                            H4_qubit_hamiltonian,
-                            target_root=0,
-                            fast=True,
-                            use_phase_based_selection=False)
-
-        dt_lst = []
-        for i in range(len(ref_lst)):
-            dt_lst.append(0.5)
-
-        s_mat_sa, h_mat_sa = qk_helpers.get_sa_mr_mats_fast(sa_ref_lst,
-                                            4,
-                                            dt_lst,
-                                            H4_qubit_hamiltonian,
-                                            len(ref),
-                                            trot_number=100)
-
-        evals, evecs = qk_helpers.canonical_geig_solve(s_mat_sa, h_mat_sa)
-        evals_sorted = np.sort(evals)
-        E = np.real(evals_sorted[0])
-        self.assertLess(E-E_fci, 1.0e-6)
+        self.assertLess(E-(-2.003133218607026), 1.0e-9)
 
 
 if __name__ == '__main__':
