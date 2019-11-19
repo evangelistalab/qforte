@@ -33,3 +33,9 @@
 
 # Local Build Files
 build/*
+
+# PyCache
+__pycache__
+
+# .egg
+qforte.egg-info/

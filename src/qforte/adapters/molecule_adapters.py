@@ -2,18 +2,21 @@
 A class for the building molecular object adapters. Adapters for various approaches to build
 the molecular info and properties (hamiltonian, rdms, etc...).
 """
-
+import operator
+import numpy as np
 from abc import ABC, abstractmethod
 
 from qforte.helper.operator_helper import build_from_openfermion
 from qforte.system.molecular_info import Molecule
+from qforte.utils import transforms as tf
 
-from openfermion.ops import QubitOperator
+from openfermion.ops import FermionOperator, QubitOperator
 from openfermion.hamiltonians import MolecularData
 from openfermion.transforms import get_fermion_operator, jordan_wigner
-from openfermion.utils import hermitian_conjugated, normal_ordered
+from openfermion.utils import hermitian_conjugated, normal_ordered, freeze_orbitals
 
 from openfermionpsi4 import run_psi4
+
 
 class MolAdapter(ABC):
     """Abstract class for the aquiring system information from external electronic
@@ -95,6 +98,8 @@ class OpenFermionMolAdapter(MolAdapter):
 
     def run(self, **kwargs):
 
+        kwargs.setdefault('order_sq_ham', False)
+        kwargs.setdefault('order_jw_ham', False)
         kwargs.setdefault('run_scf', 1)
         kwargs.setdefault('run_mp2', 0)
         kwargs.setdefault('run_ccsd', 0)
@@ -103,6 +108,8 @@ class OpenFermionMolAdapter(MolAdapter):
         kwargs.setdefault('run_fci', 0)
         kwargs.setdefault('store_uccsd_amps', False)
         kwargs.setdefault('buld_uccsd_circ_from_ccsd', False)
+        kwargs.setdefault('frozen_indicies', None)
+        kwargs.setdefault('virtual_indicies', None)
 
         skeleton_mol = MolecularData(geometry = self._mol_geometry,
                                      basis = self._basis,
@@ -122,10 +129,70 @@ class OpenFermionMolAdapter(MolAdapter):
 
         # Set qforte hamiltonian from openfermion
         molecular_hamiltonian = openfermion_mol.get_molecular_hamiltonian()
-        fermion_hamiltonian = normal_ordered(get_fermion_operator(molecular_hamiltonian))
-        qubit_hamiltonian= jordan_wigner(fermion_hamiltonian)
 
-        qforte_hamiltionan = build_from_openfermion(qubit_hamiltonian)
+        if(kwargs['frozen_indicies'] is not None):
+            fermion_hamiltonian = normal_ordered(
+                freeze_orbitals(get_fermion_operator(molecular_hamiltonian),
+                                kwargs['frozen_indicies'],
+                                unoccupied=kwargs['virtual_indicies']))
+        else:
+            fermion_hamiltonian = normal_ordered(get_fermion_operator(molecular_hamiltonian))
+
+        if(kwargs['order_sq_ham'] or kwargs['order_jw_ham']):
+
+            if(kwargs['order_sq_ham'] and kwargs['order_jw_ham']):
+                raise ValueError("Can't use more than one hamiltonain ordering option!")
+
+            if(kwargs['order_sq_ham']):
+                # Optionally sort the hamiltonian terms
+                print('using |largest|->|smallest| sq hamiltioan ordering!')
+                sorted_terms = sorted(fermion_hamiltonian.terms.items(), key=lambda kv: np.abs(kv[1]), reverse=True)
+                # print('\n\nsorted terms\n\n', sorted_terms)
+
+                # Try converting with qforte jw functions
+                sorted_sq_excitations = tf.fermop_to_sq_excitation(sorted_terms)
+                # print('\nsorted_sq_excitations:\n', sorted_sq_excitations)
+                sorted_organizer = tf.get_ucc_jw_organizer(sorted_sq_excitations, already_anti_herm=True)
+                # print('\nsorted_organizer:\n', sorted_organizer)
+                qforte_hamiltionan = tf.organizer_to_circuit(sorted_organizer)
+                # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
+                # for term in qforte_hamiltionan.terms():
+                #     print(term[0])
+                #     print(term[1].str())
+
+            if(kwargs['order_jw_ham']):
+                print('using |largest|->|smallest| jw hamiltonain ordering!')
+                unsorted_terms = [(k, v) for k, v in fermion_hamiltonian.terms.items()]
+
+                # Try converting with qforte jw functions
+                unsorted_sq_excitations = tf.fermop_to_sq_excitation(unsorted_terms)
+                # print('\nunsorted_sq_excitations:\n', unsorted_sq_excitations)
+
+                unsorted_organizer = tf.get_ucc_jw_organizer(unsorted_sq_excitations, already_anti_herm=True)
+                # print('\nunsorted_organizer:\n', unsorted_organizer)
+
+                # Sort organizer
+                sorted_organizer = sorted(unsorted_organizer, key = lambda x: np.abs(x[0]), reverse=True)
+
+
+                qforte_hamiltionan = tf.organizer_to_circuit(sorted_organizer)
+                # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
+
+                # for term in qforte_hamiltionan.terms():
+                #     print(term[0])
+                #     print(term[1].str())
+
+
+        else:
+            print('Using standard openfermion hamiltonian ordering!')
+            qubit_hamiltonian = jordan_wigner(fermion_hamiltonian)
+            qforte_hamiltionan = build_from_openfermion(qubit_hamiltonian)
+
+            # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
+            # for term in qforte_hamiltionan.terms():
+            #     print(term[0])
+            #     print(term[1].str())
+
         self._qforte_mol.set_hamiltonian(qforte_hamiltionan)
 
         # Set qforte energies from openfermion

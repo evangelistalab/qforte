@@ -9,6 +9,45 @@ import qforte
 import numpy as np
 import copy
 
+def fermop_to_sq_excitation(fermop):
+    # fermop => list of tuples [ ((idx, action), (idx, action), ...), coeff)  ]
+    sq_excitations = []
+    for term in fermop:
+        coeff = term[1]
+        tup = term[0]
+
+        num_ops = len(tup)
+        if(int(num_ops % 2) != 0):
+            raise ValueError('Second quantized term must have an even number of operators.')
+
+        an_count = 0
+        cr_count = 0
+        term_lst = []
+        for i, an_cr in enumerate(tup):
+            # print('i: ', i, ' int(num_ops/2): ', int(num_ops/2), ' cr_count: ', cr_count )
+            # check to make sure tuple is already normal ordered
+            if(i < int(num_ops/2) and an_count > 0):
+                # print('here1')
+                raise ValueError('Term is not normal ordered!')
+
+            if(i >= int(num_ops/2) and an_count > int(num_ops/2)):
+                # print('here2')
+                raise ValueError('Term is not normal ordered!')
+
+            term_lst.append(an_cr[0])
+
+            if(an_cr[1]):
+                cr_count += 1
+            else:
+                an_count += 1
+
+        if(an_count != cr_count):
+            raise ValueError('Term is not particle number conserving!')
+
+        sq_excitations.append([ tuple(term_lst),  coeff])
+
+    return sq_excitations
+
 def organizer_to_circuit(op_organizer):
     """Builds a QuantumCircuit from a operator orgainizer.
 
@@ -35,6 +74,7 @@ def organizer_to_circuit(op_organizer):
     return operator
 
 def get_ucc_jw_organizer(sq_excitations, already_anti_herm=False):
+    #NOTE: Need to rename function (Nick)
 
     T_organizer = []
 
@@ -88,6 +128,10 @@ def get_single_term_jw_organizer(sq_term):
 
     # organizer => [[coeff_0, [ ("X", i), ("X", j),  ("X", k), ...  ] ], [...] ...]
     op_organizer = []
+
+    if(len(sq_ops) == 0):
+        op_organizer.append([ sq_coeff, [] ])
+        return op_organizer
 
     ### For right side operator (a single anihilator or creator)
     for i, op_idx in enumerate(sq_ops):

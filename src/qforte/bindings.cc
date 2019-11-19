@@ -30,7 +30,8 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<QuantumBasis>(m, "QuantumBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
-        .def("str", &QuantumBasis::str);
+        .def("str", &QuantumBasis::str)
+        .def("get_bit", &QuantumBasis::get_bit);
 
     py::class_<QuantumComputer>(m, "QuantumComputer")
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
