@@ -391,7 +391,7 @@ class QKDTests(unittest.TestCase):
 
         ref = [1,1,1,1,0,0,0,0]
 
-        #code for fast qk
+        #code for fast qk (compared to FCI)
         s_mat, h_mat = qk_helpers.get_sr_mats_fast(ref,
                                                     1.0,
                                                     10,
@@ -404,9 +404,24 @@ class QKDTests(unittest.TestCase):
         E = np.real(evals_sorted[0])
         self.assertLess(E-E_fci, 1.0e-5)
 
-        #code for fast mrqk
+        #code for fast mrsqk (compared to FCI)
+        # ref_lst = get_init_ref_lst(ref, 
+        #                             3,
+        #                             3,
+        #                             0.25,
+        #                             mol,
+        #                             target_root=0,
+        #                             fast=True,
+        #                             use_phase_based_selection=False)
+        #
+        # s_mat, h_mat = get_mr_mats_fast(ref_lst,
+        #                                 nstates_per_ref,
+        #                                 dt_lst,
+        #                                 H,
+        #                                 nqubits,
+        #                                 trot_number=1)
 
-        #code for fast mrqk
+        #code for fast mrsqk (compared to exact trotter)
 
         # self.assertAlmostEqual(slow_Energy, fast_Energy)
         # self.assertLess(E_fci, slow_Energy)
