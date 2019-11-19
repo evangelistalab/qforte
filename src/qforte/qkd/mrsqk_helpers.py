@@ -198,7 +198,7 @@ def build_eq_dets(open_shell_ref):
     return eq_ref_lst2
 
 def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
-                    mol, target_root=0, fast=True,
+                    H, target_root=0, fast=True,
                     use_phase_based_selection=False):
     """Builds a list of single determinant references to be used in the MRSQK
     procedure.
@@ -223,7 +223,7 @@ def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
             The time step (delta t) to use in the inital quantum Krylov
             calculation.
 
-        mol : Molecule
+        H : Molecule
             The Molecule object to use in MRSQK.
 
         target_root : int
@@ -260,17 +260,17 @@ def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
 
     if(fast):
         s_mat, h_mat = qk_helpers.get_sr_mats_fast(initial_ref, inital_dt,
-                                                    ninitial_states, mol.get_hamiltonian(),
+                                                    ninitial_states, H,
                                                     nqubits)
 
     else:
         for p in range(ninitial_states):
             for q in range(p, ninitial_states):
-                h_mat[p][q] = qk_helpers.matrix_element(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
-                                                nqubits, mol.get_hamiltonian())
+                h_mat[p][q] = qk_helpers.matrix_element(initial_ref, inital_dt, p, q, H,
+                                                nqubits, H)
                 h_mat[q][p] = np.conj(h_mat[p][q])
 
-                s_mat[p][q] = qk_helpers.matrix_element(initial_ref, inital_dt, p, q, mol.get_hamiltonian(),
+                s_mat[p][q] = qk_helpers.matrix_element(initial_ref, inital_dt, p, q, H,
                                                 nqubits)
                 s_mat[q][p] = np.conj(s_mat[p][q])
 
@@ -319,7 +319,7 @@ def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
                     Uk.add_gate(qforte.make_gate('X', j, j))
 
             temp_op1 = qforte.QuantumOperator()
-            for t in mol.get_hamiltonian().terms():
+            for t in H.terms():
                 c, op = t
                 phase = -1.0j * n * inital_dt * c
                 temp_op1.add_term(phase, op)
@@ -409,7 +409,7 @@ def get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
         return initial_ref_lst
 
 def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
-                    mol, target_root=0, fast=True,
+                    H, target_root=0, fast=True,
                     use_phase_based_selection=False):
     """Builds a list of spin adapted references to be used in the MRSQK procedure.
 
@@ -433,7 +433,7 @@ def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
             The time step (delta t) to use in the inital quantum Krylov
             calculation.
 
-        mol : Molecule
+        H : Molecule
             The Molecule object to use in MRSQK.
 
         target_root : int
@@ -465,7 +465,7 @@ def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
 
 
     ref_lst = get_init_ref_lst(initial_ref, 2*d, ninitial_states, inital_dt,
-                                        mol, target_root=target_root, fast=True,
+                                        H, target_root=target_root, fast=True,
                                         use_phase_based_selection=use_phase_based_selection)
 
     pre_sa_ref_lst = []
@@ -484,7 +484,7 @@ def get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
     nqubits = len(pre_sa_ref_lst[0])
     dt_lst = np.zeros(len(pre_sa_ref_lst))
     s_mat, h_mat = qk_helpers.get_mr_mats_fast(pre_sa_ref_lst, 1,
-                                                dt_lst, mol.get_hamiltonian(),
+                                                dt_lst, H,
                                                 nqubits)
 
     evals, evecs = linalg.eig(h_mat)

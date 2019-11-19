@@ -133,14 +133,14 @@ def mrsqk_energy(mol, d, s, mr_dt, initial_ref,
 
     if(use_spin_adapted_refs):
         sa_ref_lst = mrsqk_helpers.get_sa_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
-                                           mol, target_root=target_root, fast=True,
+                                           mol.get_hamiltonian(), target_root=target_root, fast=True,
                                            use_phase_based_selection=use_phase_based_selection)
 
         nqubits = len(sa_ref_lst[0][0][1])
 
     else:
         ref_lst = mrsqk_helpers.get_init_ref_lst(initial_ref, d, ninitial_states, inital_dt,
-                                            mol, target_root=target_root, fast=True,
+                                            mol.get_hamiltonian(), target_root=target_root, fast=True,
                                             use_phase_based_selection=use_phase_based_selection)
 
         nqubits = len(ref_lst[0])
