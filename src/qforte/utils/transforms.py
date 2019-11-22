@@ -48,6 +48,7 @@ def fermop_to_sq_excitation(fermop):
 
     return sq_excitations
 
+#TODO: Rename organizer to operator (Nick)
 def organizer_to_circuit(op_organizer):
     """Builds a QuantumCircuit from a operator orgainizer.
 
@@ -72,6 +73,34 @@ def organizer_to_circuit(op_organizer):
         operator.add_term(coeff, circ)
 
     return operator
+
+#TODO: Rename operator to organizer (Nick)
+def circuit_to_organizer(operator):
+    """Builds a operator orgainizer from a QuantumCircuit.
+
+    Parameters
+    ----------
+    operator : QuantumOperator
+        The QuantumOperator object to converted to organizer form
+
+        The orginzer is of the form
+        [[coeff_a, [ ("X", i), ("Z", j),  ("Y", k), ...  ] ], [...] ...]
+        where X, Y, Z are strings that indicate Pauli opterators;
+        i, j, k index qubits and coeff_a indicates the coefficient for the ath
+        term in the QuantumOperator.
+    """
+    op_organizer = []
+    for term in operator.terms():
+        term_organizer = []
+        gates_in_term = []
+        term_organizer.append(term[0])
+        for gate in term[1].gates():
+            gates_in_term.append( (gate.gate_id(), gate.target()) )
+
+        term_organizer.append(gates_in_term)
+        op_organizer.append(term_organizer)
+
+    return op_organizer
 
 def get_ucc_jw_organizer(sq_excitations, already_anti_herm=False):
     #NOTE: Need to rename function (Nick)
@@ -161,6 +190,16 @@ def get_single_term_jw_organizer(sq_term):
         op_organizer[i][0] *= sq_coeff
 
     return op_organizer
+
+def join_organizers(L_op_org, R_op_org):
+    combined_op_org = []
+    for Lcoeff, Lword in L_op_org:
+        for Rcoeff, Rword in R_op_org:
+            comb_coeff = Lcoeff * Rcoeff
+            comb_word = Lword + Rword
+            combined_op_org.append([comb_coeff, comb_word])
+
+    return combine_like_terms([pauli_condense(combined_op_org)])
 
 def join_lr_organizers(current_op_org, r_op_Xterm, r_op_Yterm):
     if not current_op_org:
