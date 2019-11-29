@@ -16,8 +16,9 @@ cd qforte
 python setup.py build develop
 ```
 
-run tests:
+#### run tests:
 ```bash
+cd tests/
 pytest -v
 ```
 
