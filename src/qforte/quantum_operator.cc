@@ -16,5 +16,5 @@ std::string QuantumOperator::str() const {
     for (const auto& term : terms_) {
         s.push_back(to_string(term.first) + term.second.str());
     }
-    return join(s, " ");
+    return join(s, "\n");
 }

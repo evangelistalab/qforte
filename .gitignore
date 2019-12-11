@@ -39,3 +39,6 @@ __pycache__
 
 # .egg
 qforte.egg-info/
+
+# local binary files
+*tests/bin/
