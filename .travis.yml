@@ -42,3 +42,7 @@ script:
 - cd ${HOME}/build/evangelistalab/qforte
 - python setup.py build
 - python setup.py test
+
+after_success:
+  - codecov
+  
