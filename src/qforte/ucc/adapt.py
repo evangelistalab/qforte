@@ -1,3 +1,9 @@
+"""
+adapt.py
+=================================================
+A module for calculating the energies of quantum-
+mechanical systems with a adapt-vqe approach.
+"""
 import qforte
 from qforte import vqe
 
@@ -10,6 +16,60 @@ def adaptvqe_energy(ref, mol, avqe_thresh,
                     use_analytic_grad=True,
                     adapt_mxitr=50,
                     opt_mxitr=200):
+
+    """Executes the ADAPT-VQE algorithm and generates the energy.
+
+        Arguments
+        ---------
+        ref : list
+            The initial reference state given as a list of 1's and 0's
+            (e.g. the Hartree-Fock state).
+
+        mol : Molecule
+            The Molecule object to use in ADAPT-VQE. Specifies the Hamiltonian.
+
+        avqe_thresh : float
+            The gradient norm threshold to determine when the ADAPT-VQE
+            algorithm has converged.
+
+        print_pool : bool
+            Whether or not to print all the operators in the operator pool.
+
+        trotter_number : int
+            The Trotter number for the calculation
+            (exact in the infinte limit).
+
+        fast : bool
+            Whether or not to use a faster version of the algorithm that bypasses
+            measurment (unphysical for quantum computer).
+
+        optimizer : string
+            The type of opterizer to use for the classical portion of VQE. Suggested
+            algorithms are 'BFGS' or 'Nelder-Mead' although there are many options
+            (see SciPy.optemize.minimize documentation).
+
+        opt_thresh : float
+            The gradient norm threshold to determine when the classical optemizer
+            algorithm has converged.
+
+        use_analytic_grad : bool
+            Whether or not to use an alaystic function for the gradient to pass to
+            the optemizer. If false, the optemizer will use self-generated approximate
+            gradients (if BFGS algorithm is used).
+
+        adapt_mxitr : int
+            The maximum number of iterations to used in ADAPT-VQE.
+
+        opt_mxitr : int
+            The maximum number of iterations to use for each classical
+            optemization step.
+
+        Retruns
+        -------
+        final_energy : float
+            The final energy from the ADAPT-VQE procedure.
+
+    """
 
     print('\n-----------------------------------------------------')
     print('  Adaptive Derivative-Assembled Pseudo-Trotter VQE   ')

@@ -2,7 +2,7 @@
 adaptvqe.py
 ====================================
 A class for using an experiment to execute the variational quantum eigensolver
-for the Adaptive Derivative-Assembled Pseudo-Trotter anxatz.
+for the Adaptive Derivative-Assembled Pseudo-Trotter (ADAPT) anxatz.
 """
 
 import qforte
@@ -17,16 +17,68 @@ from scipy.optimize import minimize
 class ADAPTVQE(object):
     """
     A class that encompases the three componants of using the variational
-    quantum eigensolver to optemize a parameterized unitary CC like wave function.
-    Over a number of iterations the VQE: (1) prepares a quantum state on the quantum computer
+    quantum eigensolver to optemize a parameterized unitary CC like wave function
+    comprised of adaptivly selected operators. Growing a cirquit over many iterations
+    the ADAPT-VQE: (1) prepares a quantum state on the quantum computer
     representing the wave function to be simulated, (2) evauates the energy by
     measurement, and (3) optemizes the the wave funciton by minimizing the energy.
-    VQE object constructor.
 
     Attributes
     ----------
     _ref : list
         The set of 1s and 0s indicating the initial quantum state.
+
+    _nqubits : int
+        The number of qubits the calculation empolys.
+
+    _operator : QuantumOperator
+        The operator to be measured (usually the Hamiltonain), mapped to a
+        qubit representation.
+
+    _avqe_thresh : float
+        The gradient norm threshold to determine when the ADAPT-VQE
+        algorithm has converged.
+
+    _opt_thresh : float
+        The gradient norm threshold to determine when the classical optemizer
+        algorithm has converged.
+
+    _use_fast_measurement : bool
+        Whether or not to use a faster version of the algorithm that bypasses
+        measurment (unphysical for quantum computer).
+
+    _use_analytic_grad : bool
+        Whether or not to use an alaystic function for the gradient to pass to
+        the optemizer. If false, the optemizer will use self-generated approximate
+        gradients (if BFGS algorithm is used).
+
+    _optimizer : string
+        The type of opterizer to use for the classical portion of VQE. Suggested
+        algorithms are 'BFGS' or 'Nelder-Mead' although there are many options
+        (see SciPy.optemize.minimize documentation).
+
+    _trott_num : int
+        The Trotter number for the calculation
+        (exact in the infinte limit).
+
+    _results : list
+        The optemizer result objects from each iteration of ADAPT-VQE.
+
+    _energies : list
+        The optemized energies from each iteration of ADAPT-VQE.
+
+    _grad_norms : list
+        The gradient norms from each iteration of ADAPT-VQE.
+
+    _curr_grad_norm : float
+        The gradient norm for the current iteration of ADAPT-VQE.
+
+    _initial_guess_energy
+        The initial guess energy from each iteration of ADAPT-VQE.
+
+    _pool_obj : SDOpPool
+        An SDOpPool object corresponding to the specefied operators of
+        interest.
 
     _pool : list of lists with tuple and float
         The list of (optionally symmetrized) singe and double excitation
@@ -42,30 +94,87 @@ class ADAPTVQE(object):
         A list of amplitudes (to be optemized) representing selected
         operators in the pool.
 
-    _operator : QuantumOperator
-        The operator to be measured (usually the Hamiltonain), mapped to a
-        qubit representation.
+    _comutator_pool : list
+        The QuantumOperator objects representing the comutators [H, Am] of the
+        Hamiltonian (H) and each member of the operator pool (Am).
 
     _N_samples : int
-        The number of times to measure each term in _operator.
-    _alredy_anti_herm : bool
-        Wether or not Top is passed already in an anti-hermetian form.
-    _use_symmetric_amps : bool
-        Reduce the number of paramaters to be optemized by enforcing the
-        symmetry of certain amplitudes.
-    _many_preps : bool
-        Use a new state preparation for every measurement.
-        (Not yet functional).
-    _optimizer : str
-        The scipy optimizer to be used for the VQE.
+        The number of times to measure each term in _operator
+        (not yet functional).
+
+    _converged : bool
+        Whether or not the ADAPT-VQE has converged according to the gradient-norm
+        threshold.
+
+    _final_energy : float
+        The final ADAPT-VQE energy value.
+
+    _final_result : Result
+        The last result object from the optemizer.
+
+    _n_ham_measurements : int
+        The total number of times the energy was evaluated via
+        measurement of the Hamiltoanin
+
+    _n_comut_measurements : int
+        The total number of times the comutator was evaluated via
+        measurement of [H, Am].
+
 
     Methods
     -------
-    XX unpack_args()
-        Takes the second quantized operator and splits it into a list of
-        amplitueds and a list of tuples containing normal ordered anihilator
-        and creator indicies.
+    fill_pool()
+        Fills the pool_ with indicies pertaining spin-complete, single and
+        double excitation operators according to _nocc and _nvir.
 
+    fill_comutator_pool()
+        Fills the _comutator_pool with circuits considering the _operator to
+        be measured and the _pool.
+
+    update_ansatz()
+        Adds a paramater and operator to the ADAPT-VQE circuit, and checks for
+        convergence.
+
+    build_Uprep()
+        Returns a QuantumCircuit object corresponding to the state preparation
+        circuit for the ADAPT-VQE ansatz on a given iteration.
+
+    measure_gradient()
+        Returns the measured energy gradient with respect to a single
+        paramater Am.
+
+    measure_energy()
+        Returns the measured energy.
+
+    energy_feval()
+        Builds a state preparation circuit given a parameter list and returns
+        the measured energy. Used as the function the minimizer calls.
+
+    gradient_ary_feval()
+        Computes the gradients with respect to all operators currently in the
+        ADAPT-VQE ansatz. Used as the jacobian the minimizer calls.
+
+    solve()
+        Runs the optimizer to mimimize the energy. Sets certain optimizer
+        parameters internally.
+
+    conv_status()
+        Sets the convergence states.
+
+    get_num_ham_measurements()
+        Returns the total number of times the energy was evaluated via
+        measurement of the Hamiltoanin.
+
+    get_num_comut_measurements()
+        Returns the total number of times the comutator was evaluated via
+        measurement of [H, Am].
+
+    get_final_energy()
+        Returns the final energy.
+
+    get_final_result()
+        Retruns the fianl optemization result from the optemizer. Contains
+        the final amplitudes used.
     """
 
     #TODO: Fix N_samples arg in Experiment class to only be take for finite measurement
@@ -84,30 +193,42 @@ class ADAPTVQE(object):
         ----------
         ref : list
             The set of 1s and 0s indicating the initial quantum state
-        Top : list of lists with tuple and float
-            The cluster opterator T in a second quantized format, it is
-            represented in the form
-            [ [(p,q), t_pq], .... , [(p,q,s,r), t_pqrs], ... ]
-            where p, q, r, s are idicies of normal ordered creation or anihilation
-            operators.
+
         operator : QuantumOperator
             The operator to be measured (usually the Hamiltonain), mapped to a
             qubit representation.
+
+        avqe_thresh : float
+            The gradient norm threshold to determine when the ADAPT-VQE
+            algorithm has converged.
+
+        opt_thresh : float
+            The gradient norm threshold to determine when the classical optemizer
+            algorithm has converged.
+
         N_samples : int
             The number of times to measure each term in operator.
-        alredy_anti_herm : bool
-            Wether or not Top is passed already in an anti-hermetian form.
-        use_symmetric_amps : bool
-            Reduce the number of paramaters to be optemized by enforcing the
-            symmetry of certain amplitudes. (Not yet functional).
+
+        use_fast_measurement : bool
+            Whether or not to use a faster version of the algorithm that bypasses
+            measurment (unphysical for quantum computer).
+
+        optimizer : string
+            The type of opterizer to use for the classical portion of VQE. Suggested
+            algorithms are 'BFGS' or 'Nelder-Mead' although there are many options
+            (see SciPy.optemize.minimize documentation).
+
         use_analytic_grad : bool
             Use the get_gradients funciton to reduce the number of function
             calls in the optimizer.
+
         many_preps : bool
             Use a new state preparation for every measurement.
             (Not yet functional).
-        optimizer : str
-            The scipy optimizer to be used for the VQE.
+
+        trott_num : int
+            The Trotter number for the calculation
+            (exact in the infinte limit).
         """
         #TODO(Nick): Elimenate getting info about nqubits in the 'len(ref)' fashion
         self._ref = ref
@@ -116,10 +237,10 @@ class ADAPTVQE(object):
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
         self._N_samples = N_samples
-        self._use_symmetric_amps = use_symmetric_amps
+        # self._use_symmetric_amps = use_symmetric_amps
         self._use_fast_measurement = use_fast_measurement
         self._use_analytic_grad = use_analytic_grad
-        self._many_preps = many_preps
+        # self._many_preps = many_preps
         self._optimizer = optimizer
         self._trott_num = trott_num
 
@@ -134,6 +255,17 @@ class ADAPTVQE(object):
 
 
     def fill_pool(self, nocc=None, nvir=None):
+        """
+        Parameters
+        ----------
+        nocc : int
+            The number of occupied spatial orbtitals to cosider for particle-hole
+            formalism (derived from reference if not specified).
+
+        nvir : int
+            The number of unoccupied spatial orbtitals to cosider for particle-hole
+            formalism (derived from reference if not specified).
+        """
         #TODO(correct path ot SDOpPool fliles)
         self._pool_obj = SDOpPool(self._ref, nocc=nocc, nvir=nvir, multiplicity = 0, order = 2)
         self._pool_obj.fill_pool()
@@ -181,6 +313,11 @@ class ADAPTVQE(object):
         """ This function returns the QuantumCircuit object built
         from the appropiate ampltudes (tops)
 
+        Parameters
+        ----------
+        params : list
+            A lsit of parameters define the variational degress of freedom in
+            the state perparation circuit Uprep.
         """
         sq_ops = []
         for j, pool_idx in enumerate(self._tops):
@@ -213,6 +350,15 @@ class ADAPTVQE(object):
         return Uprep
 
     def measure_gradient(self, HAm, Ucirc):
+        """
+        Parameters
+        ----------
+        HAm : QuantumOperator
+            The comutator to measure.
+
+        Ucirc : QuantumCircuit
+            The state preparation circuit.
+        """
         # TODO: Write so finite measurement can be used
         if self._use_fast_measurement:
             myQC = qforte.QuantumComputer(self._nqubtis)
@@ -227,6 +373,12 @@ class ADAPTVQE(object):
         return val
 
     def measure_energy(self, Ucirc):
+        """
+        Parameters
+        ----------
+        Ucirc : QuantumCircuit
+            The state preparation circuit.
+        """
         if self._use_fast_measurement:
             myQC = qforte.QuantumComputer(self._nqubtis)
             myQC.apply_circuit(Ucirc)
@@ -253,9 +405,7 @@ class ADAPTVQE(object):
 
 
     def solve(self, fast=False, opt_maxiter=200):
-        """Runs the optimizer to mimimize the energy. Sets certain optimizer parameters
-        internally.
-
+        """
         Parameters
         ----------
         fast : bool
@@ -324,6 +474,13 @@ class ADAPTVQE(object):
         return self._n_comut_measurements
 
     def get_final_energy(self, hit_max_avqe_iter=0):
+        """
+        Parameters
+        ----------
+        hit_max_avqe_iter : bool
+            Wether or not to use the ADAPT-VQE has already hit the maximum
+            number of iterations.
+        """
         if hit_max_avqe_iter:
             print("\nADAPT-VQE at maximum number of iterations!")
             self._final_energy = self._energies[-1]
@@ -331,6 +488,13 @@ class ADAPTVQE(object):
             return self._final_energy
 
     def get_final_result(self, hit_max_avqe_iter=0):
+        """
+        Parameters
+        ----------
+        hit_max_avqe_iter : bool
+            Wether or not to use the ADAPT-VQE has already hit the maximum
+            number of iterations.
+        """
         if hit_max_avqe_iter:
             self._final_result = self._results[-1]
         else:

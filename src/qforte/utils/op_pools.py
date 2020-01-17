@@ -1,7 +1,8 @@
 """
 oppool.py
 ====================================
-A class for ...
+A class for operator management and
+consturction.
 """
 
 import qforte
@@ -9,33 +10,88 @@ import numpy as np
 
 class SDOpPool(object):
     """
-    A class that ...
+    A class that builds a pools of index lists pertaining to second quatized
+    operators to use in VQE and other quantum algorithms. All spin complete,
+    particle-hole single and double exccitations are considered.
 
     Attributes
     ----------
-    _pool : list of lists with tuple and float
-        The list of (optionally symmetrized) singe and double excitation
+    _pool : list of lists containing a tuple and a float
+        The list of singe and double excitation
         operators to consizer. represented in the form,
         [ [(p,q), t_pq], .... , [(p,q,s,r), t_pqrs], ... ]
         where p, q, r, s are idicies of normal ordered creation or anihilation
         operators.
 
+    _ref : list
+        The reference state given as a list of 1's and 0's representing spin
+        orbital occupations (e.g. the Hartree-Fock state).
+
+    _nqubtis : int
+        The number of qubits for the calcuation.
+
+    _nocc : int
+        The number of occupied spatial orbtitals to cosider for particle-hole
+        formalism (derived from reference if not specified).
+
+    _nvir : int
+        The number of unoccupied spatial orbtitals to cosider for particle-hole
+        formalism (derived from reference if not specified).
+
 
     Methods
     -------
-    XXunpack_args()
-        Takes the second quantized operator and splits it into a list of
-        amplitueds and a list of tuples containing normal ordered anihilator
-        and creator indicies.
+    get_orb_occs()
+        Retruns the number of occupied and unoccupied orbitals if nocc and nvir
+        are not specified.
+
+    get_singlet_SD_op_pool()
+        Retruns a list with indicies pertaining spin-complete, single and
+        double excitation operators according to _nocc and _nvir.
+
+    get_canonical_order()
+        Takes a subterm and returns the normal ordered verion of it.
+
+    simplify_single_term()
+        Takes a list of operator indicies pertainig to a single spin-complete
+        operator and normal orders all subterms, then combines like subterms.
+
+    get_simplified_SD_pool()
+        Simplifies a list of all spin-complete operators.
+
+    fill_pool()
+        Checks the multiplicity and excitation order before calling
+        get_singlet_SD_op_pool() to occupy pool_.
+
+    get_pool_lst()
+        Returns pool_.
+
+    print_pool()
+        Prints all the operators in the pool.
+
     """
 
     #TODO: Fix N_samples arg in Experiment class to only be take for finite measurement
+    #TODO: Remove order option for SDPool
     def __init__(self, ref, nocc=None, nvir=None, multiplicity = 0, order = 2):
         """
         Parameters
         ----------
-        XXref : list
-            The set of 1s and 0s indicating the initial quantum state
+        ref : list
+            The set of 1s and 0s indicating the initial quantum state.
+
+        nocc : int (optional)
+            The number of spatial occupied orbitals.
+
+        nvir : int (optional)
+            The number of spatial unoccupied orbitals.
+
+        multiplicity : int
+            The targeted multiplicity.
+
+        order : int
+            The level of excitation order to use. For exampte order = 2 refers
+            to single and double excitatoins.
 
         """
         #TODO(Nick): Elimenate getting info about nqubits in the 'len(ref)' fashion
@@ -209,6 +265,11 @@ class SDOpPool(object):
         takes in [(4, 7, 0, 1), +0.3535533905932738]
         returns  [(7, 4, 1, 0), +0.3535533905932738]
         i.e.     [(big->small, big->small), incorparate sign flips  ]
+
+        Parameters
+        ----------
+        sub_term : list of tuple and float
+            A list specifying the subterm to be normal ordered.
         """
 
         nbody = int ( len(sub_term[0]) / 2 )
@@ -240,6 +301,12 @@ class SDOpPool(object):
             raise NotImplementedError("Canonical ordering for higher than 2-body terms not avalable")
 
     def simplify_single_term(self, ops):
+        """
+        Parameters
+        ----------
+        ops : list list lists of tuple and float
+            A list of subterms in one spin-complete operator.
+        """
         can_ordered_ops = []
         for sub_term in ops:
             can_ordered_ops.append(self.get_canonical_order(sub_term))
@@ -280,7 +347,6 @@ class SDOpPool(object):
                 temp_coeff += coeff_t * coeff_t
             temp_coeff_lst.append(temp_coeff)
 
-        #if termA.many_body_order() > 0: # Not sure about this line
         for k, op in enumerate(simplified_op_list):
             for sub_term in op:
                 sub_term[1] = sub_term[1]/np.sqrt(temp_coeff_lst[k])
@@ -288,6 +354,17 @@ class SDOpPool(object):
         return simplified_op_list
 
     def fill_pool(self, multiplicity = 0, order = 2):
+        """
+        Parameters
+        ----------
+        multiplicity : int
+            The targeted multiplicity.
+
+        order : int
+            The level of excitation order to use. For exampte order = 2 refers
+            to single and double excitatoins.
+        """
+
         if (multiplicity != 0) or (order != 2):
             raise NotImplementedError("Qforte currently supports only singlet singles and doubles for pool construction.")
 
