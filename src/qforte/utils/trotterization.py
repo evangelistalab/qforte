@@ -37,7 +37,6 @@ def trotterize(operator, trotter_number=1, trotter_order=1):
     else:
         ho_op = qforte.QuantumOperator()
         for k in range(1, trotter_number+1):
-            k = float(k)
             for term in operator.terms():
                 ho_op.add_term( term[0] / float(trotter_number) , term[1])
 
