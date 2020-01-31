@@ -60,9 +60,9 @@ def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_
     # TODO(Nick): investigate real/imaginary usage of 'factor' in below expression
 
     if(Use_cRz):
-        z_rot = qforte.make_gate('cRz', max_target, ancilla_idx, 2.0 * numpy.imag(factor))
+        z_rot = qforte.make_gate('cRz', max_target, ancilla_idx, -2.0 * numpy.imag(factor))
     else:
-        z_rot = qforte.make_gate('Rz', max_target, max_target, 2.0 * numpy.imag(factor))
+        z_rot = qforte.make_gate('Rz', max_target, max_target, -2.0 * numpy.imag(factor))
 
     #assemble the actual exponential
     exponential.add_circuit(to_z)
