@@ -331,13 +331,13 @@ class ADAPTVQE(object):
 
         Uorg = get_ucc_jw_organizer(sq_ops, already_anti_herm=True)
         A = organizer_to_circuit(Uorg)
-        temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
-        for t in A.terms():
-            c, op = t
-            phase =  -c
-            temp_op1.add_term(phase, op)
+        # temp_op1 = qforte.QuantumOperator() # A temporary operator to multiply H by
+        # for t in A.terms():
+        #     c, op = t
+        #     phase =  -c
+        #     temp_op1.add_term(phase, op)
 
-        U, phase1 = qforte.trotterization.trotterize(temp_op1, trotter_number=self._trott_num)
+        U, phase1 = qforte.trotterization.trotterize(A, trotter_number=self._trott_num)
         Uprep = qforte.QuantumCircuit()
         for j in range(len(self._ref)):
             if self._ref[j] == 1:
