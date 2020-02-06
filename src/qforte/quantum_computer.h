@@ -42,6 +42,9 @@ class QuantumComputer {
     /// measure the state of the quanum computer with respect to qc
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
 
+    /// measure the readout, i.e. the value of all qubits with indicies form na to nb
+    std::vector<std::vector<int>> measure_z_readouts_fast(size_t na, size_t nb, size_t n_measurements);
+
     /// measure the readout, i.e. the value of all target qubits, for the state of the
     /// quanum computer with respect to qc
     std::vector<std::vector<int>> measure_readouts(const QuantumCircuit& qc, size_t n_measurements);
