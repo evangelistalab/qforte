@@ -139,6 +139,87 @@ std::vector<double> QuantumComputer::measure_circuit(const QuantumCircuit& qc,
     return results;
 }
 
+std::vector<std::vector<int>> QuantumComputer::measure_z_readouts_fast(size_t na, size_t nb, size_t n_measurements) {
+
+    std::vector<double> probs(nbasis_);
+    for (size_t k = 0; k < nbasis_; k++) {
+        probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]);
+    }
+
+    // random number device
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::discrete_distribution<> dd(std::begin(probs), std::end(probs));
+    std::vector<std::vector<int>> readouts(n_measurements);
+
+    for (size_t k = 0; k < n_measurements; k++) {
+        size_t measurement = dd(gen);
+        std::vector<int> temp_readout;
+        for (size_t l = na; l < nb+1; l++ ) {
+            temp_readout.push_back( static_cast<int>(basis_[measurement].get_bit(l)) );
+        }
+        readouts[k] = temp_readout;
+    }
+    return readouts;
+}
+
+std::vector<std::vector<int>> QuantumComputer::measure_readouts(const QuantumCircuit& qc,
+                                                     size_t n_measurements) {
+    // initialize a "Basis_rotator" QC to represent the corresponding change
+    // of basis
+    QuantumCircuit Basis_rotator;
+
+    // copy old coefficients
+    std::vector<std::complex<double>> old_coeff = coeff_;
+
+    for (const QuantumGate& gate : qc.gates()) {
+        size_t target_qubit = gate.target();
+        std::string gate_id = gate.gate_id();
+        if (gate_id == "Z") {
+            QuantumGate temp = make_gate("I", target_qubit, target_qubit);
+            Basis_rotator.add_gate(temp);
+        } else if (gate_id == "X") {
+            QuantumGate temp = make_gate("H", target_qubit, target_qubit);
+            Basis_rotator.add_gate(temp);
+        } else if (gate_id == "Y") {
+            QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Basis_rotator.add_gate(temp);
+        } else if (gate_id != "I") {
+            // // // std::cout<<'unrecognized gate in operator!'<<std::endl;
+        }
+    }
+
+    // apply Basis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
+    apply_circuit(Basis_rotator);
+    std::vector<double> probs(nbasis_);
+    for (size_t k = 0; k < nbasis_; k++) {
+        probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]);
+    }
+
+    // random number device
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // 'pick' an index from the discrete_distribution!
+    std::discrete_distribution<> dd(std::begin(probs), std::end(probs));
+
+    std::vector<std::vector<int>> readouts(n_measurements);
+
+    for (size_t k = 0; k < n_measurements; k++) {
+        size_t measurement = dd(gen);
+        // double value = 1.;
+        std::vector<int> temp_readout;
+        for (const QuantumGate& gate : qc.gates()) {
+            size_t target_qubit = gate.target();
+            temp_readout.push_back( static_cast<int>(basis_[measurement].get_bit(target_qubit)) );
+        }
+        readouts[k] = temp_readout;
+    }
+
+    coeff_ = old_coeff;
+    return readouts;
+}
+
 double QuantumComputer::perfect_measure_circuit(const QuantumCircuit& qc) {
     // initialize a "Basis_rotator" QC to represent the corresponding change
     // of basis

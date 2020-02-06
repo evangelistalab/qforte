@@ -41,6 +41,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_gate", &QuantumComputer::apply_gate)
         .def("apply_constant",  &QuantumComputer::apply_constant)
         .def("measure_circuit", &QuantumComputer::measure_circuit)
+        .def("measure_z_readouts_fast", &QuantumComputer::measure_z_readouts_fast)
+        .def("measure_readouts", &QuantumComputer::measure_readouts)
         .def("perfect_measure_circuit", &QuantumComputer::perfect_measure_circuit)
         .def("direct_op_exp_val", &QuantumComputer::direct_op_exp_val)
         .def("direct_circ_exp_val", &QuantumComputer::direct_circ_exp_val)
