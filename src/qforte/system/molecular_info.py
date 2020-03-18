@@ -3,6 +3,9 @@ A class for the system information, either a molecule or a lattice system such a
 Hubbard model.
 """
 
+# TODO: Documentation needs to be fixed, attributes should be listed below
+#       as opposed to arguments for __init__() (Nick).
+
 class Molecule(object):
     """Class for storing moleucular information. Should be instatiated using using
     a MolAdapter and populated by calling MolAdapter.run(**kwargs).
@@ -87,6 +90,9 @@ class Molecule(object):
     def set_hamiltonian(self, hamiltonain_operator):
         self._hamiltonian = hamiltonain_operator
 
+    def set_sq_hamiltonian(self, sq_hamiltonain_operator):
+        self._sq_hamiltonian = sq_hamiltonain_operator
+
     def set_ccsd_amps(self, ccsd_singles, ccsd_doubles):
         self._ccsd_singles = ccsd_singles
         self._ccsd_doubles = ccsd_doubles
@@ -112,6 +118,9 @@ class Molecule(object):
 
     def get_hamiltonian(self):
         return self._hamiltonian
+
+    def get_sq_hamiltonian(self):
+        return self._sq_hamiltonian
 
     def get_hf_energy(self):
         return self._hf_energy
