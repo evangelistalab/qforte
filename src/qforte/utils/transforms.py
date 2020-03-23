@@ -103,7 +103,8 @@ def circuit_to_organizer(operator):
     return op_organizer
 
 def get_ucc_jw_organizer(sq_excitations, already_anti_herm=False):
-    #NOTE: Need to rename function (Nick)
+    # TODO: rename function to be general i.e. "get_jw_organizer" (Nick)
+    # TODO: write test case for the "already_anit_herm=False" case (Nick)
 
     T_organizer = []
 
@@ -127,6 +128,16 @@ def get_ucc_jw_organizer(sq_excitations, already_anti_herm=False):
     T_organizer = combine_like_terms(T_organizer)
 
     return T_organizer
+
+def get_jw_organizer(sq_excitations, combine=True):
+    organizer = []
+    for sq_term in sq_excitations:
+        organizer.append( get_single_term_jw_organizer(sq_term) )
+
+    if(combine):
+        organizer = combine_like_terms(organizer)
+
+    return organizer
 
 def combine_like_terms(op_organizer):
     #TODO: A very slow implementation, could absolutely be improved
@@ -218,8 +229,8 @@ def join_lr_organizers(current_op_org, r_op_Xterm, r_op_Yterm):
 
     return pauli_condense(combined_op_org)
     '''return object : [
-                       [c_i, [ ('z', qi1), ('x', qi2), ... ] ],
-                       [c_j, [ ('y', qj1), ... ] ]
+                       [c_i, [ ('Z', qi1), ('X', qi2), ... ] ],
+                       [c_j, [ ('Y', qj1), ... ] ]
                        ] '''
 
 def pauli_condense(pauli_op):

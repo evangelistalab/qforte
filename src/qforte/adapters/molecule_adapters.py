@@ -6,7 +6,7 @@ import operator
 import numpy as np
 from abc import ABC, abstractmethod
 
-from qforte.helper.operator_helper import build_from_openfermion
+from qforte.helper.operator_helper import build_from_openfermion, build_sqop_from_openfermion
 from qforte.system.molecular_info import Molecule
 from qforte.utils import transforms as tf
 
@@ -194,6 +194,8 @@ class OpenFermionMolAdapter(MolAdapter):
             #     print(term[1].str())
 
         self._qforte_mol.set_hamiltonian(qforte_hamiltionan)
+
+        self._qforte_mol.set_sq_hamiltonian( build_sqop_from_openfermion(fermion_hamiltonian) )
 
         # Set qforte energies from openfermion
         if(kwargs['run_scf']==1):
