@@ -229,8 +229,8 @@ def join_lr_organizers(current_op_org, r_op_Xterm, r_op_Yterm):
 
     return pauli_condense(combined_op_org)
     '''return object : [
-                       [c_i, [ ('z', qi1), ('x', qi2), ... ] ],
-                       [c_j, [ ('y', qj1), ... ] ]
+                       [c_i, [ ('Z', qi1), ('X', qi2), ... ] ],
+                       [c_j, [ ('Y', qj1), ... ] ]
                        ] '''
 
 def pauli_condense(pauli_op):
