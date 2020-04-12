@@ -10,23 +10,29 @@ Qforte is an open-source quantum computer simulator and algorithms library for m
 Install Dependancies (Recommended)
 ----------------------------------
 
+#### create and activate qforte environment:
 ```bash
-conda create -n <env_name> python=3.7
+conda create -n qforte_env python=3.7
+conda activate qforte_env
 ```
 
-Installation
-------------
+#### install psi4 and openfermion:
+```bash
+conda install psi4 openfermion openfermionpsi4 -c psi4
+```
+
+Installation (For Development)
+------------------------------
 
 ```bash
 git clone https://github.com/evangelistalab/qforte.git
 cd qforte
-python setup.py build
+python setup.py develop
 ```
 
 #### run tests:
 ```bash
-cd tests/
-pytest -v
+python setup.py test
 ```
 
 Getting Started
