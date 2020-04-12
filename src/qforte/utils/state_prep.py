@@ -9,6 +9,8 @@ def build_Uprep(ref, trial_state_type):
     else:
         raise ValueError("Only 'reference' supported as state preparation type")
 
+    return Uprep
+
 
 def ref_string(ref, nqb):
     temp = ref.copy()

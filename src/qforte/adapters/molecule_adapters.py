@@ -105,7 +105,7 @@ class OpenFermionMolAdapter(MolAdapter):
         kwargs.setdefault('run_ccsd', 0)
         kwargs.setdefault('run_cisd', 0)
         kwargs.setdefault('run_cisd', 0)
-        kwargs.setdefault('run_fci', 0)
+        kwargs.setdefault('run_fci', 1)
         kwargs.setdefault('store_uccsd_amps', False)
         kwargs.setdefault('buld_uccsd_circ_from_ccsd', False)
         kwargs.setdefault('frozen_indicies', None)
