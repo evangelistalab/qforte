@@ -5,7 +5,7 @@ Qforte
 ![Travis Build Status](https://travis-ci.org/evangelistalab/qforte.svg?branch=master)
 
 
-Qforte is an open-source quantum computer simulator and algorithms library for molecular simulation.
+Qforte is an open-source quantum computer simulator and algorithms library for molecular simulation. It includes implementations of quantum phase estimation (QPE), Multireference selected quantum Krylov (MRSQK), quantum imaginary time evolution (QITE), ADAPT variational quantum eigensolver (VQE), and unitary coupled cluster singles and doubles VQE (UCCSD-VQE).
 
 Install Dependancies (Recommended)
 ----------------------------------
@@ -40,11 +40,28 @@ Getting Started
 ```python
 import qforte
 
-# Construct a Bell state
+# Construct a Bell state.
 computer = qforte.QuantumComputer(2)
 computer.apply_gate(qforte.make_gate('H',0,0))
 computer.apply_gate(qforte.make_gate('cX',1,0))
 
+# Run quantum phase estimation on H2.
+from qforte.qpea.qpe import qpe_energy
+from qforte.system import system_factory
+
+H2geom = [('H', (0., 0., 0.)), ('H', (0., 0., 1.50))]
+H2ref = [1,1,0,0]
+
+adapter = system_factory(mol_geometry=H2geom)
+adapter.run()
+H2mol = adapter.get_molecule()
+
+Eqpe  = qpe_energy(H2ref,
+                   H2mol,
+                   t = 0.4,
+                   success_prob = 0.9,
+                   num_precise_bits = 8,
+                   trotter_number=2)
 ```
 
 ### Copyright
