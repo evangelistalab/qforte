@@ -7,6 +7,13 @@ Qforte
 
 Qforte is an open-source quantum computer simulator and algorithms library for molecular simulation.
 
+Install Dependancies (Recommended)
+----------------------------------
+
+```bash
+conda create -n <env_name> python=3.7
+```
+
 Installation
 ------------
 
@@ -37,4 +44,3 @@ computer.apply_gate(qforte.make_gate('cX',1,0))
 ### Copyright
 
 Copyright (c) 2019, The Evangelista Lab
-
