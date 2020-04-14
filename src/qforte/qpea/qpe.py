@@ -16,7 +16,7 @@ from scipy import stats
 def qpe_energy(ref, mol,
                 t = 1.0,
                 nruns = 100,
-                state_prep = 'single-reference',
+                state_prep = 'single_reference',
                 success_prob = 0.5,
                 num_precise_bits = 10,
                 trotter_number=1,
@@ -84,7 +84,7 @@ def qpe_energy(ref, mol,
             where [0.b1b2b3...bn] = b1 / 2 + b2 / 4 + ... + bn / 2^n
 
         phases : list
-            The decimeal representatoin of the measured phases for all nruns. 
+            The decimeal representatoin of the measured phases for all nruns.
     """
 
     print('\n-----------------------------------------------------')

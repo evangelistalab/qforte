@@ -5,21 +5,34 @@ Qforte
 ![Travis Build Status](https://travis-ci.org/evangelistalab/qforte.svg?branch=master)
 
 
-Qforte is an open-source quantum computer simulator and algorithms library for molecular simulation.
+Qforte is an open-source quantum computer simulator and algorithms library for molecular simulation. It includes implementations of the following algorithms: quantum phase estimation (QPE), multireference selected quantum Krylov (MRSQK), quantum imaginary time evolution (QITE), ADAPT variational quantum eigensolver (VQE), and unitary coupled cluster singles and doubles VQE (UCCSD-VQE).
 
-Installation
-------------
+Install Dependencies (Recommended)
+----------------------------------
+
+#### create and activate qforte environment:
+```bash
+conda create -n qforte_env python=3.7
+conda activate qforte_env
+```
+
+#### install psi4 and openfermion:
+```bash
+conda install psi4 openfermion openfermionpsi4 -c psi4
+```
+
+Installation (For Development)
+------------------------------
 
 ```bash
 git clone https://github.com/evangelistalab/qforte.git
 cd qforte
-python setup.py build
+python setup.py develop
 ```
 
 #### run tests:
 ```bash
-cd tests/
-pytest -v
+python setup.py test
 ```
 
 Getting Started
@@ -27,14 +40,30 @@ Getting Started
 ```python
 import qforte
 
-# Construct a Bell state
+# Construct a Bell state.
 computer = qforte.QuantumComputer(2)
 computer.apply_gate(qforte.make_gate('H',0,0))
 computer.apply_gate(qforte.make_gate('cX',1,0))
 
+# Run quantum phase estimation on H2.
+from qforte.qpea.qpe import qpe_energy
+from qforte.system import system_factory
+
+H2geom = [('H', (0., 0., 0.)), ('H', (0., 0., 1.50))]
+H2ref = [1,1,0,0]
+
+adapter = system_factory(mol_geometry=H2geom)
+adapter.run()
+H2mol = adapter.get_molecule()
+
+Eqpe  = qpe_energy(H2ref,
+                   H2mol,
+                   t = 0.4,
+                   success_prob = 0.9,
+                   num_precise_bits = 8,
+                   trotter_number=2)
 ```
 
 ### Copyright
 
 Copyright (c) 2019, The Evangelista Lab
-
