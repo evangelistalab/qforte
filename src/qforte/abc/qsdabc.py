@@ -24,7 +24,7 @@ class QSD(Algorithm):
     def get_qk_eigenvectors(self):
         return self._eigenvectors
 
-    def verify_required_QK_attributes(self):
+    def verify_required_QSD_attributes(self):
         if self._Ets is None:
             raise NotImplementedError('Concrete QK Algorithm class must define self._Ets attribute.')
 

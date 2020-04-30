@@ -85,7 +85,7 @@ class SRQK(QSD):
 
     def verify_run(self):
         self.verify_required_attributes()
-        self.verify_required_QK_attributes()
+        self.verify_required_QSD_attributes()
 
     def print_options_banner(self):
         print('\n-----------------------------------------------------')

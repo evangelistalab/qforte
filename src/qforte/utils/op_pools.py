@@ -8,6 +8,8 @@ consturction.
 import qforte
 import numpy as np
 
+#TODO (cleanup): make oppool ABC
+
 class SDOpPool(object):
     """
     A class that builds a pools of index lists pertaining to second quatized
@@ -71,8 +73,8 @@ class SDOpPool(object):
 
     """
 
-    #TODO: Fix N_samples arg in Experiment class to only be take for finite measurement
-    #TODO: Remove order option for SDPool
+    #TODO (cleanup): Fix N_samples arg in Experiment class to only be take for finite measurement
+    #TODO (cleanup): Remove order option for SDPool
     def __init__(self, ref, nocc=None, nvir=None, multiplicity = 0, order = 2):
         """
         Parameters
