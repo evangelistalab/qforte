@@ -1,9 +1,6 @@
 import unittest
-# import numpy as np
 from qforte import qforte
-# from qforte.qkd import qk_helpers
-# from qforte.qkd import mrsqk_helpers
-from qforte.qkd.newmrsqk import MRSQK
+from qforte.qkd.mrsqk import MRSQK
 from qforte.qkd.srqk import SRQK
 from qforte.system.molecular_info import Molecule
 
@@ -394,7 +391,7 @@ class QKDTests(unittest.TestCase):
 
         ref = [1,1,1,1,0,0,0,0]
 
-        # make test with algorithm class 
+        # make test with algorithm class
         mol = Molecule()
         mol.set_hamiltonian(H4_qubit_hamiltonian)
 

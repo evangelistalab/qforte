@@ -1,6 +1,6 @@
 import unittest
 from qforte import qforte
-from qforte.qkd.newmrsqk import MRSQK
+from qforte.qkd.mrsqk import MRSQK
 from qforte.qkd.srqk import SRQK
 from qforte.system.molecular_info import Molecule
 
