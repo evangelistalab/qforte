@@ -46,7 +46,7 @@ computer.apply_gate(qforte.make_gate('H',0,0))
 computer.apply_gate(qforte.make_gate('cX',1,0))
 
 # Run quantum phase estimation on H2.
-from qforte.qpea.qpe import qpe_energy
+from qforte.qpea.qpe import QPE
 from qforte.system import system_factory
 
 H2geom = [('H', (0., 0., 0.)), ('H', (0., 0., 1.50))]
@@ -56,12 +56,13 @@ adapter = system_factory(mol_geometry=H2geom)
 adapter.run()
 H2mol = adapter.get_molecule()
 
-Eqpe  = qpe_energy(H2ref,
-                   H2mol,
-                   t = 0.4,
-                   success_prob = 0.9,
-                   num_precise_bits = 8,
-                   trotter_number=2)
+alg = QPE(H2mol, H2ref, trotter_number=2)
+alg.run(t = 0.4,
+        nruns = 100,
+        success_prob = 0.5,
+        num_precise_bits = 8)
+
+Egs = alg.get_gs_energy()
 ```
 
 ### Copyright
