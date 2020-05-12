@@ -1,12 +1,15 @@
 import unittest
-import numpy as np
+# import numpy as np
 from qforte import qforte
-from qforte.qkd import qk_helpers
-from qforte.qkd import mrsqk_helpers
+# from qforte.qkd import qk_helpers
+# from qforte.qkd import mrsqk_helpers
+from qforte.qkd.newmrsqk import MRSQK
+from qforte.qkd.srqk import SRQK
+from qforte.system.molecular_info import Molecule
 
 class QKDTests(unittest.TestCase):
     def test_H4_fast_qkd(self):
-        print('\n'),
+        print('\n')
         # The FCI energy for H4 at 1.5 Angstrom in a sto-6g basis
         E_fci = -2.0126741263939656
 
@@ -391,70 +394,89 @@ class QKDTests(unittest.TestCase):
 
         ref = [1,1,1,1,0,0,0,0]
 
-        #code for fast qk (compared to FCI)
-        s_mat, h_mat = qk_helpers.get_sr_mats_fast(ref,
-                                                    1.0,
-                                                    10,
-                                                    H4_qubit_hamiltonian,
-                                                    len(ref),
-                                                    trot_number=100)
+        # make test with algorithm class #
+        mol = Molecule()
+        mol.set_hamiltonian(H4_qubit_hamiltonian)
 
-        evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
-        evals_sorted = np.sort(evals)
-        E = np.real(evals_sorted[0])
-        self.assertLess(E-E_fci, 1.0e-5)
+        MRSQK
+        alg2 = MRSQK(mol, ref, trotter_number=100)
+        alg2.run(s=3, d=3)
+        Egs2 = alg2.get_gs_energy()
+        self.assertLess(abs(Egs2-E_fci), 1.0e-6)
 
-        # test for fast mrsqk (non spin adapted) (compared to FCI)
-        ref_lst = mrsqk_helpers.get_init_ref_lst(ref,
-                                                    6,
-                                                    3,
-                                                    0.25,
-                                                    H4_qubit_hamiltonian,
-                                                    target_root=0,
-                                                    fast=True,
-                                                    use_phase_based_selection=False)
+        SRQK
+        alg1 = SRQK(mol, ref, trotter_number=100)
+        alg1.run(s=6)
+        Egs1 = alg1.get_gs_energy()
+        self.assertLess(abs(Egs1-E_fci), 1.0e-4)
+        ##
 
-        dt_lst = []
-        for i in range(len(ref_lst)):
-            dt_lst.append(1.0)
-
-        s_mat, h_mat = qk_helpers.get_mr_mats_fast(ref_lst,
-                                                    3,
-                                                    dt_lst,
-                                                    H4_qubit_hamiltonian,
-                                                    len(ref),
-                                                    trot_number=100)
-
-        evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
-        evals_sorted = np.sort(evals)
-        E = np.real(evals_sorted[0])
-        self.assertLess(E-E_fci, 1.0e-6)
-
-        # test for fast mrsqk (non spin adapted) (compared to FCI)
-        sa_ref_lst = mrsqk_helpers.get_sa_init_ref_lst(ref,
-                            3,
-                            3,
-                            0.25,
-                            H4_qubit_hamiltonian,
-                            target_root=0,
-                            fast=True,
-                            use_phase_based_selection=False)
-
-        dt_lst = []
-        for i in range(len(ref_lst)):
-            dt_lst.append(0.5)
-
-        s_mat_sa, h_mat_sa = qk_helpers.get_sa_mr_mats_fast(sa_ref_lst,
-                                            4,
-                                            dt_lst,
-                                            H4_qubit_hamiltonian,
-                                            len(ref),
-                                            trot_number=100)
-
-        evals, evecs = qk_helpers.canonical_geig_solve(s_mat_sa, h_mat_sa)
-        evals_sorted = np.sort(evals)
-        E = np.real(evals_sorted[0])
-        self.assertLess(E-E_fci, 1.0e-6)
+        # # code for fast qk (compared to FCI)
+        # s_mat, h_mat = qk_helpers.get_sr_mats_fast(ref,
+        #                                             1.0,
+        #                                             10,
+        #                                             H4_qubit_hamiltonian,
+        #                                             len(ref),
+        #                                             trot_number=100)
+        #
+        # evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
+        # evals_sorted = np.sort(evals)
+        # E = np.real(evals_sorted[0])
+        # self.assertLess(E-E_fci, 1.0e-5)
+        #
+        # # test for fast mrsqk (non spin adapted) (compared to FCI)
+        # ref_lst = mrsqk_helpers.get_init_ref_lst(ref,
+        #                                             6,
+        #                                             3,
+        #                                             0.25,
+        #                                             H4_qubit_hamiltonian,
+        #                                             target_root=0,
+        #                                             fast=True,
+        #                                             use_phase_based_selection=False)
+        #
+        # dt_lst = []
+        # for i in range(len(ref_lst)):
+        #     dt_lst.append(1.0)
+        #
+        # s_mat, h_mat = qk_helpers.get_mr_mats_fast(ref_lst,
+        #                                             3,
+        #                                             dt_lst,
+        #                                             H4_qubit_hamiltonian,
+        #                                             len(ref),
+        #                                             trot_number=100)
+        #
+        # evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
+        # evals_sorted = np.sort(evals)
+        # E = np.real(evals_sorted[0])
+        # self.assertLess(E-E_fci, 1.0e-6)
+        #
+        # # test for fast mrsqk (non spin adapted) (compared to FCI)
+        # sa_ref_lst = mrsqk_helpers.get_sa_init_ref_lst(ref,
+        #                     3,
+        #                     3,
+        #                     0.25,
+        #                     H4_qubit_hamiltonian,
+        #                     target_root=0,
+        #                     fast=True,
+        #                     use_phase_based_selection=False)
+        #
+        # dt_lst = []
+        # for i in range(len(ref_lst)):
+        #     dt_lst.append(0.5)
+        #
+        # s_mat_sa, h_mat_sa = qk_helpers.get_sa_mr_mats_fast(sa_ref_lst,
+        #                                     4,
+        #                                     dt_lst,
+        #                                     H4_qubit_hamiltonian,
+        #                                     len(ref),
+        #                                     trot_number=100)
+        #
+        # evals, evecs = qk_helpers.canonical_geig_solve(s_mat_sa, h_mat_sa)
+        # evals_sorted = np.sort(evals)
+        # E = np.real(evals_sorted[0])
+        # self.assertLess(E-E_fci, 1.0e-6)
+        # print('Efci:      ', E_fci)
+        # print('E MRSQK:   ', E)
 
 
 if __name__ == '__main__':

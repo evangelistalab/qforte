@@ -32,7 +32,7 @@ class SRQK(QSD):
 
         self._s = s
         self._nstates = s+1
-        self._dt = 0.5
+        self._dt = dt
         self._target_root = target_root
 
         # Print options banner (should done for all algorithms).
@@ -319,7 +319,7 @@ class SRQK(QSD):
             # TODO (opt): use Uprep
             cir = qforte.QuantumCircuit()
             for j in range(self._nqb):
-                if ref[j] == 1:
+                if self._ref[j] == 1:
                     cir.add_gate(qforte.make_gate('X', j, j))
 
             cir.add_gate(qforte.make_gate('H', ancilla_idx, ancilla_idx))
@@ -367,7 +367,7 @@ class SRQK(QSD):
                 cir = qforte.QuantumCircuit()
                 # TODO (opt): use Uprep
                 for j in range(self._nqb):
-                    if ref[j] == 1:
+                    if self._ref[j] == 1:
                         cir.add_gate(qforte.make_gate('X', j, j))
 
                 cir.add_gate(qforte.make_gate('H', ancilla_idx, ancilla_idx))

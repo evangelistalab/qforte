@@ -45,7 +45,7 @@ class MRSQK(QSD):
         self._d = d
         self._s = s
         self._nstates_per_ref = s+1
-        self._mr_dt = 0.5
+        self._mr_dt = mr_dt
         self._target_root = target_root
 
         self._reference_generator = reference_generator
