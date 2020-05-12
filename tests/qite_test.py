@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from qforte import qforte
-from qforte.ite.newqite import QITE
+from qforte.ite.qite import QITE
 from qforte.system.molecular_info import Molecule
 
 class QITETests(unittest.TestCase):
