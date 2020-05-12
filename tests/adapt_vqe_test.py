@@ -1,7 +1,6 @@
 import unittest
 from qforte import qforte # remove?
-# from qforte import vqe # remove
-from qforte.ucc.newadaptvqe import ADAPTVQE
+from qforte.ucc.adaptvqe import ADAPTVQE
 from qforte.system.molecular_info import Molecule
 
 class ADAPTVQETests(unittest.TestCase):

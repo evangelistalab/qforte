@@ -1,6 +1,6 @@
 import unittest
 from qforte import qforte
-from qforte.ucc.newuccsdvqe import UCCSDVQE
+from qforte.ucc.uccsdvqe import UCCSDVQE
 from qforte.system.molecular_info import Molecule
 
 class UccTests(unittest.TestCase):
@@ -332,7 +332,7 @@ class UccTests(unittest.TestCase):
         for i in range(len(circ_vec)):
             He_qubit_hamiltonian.add_term(coef_vec[i], circ_vec[i])
 
-        # make test with algorithm class 
+        # make test with algorithm class
         mol = Molecule()
         mol.set_hamiltonian(He_qubit_hamiltonian)
 

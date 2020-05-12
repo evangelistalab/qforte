@@ -12,6 +12,5 @@ from qforte.ite import *
 from qforte.qkd import *
 from qforte.qpea import *
 from qforte.system import *
-from qforte.vqe import *
 from qforte.ucc import *
 from qforte.utils import *
