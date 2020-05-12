@@ -1,10 +1,10 @@
 import unittest
 from qforte import qforte
-from qforte.qpea.newqpe import QPE
+from qforte.qpea.qpe import QPE
 from qforte.system.molecular_info import Molecule
 
 class QPETests(unittest.TestCase):
-    def test_H4(self):
+    def test_H2(self):
         print('\n'),
         # The FCI energy for H2 at 1.5 Angstrom in a sto-3g basis
         E_fci = -0.9981493534
