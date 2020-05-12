@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 from qforte import qforte
-# from qforte.ite.qite_helpers import QITE
 from qforte.ite.newqite import QITE
 from qforte.system.molecular_info import Molecule
 
@@ -80,25 +79,6 @@ class QITETests(unittest.TestCase):
         alg.run(beta=10.0)
         Egs = alg.get_gs_energy()
         self.assertLess(abs(Egs-E_fci), 1.0e-6)
-        ##
-
-        # myQITE = QITE(ref,
-        #           H2_qubit_hamiltonian,
-        #           H2_sq_hamiltonian,
-        #           8.0,
-        #           0.2,
-        #           verbose = False,
-        #           expansion_type = 'qbGSD',
-        #           state_prep = 'single_reference',
-        #           trotter_number = 1,
-        #           fast = True,
-        #           sparseSb = True)
-        #
-        # myQITE.evolve()
-        # final_energy = myQITE._Ekb[-1]
-        # print('\nEqite: ', round(final_energy, 10))
-        # print('Efci:  ', round(E_fci,10))
-        # self.assertLess(np.abs(final_energy-E_fci), 1.0e-6)
 
 
 if __name__ == '__main__':

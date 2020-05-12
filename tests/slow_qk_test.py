@@ -1,15 +1,12 @@
 import unittest
-# import numpy as np
 from qforte import qforte
-# from qforte.qkd import qk_helpers
-# from qforte.qkd import mrsqk_helpers
 from qforte.qkd.newmrsqk import MRSQK
 from qforte.qkd.srqk import SRQK
 from qforte.system.molecular_info import Molecule
 
 class PhysicalQKDTests(unittest.TestCase):
     def test_H4_physical_qkd(self):
-        print('\n'),
+        print('\n')
         # The FCI energy for H4 at 1.5 Angstrom in a sto-6g basis
         E_fci = -2.0126741263939656
 
@@ -394,7 +391,7 @@ class PhysicalQKDTests(unittest.TestCase):
 
         ref = [1,1,1,1,0,0,0,0]
 
-        # make test with algorithm class #
+        # make test with algorithm class
         mol = Molecule()
         mol.set_hamiltonian(H4_qubit_hamiltonian)
 
@@ -403,32 +400,8 @@ class PhysicalQKDTests(unittest.TestCase):
         alg1.run(s=3)
         Egs1 = alg1.get_gs_energy()
 
-        Egs1_fast = -1.9982299799 ## change
+        Egs1_fast = -1.9982299799
         self.assertLess(abs(Egs1-Egs1_fast), 1.0e-9)
-
-        ##
-
-
-        # h_mat = np.zeros((3,3), dtype=complex)
-        # s_mat = np.zeros((3,3), dtype=complex)
-        #
-        # for p in range(3):
-        #     for q in range(p, 3):
-        #         h_mat[p][q] = qk_helpers.matrix_element(ref, 0.5, p, q, H4_qubit_hamiltonian,
-        #                                         len(ref), H4_qubit_hamiltonian, trot_number=2)
-        #
-        #         h_mat[q][p] = np.conj(h_mat[p][q])
-        #
-        #         s_mat[p][q] = qk_helpers.matrix_element(ref, 0.5, p, q, H4_qubit_hamiltonian,
-        #                                         len(ref), trot_number=2)
-        #
-        #         s_mat[q][p] = np.conj(s_mat[p][q])
-        #
-        #
-        # evals, evecs = qk_helpers.canonical_geig_solve(s_mat, h_mat)
-        # evals_sorted = np.sort(evals)
-        # E = np.real(evals_sorted[0])
-        # self.assertLess(E-(-2.003133218607026), 1.0e-9)
 
 
 if __name__ == '__main__':
