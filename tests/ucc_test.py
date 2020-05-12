@@ -1,6 +1,7 @@
 import unittest
 from qforte import qforte
-from qforte import vqe
+from qforte.ucc.uccsdvqe import UCCSDVQE
+from qforte.system.molecular_info import Molecule
 
 class UccTests(unittest.TestCase):
     def test_He_uccsd_exact(self):
@@ -325,41 +326,21 @@ class UccTests(unittest.TestCase):
         +0.260133
         ]
 
+        ref = [1,1,0,0,0,0,0,0,0,0]
+
         He_qubit_hamiltonian = qforte.QuantumOperator()
         for i in range(len(circ_vec)):
             He_qubit_hamiltonian.add_term(coef_vec[i], circ_vec[i])
 
-        # Amplitues from ccsd altered slightly
-        T_sq = [
-        [(2, 0), -0.000000000],
-        [(3, 1), -0.000000000],
-        [(2, 3, 1, 0), -0.0250000],
-        [(3, 2, 0, 1), -0.0250000],
-        [(4, 5, 1, 0), -0.0100000],
-        [(5, 4, 0, 1), -0.0100000],
-        [(6, 7, 1, 0), -0.0100000],
-        [(7, 6, 0, 1), -0.0100000],
-        [(8, 9, 1, 0), -0.0100000],
-        [(9, 8, 0, 1), -0.0100000]
-        ]
+        # make test with algorithm class
+        mol = Molecule()
+        mol.set_hamiltonian(He_qubit_hamiltonian)
 
-        ref = [1,1,0,0,0,0,0,0,0,0]
+        alg = UCCSDVQE(mol, ref)
+        alg.run()
+        Egs = alg.get_gs_energy()
+        self.assertLess(abs(Egs-E_fci), 1.0e-5)
 
-        myVQEslow = vqe.UCCVQE(ref, T_sq, He_qubit_hamiltonian)
-        myVQEslow.do_vqe(maxiter=1000, fast=False)
-        slow_Energy = myVQEslow.get_energy()
-        # slow_initial_Energy = myVQEslow.get_inital_guess_energy()
-
-        myVQEfast = vqe.UCCVQE(ref, T_sq, He_qubit_hamiltonian)
-        myVQEfast.do_vqe(maxiter=1000, fast=True)
-        fast_Energy = myVQEfast.get_energy()
-        # fast_initial_Energy = myVQEfast.get_inital_guess_energy()
-
-        self.assertAlmostEqual(slow_Energy, fast_Energy)
-        self.assertLess(E_fci, slow_Energy)
-        self.assertLess(E_fci, fast_Energy)
-        self.assertLess(slow_Energy-E_fci, 1.0e-5)
-        self.assertLess(fast_Energy-E_fci, 1.0e-5)
 
 if __name__ == '__main__':
     unittest.main()

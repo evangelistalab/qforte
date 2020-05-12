@@ -1,10 +1,10 @@
 import unittest
-import numpy as np
 from qforte import qforte
-from qforte.qpea.qpe_helpers import *
+from qforte.qpea.qpe import QPE
+from qforte.system.molecular_info import Molecule
 
 class QPETests(unittest.TestCase):
-    def test_H4(self):
+    def test_H2(self):
         print('\n'),
         # The FCI energy for H2 at 1.5 Angstrom in a sto-3g basis
         E_fci = -0.9981493534
@@ -51,83 +51,18 @@ class QPETests(unittest.TestCase):
         print('\nBegin QPE test for H2')
         print('----------------------')
 
-        n_state_qubits = len(ref)
-        n_ancilla = 10
-        n_tot_qubits = n_state_qubits + n_ancilla
-        trotter_number = 2
-        t = 0.4
-        nruns = 100
+        # make test with algorithm class
+        mol = Molecule()
+        mol.set_hamiltonian(H2_qubit_hamiltonian)
 
-        abegin = n_state_qubits
-        aend = n_tot_qubits - 1
+        alg = QPE(mol, ref, trotter_number=2)
+        alg.run(t = 0.4,
+                nruns = 100,
+                success_prob = 0.5,
+                num_precise_bits = 8)
 
-        # build hadamard circ
-        Uhad = get_Uhad(abegin, aend)
-
-        # build preparation circuit
-        Uprep = get_Uprep(ref, 'single_reference')
-
-        # build controll e^-iHt circuit
-        Udyn = get_dynamics_circ(H2_qubit_hamiltonian,
-                                 trotter_number,
-                                 abegin,
-                                 n_ancilla,
-                                 t=t)
-
-        # build reverse QFT
-        revQFTcirc = qft_circuit(abegin, aend, 'reverse')
-
-        # build QPEcirc
-        QPEcirc = qforte.QuantumCircuit()
-        QPEcirc.add_circuit(Uprep)
-        QPEcirc.add_circuit(Uhad)
-        QPEcirc.add_circuit(Udyn)
-        QPEcirc.add_circuit(revQFTcirc)
-
-        computer = qforte.QuantumComputer(n_tot_qubits)
-        computer.apply_circuit(QPEcirc)
-
-        z_readouts = computer.measure_z_readouts_fast(abegin, aend, nruns)
-
-        final_energy = 0.0
-        phases = []
-        for readout in z_readouts:
-            val = 0.0
-            i = 1
-            for z in readout:
-                val += z / (2**i)
-                i += 1
-            phases.append(val)
-
-        # find final binary string:
-        final_readout = []
-        final_readout_aves = []
-        for i in range(n_ancilla):
-            iave = 0.0
-            for readout in z_readouts:
-                iave += readout[i]
-            iave /= nruns
-            final_readout_aves.append(iave)
-            if (iave > (1.0/2)):
-                final_readout.append(1)
-            else:
-                final_readout.append(0)
-
-        print('\n           ==> QPE readout averages <==')
-        print('------------------------------------------------')
-        for i, ave in enumerate(final_readout_aves):
-            print('  bit ', i,  ': ', ave)
-        print('\n  Final bit readout: ', final_readout)
-
-        final_phase = 0.0
-        counter = 0
-        for i, z in enumerate(final_readout):
-                final_phase += z / (2**(i+1))
-
-        final_energy = -2 * np.pi * final_phase / t
-        print('Eqpe: ', final_energy)
-        print('Efci: ', E_fci)
-        self.assertLess(np.abs(final_energy-E_fci), 1.0e-2)
+        Egs = alg.get_gs_energy()
+        self.assertLess(abs(Egs-E_fci), 1.1e-3)
 
 
 if __name__ == '__main__':
