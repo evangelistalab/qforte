@@ -36,6 +36,29 @@ void QuantumComputer::set_state(std::vector<std::pair<QuantumBasis, double_c>> s
 
 void QuantumComputer::zero_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
 
+void QuantumComputer::apply_operator(const QuantumOperator& qo) {
+
+    // copy old coeficinets Co
+    std::vector<std::complex<double>> old_coeff = coeff_;
+
+    // for result vector Cf
+    std::vector<std::complex<double>> result(nbasis_, 0.0);
+
+    // loop over terms
+    for (const auto& term : qo.terms()) {
+        apply_circuit(term.second);
+        apply_constant(term.first);
+        std::transform(result.begin(), result.end(), coeff_.begin(),
+                       result.begin(), add_c<double>);
+
+        set_coeff_vec(old_coeff);
+    }
+
+    set_coeff_vec(result);
+
+
+}
+
 void QuantumComputer::apply_circuit(const QuantumCircuit& qc) {
     for (const auto& gate : qc.gates()) {
         apply_gate(gate);
