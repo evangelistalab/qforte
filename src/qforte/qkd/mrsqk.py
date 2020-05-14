@@ -328,7 +328,7 @@ class MRSQK(QSD):
         return h_CI
 
     def build_sa_qk_mats(self):
-        # TODO (cleanup):
+        # TODO (cleanup): imporve/update docs
         """Returns matrices P and Q with dimension
         (nstates_per_ref * len(ref_lst) X nstates_per_ref * len(ref_lst))
         based on the evolution of two unitary operators Um = exp(-i * m * dt * H)
@@ -390,22 +390,17 @@ class MRSQK(QSD):
         Homega_lst = []
 
         for i, ref in enumerate(self._sa_ref_lst):
-            for n in range(self._nstates_per_ref):
+            for m in range(self._nstates_per_ref):
 
-                Un = qforte.QuantumCircuit()
+                # TODO (cleanup): will need to consider gate count for this part.
+                Um = qforte.QuantumCircuit()
                 phase1 = 1.0
-                if(n>0):
-                    temp_op1 = qforte.QuantumOperator()
-                    for t in self._qb_ham.terms():
-                        c, op = t
-                        phase = -1.0j * n * self._mr_dt * c
-                        temp_op1.add_term(phase, op)
-
-                    expn_op1, phase1 = trotterize(temp_op1, trotter_number=self._trotter_number)
-                    Un.add_circuit(expn_op1)
+                if(m>0):
+                    fact = (0.0-1.0j) * m * self._mr_dt
+                    expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
+                    Um.add_circuit(expn_op1)
 
                 QC = qforte.QuantumComputer(self._nqb)
-
                 state_prep_lst = []
                 for term in ref:
                     coeff = term[0]
@@ -415,27 +410,14 @@ class MRSQK(QSD):
                     state_prep_lst.append( (state, coeff) )
 
                 QC.set_state(state_prep_lst)
-                QC.apply_circuit(Un)
+                QC.apply_circuit(Um)
                 QC.apply_constant(phase1)
                 omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
-                Homega = np.zeros((2**self._nqb), dtype=complex)
+                QC.apply_operator(self._qb_ham)
+                Homega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
-                # TODO (opt): use apply_operator function.
-                for k in range(len(self._qb_ham.terms())):
-
-                    QCk = qforte.QuantumComputer(self._nqb)
-                    QCk.set_coeff_vec(QC.get_coeff_vec())
-                    if(self._qb_ham.terms()[k][1] is not None):
-                        QCk.apply_circuit(self._qb_ham.terms()[k][1])
-
-                    if(self._qb_ham.terms()[k][0] is not None):
-                        QCk.apply_constant(self._qb_ham.terms()[k][0])
-
-                    Homega = np.add(Homega, np.asarray(QCk.get_coeff_vec(), dtype=complex))
-
-                Homega_lst.append(Homega)
-
+        # TODO (opt): add this to previous loop
         for p in range(num_tot_basis):
             for q in range(p, num_tot_basis):
                 h_mat[p][q] = np.vdot(omega_lst[p], Homega_lst[q])
