@@ -22,6 +22,10 @@ class QuantumComputer {
     /// default constructor: create a quantum computer with nqubit qubits
     QuantumComputer(int nqubit);
 
+    /// apply a quantum operator to the current state with optimized algorithm
+    /// (this operation is generally not a physical quantum computing operation).
+    void apply_operator(const QuantumOperator& qo);
+
     /// apply a quantum circuit to the current state with standard algorithm
     void apply_circuit_safe(const QuantumCircuit& qc);
 
