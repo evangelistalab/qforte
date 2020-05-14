@@ -20,7 +20,8 @@ def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_
     """
     # This function assumes that the factor is imaginary. The following tests for it.
     if numpy.real(factor) != 0.0:
-        raise SystemExit('exponentiate_single_term() called with a real factor')
+        print("exp factor: ", factor)
+        raise ValueError('exponentiate_single_term() called with a real factor')
 
     # If the Pauli string has no terms this is just a phase factor
     if term.size() == 0:

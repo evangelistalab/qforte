@@ -176,20 +176,13 @@ class SRQK(QSD):
         Homega_lst = []
 
         for m in range(self._nstates):
-
             Un = qforte.QuantumCircuit()
             Un.add_circuit(self._Uprep)
             phase1 = 1.0
 
             if(m>0):
-                # TODO (opt): write a functon to multipy QuantumOperator by a constant.
-                temp_op1 = qforte.QuantumOperator()
-                for t in self._qb_ham.terms():
-                    c, op = t
-                    phase = -1.0j * m * self._dt * c
-                    temp_op1.add_term(phase, op)
-
-                expn_op1, phase1 = trotterize(temp_op1, trotter_number=self._trotter_number)
+                fact = (0.0-1.0j) * m * self._dt
+                expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
                 Un.add_circuit(expn_op1)
 
             QC = qforte.QuantumComputer(self._nqb)
