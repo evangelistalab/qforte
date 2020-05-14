@@ -300,16 +300,12 @@ class MRSQK(QSD):
         """Builds a classical configuration interaction out of single determinants.
         """
         num_tot_basis = len(self._pre_sa_ref_lst)
-
         h_CI = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
 
-        # TODO (opt): make numpy arrays.
         omega_lst = []
         Homega_lst = []
 
-        # TODO (opt): same as other time-evo instances.
         for i, ref in enumerate(self._pre_sa_ref_lst):
-
             # NOTE: do NOT use Uprep here (is determinant specific).
             Un = qforte.QuantumCircuit()
             for j in range(self._nqb):
@@ -322,25 +318,12 @@ class MRSQK(QSD):
 
             Homega = np.zeros((2**self._nqb), dtype=complex)
 
-            # TODO (opt): add apply_operator member function for QuantumComputer
-            for k in range(len(self._qb_ham.terms())):
-                QCk = qforte.QuantumComputer(self._nqb)
-                QCk.set_coeff_vec(QC.get_coeff_vec())
+            QC.apply_operator(self._qb_ham)
+            Homega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
-                if(self._qb_ham.terms()[k][1] is not None):
-                    QCk.apply_circuit(self._qb_ham.terms()[k][1])
-                if(self._qb_ham.terms()[k][0] is not None):
-                    QCk.apply_constant(self._qb_ham.terms()[k][0])
-
-                # TODO (opt): check to see if there is a more efficet way to add these.
-                Homega = np.add(Homega, np.asarray(QCk.get_coeff_vec(), dtype=complex))
-
-            Homega_lst.append(Homega)
-
-        for p in range(num_tot_basis):
-            for q in range(p, num_tot_basis):
-                h_CI[p][q] = np.vdot(omega_lst[p], Homega_lst[q])
-                h_CI[q][p] = np.conj(h_CI[p][q])
+            for j in range(len(omega_lst)):
+                h_CI[i][j] = np.vdot(omega_lst[i], Homega_lst[j])
+                h_CI[j][i] = np.conj(h_CI[i][j])
 
         return h_CI
 
