@@ -176,17 +176,17 @@ class SRQK(QSD):
         Homega_lst = []
 
         for m in range(self._nstates):
-            Un = qforte.QuantumCircuit()
-            Un.add_circuit(self._Uprep)
+            Um = qforte.QuantumCircuit()
+            Um.add_circuit(self._Uprep)
             phase1 = 1.0
 
             if(m>0):
                 fact = (0.0-1.0j) * m * self._dt
                 expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
-                Un.add_circuit(expn_op1)
+                Um.add_circuit(expn_op1)
 
             QC = qforte.QuantumComputer(self._nqb)
-            QC.apply_circuit(Un)
+            QC.apply_circuit(Um)
             QC.apply_constant(phase1)
             omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
