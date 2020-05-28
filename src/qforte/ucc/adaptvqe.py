@@ -183,7 +183,8 @@ class ADAPTVQE(UCCVQE):
             opt_maxiter=200,
             adapt_maxiter=20,
             optimizer='BFGS',
-            use_analytic_grad = True):
+            use_analytic_grad = True,
+            op_select_type='gradient'):
 
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
@@ -192,6 +193,7 @@ class ADAPTVQE(UCCVQE):
         self._use_analytic_grad = use_analytic_grad
         self._optimizer = optimizer
         self._pool_type = pool_type
+        self._op_select_type = op_select_type
 
         self._results = []
         self._energies = []
@@ -200,6 +202,9 @@ class ADAPTVQE(UCCVQE):
         self._tamps = []
         self._comutator_pool = []
         self._converged = 0
+
+        self._n_ham_measurements = 0
+        self._n_comut_measurements = 0
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -352,32 +357,138 @@ class ADAPTVQE(UCCVQE):
 
     # Define ADAPT-VQE methods.
     def update_ansatz(self):
-        curr_norm = 0.0
-        lgrst_grad = 0.0
-        Uvqc = self.build_Uvqc()
-        for m, HAm in enumerate(self._comutator_pool):
-            """Here HAm is in QuantumOperator form"""
-            grad_m = self.measure_gradient(HAm, Uvqc)
-            curr_norm += grad_m*grad_m
-            if abs(grad_m) > abs(lgrst_grad):
-                lgrst_grad = grad_m
-                lgrst_grad_idx = m
+        if (self._op_select_type=='gradient'):
+            curr_norm = 0.0
+            lgrst_grad = 0.0
+            Uvqc = self.build_Uvqc()
+            for m, HAm in enumerate(self._comutator_pool):
+                """Here HAm is in QuantumOperator form"""
+                grad_m = self.measure_gradient(HAm, Uvqc)
+                curr_norm += grad_m*grad_m
+                if abs(grad_m) > abs(lgrst_grad):
+                    lgrst_grad = grad_m
+                    lgrst_grad_idx = m
 
-        curr_norm = np.sqrt(curr_norm)
-        print("==> Measring gradients from pool:")
-        print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
-        print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
+            curr_norm = np.sqrt(curr_norm)
+            print("==> Measring gradients from pool:")
+            print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
+            print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
 
-        self._curr_grad_norm = curr_norm
-        self._grad_norms.append(curr_norm)
-        self.conv_status()
+            self._curr_grad_norm = curr_norm
+            self._grad_norms.append(curr_norm)
+            self.conv_status()
 
-        if not self._converged:
-            print("  Adding operator m =", lgrst_grad_idx)
-            self._tops.append(lgrst_grad_idx)
-            self._tamps.append(0.0)
+            if not self._converged:
+                print("  Adding operator m =", lgrst_grad_idx)
+                self._tops.append(lgrst_grad_idx)
+                self._tamps.append(0.0)
+            else:
+                print("\n  ADAPT-VQE converged!")
+
+        elif(self._op_select_type=='minimize'):
+
+            print("==> Minimizing candidate amplitude from pool:")
+            opts = {}
+            opts['gtol'] = self._opt_thresh
+            opts['disp'] = False
+            opts['maxiter'] = self._opt_maxiter
+
+            x0 = [0.0]
+            self._trial_op = 0
+            init_gues_energy = self.energy_feval2(x0)
+
+            if self._use_analytic_grad:
+                print('  \n--> Begin selection opt with analytic graditent:')
+                print('  Initial guess energy: ', round(init_gues_energy,10))
+                print('\n')
+                print('     op index (m)          Energy decrease')
+                print('  -------------------------------------------')
+
+            else:
+                print('  \n--> Begin selection opt with grad estimated using first-differences:')
+                print('  Initial guess energy: ', round(init_gues_energy,10))
+
+            for m in range(len(self._pool)):
+                self._trial_op = m
+                if self._use_analytic_grad:
+                    res =  minimize(self.energy_feval2, x0,
+                                    method=self._optimizer,
+                                    jac=self.gradient_ary_feval2,
+                                    options=opts)
+                    print('       ', m, '                     ', '{:+.09f}'.format(res.fun-init_gues_energy))
+
+                else:
+                    res =  minimize(self.energy_feval2, x0,
+                                    method=self._optimizer,
+                                    options=opts)
+                    print('       ', m, '                     ', '{:+.09f}'.format(res.fun-init_gues_energy))
+
+
+                self._n_ham_measurements += res.nfev
+
+                if (self._use_analytic_grad):
+                    self._n_comut_measurements += res.njev
+
+
+                if(m==0):
+                    min_amp_e = res.fun
+                    min_amp_idx = m
+
+                else:
+                    if(res.fun < min_amp_e):
+                        min_amp_e = res.fun
+                        min_amp_idx = m
+
+            print("  Adding operator m =", min_amp_idx)
+            self._tops.append(min_amp_idx)
+            self._tamps.append(res.x[0])
+
         else:
-            print("\n  ADAPT-VQE converged!")
+            raise ValueError('Invalid value specified for _op_select_type')
+
+    def build_Uvqc2(self, param):
+        """ This function returns the QuantumCircuit object built
+        from the appropiate ampltudes (tops)
+
+        Parameters
+        ----------
+        param : float
+            A single parameter to opteimze appended to current _tamps.
+        """
+        sq_ops = []
+        new_tops  = copy.deepcopy(self._tops)
+        new_tamps = copy.deepcopy(self._tamps)
+        new_tops.append(self._trial_op)
+        new_tamps.append(param)
+
+        for j, pool_idx in enumerate(new_tops):
+            appended_term = copy.deepcopy(self._pool[pool_idx])
+            for l in range(len(appended_term)):
+                appended_term[l][1] *= new_tamps[j]
+                sq_ops.append(appended_term[l])
+
+        Uorg = get_ucc_jw_organizer(sq_ops, already_anti_herm=True)
+        A = organizer_to_circuit(Uorg)
+
+        U, phase1 = trotterize(A, trotter_number=self._trotter_number)
+        Uvqc = qforte.QuantumCircuit()
+        Uvqc.add_circuit(self._Uprep)
+
+        Uvqc.add_circuit(U)
+        if phase1 != 1.0 + 0.0j:
+            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+
+        return Uvqc
+
+    def energy_feval2(self, params):
+        Ucirc = self.build_Uvqc2(params[0])
+        return self.measure_energy(Ucirc)
+
+    def gradient_ary_feval2(self, params):
+        Uvqc = self.build_Uvqc2(params[0])
+        grad_lst = []
+        grad_lst.append(self.measure_gradient(self._comutator_pool[self._trial_op], Uvqc))
+        return np.asarray(grad_lst)
 
     def conv_status(self):
         if abs(self._curr_grad_norm) < abs(self._avqe_thresh):
@@ -388,13 +499,14 @@ class ADAPTVQE(UCCVQE):
             self._converged = 0
 
     def get_num_ham_measurements(self):
-        self._n_ham_measurements = 0
         for res in self._results:
             self._n_ham_measurements += res.nfev
         return self._n_ham_measurements
 
     def get_num_comut_measurements(self):
-        self._n_comut_measurements = len(self._tamps) * len(self._pool)
+        if(self._op_select_type=='gradient'):
+            self._n_comut_measurements += len(self._tamps) * len(self._pool)
+            
         if self._use_analytic_grad:
             for m, res in enumerate(self._results):
                 self._n_comut_measurements += res.njev * (m+1)
