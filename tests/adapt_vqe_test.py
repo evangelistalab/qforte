@@ -403,46 +403,10 @@ class ADAPTVQETests(unittest.TestCase):
         Egs = alg.get_gs_energy()
         Egs += NRE
         self.assertLess(abs(Egs-E_fci), 1.0e-5)
-        ##
 
-        # myAVQE= vqe.ADAPTVQE(ref, H4_qubit_hamiltonian, 5.0e-4, trott_num = 8)
-        #
-        # myAVQE.fill_pool()
-        # myAVQE._pool_obj.print_pool()
-        # myAVQE.fill_comutator_pool()
-        #
-        # avqe_iter = 0
-        # hit_maxiter = 0
-        # while not myAVQE._converged:
-        #
-        #     print('\n\n -----> ADAPT-VQE iteration ', avqe_iter, ' <-----\n')
-        #     myAVQE.update_ansatz()
-        #
-        #     if myAVQE._converged:
-        #         break
-        #
-        #     print('\ntoperators included from pool: \n', myAVQE._tops)
-        #     print('tamplitudes for tops: \n', myAVQE._tamps)
-        #     myAVQE.solve(fast=True, opt_maxiter=100)
-        #     print('  Current ADAPT-VQE energy: ', myAVQE._energies[-1]+NRE)
-        #     avqe_iter += 1
-        #
-        #     if avqe_iter > 10:
-        #         hit_maxiter = 1
-        #         break
-        #
-        # if hit_maxiter:
-        #     final_energy = myAVQE.get_final_energy(hit_max_avqe_iter=1)
-        #
-        # final_energy = myAVQE.get_final_energy()
-        #
-        # final_energy += NRE
-        #
-        # print('Note: added nuclear repulsion!')
-        # print('final energy: ', final_energy)
-        # print('FCI energy:   ', E_fci)
-        #
-        # self.assertLess(abs(final_energy-E_fci), 1.0e-5)
+        #check for internal changes
+        self.assertLess(abs(Egs - (-5.220356224960163+NRE)), 1.0e-12)
+
 
 if __name__ == '__main__':
     unittest.main()

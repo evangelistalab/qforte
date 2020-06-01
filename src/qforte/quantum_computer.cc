@@ -44,19 +44,17 @@ void QuantumComputer::apply_operator(const QuantumOperator& qo) {
     // for result vector Cf
     std::vector<std::complex<double>> result(nbasis_, 0.0);
 
-    // loop over terms
+    // loop over terms (could be done in parallel?)
     for (const auto& term : qo.terms()) {
         apply_circuit(term.second);
         apply_constant(term.first);
         std::transform(result.begin(), result.end(), coeff_.begin(),
                        result.begin(), add_c<double>);
 
-        set_coeff_vec(old_coeff);
+        coeff_ = old_coeff;
     }
 
-    set_coeff_vec(result);
-
-
+    coeff_ = result;
 }
 
 void QuantumComputer::apply_circuit(const QuantumCircuit& qc) {
@@ -718,12 +716,25 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
 }
 
 std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& qo) {
-    std::complex<double> result = 0.0;
-    for (const auto& term : qo.terms()) {
-        result += term.first * direct_circ_exp_val(term.second);
-    }
+
+    // deep copy coeficients
+    std::vector<std::complex<double>> old_coeff = coeff_;
+    apply_operator(qo);
+    std::complex<double> result = std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
+                                  std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
+
+    coeff_ = old_coeff;
     return result;
 }
+
+/// The below implemention of direct_op_exp_val may be faster for parallel computations.
+// std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& qo) {
+//     std::complex<double> result = 0.0;
+//     for (const auto& term : qo.terms()) {
+//         result += term.first * direct_circ_exp_val(term.second);
+//     }
+//     return result;
+// }
 
 std::complex<double> QuantumComputer::direct_circ_exp_val(const QuantumCircuit& qc) {
     std::vector<std::complex<double>> old_coeff = coeff_;
