@@ -140,7 +140,7 @@ def get_jw_organizer(sq_excitations, combine=True):
     return organizer
 
 def combine_like_terms(op_organizer):
-    #TODO: A very slow implementation, could absolutely be improved
+    #TODO (opt): A very slow implementation, could absolutely be improved
     term_coeff_dict = {}
     combined_op_organizer = []
     threshold = 1.0e-10
@@ -166,6 +166,7 @@ def get_single_term_jw_organizer(sq_term):
     sq_ops = sq_term[0]
     sq_coeff = sq_term[1]
 
+    #                 'coef'                  'word'
     # organizer => [[coeff_0, [ ("X", i), ("X", j),  ("X", k), ...  ] ], [...] ...]
     op_organizer = []
 
@@ -209,6 +210,37 @@ def join_organizers(L_op_org, R_op_org):
             comb_coeff = Lcoeff * Rcoeff
             comb_word = Lword + Rword
             combined_op_org.append([comb_coeff, comb_word])
+
+    return combine_like_terms([pauli_condense(combined_op_org)])
+
+# def get_org_idxs(org):
+#     pass
+#
+# def get_word_idxs(word):
+#     """Gets a list of indexes corresponing to a word
+#     """
+#     indicies = []
+#     pass
+
+# works similarly to join_orgainzers() but assumes H and Am as operators
+def join_H_Am_organizers(H_org, Am_org):
+    # word =>[ ("X", i), ("X", j),  ("X", k), ...  ]
+
+    # find what indicies are present in Am_org
+    # Am_indicies = []
+    # for Rcoeff, Rword in Am_org:
+    #     for Rletter in Rword:
+    #         idx = Rword
+    #     if
+
+    combined_op_org = []
+    for Lcoeff, Lword in H_org:
+        for Rcoeff, Rword in Am_org:
+            comb_coeff = Lcoeff * Rcoeff
+            comb_word = Lword + Rword
+            combined_op_org.append([comb_coeff, comb_word])
+            comb_word2 = Rword + Lword
+            combined_op_org.append([-comb_coeff, comb_word2])
 
     return combine_like_terms([pauli_condense(combined_op_org)])
 

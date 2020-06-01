@@ -216,7 +216,10 @@ class ADAPTVQE(UCCVQE):
         if self._verbose:
             self._pool_obj.print_pool()
 
-        self.fill_comutator_pool()
+        if self._op_select_type == 'minimize' and self._use_analytic_grad==False:
+            pass
+        else:
+            self.fill_comutator_pool()
 
         avqe_iter = 0
         hit_maxiter = 0
@@ -361,10 +364,16 @@ class ADAPTVQE(UCCVQE):
             curr_norm = 0.0
             lgrst_grad = 0.0
             Uvqc = self.build_Uvqc()
+
+            if self._verbose:
+                print('     op index (m)     N pauli terms          Gradient ')
+                print('  -------------------------------------------------------')
             for m, HAm in enumerate(self._comutator_pool):
                 """Here HAm is in QuantumOperator form"""
                 grad_m = self.measure_gradient(HAm, Uvqc)
                 curr_norm += grad_m*grad_m
+                if self._verbose:
+                    print('       ', m,  '             ', len(HAm.terms()),'                  ', '{:+.09f}'.format(grad_m))
                 if abs(grad_m) > abs(lgrst_grad):
                     lgrst_grad = grad_m
                     lgrst_grad_idx = m
@@ -400,9 +409,10 @@ class ADAPTVQE(UCCVQE):
             if self._use_analytic_grad:
                 print('  \n--> Begin selection opt with analytic graditent:')
                 print('  Initial guess energy: ', round(init_gues_energy,10))
-                print('\n')
-                print('     op index (m)          Energy decrease')
-                print('  -------------------------------------------')
+                if self._verbose:
+                    print('\n')
+                    print('     op index (m)          Energy decrease')
+                    print('  -------------------------------------------')
 
             else:
                 print('  \n--> Begin selection opt with grad estimated using first-differences:')
@@ -415,13 +425,17 @@ class ADAPTVQE(UCCVQE):
                                     method=self._optimizer,
                                     jac=self.gradient_ary_feval2,
                                     options=opts)
-                    print('       ', m, '                     ', '{:+.09f}'.format(res.fun-init_gues_energy))
+                                    
+                    if self._verbose:
+                        print('       ', m, '                     ', '{:+.09f}'.format(res.fun-init_gues_energy))
 
                 else:
                     res =  minimize(self.energy_feval2, x0,
                                     method=self._optimizer,
                                     options=opts)
-                    print('       ', m, '                     ', '{:+.09f}'.format(res.fun-init_gues_energy))
+
+                    if self._verbose:
+                        print('       ', m, '                     ', '{:+.09f}'.format(res.fun-init_gues_energy))
 
 
                 self._n_ham_measurements += res.nfev
@@ -506,7 +520,7 @@ class ADAPTVQE(UCCVQE):
     def get_num_comut_measurements(self):
         if(self._op_select_type=='gradient'):
             self._n_comut_measurements += len(self._tamps) * len(self._pool)
-            
+
         if self._use_analytic_grad:
             for m, res in enumerate(self._results):
                 self._n_comut_measurements += res.njev * (m+1)

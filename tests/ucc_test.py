@@ -340,6 +340,8 @@ class UccTests(unittest.TestCase):
         alg.run()
         Egs = alg.get_gs_energy()
         self.assertLess(abs(Egs-E_fci), 1.0e-5)
+        self.assertLess(abs(Egs--2.8875890205), 1.0e-9)
+
 
 
 if __name__ == '__main__':

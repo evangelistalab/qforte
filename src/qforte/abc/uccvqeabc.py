@@ -35,7 +35,7 @@ class UCCVQE(VQE):
         for i in range(len(self._pool)):
             Am_org = get_ucc_jw_organizer(self._pool[i], already_anti_herm=True)
             H_org = circuit_to_organizer(self._qb_ham)
-            HAm_org = join_organizers(H_org, Am_org)
+            HAm_org = join_H_Am_organizers(H_org, Am_org)
             HAm = organizer_to_circuit(HAm_org) # actually returns a single-term QuantumOperator
             self._comutator_pool.append(HAm)
         print('==> Comutator pool construction complete.')
@@ -88,15 +88,16 @@ class UCCVQE(VQE):
         if self._fast:
             myQC = qforte.QuantumComputer(self._nqb)
             myQC.apply_circuit(Ucirc)
-            val = 2*np.real(myQC.direct_op_exp_val(HAm))
+            val = myQC.direct_op_exp_val(HAm)
+
         else:
             # TODO (cleanup): remove N_samples as argument (implement variance based thresh)
             Exp = qforte.Experiment(self._nqb, Ucirc, HAm, 1000)
             empty_params = []
-            val = 2*Exp.perfect_experimental_avg(empty_params)
+            val = Exp.perfect_experimental_avg(empty_params)
 
         assert(np.isclose(np.imag(val),0.0))
-        return val
+        return np.real(val)
 
     def measure_energy(self, Ucirc):
         """
