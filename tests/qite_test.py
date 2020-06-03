@@ -79,6 +79,7 @@ class QITETests(unittest.TestCase):
         alg.run(beta=10.0)
         Egs = alg.get_gs_energy()
         self.assertLess(abs(Egs-E_fci), 1.0e-6)
+        self.assertLess(abs(Egs - -0.9981489936), 1.0e-9)
 
 
 if __name__ == '__main__':

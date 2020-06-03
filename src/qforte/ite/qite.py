@@ -144,11 +144,16 @@ class QITE(Algorithm):
         self._HSig = np.empty(shape=(self._Nl, self._NI), dtype=object)
         self._SigSig = np.empty(shape=(self._NI, self._NI), dtype=object)
 
+        #new
+        # self._HSigI = []
+
         for l, Hlorg in enumerate(H_org):
             self._H[l] = (organizer_to_circuit([Hlorg]))
 
         for I, Iorg in enumerate(SigI_org):
             self._Sig[I] = organizer_to_circuit(Iorg)
+            #new
+            # self._HSigI.append(organizer_to_circuit(join_organizers(Iorg, H_org)))
             for l, Hlorg in enumerate(H_org):
                 sigI_Hl_org = join_organizers(Iorg, [Hlorg])
                 self._HSig[l][I] = organizer_to_circuit(sigI_Hl_org)
@@ -161,13 +166,13 @@ class QITE(Algorithm):
 
     def build_S(self):
         S = np.empty((self._NI,self._NI), dtype=complex)
-        qc = qforte.QuantumComputer(self._nqb)
-        qc.apply_circuit(self._Uqite)
-        # TODO: use only upper triangle of Mat (Nick)
+        # qc = qforte.QuantumComputer(self._nqb)
+        # qc.apply_circuit(self._Uqite)
         for I in range(self._NI):
-            for J in range(self._NI):
-                val = qc.direct_op_exp_val(self._SigSig[I][J])
+            for J in range(I, self._NI):
+                val = self._qc.direct_op_exp_val(self._SigSig[I][J])
                 S[I][J] = val
+                S[J][I] = val
 
         return np.real(S)
 
@@ -180,39 +185,64 @@ class QITE(Algorithm):
                 b_sparse.append(bI)
 
         S = np.empty((len(b_sparse),len(b_sparse)), dtype=complex)
-        qc = qforte.QuantumComputer(self._nqb)
-        qc.apply_circuit(self._Uqite)
-        # TODO: use only upper triangle of Mat (Nick)
-        for i, I in enumerate(idx_sparse):
-            for j, J in enumerate(idx_sparse):
-                val = qc.direct_op_exp_val(self._SigSig[I][J])
+        # qc = qforte.QuantumComputer(self._nqb)
+        # qc.apply_circuit(self._Uqite)
+        for i in range(len(idx_sparse)):
+            for j in range(i,len(idx_sparse)):
+                val = self._qc.direct_op_exp_val(self._SigSig[idx_sparse[i]][idx_sparse[j]])
                 S[i][j] = val
+                S[j][i] = val
 
         return idx_sparse, np.real(S), np.real(b_sparse)
 
     def build_bl(self, l, cl):
         bo = -(1.0j / np.sqrt(cl))
         bl = np.zeros(shape=self._NI, dtype=complex)
-        qc = qforte.QuantumComputer(self._nqb)
-        qc.apply_circuit(self._Uqite)
+        # qc = qforte.QuantumComputer(self._nqb)
+        # qc.apply_circuit(self._Uqite)
         for I in range(self._NI):
-            bl[I] = bo * qc.direct_op_exp_val(self._HSig[l][I])
+            bl[I] = bo * self._qc.direct_op_exp_val(self._HSig[l][I])
 
         return np.real(bl)
 
     def do_quite_step(self):
-        qc = qforte.QuantumComputer(self._nqb)
-        qc.apply_circuit(self._Uqite)
+        self._qc = qforte.QuantumComputer(self._nqb)
+        self._qc.apply_circuit(self._Uqite)
 
         # Can take this approach if all Hl have same expansion terms
         btot = np.zeros(shape=self._NI, dtype=complex)
+        # btot2 = np.zeros(shape=self._NI, dtype=complex)
+
+        # TODO (opt): consider QuantumOpPool class on C side?
+        #new TODO (opt): consider QuantumOpPool class on C side?
+        # bol_lst = []
+        # for l, Hl in enumerate(self._H):
+        #     cl = 1 - 2*self._db*self._qc.direct_op_exp_val(Hl)
+        #     bol = -(1.0j / np.sqrt(cl))
+        #     bol_lst.append(bol)
+        #
+        # for I in range(self._NI):
+        #     self._HSigI[I].set_coeffs(bol_lst)
+        #     btot2[I] = self._qc.direct_op_exp_val(self._HSigI[I])
+
+        # print('NI:  ', self._NI)
+        # print('Nl:  ', self._Nl)
+        # print('NI*Nl:  ', self._NI*self._Nl)
+        # print('len(bol_lst):  ',len(bol_lst))
+        # print('len(self._HSigI):  ',len(self._HSigI))
+        # for HI in self._HSigI:
+        #     print('  len(self._HSigI):  ',len(HI.terms()))
+
         for l, Hl in enumerate(self._H):
-            cl = 1 - 2*self._db*qc.direct_op_exp_val(Hl)
+            cl = 1 - 2*self._db*self._qc.direct_op_exp_val(Hl)
             bl = self.build_bl(l, cl)
             btot = np.add(btot, bl)
             if(self._verbose):
                 print('\n\nl:  ', l)
                 print('\nbl: ', bl)
+
+        # print('\n btot: \n', btot)
+        # print('\n btot2: \n', btot2)
 
         A = qforte.QuantumOperator()
 
@@ -242,11 +272,11 @@ class QITE(Algorithm):
         self._total_phase *= phase1
         self._Uqite.add_circuit(eiA_kb)
 
-        qc.apply_circuit(eiA_kb)
-        self._Ekb.append(np.real(qc.direct_op_exp_val(self._qb_ham)))
+        self._qc.apply_circuit(eiA_kb)
+        self._Ekb.append(np.real(self._qc.direct_op_exp_val(self._qb_ham)))
 
         if(self._verbose):
-            qforte.smart_print(qc)
+            qforte.smart_print(self._qc)
 
     def evolve(self):
         self._Uqite.add_circuit(self._Uprep)

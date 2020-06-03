@@ -20,6 +20,12 @@ class QuantumOperator {
     /// add a circuit as a term in the quantum operator
     void add_term(std::complex<double> circ_coeff, const QuantumCircuit& circuit);
 
+    /// add a circuit as a term in the quantum operator
+    void add_op(const QuantumOperator& qo);
+
+    /// sets the operator coefficeints
+    void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
+
     /// return a vector of terms and thier coeficients
     const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& terms() const;
 
