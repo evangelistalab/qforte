@@ -7,6 +7,7 @@
 #include "quantum_gate.h"
 #include "quantum_computer.h"
 #include "quantum_operator.h"
+#include "sq_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -21,6 +22,14 @@ PYBIND11_MODULE(qforte, m) {
         .def("adjoint", &QuantumCircuit::adjoint)
         .def("set_parameters", &QuantumCircuit::set_parameters)
         .def("str", &QuantumCircuit::str);
+
+    py::class_<SQOperator>(m, "SQOperator")
+        .def(py::init<>())
+        .def("add_term", &SQOperator::add_term)
+        .def("add_op", &SQOperator::add_op)
+        .def("set_coeffs", &SQOperator::set_coeffs)
+        .def("terms", &SQOperator::terms)
+        .def("str", &SQOperator::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
         .def(py::init<>())
