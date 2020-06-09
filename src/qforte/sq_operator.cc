@@ -71,6 +71,22 @@ void SQOperator::canonical_order() {
     }
 }
 
+void SQOperator::simplify() {
+    canonical_order();
+    std::map<std::vector<size_t>, std::complex<double>> uniqe_trms;
+    for (const auto& term : terms_) {
+        if ( uniqe_trms.find(term.second) == uniqe_trms.end() ) {
+            uniqe_trms.insert(std::make_pair(term.second, term.first));
+        } else {
+            uniqe_trms[term.second] += term.first;
+        }
+    }
+    terms_.clear();
+    for (const auto &uniqe_trm : uniqe_trms){
+        terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
+    }
+}
+
 bool SQOperator::permutive_sign_change(std::vector<int> p) {
     std::vector<int> a(p.size());
     std::iota (std::begin(a), std::end(a), 0);
@@ -89,7 +105,6 @@ bool SQOperator::permutive_sign_change(std::vector<int> p) {
     }
 }
 
-// TODO: find out why size_t is printed as float
 std::string SQOperator::str() const {
     std::vector<std::string> s;
     s.push_back("");

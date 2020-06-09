@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 #include <numeric>
-
-#include <iostream>
+#include <map>
 
 class SQOperator {
   public:
@@ -29,11 +28,14 @@ class SQOperator {
     /// return a vector of terms and thier coeficients
     const std::vector<std::pair< std::complex<double>, std::vector<size_t>>>& terms() const;
 
+    /// order a single term
+    void caononical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term );
+
     /// order each product of ac operators in a standardized fashion
     void canonical_order();
 
-    /// order a single term
-    void caononical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term );
+    /// simplify the operator (i.e. combine like terms)
+    void simplify();
 
     /// return a vector of string representing this quantum operator
     std::string str() const;
