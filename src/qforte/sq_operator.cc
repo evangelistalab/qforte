@@ -29,10 +29,81 @@ const std::vector<std::pair<std::complex<double>, std::vector<size_t>>>& SQOpera
     return terms_;
 }
 
+void SQOperator::caononical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term ){
+    if((term.second.size() % 2) != 0){
+        throw std::invalid_argument( "sq operator term must have equal number of anihilators and creators.");
+    }
+    int nbody = term.second.size() / 2.0;
+    if (nbody >= 2) {
+        auto term_temp = term;
+        std::vector<int> a(nbody);
+        std::iota(std::begin(a), std::end(a), 0);
+        std::vector<int> b(nbody);
+        std::iota(std::begin(b), std::end(b), 0);
+
+        // get permutations for creators then reorder
+        std::sort(a.begin(), a.end(),
+            [&](const int& i, const int& j) {
+                return (term_temp.second[i] > term_temp.second[j]);
+            }
+        );
+        for (int ai=0; ai < nbody; ai++){
+            term.second[ai] = term_temp.second[a[ai]];
+        }
+        if (permutive_sign_change(a)) { term.first *= -1.0; }
+
+        // same as above but for anihilators
+        std::sort(b.begin(), b.end(),
+            [&](const int& i, const int& j) {
+                return (term_temp.second[i+nbody] > term_temp.second[j+nbody]);
+            }
+        );
+        for (int bi=0; bi < nbody; bi++){
+            term.second[bi+nbody] = term_temp.second[b[bi]+nbody];
+        }
+        if (permutive_sign_change(b)) { term.first *= -1.0; }
+    }
+}
+
+void SQOperator::canonical_order() {
+    for (auto& term : terms_) {
+        caononical_order_single_term(term);
+    }
+}
+
+bool SQOperator::permutive_sign_change(std::vector<int> p) {
+    std::vector<int> a(p.size());
+    std::iota (std::begin(a), std::end(a), 0);
+    size_t cnt = 0;
+    for (size_t i = 0; i < a.size(); ++i) {
+        while (i != p[i]) {
+            ++cnt;
+            std::swap (a[i], a[p[i]]);
+            std::swap (p[i], p[p[i]]);
+        }
+    }
+    if(cnt % 2 == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+// TODO: find out why size_t is printed as float
 std::string SQOperator::str() const {
     std::vector<std::string> s;
+    s.push_back("");
     for (const auto& term : terms_) {
-        s.push_back(to_string(term.first) + term.second.str());
+        int nbody = term.second.size() / 2.0;
+        s.push_back(to_string(term.first));
+        s.push_back("(");
+        for (int k=0; k<nbody; k++ ) {
+            s.push_back(std::to_string(term.second[k]) + "^");
+        }
+        for (int k=nbody; k<2*nbody; k++ ) {
+            s.push_back(std::to_string(term.second[k]));
+        }
+        s.push_back(")\n");
     }
-    return join(s, "\n");
+    return join(s, " ");
 }

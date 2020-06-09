@@ -4,6 +4,9 @@
 #include <complex>
 #include <string>
 #include <vector>
+#include <numeric>
+
+#include <iostream>
 
 class SQOperator {
   public:
@@ -26,12 +29,21 @@ class SQOperator {
     /// return a vector of terms and thier coeficients
     const std::vector<std::pair< std::complex<double>, std::vector<size_t>>>& terms() const;
 
+    /// order each product of ac operators in a standardized fashion
+    void canonical_order();
+
+    /// order a single term
+    void caononical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term );
+
     /// return a vector of string representing this quantum operator
     std::string str() const;
 
   private:
     /// the list of circuits
     std::vector<std::pair< std::complex<double>, std::vector<size_t>>> terms_;
+
+    /// a function to calculation the parity of permutaiton p
+    bool permutive_sign_change(std::vector<int> p);
 };
 
 #endif // _sq_operator_h_

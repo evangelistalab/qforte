@@ -29,6 +29,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_op", &SQOperator::add_op)
         .def("set_coeffs", &SQOperator::set_coeffs)
         .def("terms", &SQOperator::terms)
+        .def("canonical_order", &SQOperator::canonical_order)
         .def("str", &SQOperator::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
