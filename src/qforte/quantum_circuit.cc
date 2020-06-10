@@ -64,13 +64,15 @@ std::complex<double> QuantumCircuit::canonical_order() {
     int n_gates = gates_.size();
     QuantumCircuit simplified_circ;
     std::complex<double> coeff = 1.0;
-    std::string s = gates_[0].gate_id();
+    std::string s;
     // counts contractions of gates for the same qubit
     int counter = 0;
 
     for (int i=0; i<n_gates-1; i++) {
-        // if same qubit.
         if(gates_[i].target() == gates_[i+1].target()) {
+            if (counter == 0) {
+                s = gates_[i].gate_id();
+            }
             coeff *= m[std::make_pair(
                 s,
                 gates_[i+1].gate_id()
@@ -80,23 +82,24 @@ std::complex<double> QuantumCircuit::canonical_order() {
                 s,
                 gates_[i+1].gate_id()
             )].second;
-
             counter++;
+
         } else {
-            // not i, i+1 not same qbit and neither are i+1 and i+2
+            // ith gate is only gate to act on target qubit
             if (counter == 0) {
                 simplified_circ.add_gate(
                     make_gate(gates_[i].gate_id(), gates_[i].target(), gates_[i].target())
                 );
             } else {
-                counter = 0;
                 simplified_circ.add_gate(
                     make_gate(s, gates_[i].target(), gates_[i].target())
                 );
-                s = gates_[i+1].gate_id();
+                counter = 0;
             }
         }
     }
+
+    std::cout << "i: " << "f" << " s: " << s << " c: " << counter << std::endl;
 
     // imples last elemet is different qbit that the rest
     if (counter == 0){
@@ -105,6 +108,7 @@ std::complex<double> QuantumCircuit::canonical_order() {
             gates_[n_gates-1].target(),
             gates_[n_gates-1].target())
         );
+    // } else /*if (s != "I")*/{
     } else if (s != "I"){
         simplified_circ.add_gate(
             make_gate(s,
@@ -114,6 +118,7 @@ std::complex<double> QuantumCircuit::canonical_order() {
     }
 
     //copy simplified terms_
+    // maybe copy, mc simp_circ may not be continuous in mem.
     gates_ = std::move(simplified_circ.gates());
     return coeff;
 }

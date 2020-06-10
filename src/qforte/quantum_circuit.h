@@ -5,6 +5,8 @@
 #include <map>
 #include <complex>
 
+#include <iostream>
+
 class QuantumGate;
 
 class QuantumCircuit {

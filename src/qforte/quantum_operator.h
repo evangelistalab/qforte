@@ -29,11 +29,11 @@ class QuantumOperator {
     /// return a vector of terms and thier coeficients
     const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& terms() const;
 
-    /// order a single term
-    // void canonical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term );
+    // order a single term (not const!)
+    // void canonical_order_single_term(std::pair<std::complex<double>, QuantumCircuit>& term );
 
-    // /// order each product of ac operators in a standardized fashion
-    // void canonical_order();
+    /// order each product of ac operators in a standardized fashion
+    void canonical_order();
     //
     // /// simplify the operator (i.e. combine like terms)
     // void simplify();
