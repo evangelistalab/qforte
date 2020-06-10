@@ -29,7 +29,7 @@ const std::vector<std::pair<std::complex<double>, std::vector<size_t>>>& SQOpera
     return terms_;
 }
 
-void SQOperator::caononical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term ){
+void SQOperator::canonical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term ){
     if((term.second.size() % 2) != 0){
         throw std::invalid_argument( "sq operator term must have equal number of anihilators and creators.");
     }
@@ -67,7 +67,7 @@ void SQOperator::caononical_order_single_term(std::pair< std::complex<double>, s
 
 void SQOperator::canonical_order() {
     for (auto& term : terms_) {
-        caononical_order_single_term(term);
+        canonical_order_single_term(term);
     }
 }
 

@@ -24,6 +24,8 @@ void QuantumOperator::set_coeffs(const std::vector<std::complex<double>>& new_co
     }
 }
 
+// new funcitons here
+
 const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& QuantumOperator::terms() const {
     return terms_;
 }

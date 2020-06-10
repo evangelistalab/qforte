@@ -20,6 +20,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("gates", &QuantumCircuit::gates)
         .def("size", &QuantumCircuit::size)
         .def("adjoint", &QuantumCircuit::adjoint)
+        .def("canonical_order", &QuantumCircuit::canonical_order)
         .def("set_parameters", &QuantumCircuit::set_parameters)
         .def("str", &QuantumCircuit::str);
 

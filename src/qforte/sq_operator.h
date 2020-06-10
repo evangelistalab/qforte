@@ -29,7 +29,7 @@ class SQOperator {
     const std::vector<std::pair< std::complex<double>, std::vector<size_t>>>& terms() const;
 
     /// order a single term
-    void caononical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term );
+    void canonical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term );
 
     /// order each product of ac operators in a standardized fashion
     void canonical_order();

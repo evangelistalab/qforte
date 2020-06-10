@@ -34,6 +34,90 @@ QuantumCircuit QuantumCircuit::adjoint() {
     return qcirc_adjoint;
 }
 
+std::complex<double> QuantumCircuit::canonical_order() {
+    /// TODO: peraphs put ths somewhere else?
+    using namespace std::complex_literals;
+    std::map<
+        std::pair<std::string,std::string> ,
+        std::pair<std::complex<double>,std::string>
+        > m = {
+        {std::make_pair("X", "Y"), std::make_pair( 1.0i, "Z")},
+        {std::make_pair("X", "Z"), std::make_pair(-1.0i, "Y")},
+        {std::make_pair("Y", "X"), std::make_pair(-1.0i, "Z")},
+        {std::make_pair("Y", "Z"), std::make_pair( 1.0i, "X")},
+        {std::make_pair("Z", "X"), std::make_pair( 1.0i, "Y")},
+        {std::make_pair("Z", "Y"), std::make_pair(-1.0i, "X")},
+        {std::make_pair("X", "X"), std::make_pair( 1.0,  "I")},
+        {std::make_pair("Y", "Y"), std::make_pair( 1.0,  "I")},
+        {std::make_pair("Z", "Z"), std::make_pair( 1.0,  "I")},
+        {std::make_pair("I", "X"), std::make_pair( 1.0,  "X")},
+        {std::make_pair("I", "Y"), std::make_pair( 1.0,  "Y")},
+        {std::make_pair("I", "Z"), std::make_pair( 1.0,  "Z")}
+    };
+
+    std::sort(gates_.begin(), gates_.end(),
+        [&](const QuantumGate& a, const QuantumGate& b) {
+            return (a.target() < b.target());
+        }
+    );
+
+    int n_gates = gates_.size();
+    QuantumCircuit simplified_circ;
+    std::complex<double> coeff = 1.0;
+    std::string s = gates_[0].gate_id();
+    // counts contractions of gates for the same qubit
+    int counter = 0;
+
+    for (int i=0; i<n_gates-1; i++) {
+        // if same qubit.
+        if(gates_[i].target() == gates_[i+1].target()) {
+            coeff *= m[std::make_pair(
+                s,
+                gates_[i+1].gate_id()
+            )].first;
+
+            s = m[std::make_pair(
+                s,
+                gates_[i+1].gate_id()
+            )].second;
+
+            counter++;
+        } else {
+            // not i, i+1 not same qbit and neither are i+1 and i+2
+            if (counter == 0) {
+                simplified_circ.add_gate(
+                    make_gate(gates_[i].gate_id(), gates_[i].target(), gates_[i].target())
+                );
+            } else {
+                counter = 0;
+                simplified_circ.add_gate(
+                    make_gate(s, gates_[i].target(), gates_[i].target())
+                );
+                s = gates_[i+1].gate_id();
+            }
+        }
+    }
+
+    // imples last elemet is different qbit that the rest
+    if (counter == 0){
+        simplified_circ.add_gate(
+            make_gate(gates_[n_gates-1].gate_id(),
+            gates_[n_gates-1].target(),
+            gates_[n_gates-1].target())
+        );
+    } else if (s != "I"){
+        simplified_circ.add_gate(
+            make_gate(s,
+            gates_[n_gates-1].target(),
+            gates_[n_gates-1].target())
+        );
+    }
+
+    //copy simplified terms_
+    gates_ = std::move(simplified_circ.gates());
+    return coeff;
+}
+
 std::string QuantumCircuit::str() const {
     std::vector<std::string> s;
     for (const auto& gate : gates_) {

@@ -2,6 +2,8 @@
 #define _quantum_circuit_h_
 
 #include <vector>
+#include <map>
+#include <complex>
 
 class QuantumGate;
 
@@ -28,6 +30,10 @@ class QuantumCircuit {
     /// reset the circuit with a new set of parameters
     void set_parameters(const std::vector<double>& params);
 
+    /// reorders the circuit by qubit and retruns the resluting
+    /// factor (either +/-1.0 or +/-1.0j)
+    std::complex<double> canonical_order();
+
     /// return a vector of string representing this circuit
     std::string str() const;
 
@@ -36,7 +42,8 @@ class QuantumCircuit {
     std::vector<QuantumGate> gates_;
 
     /// reversed list of gates
-    std::vector<QuantumGate> rev_copy_;
+    // std::vector<QuantumGate> rev_copy_;
+
 };
 
 #endif // _quantum_circuit_h_
