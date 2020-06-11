@@ -147,3 +147,21 @@ std::string QuantumCircuit::str() const {
 //         }
 //     }
 // }
+
+
+bool operator==(const QuantumCircuit& qc1, const QuantumCircuit& qc2)  {
+    if(qc1.gates().size() == qc2.gates().size()){
+        for (int k=0; k<qc1.gates().size(); k++){
+            if (qc1.gates()[k].gate_id() != qc2.gates()[k].gate_id()){
+                return false;
+            } else if (qc1.gates()[k].target() != qc2.gates()[k].target()) {
+                return false;
+            } else if (qc1.gates()[k].control() != qc2.gates()[k].control()) {
+                return false;
+            }
+        }
+        return true;
+    } else {
+        return false;
+    }
+}

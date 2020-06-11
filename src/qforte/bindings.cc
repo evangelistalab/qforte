@@ -41,6 +41,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_coeffs", &QuantumOperator::set_coeffs)
         .def("terms", &QuantumOperator::terms)
         .def("canonical_order", &QuantumOperator::canonical_order)
+        .def("simplify", &QuantumOperator::simplify)
         .def("str", &QuantumOperator::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")

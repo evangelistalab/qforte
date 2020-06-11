@@ -31,6 +31,35 @@ void QuantumOperator::canonical_order() {
     }
 }
 
+void QuantumOperator::add_unique_term(
+    std::vector<std::pair<std::complex<double>, QuantumCircuit>>& uniqe_trms,
+    const std::pair<std::complex<double>, QuantumCircuit>& term
+) {
+    bool not_in_unique = true;
+    for (auto& uniqe_trm : uniqe_trms) {
+        // if already in uniqe_trms, do a += anew
+        if (uniqe_trm.second == term.second) {
+            uniqe_trm.first += term.first;
+            not_in_unique = false;
+            break;
+        }
+    }
+    if (not_in_unique) {
+        uniqe_trms.push_back(term);
+    }
+}
+
+void QuantumOperator::simplify() {
+    // TODO: find a way with std::unordered_map
+    // (see implementaion for SQOperator::simplify)
+    canonical_order();
+    std::vector<std::pair<std::complex<double>, QuantumCircuit>> uniqe_trms;
+    for (auto& term : terms_) {
+        add_unique_term(uniqe_trms, term);
+    }
+    terms_ = std::move(uniqe_trms);
+}
+
 const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& QuantumOperator::terms() const {
     return terms_;
 }

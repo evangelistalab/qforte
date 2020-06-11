@@ -4,6 +4,8 @@
 #include <complex>
 #include <string>
 #include <vector>
+// #include <map>
+// #include <unordered_map>
 
 class QuantumOperator {
   public:
@@ -29,14 +31,18 @@ class QuantumOperator {
     /// return a vector of terms and thier coeficients
     const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& terms() const;
 
-    // order a single term (not const!)
-    // void canonical_order_single_term(std::pair<std::complex<double>, QuantumCircuit>& term );
-
     /// order each product of ac operators in a standardized fashion
     void canonical_order();
-    //
-    // /// simplify the operator (i.e. combine like terms)
-    // void simplify();
+
+    /// adds term to uniqe_trms if not already contained in uniqe_trms, otherwise
+    /// adds coeficent of term to coeficent of identical term in uniqe_trms
+    void add_unique_term(
+        std::vector<std::pair<std::complex<double>, QuantumCircuit>>& uniqe_trms,
+        const std::pair<std::complex<double>, QuantumCircuit>& term
+    );
+
+    /// simplify the operator (i.e. combine like terms)
+    void simplify();
 
     /// return a vector of string representing this quantum operator
     std::string str() const;
