@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "helpers.h"
 // #include "quantum_gate.h"
 // #include "quantum_circuit.h"
