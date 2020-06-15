@@ -223,6 +223,7 @@ def join_organizers(L_op_org, R_op_org):
 #     pass
 
 # works similarly to join_orgainzers() but assumes H and Am as operators
+# esentially builds a commutator HAm - AmH
 def join_H_Am_organizers(H_org, Am_org):
     # word =>[ ("X", i), ("X", j),  ("X", k), ...  ]
 

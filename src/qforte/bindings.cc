@@ -32,6 +32,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &SQOperator::terms)
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
+        .def("jw_transform", &SQOperator::jw_transform)
         .def("str", &SQOperator::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
@@ -42,6 +43,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &QuantumOperator::terms)
         .def("canonical_order", &QuantumOperator::canonical_order)
         .def("simplify", &QuantumOperator::simplify)
+        .def("map_simplify", &QuantumOperator::map_simplify)
+        .def("join_operator", &QuantumOperator::join_operator)
         .def("str", &QuantumOperator::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")

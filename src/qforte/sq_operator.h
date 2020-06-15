@@ -7,6 +7,10 @@
 #include <numeric>
 #include <map>
 
+class QuantumGate;
+
+class QuantumOperator;
+
 class SQOperator {
   public:
     /// default constructor: creates an empty second quantized operator
@@ -36,6 +40,10 @@ class SQOperator {
 
     /// simplify the operator (i.e. combine like terms)
     void simplify();
+
+    /// return the QuantumOperator ojbect correstponting the the Jordan-Wigner
+    /// transform of this sq operator.
+    QuantumOperator jw_transform();
 
     /// return a vector of string representing this quantum operator
     std::string str() const;

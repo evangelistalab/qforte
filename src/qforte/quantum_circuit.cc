@@ -35,7 +35,9 @@ QuantumCircuit QuantumCircuit::adjoint() {
 }
 
 std::complex<double> QuantumCircuit::canonical_order() {
-    /// TODO: peraphs put ths somewhere else?
+    if (gates_.size()==0){
+        return 1.0;
+    }
     using namespace std::complex_literals;
     std::map<
         std::pair<std::string,std::string> ,
@@ -65,7 +67,6 @@ std::complex<double> QuantumCircuit::canonical_order() {
     QuantumCircuit simplified_circ;
     std::complex<double> coeff = 1.0;
     std::string s;
-    // counts contractions of gates for the same qubit
     int counter = 0;
 
     for (int i=0; i<n_gates-1; i++) {
@@ -90,16 +91,16 @@ std::complex<double> QuantumCircuit::canonical_order() {
                 simplified_circ.add_gate(
                     make_gate(gates_[i].gate_id(), gates_[i].target(), gates_[i].target())
                 );
-            } else {
+            } else if (s != "I") {
                 simplified_circ.add_gate(
                     make_gate(s, gates_[i].target(), gates_[i].target())
                 );
                 counter = 0;
+            } else {
+                counter = 0;
             }
         }
     }
-
-    std::cout << "i: " << "f" << " s: " << s << " c: " << counter << std::endl;
 
     // imples last elemet is different qbit that the rest
     if (counter == 0){
@@ -108,7 +109,6 @@ std::complex<double> QuantumCircuit::canonical_order() {
             gates_[n_gates-1].target(),
             gates_[n_gates-1].target())
         );
-    // } else /*if (s != "I")*/{
     } else if (s != "I"){
         simplified_circ.add_gate(
             make_gate(s,
@@ -117,8 +117,8 @@ std::complex<double> QuantumCircuit::canonical_order() {
         );
     }
 
-    //copy simplified terms_
-    // maybe copy, mc simp_circ may not be continuous in mem.
+    // copy simplified terms_
+    // maybe use copy, not sure move is faster here?
     gates_ = std::move(simplified_circ.gates());
     return coeff;
 }

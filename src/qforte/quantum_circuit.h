@@ -48,4 +48,6 @@ class QuantumCircuit {
 // A eqivalence comparitor for QuantumCircuit class
 bool operator==(const QuantumCircuit& qc1, const QuantumCircuit& qc2);
 
+
+
 #endif // _quantum_circuit_h_
