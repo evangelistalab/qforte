@@ -108,7 +108,8 @@ bool SQOperator::permutive_sign_change(std::vector<int> p) {
 }
 
 QuantumOperator SQOperator::jw_transform() {
-    using namespace std::complex_literals;
+    //using namespace std::complex_literals;
+    std::complex<double> halfi(0.0, 0.5);
     simplify();
     QuantumOperator qo;
     // loop through terms in sq_operator
@@ -137,9 +138,9 @@ QuantumOperator SQOperator::jw_transform() {
 
             temp2.add_term(0.5, Xcirc);
             if(ai < nbody){
-                temp2.add_term(-0.5i, Ycirc);
+                temp2.add_term(-halfi, Ycirc);
             } else {
-                temp2.add_term(0.5i, Ycirc);
+                temp2.add_term(halfi, Ycirc);
             }
 
             if(ai==0){

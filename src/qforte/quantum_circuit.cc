@@ -38,17 +38,18 @@ std::complex<double> QuantumCircuit::canonical_order() {
     if (gates_.size()==0){
         return 1.0;
     }
-    using namespace std::complex_literals;
+    //using namespace std::complex_literals;
+    std::complex<double> onei(0.0, 1.0);
     std::map<
         std::pair<std::string,std::string> ,
         std::pair<std::complex<double>,std::string>
         > m = {
-        {std::make_pair("X", "Y"), std::make_pair( 1.0i, "Z")},
-        {std::make_pair("X", "Z"), std::make_pair(-1.0i, "Y")},
-        {std::make_pair("Y", "X"), std::make_pair(-1.0i, "Z")},
-        {std::make_pair("Y", "Z"), std::make_pair( 1.0i, "X")},
-        {std::make_pair("Z", "X"), std::make_pair( 1.0i, "Y")},
-        {std::make_pair("Z", "Y"), std::make_pair(-1.0i, "X")},
+        {std::make_pair("X", "Y"), std::make_pair( onei, "Z")},
+        {std::make_pair("X", "Z"), std::make_pair(-onei, "Y")},
+        {std::make_pair("Y", "X"), std::make_pair(-onei, "Z")},
+        {std::make_pair("Y", "Z"), std::make_pair( onei, "X")},
+        {std::make_pair("Z", "X"), std::make_pair( onei, "Y")},
+        {std::make_pair("Z", "Y"), std::make_pair(-onei, "X")},
         {std::make_pair("X", "X"), std::make_pair( 1.0,  "I")},
         {std::make_pair("Y", "Y"), std::make_pair( 1.0,  "I")},
         {std::make_pair("Z", "Z"), std::make_pair( 1.0,  "I")},
