@@ -58,7 +58,7 @@ std::complex<double> QuantumCircuit::canonical_order() {
         {std::make_pair("I", "Z"), std::make_pair( 1.0,  "Z")}
     };
 
-    std::sort(gates_.begin(), gates_.end(),
+    std::stable_sort(gates_.begin(), gates_.end(),
         [&](const QuantumGate& a, const QuantumGate& b) {
             return (a.target() < b.target());
         }
@@ -148,7 +148,6 @@ std::string QuantumCircuit::str() const {
 //         }
 //     }
 // }
-
 
 bool operator==(const QuantumCircuit& qc1, const QuantumCircuit& qc2)  {
     if(qc1.gates().size() == qc2.gates().size()){

@@ -47,31 +47,37 @@ void QuantumOperator::mult_coeffs(const std::complex<double>& multiplier) {
     }
 }
 
+void QuantumOperator::order_terms() {
+    simplify();
+    std::sort(terms_.begin(), terms_.end(),
+        [&](const std::pair<std::complex<double>, QuantumCircuit>& a,
+            const std::pair<std::complex<double>, QuantumCircuit>& b) {
+                int a_sz = a.second.gates().size();
+                int b_sz = b.second.gates().size();
+                // 1. sort by qb
+                for (int k=0; k<std::min(a_sz, b_sz); k++){
+                    if( a.second.gates()[k].target() != b.second.gates()[k].target()){
+                        return (a.second.gates()[k].target() < b.second.gates()[k].target());
+                    }
+                }
+                // 2. sort by gate id
+                for (int k=0; k<std::min(a_sz, b_sz); k++){
+                    if(a.second.gates()[k].gate_id() != b.second.gates()[k].gate_id()){
+                        return (a.second.gates()[k].gate_id() < b.second.gates()[k].gate_id());
+                    }
+                }
+                return (a.second.gates().size() < a.second.gates().size());
+        }
+    );
+}
+
 void QuantumOperator::canonical_order() {
     for (auto& term : terms_) {
         term.first *= term.second.canonical_order();
     }
 }
 
-void QuantumOperator::add_unique_term(
-    std::vector<std::pair<std::complex<double>, QuantumCircuit>>& uniqe_trms,
-    const std::pair<std::complex<double>, QuantumCircuit>& term
-) {
-    bool not_in_unique = true;
-    for (auto& uniqe_trm : uniqe_trms) {
-        // if already in uniqe_trms, do a += anew
-        if (uniqe_trm.second == term.second) {
-            uniqe_trm.first += term.first;
-            not_in_unique = false;
-            break;
-        }
-    }
-    if (not_in_unique) {
-        uniqe_trms.push_back(term);
-    }
-}
-
-void QuantumOperator::map_simplify() {
+void QuantumOperator::simplify() {
     canonical_order();
     std::unordered_map<QuantumCircuit, std::complex<double>> uniqe_trms;
     for (const auto& term : terms_) {
@@ -89,20 +95,10 @@ void QuantumOperator::map_simplify() {
     }
 }
 
-void QuantumOperator::simplify() {
-    canonical_order();
-    std::vector<std::pair<std::complex<double>, QuantumCircuit>> uniqe_trms;
-    for (auto& term : terms_) {
-        add_unique_term(uniqe_trms, term);
-    }
-    // TODO: need to account for the removal of terms with coeff = 0.0
-    terms_ = std::move(uniqe_trms);
-}
-
 void QuantumOperator::join_operator(QuantumOperator& rqo, bool simplify_lop_rop ) {
     if(simplify_lop_rop){
-        map_simplify();
-        rqo.map_simplify();
+        simplify();
+        rqo.simplify();
     }
 
     QuantumOperator LR;
@@ -115,11 +111,30 @@ void QuantumOperator::join_operator(QuantumOperator& rqo, bool simplify_lop_rop 
         }
     }
     terms_ = std::move(LR.terms());
-    map_simplify();
+    simplify();
 }
 
 const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& QuantumOperator::terms() const {
     return terms_;
+}
+
+bool QuantumOperator::check_op_equivalence(QuantumOperator qo, bool reorder) {
+    if(reorder){
+        order_terms();
+        qo.order_terms();
+    }
+    if (terms_.size() != qo.terms().size()){
+        return false;
+    }
+    for (size_t l = 0; l < terms_.size(); l++){
+        if(std::abs(terms_[l].first-qo.terms()[l].first) > 1.0e-10){
+            return false;
+        }
+        if (!(terms_[l].second == qo.terms()[l].second)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 std::string QuantumOperator::str() const {

@@ -41,10 +41,11 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_op", &QuantumOperator::add_op)
         .def("set_coeffs", &QuantumOperator::set_coeffs)
         .def("terms", &QuantumOperator::terms)
+        .def("order_terms", &QuantumOperator::order_terms)
         .def("canonical_order", &QuantumOperator::canonical_order)
         .def("simplify", &QuantumOperator::simplify)
-        .def("map_simplify", &QuantumOperator::map_simplify)
         .def("join_operator", &QuantumOperator::join_operator)
+        .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
         .def("str", &QuantumOperator::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")

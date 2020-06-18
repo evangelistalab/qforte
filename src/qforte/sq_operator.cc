@@ -42,7 +42,6 @@ void SQOperator::canonical_order_single_term(std::pair< std::complex<double>, st
         std::iota(std::begin(a), std::end(a), 0);
         std::vector<int> b(nbody);
         std::iota(std::begin(b), std::end(b), 0);
-
         // get permutations for creators then reorder
         std::sort(a.begin(), a.end(),
             [&](const int& i, const int& j) {
@@ -53,7 +52,6 @@ void SQOperator::canonical_order_single_term(std::pair< std::complex<double>, st
             term.second[ai] = term_temp.second[a[ai]];
         }
         if (permutive_sign_change(a)) { term.first *= -1.0; }
-
         // same as above but for anihilators
         std::sort(b.begin(), b.end(),
             [&](const int& i, const int& j) {
@@ -113,7 +111,6 @@ QuantumOperator SQOperator::jw_transform() {
     simplify();
     QuantumOperator qo;
     // loop through terms in sq_operator
-
     for (const auto& term : terms_) {
         // "term" has form c*(2^, 1^, 4, 2)
         if((term.second.size() % 2) != 0){
@@ -123,10 +120,9 @@ QuantumOperator SQOperator::jw_transform() {
         QuantumOperator temp1;
         for (int ai=0; ai<2*nbody; ai++){
             QuantumOperator temp2;
-
-            // form X and Y circuits
             QuantumCircuit Xcirc;
             QuantumCircuit Ycirc;
+
             if(term.second[ai]>0) {
                 for(int k=0; k<term.second[ai]; k++){
                     Xcirc.add_gate(make_gate("Z", k, k));
@@ -135,14 +131,12 @@ QuantumOperator SQOperator::jw_transform() {
             }
             Xcirc.add_gate(make_gate("X", term.second[ai], term.second[ai]));
             Ycirc.add_gate(make_gate("Y", term.second[ai], term.second[ai]));
-
             temp2.add_term(0.5, Xcirc);
             if(ai < nbody){
                 temp2.add_term(-halfi, Ycirc);
             } else {
                 temp2.add_term(halfi, Ycirc);
             }
-
             if(ai==0){
                 temp1.add_op(temp2);
             } else {
@@ -152,8 +146,7 @@ QuantumOperator SQOperator::jw_transform() {
         temp1.mult_coeffs(term.first);
         qo.add_op(temp1);
     }
-
-    qo.map_simplify();
+    qo.simplify();
     return qo;
 }
 
