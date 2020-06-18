@@ -4,6 +4,7 @@
 #include "quantum_operator.h"
 
 #include <stdexcept>
+#include <algorithm>
 
 namespace std {
 

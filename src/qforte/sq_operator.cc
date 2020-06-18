@@ -7,6 +7,7 @@
 #include "sq_operator.h"
 
 #include <stdexcept>
+#include <algorithm>
 
 void SQOperator::add_term(std::complex<double> circ_coeff, const std::vector<size_t>& ac_ops) {
     terms_.push_back(std::make_pair(circ_coeff, ac_ops));
