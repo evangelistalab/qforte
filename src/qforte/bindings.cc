@@ -7,6 +7,7 @@
 #include "quantum_gate.h"
 #include "quantum_computer.h"
 #include "quantum_operator.h"
+#include "sq_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -19,8 +20,20 @@ PYBIND11_MODULE(qforte, m) {
         .def("gates", &QuantumCircuit::gates)
         .def("size", &QuantumCircuit::size)
         .def("adjoint", &QuantumCircuit::adjoint)
+        .def("canonical_order", &QuantumCircuit::canonical_order)
         .def("set_parameters", &QuantumCircuit::set_parameters)
         .def("str", &QuantumCircuit::str);
+
+    py::class_<SQOperator>(m, "SQOperator")
+        .def(py::init<>())
+        .def("add_term", &SQOperator::add_term)
+        .def("add_op", &SQOperator::add_op)
+        .def("set_coeffs", &SQOperator::set_coeffs)
+        .def("terms", &SQOperator::terms)
+        .def("canonical_order", &SQOperator::canonical_order)
+        .def("simplify", &SQOperator::simplify)
+        .def("jw_transform", &SQOperator::jw_transform)
+        .def("str", &SQOperator::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
         .def(py::init<>())
@@ -28,6 +41,11 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_op", &QuantumOperator::add_op)
         .def("set_coeffs", &QuantumOperator::set_coeffs)
         .def("terms", &QuantumOperator::terms)
+        .def("order_terms", &QuantumOperator::order_terms)
+        .def("canonical_order", &QuantumOperator::canonical_order)
+        .def("simplify", &QuantumOperator::simplify)
+        .def("join_operator", &QuantumOperator::join_operator)
+        .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
         .def("str", &QuantumOperator::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")

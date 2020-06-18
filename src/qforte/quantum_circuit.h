@@ -2,6 +2,10 @@
 #define _quantum_circuit_h_
 
 #include <vector>
+#include <map>
+#include <complex>
+
+#include <iostream>
 
 class QuantumGate;
 
@@ -28,15 +32,22 @@ class QuantumCircuit {
     /// reset the circuit with a new set of parameters
     void set_parameters(const std::vector<double>& params);
 
+    /// reorders the circuit by increading qubit and retruns the resluting factor
+    /// after contracting all pauli gates
+    /// (either +/-1.0 or +/-1.0j)
+    std::complex<double> canonical_order();
+
     /// return a vector of string representing this circuit
     std::string str() const;
 
   private:
     /// the list of gates
     std::vector<QuantumGate> gates_;
-
-    /// reversed list of gates
-    std::vector<QuantumGate> rev_copy_;
 };
+
+// A eqivalence comparitor for QuantumCircuit class
+bool operator==(const QuantumCircuit& qc1, const QuantumCircuit& qc2);
+
+
 
 #endif // _quantum_circuit_h_

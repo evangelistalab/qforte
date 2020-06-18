@@ -4,6 +4,8 @@
 #include <complex>
 #include <string>
 #include <vector>
+#include <map>
+#include <unordered_map>
 
 class QuantumOperator {
   public:
@@ -26,8 +28,28 @@ class QuantumOperator {
     /// sets the operator coefficeints
     void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
 
+    /// multiplies the operator coefficeints by multiplier
+    void mult_coeffs(const std::complex<double>& multiplier);
+
     /// return a vector of terms and thier coeficients
     const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& terms() const;
+
+    /// order the terms by increasing coefficient value
+    void order_terms();
+
+    /// order the gates by increasing quibits in each QuantumCircuit in terms_
+    /// and contract all pauli operators
+    void canonical_order();
+
+    /// simplify the operator using std::unsorted_map (i.e. combine like terms)
+    void simplify();
+
+    /// join a new operator to this operator via multiplicaiton
+    void join_operator(QuantumOperator& rqo, bool pre_simplified );
+
+    /// check if this operaotr is equivalent to another operator qo
+    /// mostly used for testing
+    bool check_op_equivalence(QuantumOperator qo, bool reorder);
 
     /// return a vector of string representing this quantum operator
     std::string str() const;
