@@ -28,6 +28,12 @@ void SQOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs)
     }
 }
 
+void SQOperator::mult_coeffs(const std::complex<double>& multiplier) {
+    for (size_t l = 0; l < terms_.size(); l++){
+        terms_[l].first *= multiplier;
+    }
+}
+
 const std::vector<std::pair<std::complex<double>, std::vector<size_t>>>& SQOperator::terms() const {
     return terms_;
 }
@@ -84,7 +90,9 @@ void SQOperator::simplify() {
     }
     terms_.clear();
     for (const auto &uniqe_trm : uniqe_trms){
-        terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
+        if (std::abs(uniqe_trm.second) > 0.0){
+            terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
+        }
     }
 }
 
@@ -148,6 +156,7 @@ QuantumOperator SQOperator::jw_transform() {
         qo.add_op(temp1);
     }
     qo.simplify();
+    // Consider also standard ordering these?
     return qo;
 }
 

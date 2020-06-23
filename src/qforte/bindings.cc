@@ -8,6 +8,7 @@
 #include "quantum_computer.h"
 #include "quantum_operator.h"
 #include "sq_operator.h"
+#include "sq_op_pool.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -34,6 +35,17 @@ PYBIND11_MODULE(qforte, m) {
         .def("simplify", &SQOperator::simplify)
         .def("jw_transform", &SQOperator::jw_transform)
         .def("str", &SQOperator::str);
+
+    py::class_<SQOpPool>(m, "SQOpPool")
+        .def(py::init<>())
+        .def("add_term", &SQOpPool::add_term)
+        .def("set_coeffs", &SQOpPool::set_coeffs)
+        .def("terms", &SQOpPool::terms)
+        .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
+        .def("get_quantum_operators", &SQOpPool::get_quantum_operators)
+        .def("get_quantum_operator", &SQOpPool::get_quantum_operator)
+        .def("fill_pool", &SQOpPool::fill_pool)
+        .def("str", &SQOpPool::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
         .def(py::init<>())
