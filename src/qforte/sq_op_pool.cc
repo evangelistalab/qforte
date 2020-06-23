@@ -3,6 +3,7 @@
 #include "quantum_circuit.h"
 #include "quantum_operator.h"
 #include "sq_operator.h"
+#include "quantum_op_pool.h"
 #include "sq_op_pool.h"
 
 #include <stdexcept>
@@ -53,6 +54,16 @@ std::vector<QuantumOperator> SQOpPool::get_quantum_operators(){
         QuantumOperator a = term.second.jw_transform();
         a.mult_coeffs(term.first);
         A.push_back(a);
+    }
+    return A;
+}
+
+QuantumOpPool SQOpPool::get_quantum_op_pool(){
+    QuantumOpPool A;
+    for (auto& term : terms_) {
+        // QuantumOperator a = term.second.jw_transform();
+        // a.mult_coeffs(term.first);
+        A.add_term(term.first, term.second.jw_transform());
     }
     return A;
 }

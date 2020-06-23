@@ -6,8 +6,8 @@
 #include <vector>
 
 class SQOperator;
-
 class QuantumOperator;
+class QuantumOpPool;
 
 class SQOpPool {
   public:
@@ -29,7 +29,10 @@ class SQOpPool {
     /// returns the JW transformed vector of operators
     std::vector<QuantumOperator> get_quantum_operators();
 
-    /// return a singe QuantumOperator of tge JW transformed ops
+    /// returns a QuantumOpPool object with one term for each term in terms_s
+    QuantumOpPool get_quantum_op_pool();
+
+    /// returns a singe QuantumOperator of the JW transformed sq ops
     QuantumOperator get_quantum_operator();
 
     /// builds the sq operator pool

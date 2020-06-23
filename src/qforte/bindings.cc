@@ -9,6 +9,7 @@
 #include "quantum_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
+#include "quantum_op_pool.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -59,6 +60,19 @@ PYBIND11_MODULE(qforte, m) {
         .def("join_operator", &QuantumOperator::join_operator)
         .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
         .def("str", &QuantumOperator::str);
+
+    py::class_<QuantumOpPool>(m, "QuantumOpPool")
+        .def(py::init<>())
+        .def("add_term", &QuantumOpPool::add_term)
+        .def("set_coeffs", &QuantumOpPool::set_coeffs)
+        .def("set_terms", &QuantumOpPool::set_terms)
+        .def("terms", &QuantumOpPool::terms)
+        .def("set_orb_spaces", &QuantumOpPool::set_orb_spaces)
+        .def("join_op_from_right", &QuantumOpPool::join_op_from_right)
+        .def("join_op_from_left", &QuantumOpPool::join_op_from_left)
+        .def("join_as_comutator", &QuantumOpPool::join_as_comutator)
+        .def("fill_pool", &QuantumOpPool::fill_pool)
+        .def("str", &QuantumOpPool::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")

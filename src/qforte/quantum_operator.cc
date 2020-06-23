@@ -96,10 +96,10 @@ void QuantumOperator::simplify() {
     }
 }
 
-void QuantumOperator::join_operator(QuantumOperator& rqo, bool simplify_lop_rop ) {
-    if(simplify_lop_rop){
+void QuantumOperator::join_operator(const QuantumOperator& rqo, bool simplify_lop ) {
+    if(simplify_lop){
         simplify();
-        rqo.simplify();
+        // rqo.simplify();
     }
 
     QuantumOperator LR;

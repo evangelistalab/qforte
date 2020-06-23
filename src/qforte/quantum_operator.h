@@ -45,7 +45,7 @@ class QuantumOperator {
     void simplify();
 
     /// join a new operator to this operator via multiplicaiton
-    void join_operator(QuantumOperator& rqo, bool pre_simplified );
+    void join_operator(const QuantumOperator& rqo, bool simplify_lop);
 
     /// check if this operaotr is equivalent to another operator qo
     /// mostly used for testing
