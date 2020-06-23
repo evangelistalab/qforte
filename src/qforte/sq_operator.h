@@ -29,6 +29,9 @@ class SQOperator {
     /// sets the operator coefficeints
     void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
 
+    /// multiplies the sq operator coefficeints by multiplier
+    void mult_coeffs(const std::complex<double>& multiplier);
+
     /// return a vector of terms and thier coeficients
     const std::vector<std::pair< std::complex<double>, std::vector<size_t>>>& terms() const;
 

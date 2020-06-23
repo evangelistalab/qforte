@@ -23,7 +23,8 @@ pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
     "${SOURCE_DIR}/quantum_computer.cc"
     "${SOURCE_DIR}/quantum_gate.cc"
     "${SOURCE_DIR}/quantum_operator.cc"
-    "${SOURCE_DIR}/sq_operator.cc")
+    "${SOURCE_DIR}/sq_operator.cc"
+    "${SOURCE_DIR}/sq_op_pool.cc")
 
 target_link_libraries(qforte PRIVATE fmt-header-only)
 
