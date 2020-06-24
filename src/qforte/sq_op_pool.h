@@ -29,7 +29,7 @@ class SQOpPool {
     /// returns the JW transformed vector of operators
     std::vector<QuantumOperator> get_quantum_operators();
 
-    /// returns a QuantumOpPool object with one term for each term in terms_s
+    /// returns a QuantumOpPool object with one term for each term in terms_
     QuantumOpPool get_quantum_op_pool();
 
     /// returns a singe QuantumOperator of the JW transformed sq ops

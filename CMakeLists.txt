@@ -51,6 +51,7 @@ add_executable("${PROJECT_NAME}_benchmarks"
     "${SOURCE_DIR}/quantum_circuit.cc"
     "${SOURCE_DIR}/quantum_computer.cc"
     "${SOURCE_DIR}/quantum_gate.cc"
-    "${SOURCE_DIR}/quantum_operator.cc")
+    "${SOURCE_DIR}/quantum_operator.cc"
+    "${SOURCE_DIR}/quantum_op_pool.cc")
 
 target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only)

@@ -29,9 +29,13 @@ void QuantumOpPool::set_terms(std::vector<std::pair<std::complex<double>, Quantu
     }
 }
 
-const std::vector<std::pair< std::complex<double>, QuantumOperator>>& QuantumOpPool::terms() const{
+const std::vector<std::pair<std::complex<double>, QuantumOperator>>& QuantumOpPool::terms() const{
     return terms_;
 }
+
+// const std::vector< QuantumOperator>& QuantumOpPool::terms() const{
+//     return terms_;
+// }
 
 void QuantumOpPool::set_orb_spaces(const std::vector<int>& ref){
     int norb = ref.size();

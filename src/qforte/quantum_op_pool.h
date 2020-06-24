@@ -24,7 +24,10 @@ class QuantumOpPool {
     void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
 
     /// return a vector of terms and thier coeficients
-    const std::vector<std::pair< std::complex<double>, QuantumOperator>>& terms() const;
+    const std::vector<std::pair<std::complex<double>, QuantumOperator>>& terms() const;
+
+    /// return a vector of QuantumOperators multiplied by thier coeficients
+    const std::vector<std::pair< std::complex<double>, QuantumOperator>>& operator_terms() const;
 
     /// set the orbtial occupations from a reference
     void set_orb_spaces(const std::vector<int>& ref);

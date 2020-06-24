@@ -6,7 +6,8 @@ for the Adaptive Derivative-Assembled Pseudo-Trotter (ADAPT) anxatz.
 """
 
 import qforte
-from qforte.abc.uccvqeabc import UCCVQE
+# from qforte.abc.uccvqeabc import UCCVQE
+from qforte.abc.uccvqeabc2 import UCCVQE2
 
 from qforte.experiment import *
 from qforte.utils.transforms import *
@@ -17,7 +18,8 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 from scipy.optimize import minimize
 
-class ADAPTVQE(UCCVQE):
+# class ADAPTVQE(UCCVQE):
+class ADAPTVQE2(UCCVQE2):
     """
     A class that encompases the three componants of using the variational
     quantum eigensolver to optemize a parameterized unitary CC like wave function
@@ -214,7 +216,10 @@ class ADAPTVQE(UCCVQE):
         self.fill_pool()
 
         if self._verbose:
-            self._pool_obj.print_pool()
+            print('\n\n-------------------------------------')
+            print('   Second Quantized Operator Pool')
+            print('-------------------------------------')
+            print(self._pool_obj.str())
 
         if self._op_select_type == 'minimize' and self._use_analytic_grad==False:
             pass
@@ -368,13 +373,28 @@ class ADAPTVQE(UCCVQE):
             if self._verbose:
                 print('     op index (m)     N pauli terms          Gradient ')
                 print('  -------------------------------------------------------')
-            for m, HAm in enumerate(self._comutator_pool):
-                """Here HAm is in QuantumOperator form"""
-                grad_m = self.measure_gradient(HAm, Uvqc)
+
+            #old#<
+            # for m, HAm in enumerate(self._comutator_pool):
+            #     """Here HAm is in QuantumOperator form"""
+            #     grad_m = self.measure_gradient(HAm, Uvqc)
+            #     curr_norm += grad_m*grad_m
+            #     if self._verbose:
+            #         print('       ', m,  '             ', len(HAm.terms()),'                  ', '{:+.09f}'.format(grad_m))
+            #     if abs(grad_m) > abs(lgrst_grad):
+            #         lgrst_grad = grad_m
+            #         lgrst_grad_idx = m
+            #old#>
+
+            #new#<
+            # print(self._comutator_pool.terms()[1][0])
+
+            grads = self.measure_gradient(self._comutator_pool, Uvqc)
+            for m, grad_m in enumerate(grads):
                 curr_norm += grad_m*grad_m
-                if self._verbose:
-                    print('       ', m,  '             ', len(HAm.terms()),'                  ', '{:+.09f}'.format(grad_m))
-                if abs(grad_m) > abs(lgrst_grad):
+                if (self._verbose):
+                    print('       ', m,  '             ', len(self._comutator_pool.terms()[m][1].terms()),'                  ', '{:+.09f}'.format(grad_m))
+                if (abs(grad_m) > abs(lgrst_grad)):
                     lgrst_grad = grad_m
                     lgrst_grad_idx = m
 

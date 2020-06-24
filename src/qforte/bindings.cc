@@ -44,6 +44,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_quantum_operators", &SQOpPool::get_quantum_operators)
+        .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
         .def("get_quantum_operator", &SQOpPool::get_quantum_operator)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str);
@@ -91,6 +92,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("measure_z_readouts_fast", &QuantumComputer::measure_z_readouts_fast)
         .def("measure_readouts", &QuantumComputer::measure_readouts)
         .def("perfect_measure_circuit", &QuantumComputer::perfect_measure_circuit)
+        .def("direct_oppl_exp_val", &QuantumComputer::direct_oppl_exp_val)
+        .def("direct_idxd_oppl_exp_val", &QuantumComputer::direct_idxd_oppl_exp_val)
         .def("direct_op_exp_val", &QuantumComputer::direct_op_exp_val)
         .def("direct_circ_exp_val", &QuantumComputer::direct_circ_exp_val)
         .def("direct_gate_exp_val", &QuantumComputer::direct_gate_exp_val)
