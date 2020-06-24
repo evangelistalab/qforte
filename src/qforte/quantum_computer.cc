@@ -9,6 +9,7 @@
 #include "quantum_circuit.h"
 #include "quantum_gate.h"
 #include "quantum_operator.h"
+#include "quantum_op_pool.h"
 
 #include "quantum_computer.h"
 
@@ -725,6 +726,36 @@ std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& q
 
     coeff_ = old_coeff;
     return result;
+}
+
+std::vector<std::complex<double>> QuantumComputer::direct_oppl_exp_val(const QuantumOpPool& qopl) {
+    // deep copy coeficients
+    std::vector<std::complex<double>> old_coeff = coeff_;
+    std::vector<std::complex<double>> results;
+    for (const auto& pl_term : qopl.terms()){
+        apply_operator(pl_term.second);
+        std::complex<double> val = std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
+                                      std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
+
+        results.push_back(val*pl_term.first);
+        coeff_ = old_coeff;
+    }
+    return results;
+}
+
+std::vector<std::complex<double>> QuantumComputer::direct_idxd_oppl_exp_val(const QuantumOpPool& qopl, const std::vector<int>& idxs) {
+    // deep copy coeficients
+    std::vector<std::complex<double>> old_coeff = coeff_;
+    std::vector<std::complex<double>> results;
+    for (const auto& idx : idxs){
+        apply_operator(qopl.terms()[idx].second);
+        std::complex<double> val = std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
+                                      std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
+
+        results.push_back(val*qopl.terms()[idx].first);
+        coeff_ = old_coeff;
+    }
+    return results;
 }
 
 /// The below implemention of direct_op_exp_val may be faster for parallel computations.

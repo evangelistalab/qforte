@@ -5,6 +5,8 @@
 #include "quantum_basis.h"
 #include "quantum_circuit.h"
 #include "quantum_computer.h"
+#include "quantum_op_pool.h"
+#include "quantum_operator.h"
 #include "quantum_gate.h"
 
 QuantumBasis qb;

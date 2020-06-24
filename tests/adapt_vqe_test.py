@@ -405,7 +405,7 @@ class ADAPTVQETests(unittest.TestCase):
         self.assertLess(abs(Egs-E_fci), 1.0e-5)
 
         #check for internal changes
-        self.assertLess(abs(Egs - (-5.220356224960163+NRE)), 1.0e-12)
+        self.assertLess(abs(Egs - (-5.220356224960163+NRE)), 1.0e-8)
 
 
 if __name__ == '__main__':

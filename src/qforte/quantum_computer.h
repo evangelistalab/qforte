@@ -16,6 +16,7 @@ class QuantumGate;
 class QuantumBasis;
 class QuantumCircuit;
 class QuantumOperator;
+class QuantumOpPool;
 
 class QuantumComputer {
   public:
@@ -55,6 +56,12 @@ class QuantumComputer {
 
     /// perfectly measure the state of the quanum computer in basis of circuit
     double perfect_measure_circuit(const QuantumCircuit& qc);
+
+    /// measure expectaion value of all operators in an operator pool
+    std::vector<std::complex<double>> direct_oppl_exp_val(const QuantumOpPool& qopl);
+
+    /// measure expectaion value for specific operators in an operator pool
+    std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QuantumOpPool& qopl, const std::vector<int>& idxs);
 
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)

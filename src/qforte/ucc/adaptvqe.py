@@ -5,9 +5,9 @@ A class for using an experiment to execute the variational quantum eigensolver
 for the Adaptive Derivative-Assembled Pseudo-Trotter (ADAPT) anxatz.
 """
 
-import qforte
-from qforte.abc.uccvqeabc import UCCVQE
+import qforte as qf
 
+from qforte.abc.uccvqeabc import UCCVQE
 from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.utils.op_pools import *
@@ -17,6 +17,7 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 from scipy.optimize import minimize
 
+# class ADAPTVQE(UCCVQE):
 class ADAPTVQE(UCCVQE):
     """
     A class that encompases the three componants of using the variational
@@ -214,7 +215,10 @@ class ADAPTVQE(UCCVQE):
         self.fill_pool()
 
         if self._verbose:
-            self._pool_obj.print_pool()
+            print('\n\n-------------------------------------')
+            print('   Second Quantized Operator Pool')
+            print('-------------------------------------')
+            print(self._pool_obj.str())
 
         if self._op_select_type == 'minimize' and self._use_analytic_grad==False:
             pass
@@ -305,7 +309,7 @@ class ADAPTVQE(UCCVQE):
 
         print('\n\n                ==> ADAPT-VQE summary <==')
         print('-----------------------------------------------------------')
-        print('Final ADAPT-VQE Energy:                     ', round(self._Egs, 1000))
+        print('Final ADAPT-VQE Energy:                     ', round(self._Egs, 10))
         print('Number of operators in pool:                 ', len(self._pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
@@ -368,13 +372,13 @@ class ADAPTVQE(UCCVQE):
             if self._verbose:
                 print('     op index (m)     N pauli terms          Gradient ')
                 print('  -------------------------------------------------------')
-            for m, HAm in enumerate(self._comutator_pool):
-                """Here HAm is in QuantumOperator form"""
-                grad_m = self.measure_gradient(HAm, Uvqc)
+
+            grads = self.measure_gradient(self._comutator_pool, Uvqc)
+            for m, grad_m in enumerate(grads):
                 curr_norm += grad_m*grad_m
-                if self._verbose:
-                    print('       ', m,  '             ', len(HAm.terms()),'                  ', '{:+.09f}'.format(grad_m))
-                if abs(grad_m) > abs(lgrst_grad):
+                if (self._verbose):
+                    print('       ', m,  '             ', len(self._comutator_pool.terms()[m][1].terms()),'                  ', '{:+.09f}'.format(grad_m))
+                if (abs(grad_m) > abs(lgrst_grad)):
                     lgrst_grad = grad_m
                     lgrst_grad_idx = m
 
@@ -409,14 +413,15 @@ class ADAPTVQE(UCCVQE):
             if self._use_analytic_grad:
                 print('  \n--> Begin selection opt with analytic graditent:')
                 print('  Initial guess energy: ', round(init_gues_energy,10))
-                if self._verbose:
-                    print('\n')
-                    print('     op index (m)          Energy decrease')
-                    print('  -------------------------------------------')
 
             else:
                 print('  \n--> Begin selection opt with grad estimated using first-differences:')
                 print('  Initial guess energy: ', round(init_gues_energy,10))
+
+            if self._verbose:
+                print('\n')
+                print('     op index (m)          Energy decrease')
+                print('  -----------------------------------------------')
 
             for m in range(len(self._pool)):
                 self._trial_op = m
@@ -425,7 +430,7 @@ class ADAPTVQE(UCCVQE):
                                     method=self._optimizer,
                                     jac=self.gradient_ary_feval2,
                                     options=opts)
-                                    
+
                     if self._verbose:
                         print('       ', m, '                     ', '{:+.09f}'.format(res.fun-init_gues_energy))
 
@@ -475,19 +480,16 @@ class ADAPTVQE(UCCVQE):
         new_tops.append(self._trial_op)
         new_tamps.append(param)
 
-        for j, pool_idx in enumerate(new_tops):
-            appended_term = copy.deepcopy(self._pool[pool_idx])
-            for l in range(len(appended_term)):
-                appended_term[l][1] *= new_tamps[j]
-                sq_ops.append(appended_term[l])
+        temp_pool = qf.SQOpPool()
+        for tamp, top in zip(new_tamps, new_tops):
+            temp_pool.add_term(tamp, self._pool[top][1])
 
-        Uorg = get_ucc_jw_organizer(sq_ops, already_anti_herm=True)
-        A = organizer_to_circuit(Uorg)
+        A = temp_pool.get_quantum_operator()
+        A.order_terms() # order could be explored
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
-        Uvqc = qforte.QuantumCircuit()
+        Uvqc = qf.QuantumCircuit()
         Uvqc.add_circuit(self._Uprep)
-
         Uvqc.add_circuit(U)
         if phase1 != 1.0 + 0.0j:
             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
@@ -500,9 +502,10 @@ class ADAPTVQE(UCCVQE):
 
     def gradient_ary_feval2(self, params):
         Uvqc = self.build_Uvqc2(params[0])
-        grad_lst = []
-        grad_lst.append(self.measure_gradient(self._comutator_pool[self._trial_op], Uvqc))
-        return np.asarray(grad_lst)
+        # grad_lst = []
+        # grad_lst.append(self.measure_gradient(self._comutator_pool[self._trial_op], Uvqc))
+        grads = self.measure_gradient(self._comutator_pool, Uvqc, [self._trial_op])
+        return grads
 
     def conv_status(self):
         if abs(self._curr_grad_norm) < abs(self._avqe_thresh):

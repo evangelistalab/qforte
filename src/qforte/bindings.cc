@@ -9,6 +9,7 @@
 #include "quantum_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
+#include "quantum_op_pool.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -43,6 +44,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_quantum_operators", &SQOpPool::get_quantum_operators)
+        .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
         .def("get_quantum_operator", &SQOpPool::get_quantum_operator)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str);
@@ -59,6 +61,19 @@ PYBIND11_MODULE(qforte, m) {
         .def("join_operator", &QuantumOperator::join_operator)
         .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
         .def("str", &QuantumOperator::str);
+
+    py::class_<QuantumOpPool>(m, "QuantumOpPool")
+        .def(py::init<>())
+        .def("add_term", &QuantumOpPool::add_term)
+        .def("set_coeffs", &QuantumOpPool::set_coeffs)
+        .def("set_terms", &QuantumOpPool::set_terms)
+        .def("terms", &QuantumOpPool::terms)
+        .def("set_orb_spaces", &QuantumOpPool::set_orb_spaces)
+        .def("join_op_from_right", &QuantumOpPool::join_op_from_right)
+        .def("join_op_from_left", &QuantumOpPool::join_op_from_left)
+        .def("join_as_comutator", &QuantumOpPool::join_as_comutator)
+        .def("fill_pool", &QuantumOpPool::fill_pool)
+        .def("str", &QuantumOpPool::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
@@ -77,6 +92,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("measure_z_readouts_fast", &QuantumComputer::measure_z_readouts_fast)
         .def("measure_readouts", &QuantumComputer::measure_readouts)
         .def("perfect_measure_circuit", &QuantumComputer::perfect_measure_circuit)
+        .def("direct_oppl_exp_val", &QuantumComputer::direct_oppl_exp_val)
+        .def("direct_idxd_oppl_exp_val", &QuantumComputer::direct_idxd_oppl_exp_val)
         .def("direct_op_exp_val", &QuantumComputer::direct_op_exp_val)
         .def("direct_circ_exp_val", &QuantumComputer::direct_circ_exp_val)
         .def("direct_gate_exp_val", &QuantumComputer::direct_gate_exp_val)
