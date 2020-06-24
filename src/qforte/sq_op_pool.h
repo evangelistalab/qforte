@@ -33,7 +33,7 @@ class SQOpPool {
     QuantumOpPool get_quantum_op_pool();
 
     /// returns a singe QuantumOperator of the JW transformed sq ops
-    QuantumOperator get_quantum_operator();
+    QuantumOperator get_quantum_operator(const std::string& order_type);
 
     /// builds the sq operator pool
     void fill_pool(std::string pool_type);
