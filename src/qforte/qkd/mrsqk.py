@@ -39,7 +39,8 @@ class MRSQK(QSD):
             dt_o=0.25,
             trotter_order_o=1,
             trotter_number_o=1,
-            aci_sigma=0.1
+            aci_sigma=0.1,
+            diagonalize_each_step=True
             ):
 
         self._d = d
@@ -57,6 +58,8 @@ class MRSQK(QSD):
         self._trotter_order_o = trotter_order_o
         self._trotter_number_o = trotter_number_o
         self._aci_sigma = aci_sigma
+
+        self._diagonalize_each_step=diagonalize_each_step
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -267,12 +270,28 @@ class MRSQK(QSD):
                 QC.apply_operator(self._qb_ham)
                 Homega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
+        if(self._diagonalize_each_step):
+            print('\n\n')
+            print('     basis index (m)       E target root          k(S) ')
+            print('  -------------------------------------------------------')
+
         for p in range(num_tot_basis):
             for q in range(p, num_tot_basis):
                 h_mat[p][q] = np.vdot(omega_lst[p], Homega_lst[q])
                 h_mat[q][p] = np.conj(h_mat[p][q])
                 s_mat[p][q] = np.vdot(omega_lst[p], omega_lst[q])
                 s_mat[q][p] = np.conj(s_mat[p][q])
+
+            if (self._diagonalize_each_step):
+                # TODO (cleanup): have this print to a separate file
+                evals, evecs = canonical_geig_solve(s_mat[0:p+1, 0:p+1],
+                                   h_mat[0:p+1, 0:p+1],
+                                   print_mats=False,
+                                   sort_ret_vals=True)
+
+                scond = np.linalg.cond(s_mat[0:p+1, 0:p+1])
+                cs_str = '{:.2e}'.format(scond)
+                print('         ', p,  '              ', '{:+.09f}'.format(np.real(evals[self._target_root])),'       ', cs_str)
 
         return s_mat, h_mat
 
@@ -397,6 +416,11 @@ class MRSQK(QSD):
                 QC.apply_operator(self._qb_ham)
                 Homega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
+        if(self._diagonalize_each_step):
+            print('\n\n')
+            print('     basis index (m)       E target root          k(S) ')
+            print('  -------------------------------------------------------')
+
         # TODO (opt): add this to previous loop
         for p in range(num_tot_basis):
             for q in range(p, num_tot_basis):
@@ -404,6 +428,17 @@ class MRSQK(QSD):
                 h_mat[q][p] = np.conj(h_mat[p][q])
                 s_mat[p][q] = np.vdot(omega_lst[p], omega_lst[q])
                 s_mat[q][p] = np.conj(s_mat[p][q])
+
+            if (self._diagonalize_each_step):
+                # TODO (cleanup): have this print to a separate file
+                evals, evecs = canonical_geig_solve(s_mat[0:p+1, 0:p+1],
+                                   h_mat[0:p+1, 0:p+1],
+                                   print_mats=False,
+                                   sort_ret_vals=True)
+
+                scond = np.linalg.cond(s_mat[0:p+1, 0:p+1])
+                cs_str = '{:.2e}'.format(scond)
+                print('         ', p,  '              ', '{:+.09f}'.format(np.real(evals[self._target_root])),'       ', cs_str)
 
         return s_mat, h_mat
 
@@ -560,7 +595,6 @@ class MRSQK(QSD):
                 idx_lst.append( sorted_idxs[n][1] )
                 true_idx_lst.append( true_sorted_idxs[n][1] )
 
-        # TODO (add feature): make functional for state averaging.
         else:
             raise NotImplementedError("psudo state-avaraged selection approach not yet functional")
 
@@ -664,11 +698,6 @@ class MRSQK(QSD):
         if(self._fast==False):
             raise NotImplementedError('Only fast algorithm avalible to build spin adapted refs.')
 
-
-#         ref_lst = get_init_ref_lst(initial_ref, 2*d, ninitial_states, inital_dt,
-#                                             H, target_root=target_root, fast=True,
-#                                             use_phase_based_selection=use_phase_based_selection)
-
         target_root = self._target_root
         self._pre_sa_ref_lst = []
         num_refs_per_config = []
@@ -683,14 +712,8 @@ class MRSQK(QSD):
                     self._pre_sa_ref_lst.append(ref)
                     num_refs_per_config.append(1)
 
-
-#         nqubits = len(pre_sa_ref_lst[0])
-#         dt_lst = np.zeros(len(pre_sa_ref_lst))
-
-        # TODO (opt): replace below function with dedicated classical CI solver, much faster.
         h_mat = self.build_classical_CI_mats()
 
-        # I AM HERE!
         evals, evecs = eig(h_mat)
 
         sorted_evals_idxs = sorted_largest_idxs(evals, use_real=True, rev=False)

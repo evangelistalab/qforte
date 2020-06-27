@@ -39,3 +39,6 @@ class QSD(Algorithm):
 
         if self._Scond is None:
             raise NotImplementedError('Concrete QK Algorithm class must define self._Scond attribute.')
+
+        if self._diagonalize_each_step is None:
+            raise NotImplementedError('Concrete QK Algorithm class must define self._diagonalize_each_step attribute.')

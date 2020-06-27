@@ -9,10 +9,10 @@ quantum Krylov algorithm.
 import qforte
 from qforte.abc.qsdabc import QSD
 from qforte.helper.printing import matprint
-from qforte.utils.transforms import (circuit_to_organizer,
-                                    organizer_to_circuit,
-                                    join_organizers,
-                                    get_jw_organizer)
+# from qforte.utils.transforms import (circuit_to_organizer,
+#                                     organizer_to_circuit,
+#                                     join_organizers,
+#                                     get_jw_organizer)
 
 from qforte.maths.eigsolve import canonical_geig_solve
 
@@ -28,12 +28,14 @@ class SRQK(QSD):
             s=3,
             dt=0.5,
             target_root=0,
+            diagonalize_each_step=True
             ):
 
         self._s = s
         self._nstates = s+1
         self._dt = dt
         self._target_root = target_root
+        self._diagonalize_each_step = diagonalize_each_step
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -175,6 +177,11 @@ class SRQK(QSD):
         omega_lst = []
         Homega_lst = []
 
+        if(self._diagonalize_each_step):
+            print('\n\n')
+            print('     basis index (m)       E target root          k(S) ')
+            print('  -------------------------------------------------------')
+
         for m in range(self._nstates):
             Um = qforte.QuantumCircuit()
             Um.add_circuit(self._Uprep)
@@ -198,6 +205,17 @@ class SRQK(QSD):
                 h_mat[n][m] = np.conj(h_mat[m][n])
                 s_mat[m][n] = np.vdot(omega_lst[m], omega_lst[n])
                 s_mat[n][m] = np.conj(s_mat[m][n])
+
+            if (self._diagonalize_each_step):
+                # TODO (cleanup): have this print to a separate file
+                evals, evecs = canonical_geig_solve(s_mat[0:m+1, 0:m+1],
+                                   h_mat[0:m+1, 0:m+1],
+                                   print_mats=False,
+                                   sort_ret_vals=True)
+
+                scond = np.linalg.cond(s_mat[0:m+1, 0:m+1])
+                cs_str = '{:.2e}'.format(scond)
+                print('         ', m,  '              ', '{:+.09f}'.format(np.real(evals[self._target_root])),'       ', cs_str)
 
         return s_mat, h_mat
 

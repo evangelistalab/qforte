@@ -17,7 +17,6 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 from scipy.optimize import minimize
 
-# class ADAPTVQE(UCCVQE):
 class ADAPTVQE(UCCVQE):
     """
     A class that encompases the three componants of using the variational
@@ -301,6 +300,7 @@ class ADAPTVQE(UCCVQE):
         print('Operator pool type:                      ',  str(self._pool_type))
 
         # Specific ADAPT-VQE options.
+        print('ADAPT-VQE operator selection type:       ',  self._op_select_type)
         print('ADAPT-VQE grad-norm threshold (eps):     ',  avqe_thrsh_str)
         print('ADAPT-VQE maxiter:                       ',  self._adapt_maxiter)
 
@@ -484,8 +484,9 @@ class ADAPTVQE(UCCVQE):
         for tamp, top in zip(new_tamps, new_tops):
             temp_pool.add_term(tamp, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator()
-        A.order_terms() # order could be explored
+        A = temp_pool.get_quantum_operator('comuting_grp_lex')
+        # A = temp_pool.get_quantum_operator()
+        # A.order_terms() # order could be explored
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
         Uvqc = qf.QuantumCircuit()
