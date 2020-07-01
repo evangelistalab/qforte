@@ -115,6 +115,20 @@ void QuantumOperator::join_operator(const QuantumOperator& rqo, bool simplify_lo
     simplify();
 }
 
+void QuantumOperator::join_operator_lazy(const QuantumOperator& rqo) {
+    QuantumOperator LR;
+    for (auto& term_l : terms_) {
+        for (auto& term_r : rqo.terms()){
+            QuantumCircuit temp_circ;
+            temp_circ.add_circuit(term_l.second);
+            temp_circ.add_circuit(term_r.second);
+            LR.add_term(term_l.first * term_r.first, temp_circ);
+        }
+    }
+    terms_ = std::move(LR.terms());
+    canonical_order();
+}
+
 const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& QuantumOperator::terms() const {
     return terms_;
 }
