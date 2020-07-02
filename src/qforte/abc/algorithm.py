@@ -73,6 +73,7 @@ class Algorithm(ABC):
         # Required attributes, to be defined in concrete class.
         self._Egs = None
         self._Umaxdepth = None
+        self._n_CNOT = None
         self._tot_Nmeasurements = None
         self._tot_Npreps = None
 
