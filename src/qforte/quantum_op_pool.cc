@@ -147,7 +147,6 @@ void QuantumOpPool::join_as_comutator(const QuantumOperator& q_op){
 
 void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref){
     if(pool_type == "test"){
-        // [86, 89, 101, 106, 149, 154, 166, 169]
         QuantumOperator A1;
         QuantumOperator A2;
         QuantumOperator A3;

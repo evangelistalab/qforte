@@ -65,6 +65,7 @@ class Algorithm(ABC):
         self._Uprep = build_Uprep(reference, trial_state_type)
         # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonain()
         self._qb_ham = system.get_hamiltonian()
+        self._Nl = len(self._qb_ham.terms())
         self._trotter_order = trotter_order
         self._trotter_number = trotter_number
         self._fast = fast
@@ -73,9 +74,10 @@ class Algorithm(ABC):
         # Required attributes, to be defined in concrete class.
         self._Egs = None
         self._Umaxdepth = None
-        self._n_CNOT = None
-        self._tot_Nmeasurements = None
-        self._tot_Npreps = None
+        self._n_classical_params = None
+        self._n_cnot = None
+        self._n_pauli_trm_measures = None
+
 
     @abstractmethod
     def print_options_banner(self):

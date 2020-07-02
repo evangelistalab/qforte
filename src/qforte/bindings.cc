@@ -24,6 +24,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("adjoint", &QuantumCircuit::adjoint)
         .def("canonical_order", &QuantumCircuit::canonical_order)
         .def("set_parameters", &QuantumCircuit::set_parameters)
+        .def("get_num_cnots", &QuantumCircuit::get_num_cnots)
         .def("str", &QuantumCircuit::str);
 
     py::class_<SQOperator>(m, "SQOperator")
