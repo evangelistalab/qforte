@@ -37,6 +37,10 @@ class SRQK(QSD):
         self._target_root = target_root
         self._diagonalize_each_step = diagonalize_each_step
 
+        self._n_classical_params = 0
+        self._n_cnot = 0
+        self._n_pauli_trm_measures = 0
+
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
@@ -98,6 +102,7 @@ class SRQK(QSD):
         print('-----------------------------------------------------------')
         # General algorithm options.
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
+        print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
         print('Trial state preparation method:          ',  self._trial_state_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
@@ -121,6 +126,9 @@ class SRQK(QSD):
         print('Condition number of overlap mat k(S):      ', cs_str)
         print('Final SRQK ground state Energy:           ', round(self._Egs, 10))
         print('Final SRQK target state Energy:           ', round(self._Ets, 10))
+        print('Number of classical parameters used:       ', self._n_classical_params)
+        print('Number of CNOT gates in deepest circuit:   ', self._n_cnot)
+        print('Number Pauli term measurements:            ', self._n_pauli_trm_measures)
 
     # Define QK abstract methods.
     def build_qk_mats(self):
@@ -179,8 +187,11 @@ class SRQK(QSD):
 
         if(self._diagonalize_each_step):
             print('\n\n')
-            print('     basis index (m)       E target root          k(S) ')
-            print('  -------------------------------------------------------')
+
+            print(f"{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
+            print('-------------------------------------------------------------------------------')
+            # print('     basis index (m)       E target root          k(S) ')
+            # print('  -------------------------------------------------------')
 
         for m in range(self._nstates):
             Um = qforte.QuantumCircuit()
@@ -208,14 +219,33 @@ class SRQK(QSD):
 
             if (self._diagonalize_each_step):
                 # TODO (cleanup): have this print to a separate file
-                evals, evecs = canonical_geig_solve(s_mat[0:m+1, 0:m+1],
-                                   h_mat[0:m+1, 0:m+1],
+                k = m+1
+                evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
+                                   h_mat[0:k, 0:k],
                                    print_mats=False,
                                    sort_ret_vals=True)
 
-                scond = np.linalg.cond(s_mat[0:m+1, 0:m+1])
-                cs_str = '{:.2e}'.format(scond)
-                print('         ', m,  '              ', '{:+.09f}'.format(np.real(evals[self._target_root])),'       ', cs_str)
+                scond = np.linalg.cond(s_mat[0:k, 0:k])
+                self._n_classical_params = k
+                self._n_cnot = 2 * Um.get_num_cnots()
+                self._n_pauli_trm_measures  = k * self._Nl
+                self._n_pauli_trm_measures += k * (k-1) * self._Nl
+                self._n_pauli_trm_measures += k * (k-1)
+
+                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
+
+                # cs_str = '{:.2e}'.format(scond)
+                # print('         ', m,  '              ', '{:+.09f}'.format(np.real(evals[self._target_root])),'       ', cs_str)
+
+        self._n_classical_params = self._nstates
+        self._n_cnot = 2 * Um.get_num_cnots()
+        # diagonal terms of Hbar
+        self._n_pauli_trm_measures  = self._nstates * self._Nl
+        # off-diagonal of Hbar (<X> and <Y> of Hadamard test)
+        self._n_pauli_trm_measures += self._nstates*(self._nstates-1) * self._Nl
+        # off-diagonal of S (<X> and <Y> of Hadamard test)
+        self._n_pauli_trm_measures += self._nstates*(self._nstates-1)
+
 
         return s_mat, h_mat
 

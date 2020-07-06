@@ -33,7 +33,6 @@ class QITE(Algorithm):
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
 
-
         qc_ref = qf.QuantumComputer(self._nqb)
         qc_ref.apply_circuit(self._Uprep)
         self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
@@ -42,9 +41,9 @@ class QITE(Algorithm):
         self.print_options_banner()
 
         # Build expansion pool.
-        self.build_expansion_pool2()
+        self.build_expansion_pool()
         # Do the imaginary time evolution.
-        self.evolve3()
+        self.evolve()
 
         # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
@@ -68,7 +67,7 @@ class QITE(Algorithm):
         print('-----------------------------------------------------------')
         # General algorithm options.
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
-        print('Number of Hamiltoanin Paulit terms:      ',  self._Nl)
+        print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
         print('Trial state preparation method:          ',  self._trial_state_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
@@ -97,7 +96,7 @@ class QITE(Algorithm):
         print('Number of CNOT gates in deepest circuit:  ', self._n_cnot)
         print('Number Pauli term measurements:           ', self._n_pauli_trm_measures)
 
-    def build_expansion_pool2(self):
+    def build_expansion_pool(self):
         print('\n==> Building expansion pool <==')
         self._sig = qf.QuantumOpPool()
 
@@ -131,7 +130,6 @@ class QITE(Algorithm):
         else:
             raise ValueError('Invalid expansion type specified.')
 
-        # self._Nl = len(self._qb_ham.terms())
         self._NI = len(self._sig.terms())
         self._h = np.ones(self._Nl, dtype=complex)
         for l, term in enumerate(self._qb_ham.terms()):
@@ -148,7 +146,7 @@ class QITE(Algorithm):
 
         print('\n      Expansion pool successfully built!\n')
 
-    def build_S2(self):
+    def build_S(self):
         S = np.empty((self._NI,self._NI), dtype=complex)
         Svec = self._qc.direct_oppl_exp_val(self._sig2)
         self._n_pauli_trm_measures += len(Svec)
@@ -161,7 +159,7 @@ class QITE(Algorithm):
 
         return np.real(S)
 
-    def build_sparse_S_b2(self, b):
+    def build_sparse_S_b(self, b):
         b_sparse = []
         idx_sparse = []
         K_idx_sparse = []
@@ -190,7 +188,7 @@ class QITE(Algorithm):
 
         return idx_sparse, np.real(S), np.real(b_sparse)
 
-    def build_b2(self):
+    def build_b(self):
         fo = np.zeros(self._Nl, dtype=complex)
         for l, Hl in enumerate(self._qb_ham.terms()):
             term = np.sqrt(1 - 2*self._db*Hl[0]*self._qc.direct_circ_exp_val(Hl[1]))
@@ -199,16 +197,16 @@ class QITE(Algorithm):
         self._n_pauli_trm_measures += self._Nl * self._NI
         return np.real(self._qc.direct_oppl_exp_val_w_mults(self._sigH, fo))
 
-    def do_quite_step2(self):
+    def do_quite_step(self):
         self._qc = qf.QuantumComputer(self._nqb)
         self._qc.apply_circuit(self._Uqite)
-        btot = self.build_b2()
+        btot = self.build_b()
         A = qf.QuantumOperator()
 
         if(self._sparseSb):
-            sp_idxs, S, btot = self.build_sparse_S_b2(btot)
+            sp_idxs, S, btot = self.build_sparse_S_b(btot)
         else:
-            S = self.build_S2()
+            S = self.build_S()
 
         x = lstsq(S, btot)[0]
         x = np.real(x)
@@ -246,26 +244,14 @@ class QITE(Algorithm):
         if(self._verbose):
             qf.smart_print(self._qc)
 
-    def evolve2(self):
+    def evolve(self):
         self._Uqite.add_circuit(self._Uprep)
-        print(' Beta        <Psi_b|H|Psi_b> ')
-        print('---------------------------------------')
-        print(' ', round(0.00, 3), '       ', np.round(self._Ekb[0], 10))
-
-        for kb in range(1, self._nbeta):
-            self.do_quite_step2()
-            print(' ', round(kb*self._db, 3), '       ', np.round(self._Ekb[kb], 10))
-
-        self._Egs = self._Ekb[-1]
-
-    def evolve3(self):
-        self._Uqite.add_circuit(self._Uprep)
-        print('   beta          E(beta)      N(params)           N(CNOT)          N(measure)')
+        print(f"{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
         print('-------------------------------------------------------------------------------')
         print(f' {0.0:7.3f}    {self._Ekb[0]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         for kb in range(1, self._nbeta):
-            self.do_quite_step2()
+            self.do_quite_step()
             print(f' {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         self._Egs = self._Ekb[-1]
