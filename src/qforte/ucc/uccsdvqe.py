@@ -197,6 +197,10 @@ class UCCSDVQE(UCCVQE):
         self._comutator_pool = []
         self._converged = 0
 
+        self._n_classical_params = 0
+        self._n_cnot = 0
+        self._n_pauli_trm_measures = 0
+
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
@@ -247,6 +251,7 @@ class UCCSDVQE(UCCVQE):
         print('---------------------------------------------------------')
         # General algorithm options.
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
+        print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
         print('Trial state preparation method:          ',  self._trial_state_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
@@ -277,6 +282,9 @@ class UCCSDVQE(UCCVQE):
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
         print('Total number of comutator measurements:      ', self.get_num_comut_measurements())
+        print('Number of classical parameters used:         ', self._n_classical_params)
+        print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
+        print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
 
     # Define VQE abstract methods.
     def solve(self):
@@ -324,6 +332,12 @@ class UCCSDVQE(UCCVQE):
             self._Egs = res.fun
             self._final_result = res
             self._tamps = list(res.x)
+
+        self._n_classical_params = self._n_classical_params = len(self._tamps)
+        self._n_cnot = self.build_Uvqc().get_num_cnots()
+        self._n_pauli_trm_measures += self._Nl * res.nfev
+        for m in range(self._n_classical_params):
+            self._n_pauli_trm_measures += len(self._comutator_pool.terms()[m][1].terms()) * res.njev
 
     def initialize_ansatz(self):
         for l in range(len(self._pool)):

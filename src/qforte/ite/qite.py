@@ -1,13 +1,11 @@
-import qforte
+import qforte as qf
 from qforte.abc.algorithm import Algorithm
-from qforte.utils.transforms import (circuit_to_organizer,
-                                    organizer_to_circuit,
-                                    join_organizers,
-                                    get_jw_organizer)
+from qforte.utils.transforms import (get_jw_organizer,
+                                    organizer_to_circuit)
 
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
-
+from qforte.helper.printing import *
 import numpy as np
 from scipy.linalg import lstsq
 
@@ -16,7 +14,9 @@ class QITE(Algorithm):
             beta=1.0,
             db=0.2,
             expansion_type='qbGSD',
-            sparseSb=True):
+            sparseSb=True,
+            b_thresh=1.0e-6,
+            x_thresh=1.0e-8):
 
         self._beta = beta
         self._db = db
@@ -25,9 +25,15 @@ class QITE(Algorithm):
         self._expansion_type = expansion_type
         self._sparseSb = sparseSb
         self._total_phase = 1.0 + 0.0j
-        self._Uqite = qforte.QuantumCircuit()
+        self._Uqite = qf.QuantumCircuit()
+        self._b_thresh = b_thresh
+        self._x_thresh = x_thresh
 
-        qc_ref = qforte.QuantumComputer(self._nqb)
+        self._n_classical_params = 0
+        self._n_cnot = 0
+        self._n_pauli_trm_measures = 0
+
+        qc_ref = qf.QuantumComputer(self._nqb)
         qc_ref.apply_circuit(self._Uprep)
         self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
 
@@ -36,7 +42,6 @@ class QITE(Algorithm):
 
         # Build expansion pool.
         self.build_expansion_pool()
-
         # Do the imaginary time evolution.
         self.evolve()
 
@@ -62,6 +67,7 @@ class QITE(Algorithm):
         print('-----------------------------------------------------------')
         # General algorithm options.
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
+        print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
         print('Trial state preparation method:          ',  self._trial_state_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
@@ -75,102 +81,79 @@ class QITE(Algorithm):
         print('Total imaginary evolution time (beta):   ',  self._beta)
         print('Imaginary time step (db):                ',  self._db)
         print('Expansion type:                          ',  self._expansion_type)
+        print('x value threshold:                       ',  self._x_thresh)
         print('Use sparse tensors to solve Sx = b:      ',  str(self._sparseSb))
+        if(self._sparseSb):
+            print('b value threshold:                       ',  str(self._b_thresh))
         print('\n')
 
     def print_summary_banner(self):
         print('\n\n                        ==> QITE summary <==')
         print('-----------------------------------------------------------')
         print('Final QITE Energy:                        ', round(self._Egs, 10))
-
-    def to_base4(self, I):
-        convert_str = "0123456789"
-        if I < 4:
-            return convert_str[I]
-        else:
-            return self.to_base4(I//4) + convert_str[I%4]
-
-    def pauli_idx_str(self, I_str):
-        res = ''
-        for i in range(self._nqb-len(I_str)):
-            res += '0'
-        return res + I_str
+        print('Number of operators in pool:              ', self._NI)
+        print('Number of classical parameters used:      ', self._n_classical_params)
+        print('Number of CNOT gates in deepest circuit:  ', self._n_cnot)
+        print('Number of Pauli term measurements:        ', self._n_pauli_trm_measures)
 
     def build_expansion_pool(self):
         print('\n==> Building expansion pool <==')
-        self._expansion_ops = []
+        self._sig = qf.QuantumOpPool()
 
-        if(self._expansion_type == 'sqGSD'):
-            SigI_org = []
-            op_organizer = get_jw_organizer(self._sq_ham, combine=True)
-            for l in range(len(op_organizer)):
-                op_organizer[l][0] = 1.0 + 0.0j
-                SigI_org.append([op_organizer[l]])
-
-        elif(self._expansion_type == 'qbGSD'):
-            op_organizer = get_jw_organizer(self._sq_ham, combine=False)
-            uniqe_org = []
-            SigI_org = []
-            for term in op_organizer:
-                for coeff, word in term:
-                    uniqe_term = [1.0, word]
-                    if(uniqe_term not in uniqe_org):
-                        uniqe_org.append(uniqe_term)
-                        SigI_org.append([uniqe_term])
-
-        elif(self._expansion_type == 'complete_qubit'):
+        if(self._expansion_type == 'complete_qubit'):
             if (self._nqb > 6):
                 raise ValueError('Using complete qubits expansion will reslut in a very large number of terms!')
+            self._sig.fill_pool("complete_qubit", self._ref)
 
-            SigI_org = []
-            paulis = ['I', 'X', 'Y', 'Z']
-            for I in range(4**(self._nqb)):
-                paulistr = self.pauli_idx_str(self.to_base4(I))
-                AI = []
-                for k, gate_id in enumerate(paulistr):
-                    if(gate_id != '0'):
-                        AI.append( ( paulis[int(gate_id)], k ) )
+        elif(self._expansion_type == 'cqoy'):
+            self._sig.fill_pool("cqoy", self._ref)
 
-                SigI_org.append([[1.0, AI]])
+        elif(self._expansion_type == 'qbGSD'):
+            # TODO (opt), put this on C side
+            op_organizer = get_jw_organizer(self._sq_ham, combine=False)
+            uniqe_org = []
+            for term in op_organizer:
+                for coeff, word in term:
+                    nygates = 0
+                    for pgate in word:
+                        if pgate[0] == 'Y':
+                            nygates += 1
+                    if (nygates%2 != 0):
+                        uniqe_term = [1.0, word]
+                        if(uniqe_term not in uniqe_org):
+                            uniqe_org.append(uniqe_term)
+                            self._sig.add_term(1.0, organizer_to_circuit([uniqe_term]))
+
+        elif(self._expansion_type == 'test'):
+            self._sig.fill_pool("test", self._ref)
 
         else:
             raise ValueError('Invalid expansion type specified.')
 
-        H_org = circuit_to_organizer(self._qb_ham)
-        self._Nl = len(self._qb_ham.terms())
-        self._NI = len(SigI_org)
-        self._H = np.empty(shape=self._Nl, dtype=object)
-        self._Sig = np.empty(shape=self._NI, dtype=object)
-        self._HSig = np.empty(shape=(self._Nl, self._NI), dtype=object)
-        self._SigSig = np.empty(shape=(self._NI, self._NI), dtype=object)
+        self._NI = len(self._sig.terms())
+        self._h = np.ones(self._Nl, dtype=complex)
+        for l, term in enumerate(self._qb_ham.terms()):
+            self._h[l] = term[0]
 
-        #new
-        # self._HSigI = []
+        self._sigH = qf.QuantumOpPool()
+        self._sig2 = qf.QuantumOpPool()
+        for term in self._sig.terms():
+            self._sigH.add_term(term[0], term[1])
+            self._sig2.add_term(term[0], term[1])
 
-        for l, Hlorg in enumerate(H_org):
-            self._H[l] = (organizer_to_circuit([Hlorg]))
-
-        for I, Iorg in enumerate(SigI_org):
-            self._Sig[I] = organizer_to_circuit(Iorg)
-            #new
-            # self._HSigI.append(organizer_to_circuit(join_organizers(Iorg, H_org)))
-            for l, Hlorg in enumerate(H_org):
-                sigI_Hl_org = join_organizers(Iorg, [Hlorg])
-                self._HSig[l][I] = organizer_to_circuit(sigI_Hl_org)
-
-            for J, Jorg in enumerate(SigI_org):
-                sigI_sigJ_org = join_organizers(Iorg, Jorg)
-                self._SigSig[I][J] = organizer_to_circuit(sigI_sigJ_org)
+        self._sig2.square(True)
+        self._sigH.join_op_from_right_lazy(self._qb_ham)
 
         print('\n      Expansion pool successfully built!\n')
 
     def build_S(self):
         S = np.empty((self._NI,self._NI), dtype=complex)
-        # qc = qforte.QuantumComputer(self._nqb)
-        # qc.apply_circuit(self._Uqite)
+        Svec = self._qc.direct_oppl_exp_val(self._sig2)
+        self._n_pauli_trm_measures += len(Svec)
         for I in range(self._NI):
             for J in range(I, self._NI):
-                val = self._qc.direct_op_exp_val(self._SigSig[I][J])
+                K = I*self._NI - int(I*(I-1)/2) + (J-I)
+                val = Svec[K]
                 S[I][J] = val
                 S[J][I] = val
 
@@ -179,76 +162,49 @@ class QITE(Algorithm):
     def build_sparse_S_b(self, b):
         b_sparse = []
         idx_sparse = []
+        K_idx_sparse = []
         for I, bI in enumerate(b):
-            if(np.abs(bI) > 1e-6):
+            if(np.abs(bI) > self._b_thresh):
                 idx_sparse.append(I)
                 b_sparse.append(bI)
 
-        S = np.empty((len(b_sparse),len(b_sparse)), dtype=complex)
-        # qc = qforte.QuantumComputer(self._nqb)
-        # qc.apply_circuit(self._Uqite)
         for i in range(len(idx_sparse)):
             for j in range(i,len(idx_sparse)):
-                val = self._qc.direct_op_exp_val(self._SigSig[idx_sparse[i]][idx_sparse[j]])
+                k_sp = idx_sparse[i]*self._NI
+                k_sp -= int( idx_sparse[i] * (idx_sparse[i]-1)/2 )
+                k_sp += idx_sparse[j] - idx_sparse[i]
+                K_idx_sparse.append(k_sp)
+
+        self._n_pauli_trm_measures += len(K_idx_sparse)
+
+        S = np.empty((len(b_sparse),len(b_sparse)), dtype=complex)
+        Svec = self._qc.direct_idxd_oppl_exp_val(self._sig2, K_idx_sparse)
+        for i in range(len(idx_sparse)):
+            for j in range(i,len(idx_sparse)):
+                k = i*len(b_sparse) - int(i*(i-1)/2) + (j-i)
+                val = Svec[k]
                 S[i][j] = val
                 S[j][i] = val
 
         return idx_sparse, np.real(S), np.real(b_sparse)
 
-    def build_bl(self, l, cl):
-        bo = -(1.0j / np.sqrt(cl))
-        bl = np.zeros(shape=self._NI, dtype=complex)
-        # qc = qforte.QuantumComputer(self._nqb)
-        # qc.apply_circuit(self._Uqite)
-        for I in range(self._NI):
-            bl[I] = bo * self._qc.direct_op_exp_val(self._HSig[l][I])
+    def build_b(self):
+        fo = np.zeros(self._Nl, dtype=complex)
+        for l, Hl in enumerate(self._qb_ham.terms()):
+            term = np.sqrt(1 - 2*self._db*Hl[0]*self._qc.direct_circ_exp_val(Hl[1]))
+            fo[l] = -1.0j / term
 
-        return np.real(bl)
+        self._n_pauli_trm_measures += self._Nl * self._NI
+        return np.real(self._qc.direct_oppl_exp_val_w_mults(self._sigH, fo))
 
     def do_quite_step(self):
-        self._qc = qforte.QuantumComputer(self._nqb)
+        self._qc = qf.QuantumComputer(self._nqb)
         self._qc.apply_circuit(self._Uqite)
-
-        # Can take this approach if all Hl have same expansion terms
-        btot = np.zeros(shape=self._NI, dtype=complex)
-        # btot2 = np.zeros(shape=self._NI, dtype=complex)
-
-        # TODO (opt): consider QuantumOpPool class on C side?
-        #new TODO (opt): consider QuantumOpPool class on C side?
-        # bol_lst = []
-        # for l, Hl in enumerate(self._H):
-        #     cl = 1 - 2*self._db*self._qc.direct_op_exp_val(Hl)
-        #     bol = -(1.0j / np.sqrt(cl))
-        #     bol_lst.append(bol)
-        #
-        # for I in range(self._NI):
-        #     self._HSigI[I].set_coeffs(bol_lst)
-        #     btot2[I] = self._qc.direct_op_exp_val(self._HSigI[I])
-
-        # print('NI:  ', self._NI)
-        # print('Nl:  ', self._Nl)
-        # print('NI*Nl:  ', self._NI*self._Nl)
-        # print('len(bol_lst):  ',len(bol_lst))
-        # print('len(self._HSigI):  ',len(self._HSigI))
-        # for HI in self._HSigI:
-        #     print('  len(self._HSigI):  ',len(HI.terms()))
-
-        for l, Hl in enumerate(self._H):
-            cl = 1 - 2*self._db*self._qc.direct_op_exp_val(Hl)
-            bl = self.build_bl(l, cl)
-            btot = np.add(btot, bl)
-            if(self._verbose):
-                print('\n\nl:  ', l)
-                print('\nbl: ', bl)
-
-        # print('\n btot: \n', btot)
-        # print('\n btot2: \n', btot2)
-
-        A = qforte.QuantumOperator()
+        btot = self.build_b()
+        A = qf.QuantumOperator()
 
         if(self._sparseSb):
             sp_idxs, S, btot = self.build_sparse_S_b(btot)
-
         else:
             S = self.build_S()
 
@@ -257,42 +213,50 @@ class QITE(Algorithm):
 
         if(self._sparseSb):
             for I, spI in enumerate(sp_idxs):
-                if np.abs(x[I]) > 1e-6:
-                    A.add_term(-1.0j * self._db * x[I], self._Sig[spI].terms()[0][1])
+                if np.abs(x[I]) > self._x_thresh:
+                    A.add_term(-1.0j * self._db * x[I], self._sig.terms()[spI][1].terms()[0][1])
+                    self._n_classical_params += 1
 
         else:
-            for I, SigI in enumerate(self._Sig):
-                if np.abs(x[I]) > 1e-6:
-                    A.add_term(-1.0j * self._db * x[I], SigI.terms()[0][1])
+            for I, SigI in enumerate(self._sig.terms()):
+                if np.abs(x[I]) > self._x_thresh:
+                    A.add_term(-1.0j * self._db * x[I], SigI[1].terms()[0][1])
+                    self._n_classical_params += 1
 
         if(self._verbose):
+            print('\nbo:\n ')
+            for val in self._bo:
+                print('  ', val)
             print('\nbtot:\n ', btot)
+            print('\n S:  \n')
+            matprint(S)
+            print('\n x:  \n')
+            print(x)
 
         eiA_kb, phase1 = trotterize(A, trotter_number=self._trotter_number)
         self._total_phase *= phase1
         self._Uqite.add_circuit(eiA_kb)
-
         self._qc.apply_circuit(eiA_kb)
         self._Ekb.append(np.real(self._qc.direct_op_exp_val(self._qb_ham)))
 
+        self._n_cnot += eiA_kb.get_num_cnots()
+
         if(self._verbose):
-            qforte.smart_print(self._qc)
+            qf.smart_print(self._qc)
 
     def evolve(self):
         self._Uqite.add_circuit(self._Uprep)
-        print(' Beta        <Psi_b|H|Psi_b> ')
-        print('---------------------------------------')
-        print(' ', round(0.00, 3), '       ', np.round(self._Ekb[0], 10))
+        print(f"{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
+        print('-------------------------------------------------------------------------------')
+        print(f' {0.0:7.3f}    {self._Ekb[0]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         for kb in range(1, self._nbeta):
             self.do_quite_step()
-            print(' ', round(kb*self._db, 3), '       ', np.round(self._Ekb[kb], 10))
+            print(f' {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         self._Egs = self._Ekb[-1]
 
     def print_expansion_ops(self):
         print('\nQITE expansion operators:')
         print('-------------------------')
-        for I, SigI in enumerate(self._Sig):
-            print('\nI: ', I)
-            qforte.smart_print(SigI)
+        print(self._sig.str())

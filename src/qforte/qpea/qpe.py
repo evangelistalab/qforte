@@ -34,6 +34,9 @@ class QPE(Algorithm):
         self._abegin = self._n_state_qubits
         self._aend = self._n_tot_qubits - 1
 
+        self._n_classical_params = 0
+        self._n_pauli_trm_measures = nruns
+
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
@@ -53,6 +56,8 @@ class QPE(Algorithm):
 
         computer = qforte.QuantumComputer(self._n_tot_qubits)
         computer.apply_circuit(self._Uqpe)
+
+        self._n_cnot = self._Uqpe.get_num_cnots()
 
         if(self._fast):
             z_readouts = computer.measure_z_readouts_fast(self._abegin, self._aend, self._nruns)
@@ -153,6 +158,9 @@ class QPE(Algorithm):
         print('Mode QPE Energy:                         ',  round(self._mode_energy, 10))
         print('Final QPE phase:                          ', round(self._final_phase, 10))
         print('Mode QPE phase:                           ', round(self._mode_phase, 10))
+        print('Number of classical parameters used:      ', self._n_classical_params)
+        print('Number of CNOT gates in deepest circuit:  ', self._n_cnot)
+        print('Number of Pauli term measurements:        ', self._n_pauli_trm_measures)
 
     ### QPE specific methods
 

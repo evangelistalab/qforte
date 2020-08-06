@@ -37,6 +37,9 @@ class QuantumCircuit {
     /// (either +/-1.0 or +/-1.0j)
     std::complex<double> canonical_order();
 
+    /// get the number of CNOT gates in the circuit
+    int get_num_cnots() const;
+
     /// return a vector of string representing this circuit
     std::string str() const;
 

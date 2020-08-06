@@ -206,6 +206,12 @@ class ADAPTVQE(UCCVQE):
         self._n_ham_measurements = 0
         self._n_comut_measurements = 0
 
+        self._n_classical_params = 0
+        self._n_cnot = 0
+        self._n_cnot_lst = []
+        self._n_pauli_trm_measures = 0
+        self._n_pauli_trm_measures_lst = []
+
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
@@ -251,6 +257,15 @@ class ADAPTVQE(UCCVQE):
 
         self._Egs = self.get_final_energy()
 
+        print('\n\n')
+        print(f"{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
+        print('-------------------------------------------------------------------------------')
+        for k, Ek in enumerate(self._energies):
+            print(f' {k:7}    {Ek:+15.9f}    {k+1:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
+
+        self._n_classical_params = len(self._tamps)
+        self._n_cnot = self._n_cnot_lst[-1]
+        self._n_pauli_trm_measures = sum(self._n_pauli_trm_measures_lst)
         ######### ADAPT-VQE #########
 
         # Print summary banner (should done for all algorithms).
@@ -278,6 +293,7 @@ class ADAPTVQE(UCCVQE):
         print('---------------------------------------------------------')
         # General algorithm options.
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
+        print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
         print('Trial state preparation method:          ',  self._trial_state_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
@@ -314,6 +330,9 @@ class ADAPTVQE(UCCVQE):
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
         print('Total number of comutator measurements:      ', self.get_num_comut_measurements())
+        print('Number of classical parameters used:         ', self._n_classical_params)
+        print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
+        print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
 
     # Define VQE abstract methods.
     def solve(self):
@@ -342,6 +361,10 @@ class ADAPTVQE(UCCVQE):
                                     jac=self.gradient_ary_feval,
                                     options=opts)
 
+            self._n_pauli_measures_k += self._Nl * res.nfev
+            for m in self._tops:
+                self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms()) * res.njev
+
         else:
             print('  \n--> Begin opt with grad estimated using first-differences:')
             print('  Initial guess energy: ', round(init_gues_energy,1000))
@@ -349,21 +372,25 @@ class ADAPTVQE(UCCVQE):
                                     method=self._optimizer,
                                     options=opts)
 
+            self._n_pauli_measures_k += self._Nl * res.nfev
+
         if(res.success):
             print('  minimization successful.')
             print('  min Energy: ', res.fun)
-            self._energies.append(res.fun)
-            self._results.append(res)
-            self._tamps = list(res.x)
+
         else:
             print('  WARNING: minimization result may not be tightly converged.')
             print('  min Energy: ', res.fun)
-            self._energies.append(res.fun)
-            self._results.append(res)
-            self._tamps = list(res.x)
+
+        self._energies.append(res.fun)
+        self._results.append(res)
+        self._tamps = list(res.x)
+        self._n_pauli_trm_measures_lst.append(self._n_pauli_measures_k)
+        self._n_cnot_lst.append(self.build_Uvqc().get_num_cnots())
 
     # Define ADAPT-VQE methods.
     def update_ansatz(self):
+        self._n_pauli_measures_k = 0
         if (self._op_select_type=='gradient'):
             curr_norm = 0.0
             lgrst_grad = 0.0
@@ -374,7 +401,9 @@ class ADAPTVQE(UCCVQE):
                 print('  -------------------------------------------------------')
 
             grads = self.measure_gradient(self._comutator_pool, Uvqc)
+
             for m, grad_m in enumerate(grads):
+                self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms())
                 curr_norm += grad_m*grad_m
                 if (self._verbose):
                     print('       ', m,  '             ', len(self._comutator_pool.terms()[m][1].terms()),'                  ', '{:+.09f}'.format(grad_m))
@@ -444,10 +473,11 @@ class ADAPTVQE(UCCVQE):
 
 
                 self._n_ham_measurements += res.nfev
+                self._n_pauli_measures_k += self._Nl * res.nfev
 
                 if (self._use_analytic_grad):
                     self._n_comut_measurements += res.njev
-
+                    self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms()) * res.njev
 
                 if(m==0):
                     min_amp_e = res.fun
@@ -485,8 +515,6 @@ class ADAPTVQE(UCCVQE):
             temp_pool.add_term(tamp, self._pool[top][1])
 
         A = temp_pool.get_quantum_operator('comuting_grp_lex')
-        # A = temp_pool.get_quantum_operator()
-        # A.order_terms() # order could be explored
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
         Uvqc = qf.QuantumCircuit()
@@ -503,8 +531,6 @@ class ADAPTVQE(UCCVQE):
 
     def gradient_ary_feval2(self, params):
         Uvqc = self.build_Uvqc2(params[0])
-        # grad_lst = []
-        # grad_lst.append(self.measure_gradient(self._comutator_pool[self._trial_op], Uvqc))
         grads = self.measure_gradient(self._comutator_pool, Uvqc, [self._trial_op])
         return grads
 

@@ -124,6 +124,16 @@ std::complex<double> QuantumCircuit::canonical_order() {
     return coeff;
 }
 
+int QuantumCircuit::get_num_cnots() const {
+    int n_cnots = 0;
+    for (const auto& gate : gates_) {
+        if(gate.gate_id() == "CNOT" || gate.gate_id() == "cX"){
+            n_cnots++;
+        }
+    }
+    return n_cnots;
+}
+
 std::string QuantumCircuit::str() const {
     std::vector<std::string> s;
     for (const auto& gate : gates_) {

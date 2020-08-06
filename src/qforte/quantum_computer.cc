@@ -758,6 +758,22 @@ std::vector<std::complex<double>> QuantumComputer::direct_idxd_oppl_exp_val(cons
     return results;
 }
 
+std::vector<std::complex<double>> QuantumComputer::direct_oppl_exp_val_w_mults(
+    const QuantumOpPool& qopl,
+    const std::vector<std::complex<double>>& mults) {
+
+    std::vector<std::complex<double>> results;
+    for (const auto& pl_term : qopl.terms()){
+        std::complex<double> result = 0.0;
+        for (int l=0; l < pl_term.second.terms().size(); l++){
+            std::complex<double> val = mults[l] * pl_term.first * pl_term.second.terms()[l].first;
+            result +=  val * direct_circ_exp_val(pl_term.second.terms()[l].second);
+        }
+        results.push_back(result);
+    }
+    return results;
+}
+
 /// The below implemention of direct_op_exp_val may be faster for parallel computations.
 // std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& qo) {
 //     std::complex<double> result = 0.0;
