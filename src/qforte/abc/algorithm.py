@@ -118,8 +118,11 @@ class Algorithm(ABC):
 #         if self._Umaxdepth is None:
 #             raise NotImplementedError('Concrete Algorithm class must define self._Umaxdepth attribute.')
 
-#         if self._n_ham_measurements is None:
-#             raise NotImplementedError('Concrete Algorithm class must define self._n_ham_measurements attribute.')
+        if self._n_classical_params is None:
+            raise NotImplementedError('Concrete Algorithm class must define self._n_classical_params attribute.')
 
-#         if self._n_ham_measurements is None:
-#             raise NotImplementedError('Concrete Algorithm class must define self._n_ham_measurements attribute.')
+        if self._n_cnot is None:
+            raise NotImplementedError('Concrete Algorithm class must define self._n_cnot attribute.')
+
+        if self._n_pauli_trm_measures is None:
+            raise NotImplementedError('Concrete Algorithm class must define self._n_pauli_trm_measures attribute.')

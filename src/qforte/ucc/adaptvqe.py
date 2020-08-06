@@ -332,7 +332,7 @@ class ADAPTVQE(UCCVQE):
         print('Total number of comutator measurements:      ', self.get_num_comut_measurements())
         print('Number of classical parameters used:         ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
-        print('Number Pauli term measurements:              ', self._n_pauli_trm_measures)
+        print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
 
     # Define VQE abstract methods.
     def solve(self):

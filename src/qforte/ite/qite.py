@@ -94,7 +94,7 @@ class QITE(Algorithm):
         print('Number of operators in pool:              ', self._NI)
         print('Number of classical parameters used:      ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:  ', self._n_cnot)
-        print('Number Pauli term measurements:           ', self._n_pauli_trm_measures)
+        print('Number of Pauli term measurements:        ', self._n_pauli_trm_measures)
 
     def build_expansion_pool(self):
         print('\n==> Building expansion pool <==')

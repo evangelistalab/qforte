@@ -128,7 +128,7 @@ class SRQK(QSD):
         print('Final SRQK target state Energy:           ', round(self._Ets, 10))
         print('Number of classical parameters used:       ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:   ', self._n_cnot)
-        print('Number Pauli term measurements:            ', self._n_pauli_trm_measures)
+        print('Number of Pauli term measurements:         ', self._n_pauli_trm_measures)
 
     # Define QK abstract methods.
     def build_qk_mats(self):

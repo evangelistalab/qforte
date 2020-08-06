@@ -46,6 +46,7 @@ class MRSQK(QSD):
         self._d = d
         self._s = s
         self._nstates_per_ref = s+1
+        self._nstates = d*(s+1)
         self._mr_dt = mr_dt
         self._target_root = target_root
 
@@ -78,6 +79,10 @@ class MRSQK(QSD):
 
             self._srqk.run(s=self._s_o,
                            dt=self._dt_o)
+
+            self._n_classical_params = self._srqk._n_classical_params
+            self._n_cnot = self._srqk._n_cnot # maybe not
+            self._n_pauli_trm_measures = self._srqk._n_pauli_trm_measures
 
             self.build_refs_from_srqk()
 
@@ -123,6 +128,18 @@ class MRSQK(QSD):
             self._Ets = self._Egs
         else:
             self._Ets = np.real(self._eigenvalues[self._target_root])
+
+        self._n_classical_params = self._nstates
+
+        # diagonal terms of Hbar
+        if(reference_generator=='SRQK'):
+            self._n_pauli_trm_measures  = self._nstates * self._Nl + self._srqk._n_pauli_trm_measures
+        else:
+            raise ValueError('Can only count number of paulit term measurements when using SRQK.')
+        # off-diagonal of Hbar (<X> and <Y> of Hadamard test)
+        self._n_pauli_trm_measures += self._nstates*(self._nstates-1) * self._Nl
+        # off-diagonal of S (<X> and <Y> of Hadamard test)
+        self._n_pauli_trm_measures += self._nstates*(self._nstates-1)
 
         ######### MRSQK #########
 
@@ -188,6 +205,9 @@ class MRSQK(QSD):
         print('Condition number of overlap mat k(S):      ', cs_str)
         print('Final MRSQK ground state Energy:          ', round(self._Egs, 10))
         print('Final MRSQK target state Energy:          ', round(self._Ets, 10))
+        print('Number of classical parameters used:       ', self._n_classical_params)
+        print('Number of CNOT gates in deepest circuit:   ', self._n_cnot)
+        print('Number of Pauli term measurements:         ', self._n_pauli_trm_measures)
 
     # Define QK abstract methods.
     def build_qk_mats(self):
@@ -272,8 +292,8 @@ class MRSQK(QSD):
 
         if(self._diagonalize_each_step):
             print('\n\n')
-            print('     basis index (m)       E target root          k(S) ')
-            print('  -------------------------------------------------------')
+            print(f"{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
+            print('-------------------------------------------------------------------------------')
 
         for p in range(num_tot_basis):
             for q in range(p, num_tot_basis):
@@ -291,7 +311,18 @@ class MRSQK(QSD):
 
                 scond = np.linalg.cond(s_mat[0:p+1, 0:p+1])
                 cs_str = '{:.2e}'.format(scond)
-                print('         ', p,  '              ', '{:+.09f}'.format(np.real(evals[self._target_root])),'       ', cs_str)
+
+                k = p+1
+                self._n_classical_params = k
+                if(k==1):
+                    self._n_cnot = self._srqk._n_cnot
+                else:
+                    self._n_cnot = 2 * Um.get_num_cnots()
+                self._n_pauli_trm_measures  = k * self._Nl + self._srqk._n_pauli_trm_measures
+                self._n_pauli_trm_measures += k * (k-1) * self._Nl
+                self._n_pauli_trm_measures += k * (k-1)
+
+                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         return s_mat, h_mat
 
@@ -418,8 +449,8 @@ class MRSQK(QSD):
 
         if(self._diagonalize_each_step):
             print('\n\n')
-            print('     basis index (m)       E target root          k(S) ')
-            print('  -------------------------------------------------------')
+            print(f"{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
+            print('-------------------------------------------------------------------------------')
 
         # TODO (opt): add this to previous loop
         for p in range(num_tot_basis):
@@ -438,7 +469,18 @@ class MRSQK(QSD):
 
                 scond = np.linalg.cond(s_mat[0:p+1, 0:p+1])
                 cs_str = '{:.2e}'.format(scond)
-                print('         ', p,  '              ', '{:+.09f}'.format(np.real(evals[self._target_root])),'       ', cs_str)
+
+                k = p+1
+                self._n_classical_params = k
+                if(k==1):
+                    self._n_cnot = self._srqk._n_cnot
+                else:
+                    self._n_cnot = 2 * Um.get_num_cnots()
+                self._n_pauli_trm_measures  = k * self._Nl + self._srqk._n_pauli_trm_measures
+                self._n_pauli_trm_measures += k * (k-1) * self._Nl
+                self._n_pauli_trm_measures += k * (k-1)
+
+                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         return s_mat, h_mat
 
