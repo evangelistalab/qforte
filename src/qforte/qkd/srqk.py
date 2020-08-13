@@ -190,8 +190,10 @@ class SRQK(QSD):
 
             print(f"{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
             print('-------------------------------------------------------------------------------')
-            # print('     basis index (m)       E target root          k(S) ')
-            # print('  -------------------------------------------------------')
+
+            f = open("summary.dat", "w+", buffering=1)
+            f.write(f"#{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}\n")
+            f.write('#-------------------------------------------------------------------------------\n')
 
         for m in range(self._nstates):
             Um = qforte.QuantumCircuit()
@@ -233,9 +235,10 @@ class SRQK(QSD):
                 self._n_pauli_trm_measures += k * (k-1)
 
                 print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
+                f.write(f'  {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n')
 
-                # cs_str = '{:.2e}'.format(scond)
-                # print('         ', m,  '              ', '{:+.09f}'.format(np.real(evals[self._target_root])),'       ', cs_str)
+        if (self._diagonalize_each_step):
+            f.close()
 
         self._n_classical_params = self._nstates
         self._n_cnot = 2 * Um.get_num_cnots()
