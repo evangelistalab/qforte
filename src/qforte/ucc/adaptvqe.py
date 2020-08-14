@@ -232,6 +232,11 @@ class ADAPTVQE(UCCVQE):
 
         avqe_iter = 0
         hit_maxiter = 0
+
+        f = open("summary.dat", "w+", buffering=1)
+        f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
+        f.write('#-------------------------------------------------------------------------------\n')
+
         while not self._converged:
 
             print('\n\n -----> ADAPT-VQE iteration ', avqe_iter, ' <-----\n')
@@ -244,12 +249,14 @@ class ADAPTVQE(UCCVQE):
             print('tamplitudes for tops: \n', self._tamps)
 
             self.solve()
+            f.write(f'  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {avqe_iter+1:8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
             avqe_iter += 1
 
             if avqe_iter > self._adapt_maxiter-1:
                 hit_maxiter = 1
                 break
 
+        f.close()
         # Set final ground state energy.
         if hit_maxiter:
             self._Egs = self.get_final_energy(hit_max_avqe_iter=1)
@@ -260,6 +267,7 @@ class ADAPTVQE(UCCVQE):
         print('\n\n')
         print(f"{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
         print('-------------------------------------------------------------------------------')
+
         for k, Ek in enumerate(self._energies):
             print(f' {k:7}    {Ek:+15.9f}    {k+1:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
 

@@ -246,15 +246,23 @@ class QITE(Algorithm):
 
     def evolve(self):
         self._Uqite.add_circuit(self._Uprep)
+        f = open("summary.dat", "w+", buffering=1)
+
         print(f"{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
         print('-------------------------------------------------------------------------------')
         print(f' {0.0:7.3f}    {self._Ekb[0]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
+        f.write(f"#{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}\n")
+        f.write('#-------------------------------------------------------------------------------\n')
+        f.write(f'  {0.0:7.3f}    {self._Ekb[0]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n')
+
         for kb in range(1, self._nbeta):
             self.do_quite_step()
             print(f' {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
-
+            f.write(f'  {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n')
         self._Egs = self._Ekb[-1]
+
+        f.close()
 
     def print_expansion_ops(self):
         print('\nQITE expansion operators:')
