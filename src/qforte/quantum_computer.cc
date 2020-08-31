@@ -48,16 +48,8 @@ void QuantumComputer::set_state(std::vector<std::pair<QuantumBasis, double_c>> s
 void QuantumComputer::zero_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
 
 void QuantumComputer::apply_operator(const QuantumOperator& qo) {
-
-    // copy old coeficinets Co
     std::vector<std::complex<double>> old_coeff = coeff_;
-
-    // for result vector Cf
     std::vector<std::complex<double>> result(nbasis_, 0.0);
-
-    // loop over terms (could be done in parallel?)
-    // #pragma omp parallel num_threads(2)
-    // {
         for (const auto& term : qo.terms()) {
             apply_circuit(term.second);
             apply_constant(term.first);
@@ -66,7 +58,6 @@ void QuantumComputer::apply_operator(const QuantumOperator& qo) {
 
             coeff_ = old_coeff;
         }
-    // }
     coeff_ = result;
 }
 
