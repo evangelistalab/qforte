@@ -59,23 +59,56 @@ class QuantumComputer {
 
     /// measure expectaion value of all operators in an operator pool
     std::vector<std::complex<double>> direct_oppl_exp_val(const QuantumOpPool& qopl);
+    // std::vector<std::complex<double>> direct_oppl_exp_val2(const QuantumOpPool& qopl);
 
     /// measure expectaion value for specific operators in an operator pool
     std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QuantumOpPool& qopl, const std::vector<int>& idxs);
+    // std::vector<std::complex<double>> direct_idxd_oppl_exp_val2(const QuantumOpPool& qopl, const std::vector<int>& idxs);
 
     /// measure expectaion value of all operators in an operator pool, where the
     /// operator coefficents have been multipild by mults
     std::vector<std::complex<double>> direct_oppl_exp_val_w_mults(
         const QuantumOpPool& qopl,
         const std::vector<std::complex<double>>& mults);
+    // std::vector<std::complex<double>> direct_oppl_exp_val_w_mults2(
+    //     const QuantumOpPool& qopl,
+    //     const std::vector<std::complex<double>>& mults);
 
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
     std::complex<double> direct_op_exp_val(const QuantumOperator& qo);
 
+    // std::complex<double> direct_op_exp_val_2s(const QuantumOperator& qo);
+
+    // std::complex<double> direct_op_exp_val_3s(const QuantumOperator& qo);
+
+    // std::complex<double> direct_op_exp_val_4s(const QuantumOperator& qo);
+
+    // std::complex<double> direct_op_exp_val_4p(const QuantumOperator& qo);
+
     /// get the expectation value of many 1qubit gates directly
     /// (ie without simulated measurement)
     std::complex<double> direct_circ_exp_val(const QuantumCircuit& qc);
+
+    /// get the expectation value of many pauli gates directly
+    /// (ie without simulated measurement)
+    std::complex<double> direct_pauli_circ_exp_val(const QuantumCircuit& qc);
+
+    // std::complex<double> direct_pauli_circ_exp_val2(const QuantumCircuit& qc);
+
+    /// get the idx I with respect to pauli circuit permutations from qc
+    // std::complex<double> get_pauli_permuted_coeff(
+    //     size_t I,
+    //     const std::vector<int>& x_idxs,
+    //     const std::vector<int>& y_idxs,
+    //     const std::vector<int>& z_idxs
+    //     );
+    std::pair< int, std::complex<double> > get_pauli_permuted_idx(
+        size_t I,
+        const std::vector<int>& x_idxs,
+        const std::vector<int>& y_idxs,
+        const std::vector<int>& z_idxs
+        );
 
     /// get the expectation value of a single 1qubit gate directly
     /// (without simulated measurement)
@@ -113,6 +146,12 @@ class QuantumComputer {
 
     void zero_state();
 
+    /// get timings
+    std::vector<std::pair<std::string, double>> get_timings() { return timings_; }
+
+    /// clear the timings
+    void clear_timings() { timings_.clear(); }
+
   private:
     /// the number of qubits
     size_t nqubit_;
@@ -124,6 +163,8 @@ class QuantumComputer {
     std::vector<std::complex<double>> coeff_;
     /// the coefficients of the tensor product basis
     std::vector<std::complex<double>> new_coeff_;
+    /// timings and descriptions accessable in python
+    std::vector<std::pair<std::string, double>> timings_;
     /// the number of one-qubit operations
     size_t none_ops_ = 0;
     /// the number of two-qubit operations

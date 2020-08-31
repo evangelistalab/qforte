@@ -10,6 +10,7 @@
 #include "sq_operator.h"
 #include "sq_op_pool.h"
 #include "quantum_op_pool.h"
+#include "timer.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -83,6 +84,7 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<QuantumBasis>(m, "QuantumBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
         .def("str", &QuantumBasis::str)
+        .def("flip_bit", &QuantumBasis::flip_bit)
         .def("get_bit", &QuantumBasis::get_bit);
 
     py::class_<QuantumComputer>(m, "QuantumComputer")
@@ -98,10 +100,18 @@ PYBIND11_MODULE(qforte, m) {
         .def("measure_readouts", &QuantumComputer::measure_readouts)
         .def("perfect_measure_circuit", &QuantumComputer::perfect_measure_circuit)
         .def("direct_oppl_exp_val", &QuantumComputer::direct_oppl_exp_val)
+        // .def("direct_oppl_exp_val2", &QuantumComputer::direct_oppl_exp_val2)
         .def("direct_idxd_oppl_exp_val", &QuantumComputer::direct_idxd_oppl_exp_val)
+        // .def("direct_idxd_oppl_exp_val2", &QuantumComputer::direct_idxd_oppl_exp_val2)
         .def("direct_oppl_exp_val_w_mults", &QuantumComputer::direct_oppl_exp_val_w_mults)
+        // .def("direct_oppl_exp_val_w_mults2", &QuantumComputer::direct_oppl_exp_val_w_mults2)
         .def("direct_op_exp_val", &QuantumComputer::direct_op_exp_val)
+        // .def("direct_op_exp_val_2s", &QuantumComputer::direct_op_exp_val_2s)
+        // .def("direct_op_exp_val_3s", &QuantumComputer::direct_op_exp_val_3s)
+        // .def("direct_op_exp_val_4s", &QuantumComputer::direct_op_exp_val_4s)
+        // .def("direct_op_exp_val_4p", &QuantumComputer::direct_op_exp_val_4p)
         .def("direct_circ_exp_val", &QuantumComputer::direct_circ_exp_val)
+        .def("direct_pauli_circ_exp_val", &QuantumComputer::direct_pauli_circ_exp_val)
         .def("direct_gate_exp_val", &QuantumComputer::direct_gate_exp_val)
         .def("coeff", &QuantumComputer::coeff)
         .def("get_coeff_vec", &QuantumComputer::get_coeff_vec)
@@ -109,6 +119,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_coeff_vec", &QuantumComputer::set_coeff_vec)
         .def("set_state", &QuantumComputer::set_state)
         .def("zero_state", &QuantumComputer::zero_state)
+        .def("get_timings", &QuantumComputer::get_timings)
+        .def("clear_timings", &QuantumComputer::clear_timings)
         .def("str", &QuantumComputer::str)
         .def("__repr__", [](const QuantumComputer& qc) {
             std::string r("QuantumComputer(\n");
@@ -127,6 +139,11 @@ PYBIND11_MODULE(qforte, m) {
         .def("adjoint", &QuantumGate::adjoint)
         .def("__str__", &QuantumGate::str)
         .def("__repr__", &QuantumGate::repr);
+
+    py::class_<local_timer>(m, "local_timer")
+        .def(py::init<>())
+        .def("reset", &local_timer::reset)
+        .def("get", &local_timer::get);
 
     m.def("make_gate", &make_gate, "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
     m.def("make_control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);

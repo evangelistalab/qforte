@@ -31,6 +31,9 @@ class QuantumBasis {
     /// set bit in position 'pos' to the boolean val
     void set_bit(size_t pos, bool val) { state_ ^= (-val ^ state_) & maskbit(pos); }
 
+    /// flip bin in position 'pos' to opposite boolean invalid_argument
+    void flip_bit(size_t pos) { state_ ^= maskbit(pos); }
+
     void set(basis_t state);
 
     void zero() { state_ = static_cast<basis_t>(0); }
