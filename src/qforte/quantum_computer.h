@@ -77,6 +77,18 @@ class QuantumComputer {
     /// (ie without simulated measurement)
     std::complex<double> direct_circ_exp_val(const QuantumCircuit& qc);
 
+    /// get the expectation value of many pauli gates directly
+    /// (ie without simulated measurement)
+    std::complex<double> direct_pauli_circ_exp_val(const QuantumCircuit& qc);
+
+    /// get the idx I with respect to pauli circuit permutations from qc
+    std::pair< int, std::complex<double> > get_pauli_permuted_idx(
+        size_t I,
+        const std::vector<int>& x_idxs,
+        const std::vector<int>& y_idxs,
+        const std::vector<int>& z_idxs
+        );
+
     /// get the expectation value of a single 1qubit gate directly
     /// (without simulated measurement)
     std::complex<double> direct_gate_exp_val(const QuantumGate& qg);
@@ -113,6 +125,12 @@ class QuantumComputer {
 
     void zero_state();
 
+    /// get timings
+    std::vector<std::pair<std::string, double>> get_timings() { return timings_; }
+
+    /// clear the timings
+    void clear_timings() { timings_.clear(); }
+
   private:
     /// the number of qubits
     size_t nqubit_;
@@ -124,6 +142,8 @@ class QuantumComputer {
     std::vector<std::complex<double>> coeff_;
     /// the coefficients of the tensor product basis
     std::vector<std::complex<double>> new_coeff_;
+    /// timings and descriptions accessable in python
+    std::vector<std::pair<std::string, double>> timings_;
     /// the number of one-qubit operations
     size_t none_ops_ = 0;
     /// the number of two-qubit operations

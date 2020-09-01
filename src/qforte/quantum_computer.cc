@@ -2,6 +2,7 @@
 #include <random>
 #include <algorithm>
 #include <functional>
+#include <stdexcept>
 
 #include "fmt/format.h"
 
@@ -10,8 +11,17 @@
 #include "quantum_gate.h"
 #include "quantum_operator.h"
 #include "quantum_op_pool.h"
+#include "timer.h"
 
 #include "quantum_computer.h"
+
+#if defined(_OPENMP)
+#include <omp.h>
+extern const bool parallelism_enabled = true;
+#else
+extern const bool parallelism_enabled = false;
+#endif
+
 
 QuantumComputer::QuantumComputer(int nqubit) : nqubit_(nqubit) {
     nbasis_ = std::pow(2, nqubit_);
@@ -38,23 +48,16 @@ void QuantumComputer::set_state(std::vector<std::pair<QuantumBasis, double_c>> s
 void QuantumComputer::zero_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
 
 void QuantumComputer::apply_operator(const QuantumOperator& qo) {
-
-    // copy old coeficinets Co
     std::vector<std::complex<double>> old_coeff = coeff_;
-
-    // for result vector Cf
     std::vector<std::complex<double>> result(nbasis_, 0.0);
+        for (const auto& term : qo.terms()) {
+            apply_circuit(term.second);
+            apply_constant(term.first);
+            std::transform(result.begin(), result.end(), coeff_.begin(),
+                           result.begin(), add_c<double>);
 
-    // loop over terms (could be done in parallel?)
-    for (const auto& term : qo.terms()) {
-        apply_circuit(term.second);
-        apply_constant(term.first);
-        std::transform(result.begin(), result.end(), coeff_.begin(),
-                       result.begin(), add_c<double>);
-
-        coeff_ = old_coeff;
-    }
-
+            coeff_ = old_coeff;
+        }
     coeff_ = result;
 }
 
@@ -717,43 +720,77 @@ void QuantumComputer::apply_2qubit_gate(const QuantumGate& qg) {
 }
 
 std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& qo) {
+    // local_timer t;
+    std::complex<double> result = 0.0;
+    if(parallelism_enabled){
+        for (const auto& term : qo.terms()) {
+            result += term.first * direct_pauli_circ_exp_val(term.second);
+        }
+    } else {
+        std::vector<std::complex<double>> old_coeff = coeff_;
+        apply_operator(qo);
+        result = std::inner_product(old_coeff.begin(),
+                                    old_coeff.end(),
+                                    coeff_.begin(),
+                                    std::complex<double>(0.0, 0.0),
+                                    add_c<double>,
+                                    complex_prod<double>);
 
-    // deep copy coeficients
-    std::vector<std::complex<double>> old_coeff = coeff_;
-    apply_operator(qo);
-    std::complex<double> result = std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
-                                  std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
-
-    coeff_ = old_coeff;
+        coeff_ = old_coeff;
+    }
+    // timings_.push_back(std::make_pair("direct_op_exp_val", t.get()));
     return result;
 }
 
-std::vector<std::complex<double>> QuantumComputer::direct_oppl_exp_val(const QuantumOpPool& qopl) {
-    // deep copy coeficients
-    std::vector<std::complex<double>> old_coeff = coeff_;
-    std::vector<std::complex<double>> results;
-    for (const auto& pl_term : qopl.terms()){
-        apply_operator(pl_term.second);
-        std::complex<double> val = std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
-                                      std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
+std::vector<std::complex<double>> QuantumComputer::direct_oppl_exp_val(
+    const QuantumOpPool& qopl) {
 
-        results.push_back(val*pl_term.first);
-        coeff_ = old_coeff;
+    std::vector<std::complex<double>> results;
+    if(parallelism_enabled){
+        for (const auto& pl_term : qopl.terms()){
+            std::complex<double> val = direct_op_exp_val(pl_term.second);
+            results.push_back(val*pl_term.first);
+        }
+    } else {
+        std::vector<std::complex<double>> old_coeff = coeff_;
+        for (const auto& pl_term : qopl.terms()){
+            apply_operator(pl_term.second);
+            std::complex<double> val = std::inner_product(old_coeff.begin(),
+                                                          old_coeff.end(),
+                                                          coeff_.begin(),
+                                                          std::complex<double>(0.0, 0.0),
+                                                          add_c<double>,
+                                                          complex_prod<double>);
+
+            results.push_back(val*pl_term.first);
+            coeff_ = old_coeff;
+        }
     }
     return results;
 }
 
-std::vector<std::complex<double>> QuantumComputer::direct_idxd_oppl_exp_val(const QuantumOpPool& qopl, const std::vector<int>& idxs) {
-    // deep copy coeficients
-    std::vector<std::complex<double>> old_coeff = coeff_;
-    std::vector<std::complex<double>> results;
-    for (const auto& idx : idxs){
-        apply_operator(qopl.terms()[idx].second);
-        std::complex<double> val = std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
-                                      std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
+std::vector<std::complex<double>> QuantumComputer::direct_idxd_oppl_exp_val(
+    const QuantumOpPool& qopl, const std::vector<int>& idxs) {
 
-        results.push_back(val*qopl.terms()[idx].first);
-        coeff_ = old_coeff;
+    std::vector<std::complex<double>> results;
+    if(parallelism_enabled){
+        for (const auto& idx : idxs){
+            std::complex<double> val = direct_op_exp_val(qopl.terms()[idx].second);
+            results.push_back(val*qopl.terms()[idx].first);
+        }
+    } else {
+        std::vector<std::complex<double>> old_coeff = coeff_;
+        for (const auto& idx : idxs){
+            apply_operator(qopl.terms()[idx].second);
+            std::complex<double> val = std::inner_product(old_coeff.begin(),
+                                                          old_coeff.end(),
+                                                          coeff_.begin(),
+                                                          std::complex<double>(0.0, 0.0),
+                                                          add_c<double>, complex_prod<double>);
+
+            results.push_back(val*qopl.terms()[idx].first);
+            coeff_ = old_coeff;
+        }
     }
     return results;
 }
@@ -763,25 +800,27 @@ std::vector<std::complex<double>> QuantumComputer::direct_oppl_exp_val_w_mults(
     const std::vector<std::complex<double>>& mults) {
 
     std::vector<std::complex<double>> results;
-    for (const auto& pl_term : qopl.terms()){
-        std::complex<double> result = 0.0;
-        for (int l=0; l < pl_term.second.terms().size(); l++){
-            std::complex<double> val = mults[l] * pl_term.first * pl_term.second.terms()[l].first;
-            result +=  val * direct_circ_exp_val(pl_term.second.terms()[l].second);
+    if(parallelism_enabled){
+        for (const auto& pl_term : qopl.terms()){
+            std::complex<double> result = 0.0;
+            for (int l=0; l < pl_term.second.terms().size(); l++){
+                std::complex<double> val = mults[l] * pl_term.first * pl_term.second.terms()[l].first;
+                result +=  val * direct_pauli_circ_exp_val(pl_term.second.terms()[l].second);
+            }
+            results.push_back(result);
         }
-        results.push_back(result);
+    } else {
+        for (const auto& pl_term : qopl.terms()){
+            std::complex<double> result = 0.0;
+            for (int l=0; l < pl_term.second.terms().size(); l++){
+                std::complex<double> val = mults[l] * pl_term.first * pl_term.second.terms()[l].first;
+                result +=  val * direct_circ_exp_val(pl_term.second.terms()[l].second);
+            }
+            results.push_back(result);
+        }
     }
     return results;
 }
-
-/// The below implemention of direct_op_exp_val may be faster for parallel computations.
-// std::complex<double> QuantumComputer::direct_op_exp_val(const QuantumOperator& qo) {
-//     std::complex<double> result = 0.0;
-//     for (const auto& term : qo.terms()) {
-//         result += term.first * direct_circ_exp_val(term.second);
-//     }
-//     return result;
-// }
 
 std::complex<double> QuantumComputer::direct_circ_exp_val(const QuantumCircuit& qc) {
     std::vector<std::complex<double>> old_coeff = coeff_;
@@ -794,6 +833,79 @@ std::complex<double> QuantumComputer::direct_circ_exp_val(const QuantumCircuit& 
 
     coeff_ = old_coeff;
     return result;
+}
+
+std::complex<double> QuantumComputer::direct_pauli_circ_exp_val(const QuantumCircuit& qc) {
+    std::complex<double> result = 0.0;
+    int min_qb_idx = nqubit_ - 1;
+    std::vector<int> x_idxs;
+    std::vector<int> y_idxs;
+    std::vector<int> z_idxs;
+
+    for (const QuantumGate& gate : qc.gates()) {
+        if( gate.target() < min_qb_idx ) { min_qb_idx = gate.target(); }
+        if( gate.gate_id() == "Z" ) {
+            z_idxs.push_back(gate.target());
+        } else if( gate.gate_id() == "X" ) {
+            x_idxs.push_back(gate.target());
+        } else if (gate.gate_id() == "Y" ) {
+            y_idxs.push_back(gate.target());
+        } else {
+            throw ("Not a valid pauli gate!");
+        }
+    }
+
+    int block_size = std::pow(2, min_qb_idx);
+    int n_blocks = int(nbasis_ / block_size);
+
+    #pragma omp parallel for reduction(+:result)
+    for(size_t n=0; n < n_blocks; n++){
+        int I1 = n * block_size;
+        int I2 = I1 + block_size;
+
+        std::pair<int, std::complex<double>> pauli_perms = get_pauli_permuted_idx(I1, x_idxs, y_idxs, z_idxs);
+
+        std::vector<std::complex<double>>::iterator it1 = std::next(coeff_.begin(), I1);
+        std::vector<std::complex<double>>::iterator it2 = std::next(coeff_.begin(), I2);
+        std::vector<std::complex<double>>::iterator it3 = std::next(coeff_.begin(), pauli_perms.first );
+
+        result += pauli_perms.second * std::inner_product(
+            it1,
+            it2,
+            it3,
+            std::complex<double>(0.0, 0.0),
+            add_c<double>,
+            complex_prod<double>
+        );
+    }
+    return result;
+}
+
+std::pair< int, std::complex<double> > QuantumComputer::get_pauli_permuted_idx(
+    size_t I,
+    const std::vector<int>& x_idxs,
+    const std::vector<int>& y_idxs,
+    const std::vector<int>& z_idxs
+    ) {
+
+    QuantumBasis basis_I(I);
+    std::complex<double> val = 1.0;
+    std::complex<double> onei(0.0, 1.0);
+
+    for (const auto& xi : x_idxs) {
+        basis_I.flip_bit(xi);
+    }
+
+    for (const auto& yi : y_idxs) {
+        val *= onei*(1.0 - 2.0*basis_I.get_bit(yi));
+        basis_I.flip_bit(yi);
+    }
+
+    for (const auto& zi : z_idxs) {
+        val *= (1.0 - 2.0*basis_I.get_bit(zi));
+    }
+
+    return std::make_pair(basis_I.add(), val);
 }
 
 std::complex<double> QuantumComputer::direct_gate_exp_val(const QuantumGate& qg) {
