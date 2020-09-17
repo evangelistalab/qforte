@@ -178,7 +178,7 @@ class ADAPTVQE(UCCVQE):
     """
     def run(self,
             avqe_thresh=1.0e-2,
-            pool_type='SD',
+            pool_type='sa_SD',
             opt_thresh=1.0e-5,
             opt_maxiter=200,
             adapt_maxiter=20,
