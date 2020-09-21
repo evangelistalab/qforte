@@ -40,10 +40,15 @@ def system_factory(stytem_type = 'molecule', build_type = 'openfermion', **kwarg
                                                           filename = kwargs['filename'],
                                                           hdf5_dir = kwargs['hdf5_dir'])
 
-            return my_system_skeleton
+        elif(build_type=='external'):
+            my_system_skeleton = MA.ExternalMolAdapter(multiplicity = kwargs['multiplicity'],
+                                                       charge = kwargs['charge'],
+                                                       filename = kwargs['filename'])
 
         else:
             raise TypeError("build type not supported, supported type is 'open_fermion'.")
 
     else:
         raise TypeError("system type not supported, supported type is 'molecule'.")
+
+    return my_system_skeleton
