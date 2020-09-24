@@ -126,7 +126,7 @@ void SQOpPool::fill_pool(std::string pool_type){
             size_t ia = 2*i;
             size_t ib = 2*i+1;
 
-            for(size_t j=i; j<nocc_; j++){
+            for(size_t j=0; j<nocc_; j++){
                 size_t ja = 2*j;
                 size_t jb = 2*j+1;
 
@@ -134,7 +134,7 @@ void SQOpPool::fill_pool(std::string pool_type){
                     size_t aa = 2*nocc_ + 2*a;
                     size_t ab = 2*nocc_ + 2*a+1;
 
-                    for(size_t b=a; b<nvir_; b++){
+                    for(size_t b=0; b<nvir_; b++){
                         size_t ba = 2*nocc_ + 2*b;
                         size_t bb = 2*nocc_ + 2*b+1;
 

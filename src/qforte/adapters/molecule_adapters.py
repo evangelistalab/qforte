@@ -197,7 +197,7 @@ class OpenFermionMolAdapter(MolAdapter):
 
         self._qforte_mol.set_sq_hamiltonian( build_sqop_from_openfermion(fermion_hamiltonian) )
 
-        self._qforte_mol.set_sq_hamiltonian( fermion_hamiltonian )
+        self._qforte_mol.set_of_sq_hamiltonian( fermion_hamiltonian )
 
         # Set qforte energies from openfermion
         if(kwargs['run_scf']==1):

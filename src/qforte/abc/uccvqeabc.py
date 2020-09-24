@@ -100,73 +100,73 @@ class UCCVQE(VQE):
 
         return np.real(grads)
 
-    def measure_all_gradient_htest(self):
-        """
-        Parameters
-        ----------
-        HAm : QuantumOpPool
-            The comutator to measure.
-
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
-        """
-
-        if self._fast==False:
-            raise ValueError("self._fast must be True for gradient measurement.")
-
-        grads = [] # will be full length of pool
-        M = len(self._pool)
-        temp_tamps = [0.0 for i in range(M)]
-        for tamp, top in zip(self._tamps, self._tops):
-            temp_tamps[top] = tamp
-
-        omega_o = ref_to_basis_idx(self._ref)
-        for mu in range(M):
-            lo_pool = qf.SQOpPool()
-            hi_pool = qf.SQOpPool()
-            # if params is None:
-            for nu in range(mu):
-                print('nu: ', nu)
-                if(np.abs(temp_tamps[nu]) > 1e-10):
-                    lo_pool.add_term(temp_tamps[nu], self._pool[nu][1])
-
-            for nu in range(mu, M):
-                print('  nu: ', nu)
-                if(np.abs(temp_tamps[nu]) > 1e-10):
-                    hi_pool.add_term(temp_tamps[nu], self._pool[nu][1])
-
-            Kmu = self._pool[mu][1].jw_transform()
-            Kmu.mult_coeffs(self._pool[mu][0])
-
-            Alo = lo_pool.get_quantum_operator('comuting_grp_lex')
-            Ahi = hi_pool.get_quantum_operator('comuting_grp_lex')
-            # Ahi = lo_pool.get_quantum_operator('comuting_grp_lex')
-            # Alo = hi_pool.get_quantum_operator('comuting_grp_lex')
-
-            Ulo, plo = trotterize(Alo, trotter_number=self._trotter_number)
-            Uhi, phi = trotterize(Ahi, trotter_number=self._trotter_number)
-            if (plo != 1.0 + 0.0j) or (phi != 1.0 + 0.0j):
-                raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
-
-            qc = qforte.QuantumComputer(self._nqb)
-            qc.apply_circuit(self._Uprep)
-            qc.apply_circuit(Ulo)
-            qc.apply_operator(Kmu)
-            qc.apply_circuit(Uhi)
-            qc.apply_operator(self._qb_ham)
-            qc.apply_circuit(Uhi.adjoint())
-            qc.apply_circuit(Ulo.adjoint())
-            # qc.apply_circuit(Ulo.adjoint())
-            # qc.apply_circuit(Uhi.adjoint())
-            # qc.apply_circuit(self._Uprep.adjoint())
-
-            # grads.append( 2.0*np.real(qc.get_coeff_vec()[omega_o]) )
-            grads.append( 2.0*qc.get_coeff_vec()[omega_o] )
-
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
-
-        return np.real(grads)
+    # def measure_all_gradient_htest(self):
+    #     """
+    #     Parameters
+    #     ----------
+    #     HAm : QuantumOpPool
+    #         The comutator to measure.
+    #
+    #     Ucirc : QuantumCircuit
+    #         The state preparation circuit.
+    #     """
+    #
+    #     if self._fast==False:
+    #         raise ValueError("self._fast must be True for gradient measurement.")
+    #
+    #     grads = [] # will be full length of pool
+    #     M = len(self._pool)
+    #     temp_tamps = [0.0 for i in range(M)]
+    #     for tamp, top in zip(self._tamps, self._tops):
+    #         temp_tamps[top] = tamp
+    #
+    #     omega_o = ref_to_basis_idx(self._ref)
+    #     for mu in range(M):
+    #         lo_pool = qf.SQOpPool()
+    #         hi_pool = qf.SQOpPool()
+    #         # if params is None:
+    #         for nu in range(mu):
+    #             print('nu: ', nu)
+    #             if(np.abs(temp_tamps[nu]) > 1e-10):
+    #                 lo_pool.add_term(temp_tamps[nu], self._pool[nu][1])
+    #
+    #         for nu in range(mu, M):
+    #             print('  nu: ', nu)
+    #             if(np.abs(temp_tamps[nu]) > 1e-10):
+    #                 hi_pool.add_term(temp_tamps[nu], self._pool[nu][1])
+    #
+    #         Kmu = self._pool[mu][1].jw_transform()
+    #         Kmu.mult_coeffs(self._pool[mu][0])
+    #
+    #         Alo = lo_pool.get_quantum_operator('comuting_grp_lex')
+    #         Ahi = hi_pool.get_quantum_operator('comuting_grp_lex')
+    #         # Ahi = lo_pool.get_quantum_operator('comuting_grp_lex')
+    #         # Alo = hi_pool.get_quantum_operator('comuting_grp_lex')
+    #
+    #         Ulo, plo = trotterize(Alo, trotter_number=self._trotter_number)
+    #         Uhi, phi = trotterize(Ahi, trotter_number=self._trotter_number)
+    #         if (plo != 1.0 + 0.0j) or (phi != 1.0 + 0.0j):
+    #             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+    #
+    #         qc = qforte.QuantumComputer(self._nqb)
+    #         qc.apply_circuit(self._Uprep)
+    #         qc.apply_circuit(Ulo)
+    #         qc.apply_operator(Kmu)
+    #         qc.apply_circuit(Uhi)
+    #         qc.apply_operator(self._qb_ham)
+    #         qc.apply_circuit(Uhi.adjoint())
+    #         qc.apply_circuit(Ulo.adjoint())
+    #         # qc.apply_circuit(Ulo.adjoint())
+    #         # qc.apply_circuit(Uhi.adjoint())
+    #         # qc.apply_circuit(self._Uprep.adjoint())
+    #
+    #         # grads.append( 2.0*np.real(qc.get_coeff_vec()[omega_o]) )
+    #         grads.append( 2.0*qc.get_coeff_vec()[omega_o] )
+    #
+    #     for val in grads:
+    #         assert(np.isclose(np.imag(val), 0.0))
+    #
+    #     return np.real(grads)
 
     def measure_gradient_htest(self, params=None):
         """
@@ -199,8 +199,6 @@ class UCCVQE(VQE):
                     tamp = self._tamps[nu]
                     top = self._tops[nu]
                     hi_pool.add_term(tamp, self._pool[top][1])
-                # for tamp, top in zip(self._tamps, self._tops):
-                #     temp_pool.add_term(tamp, self._pool[top][1])
 
 
             else:
@@ -213,8 +211,6 @@ class UCCVQE(VQE):
                     tamp = params[nu]
                     top = self._tops[nu]
                     hi_pool.add_term(tamp, self._pool[top][1])
-                # for param, top in zip(params, self._tops):
-                #     temp_pool.add_term(param, self._pool[top][1])
 
 
             Kmu = self._pool[self._tops[mu]][1].jw_transform()
@@ -222,8 +218,6 @@ class UCCVQE(VQE):
 
             Alo = lo_pool.get_quantum_operator('comuting_grp_lex')
             Ahi = hi_pool.get_quantum_operator('comuting_grp_lex')
-            # Ahi = lo_pool.get_quantum_operator('comuting_grp_lex')
-            # Alo = hi_pool.get_quantum_operator('comuting_grp_lex')
 
             Ulo, plo = trotterize(Alo, trotter_number=self._trotter_number)
             Uhi, phi = trotterize(Ahi, trotter_number=self._trotter_number)
