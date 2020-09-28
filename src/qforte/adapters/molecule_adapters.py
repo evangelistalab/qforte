@@ -6,6 +6,8 @@ import operator
 import numpy as np
 from abc import ABC, abstractmethod
 
+import qforte
+
 from qforte.helper.operator_helper import build_from_openfermion, build_sqop_from_openfermion
 from qforte.system.molecular_info import Molecule
 from qforte.utils import transforms as tf
@@ -16,6 +18,8 @@ from openfermion.transforms import get_fermion_operator, jordan_wigner
 from openfermion.utils import hermitian_conjugated, normal_ordered, freeze_orbitals
 
 from openfermionpsi4 import run_psi4
+
+import json
 
 
 class MolAdapter(ABC):
@@ -197,6 +201,10 @@ class OpenFermionMolAdapter(MolAdapter):
 
         self._qforte_mol.set_sq_hamiltonian( build_sqop_from_openfermion(fermion_hamiltonian) )
 
+        ##
+        # self._qforte_mol.set_sq_of_ham(fermion_hamiltonian)
+        ##
+
         # Set qforte energies from openfermion
         if(kwargs['run_scf']==1):
             self._qforte_mol.set_hf_energy(openfermion_mol.hf_energy)
@@ -218,6 +226,53 @@ class OpenFermionMolAdapter(MolAdapter):
         if(kwargs['run_fci']==1):
             self._qforte_mol.set_fci_energy(openfermion_mol.fci_energy)
 
+
+
+    def get_molecule(self):
+        return self._qforte_mol
+
+class ExternalMolAdapter(MolAdapter):
+    """Builds a qforte Molecule object from an external json file containing
+    the one and two electron integrals and numbers of alpha/beta electrons.
+    """
+
+    def __init__(self, **kwargs):
+        # self._basis = kwargs['basis']
+        self._multiplicity = kwargs['multiplicity']
+        self._charge = kwargs['charge']
+        self._filename = kwargs['filename']
+
+
+        self._qforte_mol = Molecule(multiplicity = kwargs['multiplicity'],
+                                    charge = kwargs['charge'],
+                                    filename = kwargs['filename'])
+
+    def run(self, **kwargs):
+
+        # open json file
+        with open(self._filename) as f:
+            external_data = json.load(f)
+
+        # build sq hamiltonain
+        qforte_sq_hamiltionan = qforte.SQOperator()
+        qforte_sq_hamiltionan.add_term(external_data['scalar_energy']['data'], [])
+
+        for p, q, h_pq in external_data['oei']['data']:
+            qforte_sq_hamiltionan.add_term(h_pq, [p,q])
+
+        for p, q, r, s, h_pqrs in external_data['tei']['data']:
+            # qforte_sq_hamiltionan.add_term(h_pqrs, [p,q,r,s])
+            qforte_sq_hamiltionan.add_term(h_pqrs/4.0, [p,q,s,r]) # only works in C1 symmetry
+
+        hf_reference = [0 for i in range(external_data['nso']['data'])]
+        for n in range(external_data['na']['data'] + external_data['nb']['data']):
+            hf_reference[n] = 1
+
+        self._qforte_mol.set_hf_reference(hf_reference)
+
+        self._qforte_mol.set_sq_hamiltonian(qforte_sq_hamiltionan)
+
+        self._qforte_mol.set_hamiltonian(qforte_sq_hamiltionan.jw_transform())
 
 
     def get_molecule(self):
