@@ -191,18 +191,40 @@ void SQOpPool::fill_pool(std::string pool_type){
                 }
             }
         }
-    } else if (pool_type=="SD") {
+    } else if ( (pool_type=="SD") || (pool_type=="SDT") || (pool_type=="SDTQ") || (pool_type=="SDTQP") || (pool_type=="SDTQPH") ) {
+
+        int max_nbody = 0;
+
+        if(pool_type=="SD") {
+            max_nbody = 2;
+        } else if(pool_type=="SDT") {
+            max_nbody = 3;
+        } else if(pool_type=="SDTQ") {
+            max_nbody = 4;
+        } else if(pool_type=="SDTQP") {
+            max_nbody = 5;
+        } else if(pool_type=="SDTQPH") {
+            max_nbody = 6;
+        } else {
+            throw std::invalid_argument( "Qforte UCC only supports up to Hextuple excitations." );
+        }
 
         int nqb = 2 * (nocc_ + nvir_);
         int nel = 2 * nocc_;
 
+        // TODO(Nick): incorparate more flexability into this
+        int na_el = nocc_;
+        int nb_el = nocc_;
+
         for (int I=0; I<std::pow(2, nqb); I++) {
 
-            // get the basis | 11001100 > or whatever..
-            QuantumBasis basis_I(I);// = QuantumBasis(I);
+            // get the basis state (I) | 11001100 > or whatever..
+            QuantumBasis basis_I(I);
 
             int nbody = 0;
             int pn = 0;
+            int na_I = 0;
+            int nb_I = 0;
             std::vector<size_t> holes; // i, j, k, ...
             std::vector<size_t> particles; // a, b, c, ...
             std::vector<int> parity;
@@ -211,6 +233,12 @@ void SQOpPool::fill_pool(std::string pool_type){
                 int bit_val = static_cast<int>(basis_I.get_bit(p));
                 nbody += ( 1 - bit_val);
                 pn += bit_val;
+                if(p%2==0){
+                    na_I += bit_val;
+                } else {
+                    nb_I += bit_val;
+                }
+
                 if(bit_val-1){
                     holes.push_back(p);
                     if(p%2==0){
@@ -223,6 +251,11 @@ void SQOpPool::fill_pool(std::string pool_type){
             for (size_t q=2*nocc_; q<nqb; q++) {
                 int bit_val = static_cast<int>(basis_I.get_bit(q));
                 pn += bit_val;
+                if(q%2==0){
+                    na_I += bit_val;
+                } else {
+                    nb_I += bit_val;
+                }
                 if(bit_val){
                     particles.push_back(q);
                     if(q%2==0){
@@ -233,23 +266,26 @@ void SQOpPool::fill_pool(std::string pool_type){
                 }
             }
 
-            if( (pn==nel) && ((nbody == 1) || (nbody == 2)) ){
+            if(pn==nel && na_I == na_el && nb_I == nb_el){
 
-                int total_parity = 1;
-                for (const auto& z: parity){
-                    total_parity *= z;
-                }
+                if (nbody != 0 && nbody <= max_nbody ) {
 
-                if(total_parity==1){
-                    particles.insert(particles.end(), holes.begin(), holes.end());
-                    std::vector<size_t> particles_adj (particles.rbegin(), particles.rend());
+                    int total_parity = 1;
+                    for (const auto& z: parity){
+                        total_parity *= z;
+                    }
 
-                    // need i, j, a, b
-                    SQOperator t_temp;
-                    t_temp.add_term(+1.0, particles);
-                    t_temp.add_term(-1.0, particles_adj);
-                    t_temp.simplify();
-                    add_term(1.0, t_temp);
+                    if(total_parity==1){
+                        particles.insert(particles.end(), holes.begin(), holes.end());
+                        std::vector<size_t> particles_adj (particles.rbegin(), particles.rend());
+
+                        // need i, j, a, b
+                        SQOperator t_temp;
+                        t_temp.add_term(+1.0, particles);
+                        t_temp.add_term(-1.0, particles_adj);
+                        t_temp.simplify();
+                        add_term(1.0, t_temp);
+                    }
                 }
             }
         }
@@ -384,151 +420,6 @@ void SQOpPool::fill_pool(std::string pool_type){
                         if(temp2b.terms().size() > 0){
                             add_term(1.0, temp2b);
                         }
-                    }
-                }
-            }
-        }
-    } else if(pool_type=="sa_GSD"){
-        int norb = nocc_ + nvir_;
-        for(size_t p=0; p<norb; p++){
-            size_t pa = 2*p;
-            size_t pb = 2*p+1;
-
-            for (size_t q=p; q<norb; q++){
-                size_t qa = 2*q;
-                size_t qb = 2*q+1;
-
-                SQOperator temp1;
-                temp1.add_term(+1.0/std::sqrt(2), {pa, qa});
-                temp1.add_term(+1.0/std::sqrt(2), {pb, qb});
-
-                temp1.add_term(-1.0/std::sqrt(2), {qa, pa});
-                temp1.add_term(-1.0/std::sqrt(2), {qb, pb});
-
-                temp1.simplify();
-
-                std::complex<double> temp1_norm(0.0, 0.0);
-                for (const auto& term : temp1.terms()){
-                    temp1_norm += std::norm(term.first);
-                }
-                temp1.mult_coeffs(1.0/std::sqrt(temp1_norm));
-                add_term(1.0, temp1);
-            }
-        }
-
-        int pq = -1;
-        for(size_t p=0; p<norb; p++){
-            size_t pa = 2*p;
-            size_t pb = 2*p+1;
-
-            for(size_t q=p; q<norb; q++){
-                size_t qa = 2*q;
-                size_t qb = 2*q+1;
-                pq++;
-                int rs = -1;
-
-                for(size_t r=0; r<norb; r++){
-                    size_t ra = + 2*r;
-                    size_t rb = + 2*r+1;
-
-                    for(size_t s=r; s<norb; s++){
-                        size_t sa = 2*s;
-                        size_t sb = 2*s+1;
-
-                        rs++;
-
-                        if(pq > rs){
-                            continue;
-                        }
-
-                        // SQOperator temp2a;
-                        // if((aa != ba) && (ia != ja)){
-                        //     temp2a.add_term(2.0/std::sqrt(12), {aa,ba,ia,ja});
-                        // }
-                        // if((ab != bb ) && (ib != jb)){
-                        //     temp2a.add_term(2.0/std::sqrt(12), {ab,bb,ib,jb});
-                        // }
-                        // if((aa != bb) && (ia != jb)){
-                        //     temp2a.add_term(1.0/std::sqrt(12), {aa,bb,ia,jb});
-                        // }
-                        // if((ab != ba) && (ib != ja)){
-                        //     temp2a.add_term(1.0/std::sqrt(12), {ab,ba,ib,ja});
-                        // }
-                        // if((aa != bb) && (ib != ja)){
-                        //     temp2a.add_term(1.0/std::sqrt(12), {aa,bb,ib,ja});
-                        // }
-                        // if((ab != ba) && (ia != jb)){
-                        //     temp2a.add_term(1.0/std::sqrt(12), {ab,ba,ia,jb});
-                        // }
-                        //
-                        // // hermetian conjugate
-                        // if((ja != ia) && (ba != aa)){
-                        //     temp2a.add_term(-2.0/std::sqrt(12), {ja,ia,ba,aa});
-                        // }
-                        // if((jb != ib ) && (bb != ab)){
-                        //     temp2a.add_term(-2.0/std::sqrt(12), {jb,ib,bb,ab});
-                        // }
-                        // if((jb != ia) && (bb != aa)){
-                        //     temp2a.add_term(-1.0/std::sqrt(12), {jb,ia,bb,aa});
-                        // }
-                        // if((ja != ib) && (ba != ab)){
-                        //     temp2a.add_term(-1.0/std::sqrt(12), {ja,ib,ba,ab});
-                        // }
-                        // if((ja != ib) && (bb != aa)){
-                        //     temp2a.add_term(-1.0/std::sqrt(12), {ja,ib,bb,aa});
-                        // }
-                        // if((jb != ia) && (ba != ab)){
-                        //     temp2a.add_term(-1.0/std::sqrt(12), {jb,ia,ba,ab});
-                        // }
-                        //
-                        // SQOperator temp2b;
-                        // if((aa != bb) && (ia != jb)){
-                        //     temp2b.add_term(0.5, {aa,bb,ia,jb});
-                        // }
-                        // if((ab != ba) && (ib != ja)){
-                        //     temp2b.add_term(0.5, {ab,ba,ib,ja});
-                        // }
-                        // if((aa != bb) && (ib != ja)){
-                        //     temp2b.add_term(-0.5, {aa,bb,ib,ja});
-                        // }
-                        // if((ab != ba) && (ia != jb)){
-                        //     temp2b.add_term(-0.5, {ab,ba,ia,jb});
-                        // }
-                        //
-                        // // hermetian conjugate
-                        // if((jb != ia) && (bb != aa)){
-                        //     temp2b.add_term(-0.5, {jb,ia,bb,aa});
-                        // }
-                        // if((ja != ib) && (ba != ab)){
-                        //     temp2b.add_term(-0.5, {ja,ib,ba,ab});
-                        // }
-                        // if((ja != ib) && (bb != aa)){
-                        //     temp2b.add_term(0.5, {ja,ib,bb,aa});
-                        // }
-                        // if((jb != ia) && (ba != ab)){
-                        //     temp2b.add_term(0.5, {jb,ia,ba,ab});
-                        // }
-
-                        // temp2a.simplify();
-                        // temp2b.simplify();
-                        //
-                        // std::complex<double> temp2a_norm(0.0, 0.0);
-                        // std::complex<double> temp2b_norm(0.0, 0.0);
-                        // for (const auto& term : temp2a.terms()){
-                        //     temp2a_norm += std::norm(term.first);
-                        // }
-                        // for (const auto& term : temp2b.terms()){
-                        //     temp2b_norm += std::norm(term.first);
-                        // }
-                        // temp2a.mult_coeffs(1.0/std::sqrt(temp2a_norm));
-                        // temp2b.mult_coeffs(1.0/std::sqrt(temp2b_norm));
-                        //
-                        // if(temp2a.terms().size() > 0){
-                        //     add_term(1.0, temp2a);
-                        // }
-                        // if(temp2b.terms().size() > 0){
-                        //     add_term(1.0, temp2b);
-                        // }
                     }
                 }
             }

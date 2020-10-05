@@ -28,6 +28,22 @@ class UCCVQE(VQE):
             self._pool_obj = qf.SQOpPool()
             self._pool_obj.set_orb_spaces(self._ref)
             self._pool_obj.fill_pool('SD')
+        elif (self._pool_type=='SDT'):
+            self._pool_obj = qf.SQOpPool()
+            self._pool_obj.set_orb_spaces(self._ref)
+            self._pool_obj.fill_pool('SDT')
+        elif (self._pool_type=='SDTQ'):
+            self._pool_obj = qf.SQOpPool()
+            self._pool_obj.set_orb_spaces(self._ref)
+            self._pool_obj.fill_pool('SDTQ')
+        elif (self._pool_type=='SDTQP'):
+            self._pool_obj = qf.SQOpPool()
+            self._pool_obj.set_orb_spaces(self._ref)
+            self._pool_obj.fill_pool('SDTQP')
+        elif (self._pool_type=='SDTQPH'):
+            self._pool_obj = qf.SQOpPool()
+            self._pool_obj.set_orb_spaces(self._ref)
+            self._pool_obj.fill_pool('SDTQPH')
         else:
             raise ValueError('Invalid operator pool type specified.')
 
