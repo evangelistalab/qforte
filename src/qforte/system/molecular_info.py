@@ -93,8 +93,11 @@ class Molecule(object):
     def set_sq_hamiltonian(self, sq_hamiltonain_operator):
         self._sq_hamiltonian = sq_hamiltonain_operator
 
-    def set_of_sq_hamiltonian(self, sq_opferm_hamiltonain_operator):
-        self._sq_of_hamiltonian = sq_opferm_hamiltonain_operator
+    def set_sq_of_ham(self, sq_of_ham):
+        self._sq_of_ham = sq_of_ham
+
+    def set_hf_reference(self, hf_reference):
+        self._hf_reference = hf_reference
 
     def set_ccsd_amps(self, ccsd_singles, ccsd_doubles):
         self._ccsd_singles = ccsd_singles
@@ -124,6 +127,12 @@ class Molecule(object):
 
     def get_sq_hamiltonian(self):
         return self._sq_hamiltonian
+
+    def get_sq_of_ham(self):
+        return self._sq_of_ham
+
+    def get_hf_reference(self):
+        return self._hf_reference
 
     def get_hf_energy(self):
         return self._hf_energy
