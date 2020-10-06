@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.4)
 set (CMAKE_CXX_STANDARD 14)
 
 # optionally use OpenMP, if so use OpenMP compatible compiler
-OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" ON)
+OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)
 
 if(USE_OpenMP)
     set(CMAKE_C_COMPILER "/usr/local/Cellar/llvm/10.0.1/bin/clang")
