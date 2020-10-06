@@ -56,6 +56,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_term", &QuantumOperator::add_term)
         .def("add_op", &QuantumOperator::add_op)
         .def("set_coeffs", &QuantumOperator::set_coeffs)
+        .def("mult_coeffs", &QuantumOperator::mult_coeffs)
         .def("terms", &QuantumOperator::terms)
         .def("order_terms", &QuantumOperator::order_terms)
         .def("canonical_order", &QuantumOperator::canonical_order)
@@ -85,6 +86,8 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
         .def("str", &QuantumBasis::str)
         .def("flip_bit", &QuantumBasis::flip_bit)
+        .def("set_bit", &QuantumBasis::set_bit)
+        .def("add", &QuantumBasis::add)
         .def("get_bit", &QuantumBasis::get_bit);
 
     py::class_<QuantumComputer>(m, "QuantumComputer")
