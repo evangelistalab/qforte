@@ -233,9 +233,10 @@ class ADAPTVQE(UCCVQE):
         avqe_iter = 0
         hit_maxiter = 0
 
-        f = open("summary.dat", "w+", buffering=1)
-        f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
-        f.write('#-------------------------------------------------------------------------------\n')
+        if (self._print_summary_file):
+            f = open("summary.dat", "w+", buffering=1)
+            f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
+            f.write('#-------------------------------------------------------------------------------\n')
 
         while not self._converged:
 
@@ -249,14 +250,19 @@ class ADAPTVQE(UCCVQE):
             print('tamplitudes for tops: \n', self._tamps)
 
             self.solve()
-            f.write(f'  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {avqe_iter+1:8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
+
+            if (self._print_summary_file):
+                f.write(f'  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {avqe_iter+1:8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
+
             avqe_iter += 1
 
             if avqe_iter > self._adapt_maxiter-1:
                 hit_maxiter = 1
                 break
 
-        f.close()
+        if (self._print_summary_file):
+            f.close()
+
         # Set final ground state energy.
         if hit_maxiter:
             self._Egs = self.get_final_energy(hit_max_avqe_iter=1)
@@ -363,32 +369,37 @@ class ADAPTVQE(UCCVQE):
 
         if self._use_analytic_grad:
             print('  \n--> Begin opt with analytic graditent:')
-            print('  Initial guess energy: ', round(init_gues_energy,1000))
+            print(f" Initail guess energy:              {init_gues_energy:+12.10f}")
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
                                     jac=self.gradient_ary_feval,
-                                    options=opts)
+                                    options=opts,
+                                    callback=self.callback)
 
+            # account for energy evaluations
             self._n_pauli_measures_k += self._Nl * res.nfev
+
+            # account for gradient evaluations
             for m in self._tops:
-                self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms()) * res.njev
+                self._n_pauli_measures_k += self._Nm[m] * self._Nl * res.njev
 
         else:
             print('  \n--> Begin opt with grad estimated using first-differences:')
-            print('  Initial guess energy: ', round(init_gues_energy,1000))
+            print(f" Initail guess energy:              {init_gues_energy:+12.10f}")
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
-                                    options=opts)
+                                    options=opts,
+                                    callback=self.callback)
 
             self._n_pauli_measures_k += self._Nl * res.nfev
 
         if(res.success):
-            print('  minimization successful.')
-            print('  min Energy: ', res.fun)
+            print('  => Minimization successful!')
+            print(f'  => Minimum Energy: {res.fun:+12.10f}')
 
         else:
-            print('  WARNING: minimization result may not be tightly converged.')
-            print('  min Energy: ', res.fun)
+            print('  => WARNING: minimization result may not be tightly converged.')
+            print(f'  => Minimum Energy: {res.fun:+12.10f}')
 
         self._energies.append(res.fun)
         self._results.append(res)
@@ -408,13 +419,13 @@ class ADAPTVQE(UCCVQE):
                 print('     op index (m)     N pauli terms          Gradient ')
                 print('  -------------------------------------------------------')
 
-            grads = self.measure_gradient(self._comutator_pool, Uvqc)
+            grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc)
 
             for m, grad_m in enumerate(grads):
                 self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms())
                 curr_norm += grad_m*grad_m
                 if (self._verbose):
-                    print('       ', m,  '             ', len(self._comutator_pool.terms()[m][1].terms()),'                  ', '{:+.09f}'.format(grad_m))
+                    print('       {m:3}                {len(self._comutator_pool.terms()[m][1].terms()):8}             {grad_m:+12.9f}')
                 if (abs(grad_m) > abs(lgrst_grad)):
                     lgrst_grad = grad_m
                     lgrst_grad_idx = m
@@ -537,9 +548,10 @@ class ADAPTVQE(UCCVQE):
         Ucirc = self.build_Uvqc2(params[0])
         return self.measure_energy(Ucirc)
 
-    def gradient_ary_feval2(self, params):
+    # this fuction needs to change to use updated gradient measurement
+    def gradient_ary_feval2(self, param):
         Uvqc = self.build_Uvqc2(params[0])
-        grads = self.measure_gradient(self._comutator_pool, Uvqc, [self._trial_op])
+        grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc, [self._trial_op])
         return grads
 
     def conv_status(self):

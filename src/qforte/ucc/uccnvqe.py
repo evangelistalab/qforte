@@ -17,7 +17,7 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 from scipy.optimize import minimize
 
-class UCCSDVQE(UCCVQE):
+class UCCNVQE(UCCVQE):
     """
     A class that encompases the three componants of using the variational
     quantum eigensolver to optemize a parameterized unitary CCSD like wave function.
@@ -182,15 +182,15 @@ class UCCSDVQE(UCCVQE):
     def run(self,
             opt_thresh=1.0e-5,
             opt_maxiter=200,
+            pool_type='SD',
             optimizer='BFGS',
             use_analytic_grad = True):
 
-        # TODO (cleanup): add option to pre populate cluster amps.
         self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
         self._use_analytic_grad = use_analytic_grad
         self._optimizer = optimizer
-        self._pool_type = 'SD'
+        self._pool_type = pool_type
 
         self._tops = []
         self._tamps = []
@@ -210,9 +210,6 @@ class UCCSDVQE(UCCVQE):
 
         if self._verbose:
             self._pool_obj.print_pool()
-
-        if self._use_analytic_grad:
-            self.fill_comutator_pool()
 
         self.initialize_ansatz()
 
@@ -307,37 +304,44 @@ class UCCSDVQE(UCCVQE):
 
         if self._use_analytic_grad:
             print('  \n--> Begin opt with analytic graditent:')
-            print('  Initial guess energy: ', round(init_gues_energy,1000))
+            print(f" Initail guess energy:              {init_gues_energy:+12.10f}")
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
                                     jac=self.gradient_ary_feval,
-                                    options=opts)
+                                    options=opts,
+                                    callback=self.callback)
+
+            # account for paulit term measurement for gradient evaluations
+            for m in range(len(self._tamps)):
+                self._n_pauli_trm_measures += self._Nm[m] * self._Nl * res.njev
 
         else:
             print('  \n--> Begin opt with grad estimated using first-differences:')
-            print('  Initial guess energy: ', round(init_gues_energy,1000))
+            print(f" Initail guess energy:              {init_gues_energy:+12.10f}")
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
-                                    options=opts)
+                                    options=opts,
+                                    callback=self.callback)
 
         if(res.success):
-            print('  minimization successful.')
-            print('  min Energy: ', res.fun)
+            print('  => Minimization successful!')
+            print(f'  => Minimum Energy: {res.fun:+12.10f}')
             self._Egs = res.fun
             self._final_result = res
             self._tamps = list(res.x)
         else:
-            print('  WARNING: minimization result may not be tightly converged.')
-            print('  min Energy: ', res.fun)
+            print('  => WARNING: minimization result may not be tightly converged.')
+            print(f'  => Minimum Energy: {res.fun:+12.10f}')
             self._Egs = res.fun
             self._final_result = res
             self._tamps = list(res.x)
 
-        self._n_classical_params = self._n_classical_params = len(self._tamps)
+        self._n_classical_params = len(self._tamps)
         self._n_cnot = self.build_Uvqc().get_num_cnots()
+
+        # account for pauli term measurement for energy evaluations
         self._n_pauli_trm_measures += self._Nl * res.nfev
-        for m in range(self._n_classical_params):
-            self._n_pauli_trm_measures += len(self._comutator_pool.terms()[m][1].terms()) * res.njev
+
 
     def initialize_ansatz(self):
         for l in range(len(self._pool)):
@@ -349,8 +353,9 @@ class UCCSDVQE(UCCVQE):
         return self._n_ham_measurements
 
     def get_num_comut_measurements(self):
-        if self._use_analytic_grad:
-            self._n_comut_measurements = self._final_result.njev * (len(self._pool))
-            return self._n_comut_measurements
-        else:
-            return 0
+        # if self._use_analytic_grad:
+        #     self._n_comut_measurements = self._final_result.njev * (len(self._pool))
+        #     return self._n_comut_measurements
+        # else:
+        #     return 0
+        return 0

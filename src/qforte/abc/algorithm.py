@@ -56,7 +56,8 @@ class Algorithm(ABC):
                  trotter_order=1,
                  trotter_number=1,
                  fast=True,
-                 verbose=False):
+                 verbose=False,
+                 print_summary_file=False):
 
         self._sys = system
         self._ref = reference
@@ -70,6 +71,7 @@ class Algorithm(ABC):
         self._trotter_number = trotter_number
         self._fast = fast
         self._verbose = verbose
+        self._print_summary_file = print_summary_file
 
         # Required attributes, to be defined in concrete class.
         self._Egs = None

@@ -1,2 +1,2 @@
 from .adaptvqe import *
-from .uccsdvqe import *
+from .uccnvqe import *
