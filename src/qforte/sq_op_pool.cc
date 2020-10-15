@@ -132,11 +132,11 @@ void SQOpPool::fill_pool(std::string pool_type){
                 size_t ja = 2*j;
                 size_t jb = 2*j+1;
 
-                for(size_t a=0; a<nvir_; a++){
+                for(size_t a=nocc_; a<nvir_; a++){
                     size_t aa = 2*nocc_ + 2*a;
                     size_t ab = 2*nocc_ + 2*a+1;
 
-                    for(size_t b=0; b<nvir_; b++){
+                    for(size_t b=nocc_; b<nvir_; b++){
                         size_t ba = 2*nocc_ + 2*b;
                         size_t bb = 2*nocc_ + 2*b+1;
 
@@ -162,6 +162,125 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2abab.add_term(-1.0, {jb,ia,bb,aa});
                             temp2abab.simplify();
                             add_term(1.0, temp2abab);
+                        }
+
+                        // if((ab != ba) && (ib != ja)){
+                        //     SQOperator temp2baba;
+                        //     temp2baba.add_term(+1.0, {ab,ba,ib,ja});
+                        //     temp2baba.add_term(-1.0, {ja,ib,ba,ab});
+                        //     temp2baba.simplify();
+                        //     add_term(1.0, temp2baba);
+                        // }
+
+                        // if((aa != bb) && (ib != ja)){
+                        //     SQOperator temp2abba;
+                        //     temp2abba.add_term(+1.0, {aa,bb,ib,ja});
+                        //     temp2abba.add_term(-1.0, {ja,ib,bb,aa});
+                        //     temp2abba.simplify();
+                        //     add_term(1.0, temp2abba);
+                        // }
+
+                        // if((ab != ba) && (ia != jb)){
+                        //     SQOperator temp2baab;
+                        //     temp2baab.add_term(+1.0, {ab,ba,ia,jb});
+                        //     temp2baab.add_term(-1.0, {jb,ia,ba,ab});
+                        //     temp2baab.simplify();
+                        //     add_term(1.0, temp2baab);
+                        // }
+                    }
+                }
+            }
+        }
+    } else if(pool_type=="GSD"){
+        size_t norb = nocc_ + nvir_;
+        for(size_t i=0; i<norb; i++){
+            size_t ia = 2*i;
+            size_t ib = 2*i+1;
+
+            for (size_t a=i; a<norb; a++){
+                size_t aa = 2*a;
+                size_t ab = 2*a+1;
+
+
+
+
+                if( aa != ia ){
+                    SQOperator temp1a;
+                    temp1a.add_term(+1.0, {aa, ia});
+                    temp1a.add_term(-1.0, {ia, aa});
+                    temp1a.simplify();
+                    if(temp1a.terms().size() > 0){
+                        add_term(1.0, temp1a);
+                    }
+                }
+
+                if( ab != ib ){
+                    SQOperator temp1b;
+                    temp1b.add_term(+1.0, {ab, ib});
+                    temp1b.add_term(-1.0, {ib, ab});
+                    temp1b.simplify();
+                    if(temp1b.terms().size() > 0){
+                        add_term(1.0, temp1b);
+                    }
+                }
+            }
+        }
+
+        int pq = -1;
+
+        for(size_t i=0; i<norb; i++){
+            size_t ia = 2*i;
+            size_t ib = 2*i+1;
+
+            for(size_t j=i; j<norb; j++){
+                size_t ja = 2*j;
+                size_t jb = 2*j+1;
+
+                pq++;
+                int rs = -1;
+
+                for(size_t a=0; a<norb; a++){
+                    size_t aa = 2*a;
+                    size_t ab = 2*a+1;
+
+                    for(size_t b=a; b<norb; b++){
+                        size_t ba = 2*b;
+                        size_t bb = 2*b+1;
+
+                        rs++;
+
+                        if(pq > rs){
+                            continue;
+                        }
+
+                        if((aa != ba) && (ia != ja)){
+                            SQOperator temp2aaaa;
+                            temp2aaaa.add_term(+1.0, {aa,ba,ia,ja});
+                            temp2aaaa.add_term(-1.0, {ja,ia,ba,aa});
+                            temp2aaaa.simplify();
+                            if(temp2aaaa.terms().size() > 0){
+                                add_term(1.0, temp2aaaa);
+                            }
+                        }
+
+                        if((ab != bb ) && (ib != jb)){
+                            SQOperator temp2bbbb;
+                            temp2bbbb.add_term(+1.0, {ab,bb,ib,jb});
+                            temp2bbbb.add_term(-1.0, {jb,ib,bb,ab});
+                            temp2bbbb.simplify();
+                            if(temp2bbbb.terms().size() > 0){
+                                add_term(1.0, temp2bbbb);
+                            }
+                        }
+
+                        if((aa != bb) && (ia != jb)){
+                            SQOperator temp2abab;
+                            temp2abab.add_term(+1.0, {aa,bb,ia,jb});
+                            temp2abab.add_term(-1.0, {jb,ia,bb,aa});
+                            temp2abab.simplify();
+                            if(temp2abab.terms().size() > 0){
+                                add_term(1.0, temp2abab);
+                            }
                         }
 
                         // if((ab != ba) && (ib != ja)){

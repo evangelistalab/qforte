@@ -297,7 +297,7 @@ class UCCNVQE(UCCVQE):
 
         opts = {}
         opts['gtol'] = self._opt_thresh
-        opts['disp'] = False
+        opts['disp'] = True
         opts['maxiter'] = self._opt_maxiter
         x0 = copy.deepcopy(self._tamps)
         init_gues_energy = self.energy_feval(x0)

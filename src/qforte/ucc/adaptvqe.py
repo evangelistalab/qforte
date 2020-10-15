@@ -184,7 +184,9 @@ class ADAPTVQE(UCCVQE):
             adapt_maxiter=20,
             optimizer='BFGS',
             use_analytic_grad = True,
-            op_select_type='gradient'):
+            op_select_type='gradient',
+            use_comutator_grad_selection = False,
+            use_cumulative_thresh = False):
 
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
@@ -194,6 +196,8 @@ class ADAPTVQE(UCCVQE):
         self._optimizer = optimizer
         self._pool_type = pool_type
         self._op_select_type = op_select_type
+        self._use_comutator_grad_selection = use_comutator_grad_selection
+        self._use_cumulative_thresh = use_cumulative_thresh
 
         self._results = []
         self._energies = []
@@ -209,6 +213,7 @@ class ADAPTVQE(UCCVQE):
         self._n_classical_params = 0
         self._n_cnot = 0
         self._n_cnot_lst = []
+        self._n_classical_params_lst = []
         self._n_pauli_trm_measures = 0
         self._n_pauli_trm_measures_lst = []
 
@@ -225,9 +230,12 @@ class ADAPTVQE(UCCVQE):
             print('-------------------------------------')
             print(self._pool_obj.str())
 
-        if self._op_select_type == 'minimize' and self._use_analytic_grad==False:
-            pass
-        else:
+        # if self._op_select_type == 'minimize' and self._use_analytic_grad==False:
+        #     pass
+        # else:
+        #     self.fill_comutator_pool()
+
+        if self._use_comutator_grad_selection:
             self.fill_comutator_pool()
 
         avqe_iter = 0
@@ -246,13 +254,17 @@ class ADAPTVQE(UCCVQE):
             if self._converged:
                 break
 
-            print('\ntoperators included from pool: \n', self._tops)
-            print('tamplitudes for tops: \n', self._tamps)
+            if(self._verbose):
+                print('\ntoperators included from pool: \n', self._tops)
+                print('\ntamplitudes for tops: \n', self._tamps)
 
             self.solve()
 
+            if(self._verbose):
+                print('\ntamplitudes for tops post solve: \n', np.real(self._tamps))
+
             if (self._print_summary_file):
-                f.write(f'  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {avqe_iter+1:8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
+                f.write(f'  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
 
             avqe_iter += 1
 
@@ -275,7 +287,7 @@ class ADAPTVQE(UCCVQE):
         print('-------------------------------------------------------------------------------')
 
         for k, Ek in enumerate(self._energies):
-            print(f' {k:7}    {Ek:+15.9f}    {k+1:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
+            print(f' {k:7}    {Ek:+15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
 
         self._n_classical_params = len(self._tamps)
         self._n_cnot = self._n_cnot_lst[-1]
@@ -419,34 +431,72 @@ class ADAPTVQE(UCCVQE):
                 print('     op index (m)     N pauli terms          Gradient ')
                 print('  -------------------------------------------------------')
 
-            grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc)
+            if self._use_comutator_grad_selection:
+                grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc)
+            else:
+                grads = self.measure_gradient(use_entire_pool=True)
 
             for m, grad_m in enumerate(grads):
-                self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms())
+                if self._use_comutator_grad_selection:
+                    self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms())
+                else:
+                    # referes to number of times sigma_y must be measured in "stratagies for UCC" grad eval circuit
+                    self._n_pauli_measures_k += self._Nl * self._Nm[m]
+
                 curr_norm += grad_m*grad_m
                 if (self._verbose):
-                    print('       {m:3}                {len(self._comutator_pool.terms()[m][1].terms()):8}             {grad_m:+12.9f}')
+                    print(f'       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}')
                 if (abs(grad_m) > abs(lgrst_grad)):
                     lgrst_grad = grad_m
                     lgrst_grad_idx = m
 
             curr_norm = np.sqrt(curr_norm)
-            print("==> Measring gradients from pool:")
-            print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
-            print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
+            if self._use_comutator_grad_selection:
+                print("\n==> Measring gradients from pool:")
+                print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
+                print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
+            else:
+                print("\n==> Measring gradients:")
+                print(" Norm of g_vec = %12.8f" %curr_norm)
+                print(" Max  of g_vec = %12.8f" %lgrst_grad)
 
             self._curr_grad_norm = curr_norm
             self._grad_norms.append(curr_norm)
+
             self.conv_status()
 
             if not self._converged:
-                print("  Adding operator m =", lgrst_grad_idx)
-                self._tops.append(lgrst_grad_idx)
-                self._tamps.append(0.0)
+                if(self._use_cumulative_thresh):
+                    temp_order_tops = []
+                    grads_sq = [(grads[m] * grads[m], m) for m in range(len(grads))]
+                    grads_sq.sort()
+                    gm_sq_sum = 0.0
+                    for m, gm_sq in enumerate(grads_sq):
+                        gm_sq_sum += gm_sq[0]
+                        if gm_sq_sum > (self._avqe_thresh * self._avqe_thresh):
+                            # print("  Adding operator m =", gm_sq[1])
+                            print(f"  Adding operator m =     {gm_sq[1]:10}   |gm| = {np.sqrt(gm_sq[0]):10.8f}")
+                            # self._tops.append(gm_sq[1])
+                            self._tamps.append(0.0)
+                            temp_order_tops.insert(0,gm_sq[1])
+                            # self._tops.insert(0,gm_sq[1])
+                            # self._tamps.insert(0,0.0)
+
+                    self._tops.extend(copy.deepcopy(temp_order_tops))
+                    self._n_classical_params_lst.append(len(self._tops))
+                else:
+                    print("  Adding operator m =", lgrst_grad_idx)
+                    self._tops.append(lgrst_grad_idx)
+                    self._tamps.append(0.0)
+                    self._n_classical_params_lst.append(len(self._tops))
+
             else:
                 print("\n  ADAPT-VQE converged!")
 
         elif(self._op_select_type=='minimize'):
+
+            if not self._use_comutator_grad_selection:
+                raise ValueError("must use computator gradients for 'minimization' selection type")
 
             print("==> Minimizing candidate amplitude from pool:")
             opts = {}
