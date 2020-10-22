@@ -213,15 +213,21 @@ class UCCNVQE(UCCVQE):
 
         self.initialize_ansatz()
 
-        print('\nt operators included from pool: \n', self._tops)
-        print('Initial tamplitudes for tops: \n', self._tamps)
+        if(self._verbose):
+            print('\nt operators included from pool: \n', self._tops)
+            print('\nInitial tamplitudes for tops: \n', self._tamps)
 
         self.solve()
 
-        print('\nt operators included from pool: \n', self._tops)
-        print('Final tamplitudes for tops: \n', self._tamps)
+        if(self._verbose):
+            print('\nt operators included from pool: \n', self._tops)
+            print('\nFinal tamplitudes for tops: \n', self._tamps)
 
         ######### UCCSD-VQE #########
+        self._n_nonzero_params = 0
+        for tmu in self._tamps:
+            if(np.abs(tmu) > 1.0e-12):
+                self._n_nonzero_params += 1
 
         # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
@@ -244,7 +250,7 @@ class UCCNVQE(UCCVQE):
         print('          Unitary Coupled Cluster VQE   ')
         print('-----------------------------------------------------')
 
-        print('\n\n               ==> UCCSD-VQE options <==')
+        print('\n\n                 ==> UCC-VQE options <==')
         print('---------------------------------------------------------')
         # General algorithm options.
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
@@ -272,7 +278,7 @@ class UCCNVQE(UCCVQE):
 
     def print_summary_banner(self):
 
-        print('\n\n                ==> UCCSD-VQE summary <==')
+        print('\n\n                  ==> UCC-VQE summary <==')
         print('-----------------------------------------------------------')
         print('Final UCCSD-VQE Energy:                     ', round(self._Egs, 10))
         print('Number of operators in pool:                 ', len(self._pool))
@@ -280,8 +286,12 @@ class UCCNVQE(UCCVQE):
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
         print('Total number of comutator measurements:      ', self.get_num_comut_measurements())
         print('Number of classical parameters used:         ', self._n_classical_params)
+        print('Number of non-zero parameters used:          ', self._n_nonzero_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
         print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
+
+        print('Number of grad vector evaluations:           ', self._grad_vec_evals)
+        print('Number of individual grad evaluations:       ', self._grad_m_evals)
 
     # Define VQE abstract methods.
     def solve(self):

@@ -43,6 +43,12 @@ class UCCVQE(VQE):
         self._pool = self._pool_obj.terms()
 
         self._grad_vec_evals = 0
+        self._grad_m_evals = 0
+        self._k_counter = 0
+        self._grad_m_evals = 0
+        self._prev_energy = 0.0
+        self._curr_energy = 0.0
+        self._curr_grad_norm = 0.0
 
         self._Nm = []
         for m in range(len(self._pool_obj.terms())):
@@ -186,7 +192,7 @@ class UCCVQE(VQE):
         for val in grads:
             assert(np.isclose(np.imag(val), 0.0))
 
-        self._curr_grad_norm = np.linalg.norm(grads)
+        # self._curr_grad_norm = np.linalg.norm(grads)
 
         return np.real(grads)
 
@@ -287,7 +293,7 @@ class UCCVQE(VQE):
             qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
             Kmu_prev = Kmu
 
-        self._curr_grad_norm = np.linalg.norm(grads)
+        # self._curr_grad_norm = np.linalg.norm(grads)
 
         for val in grads:
             assert(np.isclose(np.imag(val), 0.0))
@@ -403,14 +409,20 @@ class UCCVQE(VQE):
 
     def energy_feval(self, params):
         Ucirc = self.build_Uvqc(params=params)
-        return self.measure_energy(Ucirc)
+        self._prev_energy = self._curr_energy
+        Energy = self.measure_energy(Ucirc)
+        self._curr_energy = Energy
+        return Energy
 
     def gradient_ary_feval(self, params):
         # if self._use_htest_gradient:
         grads = self.measure_gradient(params)
+        self._curr_grad_norm = np.linalg.norm(grads)
         self._grad_vec_evals += 1
+        self._grad_m_evals += len(self._tamps)
+
         # grads2 = self.measure_gradient2(params)
-        print(f'  Gradient vec evaluated {self._grad_vec_evals:3} times,  ||g||: {self._curr_grad_norm:+12.10f}')
+        # print(f'  Gradient vec evaluated {self._grad_vec_evals:3} times,  ||g||: {self._curr_grad_norm:+12.10f}')
         # cntr = 0
         # for g1, g2 in zip(grads, grads2):
         #     print(f' {params[cntr]:+10.8f} {g1:+10.8f} {g2:+10.8f} {np.abs(g1-g2):+10.8f}')
@@ -424,7 +436,16 @@ class UCCVQE(VQE):
         return np.asarray(grads)
 
     def callback(self, x):
-        print(f"\n -Minimum energy this iteration:    {self.energy_feval(x):+12.10f}")
+        # print(f"\n -Minimum energy this iteration:    {self.energy_feval(x):+12.10f}")
+        self._k_counter += 1
+
+        if(self._k_counter == 1):
+            # print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}       -----------      {self._grad_vec_evals:4}         {self._curr_grad_norm:+12.10f}')
+            print('\n    k iteration         Energy               dE           Ngvec ev      Ngm ev*         ||g||')
+            print('--------------------------------------------------------------------------------------------------')
+        # else:
+        dE = self._curr_energy - self._prev_energy
+        print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._grad_vec_evals:4}        {self._grad_m_evals:6}       {self._curr_grad_norm:+12.10f}')
 
     def verify_required_UCCVQE_attributes(self):
         if self._use_analytic_grad is None:

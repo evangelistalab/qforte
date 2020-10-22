@@ -360,6 +360,10 @@ class ADAPTVQE(UCCVQE):
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
         print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
 
+        print('Number of grad vector evaluations:           ', self._grad_vec_evals)
+        print('Number of individual grad evaluations:       ', self._grad_m_evals)
+
+
     # Define VQE abstract methods.
     def solve(self):
         """
@@ -371,6 +375,8 @@ class ADAPTVQE(UCCVQE):
         maxiter : int
             The maximum number of iterations for the scipy optimizer.
         """
+
+        self._k_counter = 0
 
         opts = {}
         opts['gtol'] = self._opt_thresh
