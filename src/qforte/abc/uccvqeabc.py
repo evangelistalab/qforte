@@ -8,6 +8,8 @@ from qforte.utils.transforms import *
 from qforte.utils.state_prep import ref_to_basis_idx
 from qforte.utils.trotterization import trotterize
 
+import numpy as np
+
 class UCCVQE(VQE):
 
     @abstractmethod
@@ -411,6 +413,10 @@ class UCCVQE(VQE):
         Ucirc = self.build_Uvqc(params=params)
         self._prev_energy = self._curr_energy
         Energy = self.measure_energy(Ucirc)
+
+        if(self._noise_factor > 1e-12):
+            Energy = np.random.normal(Energy, self._noise_factor)
+
         self._curr_energy = Energy
         return Energy
 

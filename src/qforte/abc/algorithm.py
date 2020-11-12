@@ -73,6 +73,8 @@ class Algorithm(ABC):
         self._verbose = verbose
         self._print_summary_file = print_summary_file
 
+        self._noise_factor = 0.0
+
         # Required attributes, to be defined in concrete class.
         self._Egs = None
         self._Umaxdepth = None

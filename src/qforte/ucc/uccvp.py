@@ -45,7 +45,8 @@ class UCCVP(UCCVQE):
             use_res_solve=False,
             res_vec_thresh = 1.0e-5,
             max_residual_iter = 30,
-            use_mp2_guess_amps = False):
+            use_mp2_guess_amps = False,
+            noise_factor = 0.0):
 
         # TODO (cleanup): add option to pre populate cluster amps.
         self._opt_thresh = opt_thresh
@@ -60,6 +61,8 @@ class UCCVP(UCCVQE):
         self._max_residual_iter = max_residual_iter
 
         self._use_mp2_guess_amps = use_mp2_guess_amps
+
+        self._noise_factor = noise_factor
 
         self._tops = []
         self._tamps = []
@@ -381,6 +384,9 @@ class UCCVP(UCCVQE):
                 res_m = coeffs[I] * sign_adjust # * sq_sub_tamp
                 if(np.imag(res_m) > 0.0):
                     raise ValueError("residual has imaginary component, someting went wrong!!")
+
+                if(self._noise_factor > 1e-12):
+                    res_m = np.random.normal(np.real(res_m), self._noise_factor)
 
                 residuals.append(res_m)
 

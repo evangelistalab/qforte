@@ -434,8 +434,8 @@ class ADAPTVQE(UCCVQE):
             Uvqc = self.build_Uvqc()
 
             if self._verbose:
-                print('     op index (m)     N pauli terms          Gradient ')
-                print('  -------------------------------------------------------')
+                print('     op index (m)     N pauli terms              Gradient            Tmu  ')
+                print('  ------------------------------------------------------------------------------')
 
             if self._use_comutator_grad_selection:
                 grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc)
@@ -451,7 +451,8 @@ class ADAPTVQE(UCCVQE):
 
                 curr_norm += grad_m*grad_m
                 if (self._verbose):
-                    print(f'       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}')
+                    print(f'       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}      {self._pool[m][1].terms()[0][1]}')
+        
                 if (abs(grad_m) > abs(lgrst_grad)):
                     lgrst_grad = grad_m
                     lgrst_grad_idx = m

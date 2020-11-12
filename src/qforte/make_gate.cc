@@ -114,6 +114,14 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {+c, +c_i},
             };
             return QuantumGate(type, target, control, gate);
+        } if (type == "rU1") {
+            std::complex<double> a = std::cos(parameter);
+            std::complex<double> b = std::sin(parameter);
+            std::complex<double> gate[4][4]{
+                {+a, -b},
+                {+b, +a},
+            };
+            return QuantumGate(type, target, control, gate);
         }
 
     } else {
@@ -196,6 +204,16 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 0.0, 1.0, 0.0},
                 {0.0, 1.0, 0.0, 0.0},
                 {0.0, 0.0, 0.0, 1.0},
+            };
+            return QuantumGate(type, target, control, gate);
+        } if (type == "rU2") {
+            std::complex<double> a = std::cos(parameter);
+            std::complex<double> b = std::sin(parameter);
+            std::complex<double> gate[4][4]{
+                { +a,  -b, 0.0, 0.0},
+                { +b,  +a, 0.0, 0.0},
+                {0.0, 0.0,  +a,  -b},
+                {0.0, 0.0,  +b,  +a},
             };
             return QuantumGate(type, target, control, gate);
         }
