@@ -561,18 +561,38 @@ class RSUCC(UCCVQE):
                     print('  -----------------------------------------------')
                 res_sq_sum = 0.0
                 n_ops_added = 0
-                for rmu_sq in res_sq[:-1]:
-                    res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
-                    if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
-                        # print("  Adding operator Imu =", rmu_sq[1])
-                        if(self._verbose):
-                            print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
-                        n_ops_added += 1
+
+                if(self._use_cumulative_thresh):
+                    for rmu_sq in res_sq[:-1]:
+                        res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
+                        if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
+                            # print("  Adding operator Imu =", rmu_sq[1])
+                            if(self._verbose):
+                                print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
+                            n_ops_added += 1
+                            if(rmu_sq[1] not in self._tops):
+                                self._tops.insert(0,rmu_sq[1])
+                                self._tamps.insert(0,0.0)
+                                self.add_op_from_basis_idx(rmu_sq[1])
+
+                else:
+                    res_sq.reverse()
+                    op_added = False
+                    for rmu_sq in res_sq[1:]:
+                        if(op_added):
+                            break
+                        # res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
+                        # if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
+                            # print("  Adding operator Imu =", rmu_sq[1])
+                        # if(self._verbose):
+                        print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
+                        # n_ops_added += 1
                         if(rmu_sq[1] not in self._tops):
+                            print('op added!')
                             self._tops.insert(0,rmu_sq[1])
                             self._tamps.insert(0,0.0)
-
                             self.add_op_from_basis_idx(rmu_sq[1])
+                            op_added = True
 
                 self._n_classical_params_lst.append(len(self._tops))
 

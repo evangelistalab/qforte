@@ -186,7 +186,8 @@ class ADAPTVQE(UCCVQE):
             use_analytic_grad = True,
             op_select_type='gradient',
             use_comutator_grad_selection = False,
-            use_cumulative_thresh = False):
+            use_cumulative_thresh = False,
+            add_equiv_ops = False):
 
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
@@ -198,6 +199,7 @@ class ADAPTVQE(UCCVQE):
         self._op_select_type = op_select_type
         self._use_comutator_grad_selection = use_comutator_grad_selection
         self._use_cumulative_thresh = use_cumulative_thresh
+        self._add_equiv_ops = add_equiv_ops
 
         self._results = []
         self._energies = []
@@ -388,6 +390,7 @@ class ADAPTVQE(UCCVQE):
         if self._use_analytic_grad:
             print('  \n--> Begin opt with analytic graditent:')
             print(f" Initail guess energy:              {init_gues_energy:+12.10f}")
+
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
                                     jac=self.gradient_ary_feval,
@@ -440,7 +443,8 @@ class ADAPTVQE(UCCVQE):
             if self._use_comutator_grad_selection:
                 grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc)
             else:
-                grads = self.measure_gradient(use_entire_pool=True)
+                # grads = self.measure_gradient(use_entire_pool=True)
+                grads = self.measure_gradient3()
 
             for m, grad_m in enumerate(grads):
                 if self._use_comutator_grad_selection:
@@ -452,8 +456,13 @@ class ADAPTVQE(UCCVQE):
                 curr_norm += grad_m*grad_m
                 if (self._verbose):
                     print(f'       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}      {self._pool[m][1].terms()[0][1]}')
-        
+
                 if (abs(grad_m) > abs(lgrst_grad)):
+
+                    if(abs(lgrst_grad) > 0.0):
+                        secnd_lgst_grad = lgrst_grad
+                        secnd_lgrst_grad_idx = lgrst_grad_idx
+
                     lgrst_grad = grad_m
                     lgrst_grad_idx = m
 
@@ -481,13 +490,9 @@ class ADAPTVQE(UCCVQE):
                     for m, gm_sq in enumerate(grads_sq):
                         gm_sq_sum += gm_sq[0]
                         if gm_sq_sum > (self._avqe_thresh * self._avqe_thresh):
-                            # print("  Adding operator m =", gm_sq[1])
                             print(f"  Adding operator m =     {gm_sq[1]:10}   |gm| = {np.sqrt(gm_sq[0]):10.8f}")
-                            # self._tops.append(gm_sq[1])
                             self._tamps.append(0.0)
                             temp_order_tops.insert(0,gm_sq[1])
-                            # self._tops.insert(0,gm_sq[1])
-                            # self._tamps.insert(0,0.0)
 
                     self._tops.extend(copy.deepcopy(temp_order_tops))
                     self._n_classical_params_lst.append(len(self._tops))
@@ -495,12 +500,20 @@ class ADAPTVQE(UCCVQE):
                     print("  Adding operator m =", lgrst_grad_idx)
                     self._tops.append(lgrst_grad_idx)
                     self._tamps.append(0.0)
+
+                    if(self._add_equiv_ops):
+                        if (abs(lgrst_grad) - abs(secnd_lgst_grad) < 1.0e-5):
+                            print(" *Adding operator m =", secnd_lgrst_grad_idx)
+                            self._tops.append(secnd_lgrst_grad_idx)
+                            self._tamps.append(0.0)
+
                     self._n_classical_params_lst.append(len(self._tops))
 
             else:
                 print("\n  ADAPT-VQE converged!")
 
         elif(self._op_select_type=='minimize'):
+        # TODO(Nick): remove or fix this option to work correctly
 
             if not self._use_comutator_grad_selection:
                 raise ValueError("must use computator gradients for 'minimization' selection type")

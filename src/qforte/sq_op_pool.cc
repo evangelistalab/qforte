@@ -275,7 +275,8 @@ void SQOpPool::fill_pool(std::string pool_type){
                         }
 
                         if((aa != bb) && (ia != jb)){
-                            SQOperator temp2abab;temp2abab.add_term(+1.0, {aa,bb,ia,jb});
+                            SQOperator temp2abab;
+                            temp2abab.add_term(+1.0, {aa,bb,ia,jb});
                             temp2abab.add_term(-1.0, {jb,ia,bb,aa});
                             temp2abab.simplify();
                             if(temp2abab.terms().size() > 0){

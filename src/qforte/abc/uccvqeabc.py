@@ -260,7 +260,6 @@ class UCCVQE(VQE):
             # Kmu => KN-1
             # Kmu_prev => KN
 
-            ### new
             if use_entire_pool:
                 tamp = pool_amps[mu+1]
             elif params is None:
@@ -268,16 +267,12 @@ class UCCVQE(VQE):
             else:
                 tamp = params[mu+1]
 
-
-
             if use_entire_pool:
                 Kmu = self._pool[mu][1].jw_transform()
                 Kmu.mult_coeffs(self._pool[mu][0])
             else:
                 Kmu = self._pool[self._tops[mu]][1].jw_transform()
                 Kmu.mult_coeffs(self._pool[self._tops[mu]][0])
-
-            # Kmu.mult_coeffs(tamp)
 
             Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
 
@@ -302,92 +297,50 @@ class UCCVQE(VQE):
 
         return grads
 
-    # def measure_gradient_pool(self):
-    #     """
-    #     Parameters
-    #     ----------
-    #     HAm : QuantumOpPool
-    #         The comutator to measure.
-    #
-    #     Ucirc : QuantumCircuit
-    #         The state preparation circuit.
-    #     """
-    #
-    #     if self._fast==False:
-    #         raise ValueError("self._fast must be True for gradient measurement.")
-    #
-    #
-    #     M = len(self._pool)
-    #
-    #     grads = np.zeros(M)
-    #     # omega_o = ref_to_basis_idx(self._ref)
-    #
-    #     # if params is None:
-    #     #     Utot = self.build_Uvqc()
-    #     # else:
-    #     #     Utot = self.build_Uvqc(params)
-    #
-    #     Utot = self.build_Uvqc()
-    #
-    #     qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according ADAPT-VQE analytial grad section
-    #     qc_psi.apply_circuit(Utot)
-    #     qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according ADAPT-VQE analytial grad section
-    #     psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
-    #     qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
-    #     qc_sig.apply_operator(self._qb_ham)
-    #
-    #     mu = M-1
-    #
-    #     # find <sing_N | K_N | psi_N>
-    #     Kmu_prev = self._pool[self._tops[mu]][1].jw_transform()
-    #     Kmu_prev.mult_coeffs(self._pool[self._tops[mu]][0])
-    #
-    #     qc_psi.apply_operator(Kmu_prev)
-    #     grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
-    #
-    #     #reset Kmu_prev |psi_i> -> |psi_i>
-    #     qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
-    #
-    #     for mu in reversed(range(M-1)):
-    #
-    #         # mu => N-1 => M-2
-    #         # mu+1 => N => M-1
-    #         # Kmu => KN-1
-    #         # Kmu_prev => KN
-    #
-    #         ### new
-    #         if params is None:
-    #             tamp = self._tamps[mu+1]
-    #         else:
-    #             tamp = params[mu+1]
-    #
-    #         Kmu = self._pool[self._tops[mu]][1].jw_transform()
-    #         Kmu.mult_coeffs(self._pool[self._tops[mu]][0])
-    #
-    #         # Kmu.mult_coeffs(tamp)
-    #
-    #         Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
-    #
-    #         if (pmu != 1.0 + 0.0j):
-    #             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
-    #
-    #         qc_sig.apply_circuit(Umu)
-    #         qc_psi.apply_circuit(Umu)
-    #         psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
-    #
-    #         qc_psi.apply_operator(Kmu)
-    #         grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
-    #
-    #         #reset Kmu |psi_i> -> |psi_i>
-    #         qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
-    #         Kmu_prev = Kmu
-    #
-    #     self._curr_grad_norm = np.linalg.norm(grads)
-    #
-    #     for val in grads:
-    #         assert(np.isclose(np.imag(val), 0.0))
-    #
-    #     return grads
+    def measure_gradient3(self):
+        """
+        Parameters
+        ----------
+        HAm : QuantumOpPool
+            The comutator to measure.
+
+        Ucirc : QuantumCircuit
+            The state preparation circuit.
+        """
+
+        if self._fast==False:
+            raise ValueError("self._fast must be True for gradient measurement.")
+
+        M = len(self._pool)
+        pool_amps = np.zeros(M)
+        for tamp, top in zip(self._tamps, self._tops):
+            pool_amps[top] = tamp
+
+        grads = np.zeros(M)
+        Utot = self.build_Uvqc()
+
+
+        qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according ADAPT-VQE analytial grad section
+        qc_psi.apply_circuit(Utot)
+        psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
+
+        qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according ADAPT-VQE analytial grad section
+        qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
+        qc_sig.apply_operator(self._qb_ham)
+
+        mu = M-1
+
+        for mu in range(M):
+            Kmu = self._pool[mu][1].jw_transform()
+            Kmu.mult_coeffs(self._pool[mu][0])
+            qc_psi.apply_operator(Kmu)
+            grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+            qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
+
+        for val in grads:
+            assert(np.isclose(np.imag(val), 0.0))
+
+        return grads
 
 
     def measure_energy(self, Ucirc):
@@ -421,23 +374,14 @@ class UCCVQE(VQE):
         return Energy
 
     def gradient_ary_feval(self, params):
-        # if self._use_htest_gradient:
         grads = self.measure_gradient(params)
         self._curr_grad_norm = np.linalg.norm(grads)
         self._grad_vec_evals += 1
         self._grad_m_evals += len(self._tamps)
 
-        # grads2 = self.measure_gradient2(params)
-        # print(f'  Gradient vec evaluated {self._grad_vec_evals:3} times,  ||g||: {self._curr_grad_norm:+12.10f}')
-        # cntr = 0
-        # for g1, g2 in zip(grads, grads2):
-        #     print(f' {params[cntr]:+10.8f} {g1:+10.8f} {g2:+10.8f} {np.abs(g1-g2):+10.8f}')
-        #     cntr += 1
-
-
-        # else:
-        # Uvqc = self.build_Uvqc(params=params)
-        # grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc, self._tops)
+        # iter_str = str(int(self._grad_vec_evals))
+        # np.savetxt(f"qf_gsd_grad_{iter_str}.dat", np.real(grads))
+        # np.savetxt(f"qf_gsd_params_{iter_str}.dat", np.real(params))
 
         return np.asarray(grads)
 
