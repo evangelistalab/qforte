@@ -250,6 +250,12 @@ class UCCVP(UCCVQE):
         print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*          ||r||')
         print('---------------------------------------------------------------------------------------------------')
 
+        if (self._print_summary_file):
+            f = open("summary.dat", "w+", buffering=1)
+            f.write('\n#    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
+            f.write('\n#--------------------------------------------------------------------------------------------------')
+            f.close()
+
         for k in range(1, self._max_residual_iter+1):
 
             t_old = copy.deepcopy(self._tamps)
@@ -268,6 +274,12 @@ class UCCVP(UCCVQE):
             self._res_m_evals += len(self._tamps)
 
             print(f'     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}')
+
+            if (self._print_summary_file):
+                f = open("summary.dat", "a", buffering=1)
+                # f.write(f'\n     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}')
+                f.write(f'\n     {k:7}        {Ek:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.12f}')
+                f.close()
 
             if(rk_norm < self._res_vec_thresh):
                 self._results.append('Fake result string')

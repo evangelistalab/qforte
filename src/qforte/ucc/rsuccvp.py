@@ -28,6 +28,8 @@ class RSUCC(UCCVQE):
             use_analytic_grad = True,
             op_select_type='total_res',
             dt=0.01,
+            use_adaptive_t = False,
+            M_omega = 'inf',
             res_vec_thresh = 1.0e-5,
             max_residual_iter = 30,
             use_cumulative_thresh=False,
@@ -44,6 +46,11 @@ class RSUCC(UCCVQE):
         self._pool_type = pool_type
         self._op_select_type = op_select_type
         self._dt = dt
+        self._use_adaptive_t = use_adaptive_t
+        if(M_omega != 'inf'):
+            self._M_omega = int(M_omega)
+        else:
+            self._M_omega = M_omega
 
         self._use_cumulative_thresh = use_cumulative_thresh
         self._use_comutator_grad_selection = use_comutator_grad_selection
@@ -68,7 +75,6 @@ class RSUCC(UCCVQE):
 
         self._prev_energy = 0.0
         self._curr_energy = 0.0
-
 
         self._n_ham_measurements = 0
         self._n_comut_measurements = 0
@@ -531,6 +537,11 @@ class RSUCC(UCCVQE):
             qc_res = qf.QuantumComputer(self._nqb)
             qc_res.apply_circuit(self._Uprep)
             qc_res.apply_circuit(U)
+            if(self._use_adaptive_t):
+                self._dt = np.abs( 1.0 / (np.sqrt(2.0) * self.energy_feval(self._tamps)))
+                self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor=1.0j*self._dt, trotter_number=self._trotter_number)
+                print(f'new dt:  {self._dt:10.8f}')
+
             qc_res.apply_circuit(self._eiH)
             qc_res.apply_circuit(U.adjoint())
 
@@ -539,63 +550,139 @@ class RSUCC(UCCVQE):
 
             # ned to sort the coeffs to psi_tilde
             temp_order_resids = []
-            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in range(len(res_coeffs))]
-            res_sq.sort()
 
-            self._curr_res_sq_norm = 0.0
-            for rmu_sq in res_sq[:-1]:
-                self._curr_res_sq_norm += rmu_sq[0]
+            # build different res_sq list using M_omega
+            if(self._M_omega != 'inf'):
+                res_sq_tmp = [ np.real(np.conj(res_coeffs[I]) * res_coeffs[I]) for I in range(len(res_coeffs))]
 
-            self._curr_res_sq_norm /= (self._dt * self._dt)
+                # Nmu_lst => [ det1, det2, det3, ... det_M_omega]
+                det_lst = np.random.choice(len(res_coeffs), self._M_omega, p=res_sq_tmp)
 
-            print('  \n--> Begin selection opt with residual magnitudes:')
-            print('  Initial guess energy: ', round(init_gues_energy,10))
-            print(f'  Norm of res vec:      {np.sqrt(self._curr_res_sq_norm):14.12f}')
+                print(f'|Co|∆t^2 :       {np.amax(res_sq_tmp):12.14f}')
+                print(f'mu_o :           {np.where(res_sq_tmp == np.amax(res_sq_tmp))[0][0]}')
 
-            self.conv_status()
+                No_idx = np.where(res_sq_tmp == np.amax(res_sq_tmp))[0][0]
+                print(f'\nNo_idx   {No_idx:4}')
 
-            if not self._converged:
-                if self._verbose:
-                    print('\n')
-                    print('     op index (Imu)           Residual Facotr')
-                    print('  -----------------------------------------------')
-                res_sq_sum = 0.0
-                n_ops_added = 0
+                No = np.count_nonzero(det_lst == No_idx)
+                print(f'\nNo       {No:10}')
 
-                if(self._use_cumulative_thresh):
-                    for rmu_sq in res_sq[:-1]:
-                        res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
-                        if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
-                            # print("  Adding operator Imu =", rmu_sq[1])
-                            if(self._verbose):
-                                print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
-                            n_ops_added += 1
+                res_sq = []
+                Nmu_lst = []
+                for mu in range(len(res_coeffs)):
+                    Nmu = np.count_nonzero(det_lst == mu)
+                    if(Nmu > 0):
+                        print(f'mu:    {mu:8}      Nmu      {Nmu:10}  r_mu: { Nmu / (self._M_omega):12.14f} ')
+                        Nmu_lst.append((Nmu, mu))
+                    res_sq.append( ( Nmu / (self._M_omega), mu) )
+
+                ## 1. sort
+                Nmu_lst.sort()
+                res_sq.sort()
+
+                ## 2. set norm
+                self._curr_res_sq_norm = 0.0
+                for rmu_sq in res_sq[:-1]:
+                    self._curr_res_sq_norm += rmu_sq[0]
+
+                self._curr_res_sq_norm /= (self._dt * self._dt)
+
+                ## 3. print stuff
+                print('  \n--> Begin selection opt with residual magnitudes:')
+                print('  Initial guess energy:          ', round(init_gues_energy,10))
+                print(f'  Norm of approximate res vec:  {np.sqrt(self._curr_res_sq_norm):14.12f}')
+
+                ## 4/ check conv status (need up update function with if(M_omega != 'inf'))
+                if(len(Nmu_lst)==1):
+                    print('  RG-PQE converged with M_omega thresh!')
+                    self._converged = 1
+                    self._final_energy = self._energies[-1]
+                    self._final_result = self._results[-1]
+                else:
+                    # print('RG-PQE did not converge!')
+                    self._converged = 0
+
+                ## 5. add new toperator
+                if not self._converged:
+                    if self._verbose:
+                        print('\n')
+                        print('     op index (Imu)     Number of times measured')
+                        print('  -----------------------------------------------')
+                    res_sq_sum = 0.0
+                    n_ops_added = 0
+
+
+                    for Nmu_tup in Nmu_lst[:-1]:
+                        if(self._verbose):
+                            print(f"  {Nmu_tup[1]:10}                  {np.real(Nmu_tup[0]):14}")
+                        n_ops_added += 1
+                        if(Nmu_tup[1] not in self._tops):
+                            self._tops.insert(0,Nmu_tup[1])
+                            self._tamps.insert(0,0.0)
+                            self.add_op_from_basis_idx(Nmu_tup[1])
+
+                    self._n_classical_params_lst.append(len(self._tops))
+
+            else:
+                res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in range(len(res_coeffs))]
+
+                ###
+                res_sq.sort()
+
+                self._curr_res_sq_norm = 0.0
+                for rmu_sq in res_sq[:-1]:
+                    self._curr_res_sq_norm += rmu_sq[0]
+
+                self._curr_res_sq_norm /= (self._dt * self._dt)
+
+                print('  \n--> Begin selection opt with residual magnitudes:')
+                print('  Initial guess energy: ', round(init_gues_energy,10))
+                print(f'  Norm of res vec:      {np.sqrt(self._curr_res_sq_norm):14.12f}')
+
+                self.conv_status()
+
+                if not self._converged:
+                    if self._verbose:
+                        print('\n')
+                        print('     op index (Imu)           Residual Facotr')
+                        print('  -----------------------------------------------')
+                    res_sq_sum = 0.0
+                    n_ops_added = 0
+
+                    if(self._use_cumulative_thresh):
+                        for rmu_sq in res_sq[:-1]:
+                            res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
+                            if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
+                                # print("  Adding operator Imu =", rmu_sq[1])
+                                if(self._verbose):
+                                    print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
+                                n_ops_added += 1
+                                if(rmu_sq[1] not in self._tops):
+                                    self._tops.insert(0,rmu_sq[1])
+                                    self._tamps.insert(0,0.0)
+                                    self.add_op_from_basis_idx(rmu_sq[1])
+
+                    else:
+                        res_sq.reverse()
+                        op_added = False
+                        for rmu_sq in res_sq[1:]:
+                            if(op_added):
+                                break
+                            # res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
+                            # if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
+                                # print("  Adding operator Imu =", rmu_sq[1])
+                            # if(self._verbose):
+                            print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
+                            # n_ops_added += 1
                             if(rmu_sq[1] not in self._tops):
+                                print('op added!')
                                 self._tops.insert(0,rmu_sq[1])
                                 self._tamps.insert(0,0.0)
                                 self.add_op_from_basis_idx(rmu_sq[1])
+                                op_added = True
 
-                else:
-                    res_sq.reverse()
-                    op_added = False
-                    for rmu_sq in res_sq[1:]:
-                        if(op_added):
-                            break
-                        # res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
-                        # if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
-                            # print("  Adding operator Imu =", rmu_sq[1])
-                        # if(self._verbose):
-                        print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
-                        # n_ops_added += 1
-                        if(rmu_sq[1] not in self._tops):
-                            print('op added!')
-                            self._tops.insert(0,rmu_sq[1])
-                            self._tamps.insert(0,0.0)
-                            self.add_op_from_basis_idx(rmu_sq[1])
-                            op_added = True
-
-                self._n_classical_params_lst.append(len(self._tops))
-
+                    self._n_classical_params_lst.append(len(self._tops))
+                    ###
 
         elif (self._op_select_type == "residual"):
 

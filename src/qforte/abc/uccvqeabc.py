@@ -48,7 +48,7 @@ class UCCVQE(VQE):
         self._grad_m_evals = 0
         self._k_counter = 0
         self._grad_m_evals = 0
-        self._prev_energy = 0.0
+        self._prev_energy = self._hf_energy
         self._curr_energy = 0.0
         self._curr_grad_norm = 0.0
 
@@ -364,17 +364,24 @@ class UCCVQE(VQE):
 
     def energy_feval(self, params):
         Ucirc = self.build_Uvqc(params=params)
-        self._prev_energy = self._curr_energy
+        # self._prev_energy = self._curr_energy
         Energy = self.measure_energy(Ucirc)
 
-        if(self._noise_factor > 1e-12):
-            Energy = np.random.normal(Energy, self._noise_factor)
+        # if(self._noise_factor > 1e-12):
+        #     Energy = np.random.normal(Energy, self._noise_factor)
 
         self._curr_energy = Energy
         return Energy
 
     def gradient_ary_feval(self, params):
         grads = self.measure_gradient(params)
+
+        if(self._noise_factor > 1e-14):
+            noisy_grads = []
+            for grad_m in grads:
+                noisy_grads.append(np.random.normal(np.real(grad_m), self._noise_factor))
+            grads = noisy_grads
+
         self._curr_grad_norm = np.linalg.norm(grads)
         self._grad_vec_evals += 1
         self._grad_m_evals += len(self._tamps)
@@ -387,15 +394,29 @@ class UCCVQE(VQE):
 
     def callback(self, x):
         # print(f"\n -Minimum energy this iteration:    {self.energy_feval(x):+12.10f}")
+
         self._k_counter += 1
 
         if(self._k_counter == 1):
             # print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}       -----------      {self._grad_vec_evals:4}         {self._curr_grad_norm:+12.10f}')
             print('\n    k iteration         Energy               dE           Ngvec ev      Ngm ev*         ||g||')
             print('--------------------------------------------------------------------------------------------------')
+            if (self._print_summary_file):
+                f = open("summary.dat", "w+", buffering=1)
+                f.write('\n#    k iteration         Energy               dE           Ngvec ev      Ngm ev*         ||g||')
+                f.write('\n#--------------------------------------------------------------------------------------------------')
+                f.close()
+
         # else:
         dE = self._curr_energy - self._prev_energy
         print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._grad_vec_evals:4}        {self._grad_m_evals:6}       {self._curr_grad_norm:+12.10f}')
+
+        if (self._print_summary_file):
+            f = open("summary.dat", "a", buffering=1)
+            f.write(f'\n       {self._k_counter:7}        {self._curr_energy:+12.12f}      {dE:+12.12f}      {self._grad_vec_evals:4}        {self._grad_m_evals:6}       {self._curr_grad_norm:+12.12f}')
+            f.close()
+
+        self._prev_energy = self._curr_energy
 
     def verify_required_UCCVQE_attributes(self):
         if self._use_analytic_grad is None:

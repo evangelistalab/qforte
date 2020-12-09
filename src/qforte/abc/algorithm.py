@@ -66,6 +66,7 @@ class Algorithm(ABC):
         self._Uprep = build_Uprep(reference, trial_state_type)
         # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonain()
         self._qb_ham = system.get_hamiltonian()
+        self._hf_energy = system.get_hf_energy()
         self._Nl = len(self._qb_ham.terms())
         self._trotter_order = trotter_order
         self._trotter_number = trotter_number
