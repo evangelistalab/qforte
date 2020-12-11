@@ -21,6 +21,11 @@ from openfermionpsi4 import run_psi4
 
 import json
 
+try:
+    import psi4
+    use_psi4 = True
+except:
+    use_psi4 = False
 
 class MolAdapter(ABC):
     """Abstract class for the aquiring system information from external electronic
@@ -226,6 +231,136 @@ class OpenFermionMolAdapter(MolAdapter):
         if(kwargs['run_fci']==1):
             self._qforte_mol.set_fci_energy(openfermion_mol.fci_energy)
 
+
+
+    def get_molecule(self):
+        return self._qforte_mol
+
+class Psi4MolAdapter(MolAdapter):
+    """Builds a qforte Molecule object directly from a psi4 calculation.
+    """
+
+    ## 1. define __init__
+    def __init__(self, **kwargs):
+        self._mol_geometry = kwargs['mol_geometry']
+        self._basis = kwargs['basis']
+        self._multiplicity = kwargs['multiplicity']
+        self._charge = kwargs['charge']
+        # self._symmetry = kwargs['symmetry']
+        # self._description = kwargs['description']
+        # self._filename = kwargs['filename']
+        # self._hdf5_dir = kwargs['hdf5_dir']
+
+        self._qforte_mol = Molecule(mol_geometry = kwargs['mol_geometry'],
+                                   basis = kwargs['basis'],
+                                   multiplicity = kwargs['multiplicity'],
+                                   charge = kwargs['charge'])
+                                   # description = kwargs['description'],
+                                   # filename = kwargs['filename'],
+                                   # hdf5_dir = kwargs['hdf5_dir'])
+
+
+    def run(self, **kwargs):
+
+        if not use_psi4:
+            raise ImportError("Psi4 was not imported correctely.")
+
+        ### setup psi4 calcualtion
+        psi4.set_memory('2 GB')
+        psi4.core.set_output_file('output.dat', False)
+
+        ## pass goemetry
+        p4_mol = psi4.geometry("""
+        H
+        H 1 0.75
+        symmetry c1
+        units angstrom
+        """)
+
+        psi4.set_options({'basis': self._basis,
+                  'scf_type': 'pk',
+                  # 'mp2_type': 'conv',
+                  'e_convergence': 1e-8,
+                  'd_convergence': 1e-8})
+
+        ### run psi4 caclulation
+
+        ## optionally run with higher levers of theory
+        p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
+
+
+
+        ### (?) get MO coefficients
+
+        ### set energy properties
+
+
+        # Get integrals using MintsHelper.
+        mints = psi4.core.MintsHelper(p4_wfn.basisset())
+        print("type (mints): ", type(mints))
+
+        C = p4_wfn.Ca()
+
+        mo_ints = np.asarray(mints.mo_spin_eri(C, C))
+
+        print("\n teis: \n", mo_ints)
+
+        # Update H, transform to MO basis and tile for alpha/beta spin
+        H = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
+        H = np.einsum('uj,vi,uv', C, C, H)
+
+        
+        print("\n oeis: \n", H)
+        # help(mints)
+
+
+
+        #
+        # molecule.one_body_integrals = general_basis_change(
+        #     numpy.asarray(mints.ao_kinetic()), molecule.canonical_orbitals, (1, 0))
+        #
+        # molecule.one_body_integrals += general_basis_change(
+        #     numpy.asarray(mints.ao_potential()), molecule.canonical_orbitals, (1, 0))
+        #
+        # two_body_integrals = numpy.asarray(mints.ao_eri())
+        # two_body_integrals.reshape((molecule.n_orbitals, molecule.n_orbitals,
+        #                             molecule.n_orbitals, molecule.n_orbitals))
+        # two_body_integrals = numpy.einsum('psqr', two_body_integrals)
+        # two_body_integrals = general_basis_change(
+        #     two_body_integrals, molecule.canonical_orbitals, (1, 1, 0, 0))
+        #
+        # molecule.two_body_integrals = two_body_integrals
+
+
+
+
+
+        ### (?) get integrals
+
+
+
+        # build sq hamiltonain
+        qforte_sq_hamiltionan = qforte.SQOperator()
+        # qforte_sq_hamiltionan.add_term(external_data['scalar_energy']['data'], [])
+        #
+        # for p, q, h_pq in external_data['oei']['data']:
+        #     qforte_sq_hamiltionan.add_term(h_pq, [p,q])
+        #
+        # for p, q, r, s, h_pqrs in external_data['tei']['data']:
+        #     # qforte_sq_hamiltionan.add_term(h_pqrs, [p,q,r,s])
+        #     qforte_sq_hamiltionan.add_term(h_pqrs/4.0, [p,q,s,r]) # only works in C1 symmetry
+        #
+        # hf_reference = [0 for i in range(external_data['nso']['data'])]
+        # for n in range(external_data['na']['data'] + external_data['nb']['data']):
+        #     hf_reference[n] = 1
+
+        self._qforte_mol.set_hf_energy(p4_Escf)
+
+        # self._qforte_mol.set_hf_reference(hf_reference)
+        #
+        # self._qforte_mol.set_sq_hamiltonian(qforte_sq_hamiltionan)
+        #
+        # self._qforte_mol.set_hamiltonian(qforte_sq_hamiltionan.jw_transform())
 
 
     def get_molecule(self):
