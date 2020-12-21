@@ -17,7 +17,7 @@ void SQOpPool::add_term(std::complex<double> coeff, const SQOperator& sq_op ){
 
 void SQOpPool::set_coeffs(const std::vector<std::complex<double>>& new_coeffs){
     if(new_coeffs.size() != terms_.size()){
-        throw std::invalid_argument( "Number of new coeficients for quantum operator must equal." );
+        throw std::invalid_argument( "Number of new coefficients for quantum operator must equal." );
     }
     for (size_t l = 0; l < new_coeffs.size(); l++){
         terms_[l].first = new_coeffs[l];
@@ -78,11 +78,11 @@ QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type){
             a.mult_coeffs(term.first);
             A.add_op(a);
         }
-        // TODO: analyze ordering here, eleimenating simplify will place comuting
+        // TODO: analyze ordering here, eliminating simplify will place commuting
         // terms closer together but may introduce redundancy.
         A.simplify();
         A.order_terms();
-    } else if (order_type=="comuting_grp_lex") {
+    } else if (order_type=="commuting_grp_lex") {
         for (auto& term : terms_) {
             QuantumOperator a = term.second.jw_transform();
             a.mult_coeffs(term.first);
@@ -212,7 +212,7 @@ void SQOpPool::fill_pool(std::string pool_type){
         int nqb = 2 * (nocc_ + nvir_);
         int nel = 2 * nocc_;
 
-        // TODO(Nick): incorparate more flexability into this
+        // TODO(Nick): incorporate more flexibility into this
         int na_el = nocc_;
         int nb_el = nocc_;
 

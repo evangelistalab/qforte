@@ -94,8 +94,8 @@ class ADAPTVQE(UCCVQE):
         A list of amplitudes (to be optemized) representing selected
         operators in the pool.
 
-    _comutator_pool : list
-        The QuantumOperator objects representing the comutators [H, Am] of the
+    _commutator_pool : list
+        The QuantumOperator objects representing the commutators [H, Am] of the
         Hamiltonian (H) and each member of the operator pool (Am).
 
     _N_samples : int
@@ -116,8 +116,8 @@ class ADAPTVQE(UCCVQE):
         The total number of times the energy was evaluated via
         measurement of the Hamiltoanin
 
-    _n_comut_measurements : int
-        The total number of times the comutator was evaluated via
+    _n_commut_measurements : int
+        The total number of times the commutator was evaluated via
         measurement of [H, Am].
 
 
@@ -127,8 +127,8 @@ class ADAPTVQE(UCCVQE):
         Fills the pool_ with indicies pertaining spin-complete, single and
         double excitation operators according to _nocc and _nvir.
 
-    fill_comutator_pool()
-        Fills the _comutator_pool with circuits considering the _operator to
+    fill_commutator_pool()
+        Fills the _commutator_pool with circuits considering the _operator to
         be measured and the _pool.
 
     update_ansatz()
@@ -165,8 +165,8 @@ class ADAPTVQE(UCCVQE):
         Returns the total number of times the energy was evaluated via
         measurement of the Hamiltoanin.
 
-    get_num_comut_measurements()
-        Returns the total number of times the comutator was evaluated via
+    get_num_commut_measurements()
+        Returns the total number of times the commutator was evaluated via
         measurement of [H, Am].
 
     get_final_energy()
@@ -200,11 +200,11 @@ class ADAPTVQE(UCCVQE):
         self._grad_norms = []
         self._tops = []
         self._tamps = []
-        self._comutator_pool = []
+        self._commutator_pool = []
         self._converged = 0
 
         self._n_ham_measurements = 0
-        self._n_comut_measurements = 0
+        self._n_commut_measurements = 0
 
         self._n_classical_params = 0
         self._n_cnot = 0
@@ -228,7 +228,7 @@ class ADAPTVQE(UCCVQE):
         if self._op_select_type == 'minimize' and self._use_analytic_grad==False:
             pass
         else:
-            self.fill_comutator_pool()
+            self.fill_commutator_pool()
 
         avqe_iter = 0
         hit_maxiter = 0
@@ -343,7 +343,7 @@ class ADAPTVQE(UCCVQE):
         print('Number of operators in pool:                 ', len(self._pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
-        print('Total number of comutator measurements:      ', self.get_num_comut_measurements())
+        print('Total number of commutator measurements:      ', self.get_num_commut_measurements())
         print('Number of classical parameters used:         ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
         print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
@@ -368,8 +368,8 @@ class ADAPTVQE(UCCVQE):
         init_gues_energy = self.energy_feval(x0)
 
         if self._use_analytic_grad:
-            print('  \n--> Begin opt with analytic graditent:')
-            print(f" Initail guess energy:              {init_gues_energy:+12.10f}")
+            print('  \n--> Begin opt with analytic gradient:')
+            print(f" Initial guess energy:              {init_gues_energy:+12.10f}")
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
                                     jac=self.gradient_ary_feval,
@@ -419,19 +419,19 @@ class ADAPTVQE(UCCVQE):
                 print('     op index (m)     N pauli terms          Gradient ')
                 print('  -------------------------------------------------------')
 
-            grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc)
+            grads = self.measure_commutator_gradient(self._commutator_pool, Uvqc)
 
             for m, grad_m in enumerate(grads):
-                self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms())
+                self._n_pauli_measures_k += len(self._commutator_pool.terms()[m][1].terms())
                 curr_norm += grad_m*grad_m
                 if (self._verbose):
-                    print('       {m:3}                {len(self._comutator_pool.terms()[m][1].terms()):8}             {grad_m:+12.9f}')
+                    print('       {m:3}                {len(self._commutator_pool.terms()[m][1].terms()):8}             {grad_m:+12.9f}')
                 if (abs(grad_m) > abs(lgrst_grad)):
                     lgrst_grad = grad_m
                     lgrst_grad_idx = m
 
             curr_norm = np.sqrt(curr_norm)
-            print("==> Measring gradients from pool:")
+            print("==> Measuring gradients from pool:")
             print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
             print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
 
@@ -459,7 +459,7 @@ class ADAPTVQE(UCCVQE):
             init_gues_energy = self.energy_feval2(x0)
 
             if self._use_analytic_grad:
-                print('  \n--> Begin selection opt with analytic graditent:')
+                print('  \n--> Begin selection opt with analytic gradient:')
                 print('  Initial guess energy: ', round(init_gues_energy,10))
 
             else:
@@ -495,8 +495,8 @@ class ADAPTVQE(UCCVQE):
                 self._n_pauli_measures_k += self._Nl * res.nfev
 
                 if (self._use_analytic_grad):
-                    self._n_comut_measurements += res.njev
-                    self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms()) * res.njev
+                    self._n_commut_measurements += res.njev
+                    self._n_pauli_measures_k += len(self._commutator_pool.terms()[m][1].terms()) * res.njev
 
                 if(m==0):
                     min_amp_e = res.fun
@@ -533,7 +533,7 @@ class ADAPTVQE(UCCVQE):
         for tamp, top in zip(new_tamps, new_tops):
             temp_pool.add_term(tamp, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('comuting_grp_lex')
+        A = temp_pool.get_quantum_operator('commuting_grp_lex')
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
         Uvqc = qf.QuantumCircuit()
@@ -551,7 +551,7 @@ class ADAPTVQE(UCCVQE):
     # this fuction needs to change to use updated gradient measurement
     def gradient_ary_feval2(self, param):
         Uvqc = self.build_Uvqc2(params[0])
-        grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc, [self._trial_op])
+        grads = self.measure_commutator_gradient(self._commutator_pool, Uvqc, [self._trial_op])
         return grads
 
     def conv_status(self):
@@ -567,15 +567,15 @@ class ADAPTVQE(UCCVQE):
             self._n_ham_measurements += res.nfev
         return self._n_ham_measurements
 
-    def get_num_comut_measurements(self):
+    def get_num_commut_measurements(self):
         if(self._op_select_type=='gradient'):
-            self._n_comut_measurements += len(self._tamps) * len(self._pool)
+            self._n_commut_measurements += len(self._tamps) * len(self._pool)
 
         if self._use_analytic_grad:
             for m, res in enumerate(self._results):
-                self._n_comut_measurements += res.njev * (m+1)
+                self._n_commut_measurements += res.njev * (m+1)
 
-        return self._n_comut_measurements
+        return self._n_commut_measurements
 
     def get_final_energy(self, hit_max_avqe_iter=0):
         """

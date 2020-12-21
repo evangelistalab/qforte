@@ -16,7 +16,7 @@ void QuantumOpPool::add_term(std::complex<double> coeff, const QuantumOperator& 
 
 void QuantumOpPool::set_coeffs(const std::vector<std::complex<double>>& new_coeffs){
     if(new_coeffs.size() != terms_.size()){
-        throw std::invalid_argument( "Number of new coeficients for quantum op pool must equal number of terms in pool." );
+        throw std::invalid_argument( "Number of new coefficients for quantum op pool must equal number of terms in pool." );
     }
     for (size_t l = 0; l < new_coeffs.size(); l++){
         terms_[l].first = new_coeffs[l];
@@ -122,7 +122,7 @@ void QuantumOpPool::join_op_from_left(const QuantumOperator& q_op){
     terms_ = std::move(temp_terms);
 }
 
-void QuantumOpPool::join_as_comutator(const QuantumOperator& q_op){
+void QuantumOpPool::join_as_commutator(const QuantumOperator& q_op){
     std::vector<std::pair<std::complex<double>, QuantumOperator>> temp_terms;
     for (const auto& term : terms_) {
         // build HAm
