@@ -45,8 +45,8 @@ class QuantumOpPool {
     /// join an operator to all terms from the left (i.e. term -> Op*term)
     void join_op_from_left(const QuantumOperator& q_op);
 
-    /// join an operator to all terms to form the comutator (i.e. term -> [term, Op])
-    void join_as_comutator(const QuantumOperator& q_op);
+    /// join an operator to all terms to form the commutator (i.e. term -> [term, Op])
+    void join_as_commutator(const QuantumOperator& q_op);
 
     /// square the current operator pool,
     void square(bool upper_triangle_only);
