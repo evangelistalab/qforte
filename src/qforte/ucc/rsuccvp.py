@@ -58,6 +58,8 @@ class RSUCC(UCCVQE):
         self._res_vec_thresh = res_vec_thresh
         self._max_residual_iter = max_residual_iter
 
+        self._nbody_counts = []
+
         self._n_classical_params_lst = []
 
         self._results = []
@@ -98,6 +100,10 @@ class RSUCC(UCCVQE):
             self._Nm = []
             self._pool_type = 'complete'
             self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor=1.0j*self._dt, trotter_number=self._trotter_number)
+
+            for i, occupation in enumerate(self._ref):
+                if(occupation):
+                    self._nbody_counts.append(0)
         else:
             self.fill_pool()
 
@@ -153,6 +159,14 @@ class RSUCC(UCCVQE):
             self._final_result = self._results[-1]
 
         self._Egs = self.get_final_energy()
+
+        print("\n\n")
+        print("---> Final n-body excitation counts in SPQE ansatz <---")
+        print("\n")
+        print(f"{'Excitaion order':>20}{'Number of operators':>30}")
+        print('---------------------------------------------------------')
+        for l, nl in enumerate(self._nbody_counts):
+            print(f"{l+1:12}              {nl:14}")
 
         print('\n\n')
         print(f"{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
@@ -774,7 +788,7 @@ class RSUCC(UCCVQE):
 
     def add_op_from_basis_idx(self, I):
 
-        max_nbody = 100
+        max_nbody = len(self._nbody_counts)
 
         nqb = len(self._ref)
         nel = int(sum(self._ref))
@@ -853,6 +867,7 @@ class RSUCC(UCCVQE):
                     self._Nm.insert(0, len(K_temp.jw_transform().terms()))
                     # self._pool.insert(0, tuple(1.0, K_temp))
                     # add_term(1.0, t_temp);
+                    self._nbody_counts[nbody-1] += 1
 
     def build_Uvqc2(self, param):
         """ This function returns the QuantumCircuit object built
