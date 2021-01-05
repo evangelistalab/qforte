@@ -269,10 +269,19 @@ class Psi4MolAdapter(MolAdapter):
         psi4.set_memory('2 GB')
         psi4.core.set_output_file('output.dat', False)
 
-        ## pass goemetry
+        # pass goemetry
+        # p4_mol = psi4.geometry("""
+        # H
+        # H 1 0.75
+        # symmetry c1
+        # units angstrom
+        # """)
+
         p4_mol = psi4.geometry("""
-        H
-        H 1 0.75
+        H 0.0 0.0 0.00
+        H 0.0 0.0 0.75
+        H 0.0 0.0 1.50
+        H 0.0 0.0 2.25
         symmetry c1
         units angstrom
         """)
@@ -301,21 +310,26 @@ class Psi4MolAdapter(MolAdapter):
 
         C = p4_wfn.Ca()
 
-        mo_ints = np.asarray(mints.mo_spin_eri(C, C))
+        # mo_teis = np.asarray(mints.mo_spin_eri(C, C))
+        mo_teis = np.asarray(mints.mo_eri(C, C, C, C))
 
-        print("\n teis: \n", mo_ints)
+        self._mo_tei = mo_teis
+
+        print("\n teis: \n", mo_teis)
+        print('type(mo_teis): ', type(mo_teis))
 
         # Update H, transform to MO basis and tile for alpha/beta spin
-        H = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
-        H = np.einsum('uj,vi,uv', C, C, H)
+        mo_oeis = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
+        mo_oeis = np.einsum('uj,vi,uv', C, C, mo_oeis)
 
-        
-        print("\n oeis: \n", H)
+
+        print("\n oeis: \n", mo_oeis)
+        print('type(mo_oeis): ', type(mo_oeis))
         # help(mints)
 
+        self._mo_oei = mo_oeis
 
-
-        #
+        # from openferion
         # molecule.one_body_integrals = general_basis_change(
         #     numpy.asarray(mints.ao_kinetic()), molecule.canonical_orbitals, (1, 0))
         #
@@ -330,10 +344,6 @@ class Psi4MolAdapter(MolAdapter):
         #     two_body_integrals, molecule.canonical_orbitals, (1, 1, 0, 0))
         #
         # molecule.two_body_integrals = two_body_integrals
-
-
-
-
 
         ### (?) get integrals
 
