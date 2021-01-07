@@ -21,6 +21,11 @@ from openfermionpsi4 import run_psi4
 
 import json
 
+try:
+    import psi4
+    use_psi4 = True
+except:
+    use_psi4 = False
 
 class MolAdapter(ABC):
     """Abstract class for the aquiring system information from external electronic
@@ -227,6 +232,158 @@ class OpenFermionMolAdapter(MolAdapter):
             self._qforte_mol.set_fci_energy(openfermion_mol.fci_energy)
 
 
+
+    def get_molecule(self):
+        return self._qforte_mol
+
+class Psi4MolAdapter(MolAdapter):
+    """Builds a qforte Molecule object directly from a psi4 calculation.
+    """
+
+    def __init__(self, **kwargs):
+
+        kwargs.setdefault('symmetry', 'c1')
+        kwargs.setdefault('charge', 0)
+        kwargs.setdefault('multiplicity', 1)
+
+        self._mol_geometry = kwargs['mol_geometry']
+        self._basis = kwargs['basis']
+        self._multiplicity = kwargs['multiplicity']
+        self._charge = kwargs['charge']
+        self._symmetry = kwargs['symmetry']
+
+        self._qforte_mol = Molecule(mol_geometry = kwargs['mol_geometry'],
+                                   basis = kwargs['basis'],
+                                   multiplicity = kwargs['multiplicity'],
+                                   charge = kwargs['charge'])
+
+
+    def run(self, **kwargs):
+
+        if not use_psi4:
+            raise ImportError("Psi4 was not imported correctely.")
+
+        kwargs.setdefault('run_scf', 1)
+        kwargs.setdefault('run_mp2', 0)
+        kwargs.setdefault('run_ccsd', 0)
+        kwargs.setdefault('run_cisd', 0)
+        kwargs.setdefault('run_fci', 1)
+
+        # Setup psi4 calcualtion(s)
+        psi4.set_memory('2 GB')
+        psi4.core.set_output_file('output.dat', False)
+
+        p4_geom_str =  f"{int(self._charge)}  {int(self._multiplicity)}"
+        for geom_line in self._mol_geometry:
+            p4_geom_str += f"\n{geom_line[0]}  {geom_line[1][0]}  {geom_line[1][1]}  {geom_line[1][2]}"
+        p4_geom_str += f"\nsymmetry {self._symmetry}"
+        p4_geom_str += f"\nunits angstrom"
+
+        print(' ==> Psi4 geometry <==')
+        print('-------------------------')
+        print(p4_geom_str)
+
+        p4_mol = psi4.geometry(p4_geom_str)
+
+        psi4.set_options({'basis': self._basis,
+                  'scf_type': 'pk',
+                  'e_convergence': 1e-8,
+                  'd_convergence': 1e-8,
+                  'ci_maxiter': 100})
+
+        # run psi4 caclulation
+        if(kwargs['run_scf']):
+            p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
+
+        if(kwargs['run_mp2']):
+            p4_Emp2 = psi4.energy('MP2')
+
+        if(kwargs['run_ccsd']):
+            p4_Eccsd = psi4.energy('CCSD')
+
+        if(kwargs['run_ccsd']):
+            p4_Ecisd = psi4.energy('CISD')
+
+        if(kwargs['run_fci']):
+            p4_Efci = psi4.energy('FCI')
+
+        # Get integrals using MintsHelper.
+        mints = psi4.core.MintsHelper(p4_wfn.basisset())
+
+        C = p4_wfn.Ca()
+        scalars = p4_wfn.scalar_variables()
+
+        p4_Enuc_ref = scalars["NUCLEAR REPULSION ENERGY"]
+
+        # Do MO integral transformation
+        mo_teis = np.asarray(mints.mo_eri(C, C, C, C))
+        mo_oeis = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
+        mo_oeis = np.einsum('uj,vi,uv', C, C, mo_oeis)
+
+        nmo = np.shape(mo_oeis)[0]
+        nalpha = p4_wfn.nalpha()
+        nbeta = p4_wfn.nbeta()
+        nel = nalpha + nbeta
+
+        # Make hf_reference
+        hf_reference = []
+        for a in range(2*nmo):
+            if(a<nel):
+                hf_reference.append(1)
+            else:
+                hf_reference.append(0)
+
+        # Build second quantized Hamiltonain
+        nmo = np.shape(mo_oeis)[0]
+        Hsq = qforte.SQOperator()
+        Hsq.add_term(p4_Enuc_ref, [])
+        for i in range(nmo):
+            ia = i*2
+            ib = i*2 + 1
+            for j in range(nmo):
+                ja = j*2
+                jb = j*2 + 1
+
+                Hsq.add_term(mo_oeis[i,j], [ia, ja])
+                Hsq.add_term(mo_oeis[i,j], [ib, jb])
+
+                for k in range(nmo):
+                    ka = k*2
+                    kb = k*2 + 1
+                    for l in range(nmo):
+                        la = l*2
+                        lb = l*2 + 1
+
+                        if(ia!=jb and kb != la):
+                            Hsq.add_term( mo_teis[i,l,k,j]/2, [ia, jb, kb, la] ) # abba
+                        if(ib!=ja and ka!=lb):
+                            Hsq.add_term( mo_teis[i,l,k,j]/2, [ib, ja, ka, lb] ) # baab
+
+                        if(ia!=ja and ka!=la):
+                            Hsq.add_term( mo_teis[i,l,k,j]/2, [ia, ja, ka, la] ) # aaaa
+                        if(ib!=jb and kb!=lb):
+                            Hsq.add_term( mo_teis[i,l,k,j]/2, [ib, jb, kb, lb] ) # bbbb
+
+        # Set attributes
+        self._qforte_mol.set_nuclear_repulsion_energy(p4_Enuc_ref)
+        self._qforte_mol.set_hf_energy(p4_Escf)
+        self._qforte_mol.set_hf_reference(hf_reference)
+        self._qforte_mol.set_mo_oei(mo_oeis)
+        self._qforte_mol.set_mo_tei(mo_teis)
+        self._qforte_mol.set_sq_hamiltonian(Hsq)
+        self._qforte_mol.set_hamiltonian(Hsq.jw_transform())
+
+        if(kwargs['run_mp2']):
+            self._qforte_mol.set_mp2_energy(p4_Emp2)
+
+        if(kwargs['run_cisd']):
+            self._qforte_mol.set_cisd_energy(p4_Ecisd)
+
+        if(kwargs['run_ccsd']):
+            self._qforte_mol.set_ccsd_energy(p4_Eccsd)
+
+        if(kwargs['run_fci']):
+            self._qforte_mol.set_fci_energy(p4_Efci)
 
     def get_molecule(self):
         return self._qforte_mol

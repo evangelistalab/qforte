@@ -77,7 +77,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("join_op_from_right_lazy", &QuantumOpPool::join_op_from_right_lazy)
         .def("join_op_from_right", &QuantumOpPool::join_op_from_right)
         .def("join_op_from_left", &QuantumOpPool::join_op_from_left)
-        .def("join_as_comutator", &QuantumOpPool::join_as_comutator)
+        .def("join_as_commutator", &QuantumOpPool::join_as_commutator)
         .def("square", &QuantumOpPool::square)
         .def("fill_pool", &QuantumOpPool::fill_pool)
         .def("str", &QuantumOpPool::str);

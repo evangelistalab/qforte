@@ -36,7 +36,8 @@ class ADAPTVQETests(unittest.TestCase):
                 pool_type='SDTQ')
 
         Egs_elec = alg.get_gs_energy()
-        Egs = Egs_elec + Enuc
+        # Egs = Egs_elec + Enuc
+        Egs = Egs_elec
         self.assertLess(abs(Egs-Efci), 5.0e-11)
 
 

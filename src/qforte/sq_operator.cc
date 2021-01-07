@@ -126,6 +126,12 @@ QuantumOperator SQOperator::jw_transform() {
             throw std::invalid_argument( "sq operator term must have equal number of anihilators and creators.");
         }
         int nbody = term.second.size() / 2.0;
+        if(nbody==0){
+            QuantumCircuit scalar_circ;
+            QuantumOperator scalar_op;
+            scalar_op.add_term(term.first, scalar_circ);
+            qo.add_op(scalar_op);
+        }
         QuantumOperator temp1;
         for (int ai=0; ai<2*nbody; ai++){
             QuantumOperator temp2;

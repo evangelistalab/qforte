@@ -17,7 +17,7 @@ class UCCVQE(VQE):
         pass
 
     @abstractmethod
-    def get_num_comut_measurements(self):
+    def get_num_commut_measurements(self):
         pass
 
     def fill_pool(self):
@@ -25,20 +25,8 @@ class UCCVQE(VQE):
         self._pool_obj = qf.SQOpPool()
         self._pool_obj.set_orb_spaces(self._ref)
 
-        if (self._pool_type=='sa_SD'):
-            self._pool_obj.fill_pool('sa_SD')
-        if (self._pool_type=='GSD'):
-            self._pool_obj.fill_pool('GSD')
-        elif (self._pool_type=='SD'):
-            self._pool_obj.fill_pool('SD')
-        elif (self._pool_type=='SDT'):
-            self._pool_obj.fill_pool('SDT')
-        elif (self._pool_type=='SDTQ'):
-            self._pool_obj.fill_pool('SDTQ')
-        elif (self._pool_type=='SDTQP'):
-            self._pool_obj.fill_pool('SDTQP')
-        elif (self._pool_type=='SDTQPH'):
-            self._pool_obj.fill_pool('SDTQPH')
+        if self._pool_type in {'sa_SD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+            self._pool_obj.fill_pool(self._pool_type)
         else:
             raise ValueError('Invalid operator pool type specified.')
 
@@ -56,11 +44,11 @@ class UCCVQE(VQE):
         for m in range(len(self._pool_obj.terms())):
             self._Nm.append(len(self._pool_obj.terms()[m][1].jw_transform().terms()))
 
-    def fill_comutator_pool(self):
-        print('\n\n==> Building comutator pool for gradient measurement.')
-        self._comutator_pool = self._pool_obj.get_quantum_op_pool()
-        self._comutator_pool.join_as_comutator(self._qb_ham)
-        print('==> Comutator pool construction complete.')
+    def fill_commutator_pool(self):
+        print('\n\n==> Building commutator pool for gradient measurement.')
+        self._commutator_pool = self._pool_obj.get_quantum_op_pool()
+        self._commutator_pool.join_as_commutator(self._qb_ham)
+        print('==> Commutator pool construction complete.')
 
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, params=None):
@@ -70,8 +58,8 @@ class UCCVQE(VQE):
         Parameters
         ----------
         params : list
-            A lsit of parameters define the variational degress of freedom in
-            the state perparation circuit Uvqc.
+            A list of parameters define the variational degress of freedom in
+            the state preparation circuit Uvqc.
         """
         temp_pool = qf.SQOpPool()
         if params is None:
@@ -81,7 +69,7 @@ class UCCVQE(VQE):
             for param, top in zip(params, self._tops):
                 temp_pool.add_term(param, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('comuting_grp_lex')
+        A = temp_pool.get_quantum_operator('commuting_grp_lex')
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
         Uvqc = qforte.QuantumCircuit()
@@ -92,12 +80,12 @@ class UCCVQE(VQE):
 
         return Uvqc
 
-    def measure_comutator_gradient(self, HAm, Ucirc, idxs=[], params=None):
+    def measure_commutator_gradient(self, HAm, Ucirc, idxs=[], params=None):
         """
         Parameters
         ----------
         HAm : QuantumOpPool
-            The comutator to measure.
+            The commutator to measure.
 
         Ucirc : QuantumCircuit
             The state preparation circuit.
@@ -128,7 +116,7 @@ class UCCVQE(VQE):
         Parameters
         ----------
         HAm : QuantumOpPool
-            The comutator to measure.
+            The commutator to measure.
 
         Ucirc : QuantumCircuit
             The state preparation circuit.
@@ -171,8 +159,8 @@ class UCCVQE(VQE):
             Kmu = self._pool[self._tops[mu]][1].jw_transform()
             Kmu.mult_coeffs(self._pool[self._tops[mu]][0])
 
-            Alo = lo_pool.get_quantum_operator('comuting_grp_lex')
-            Ahi = hi_pool.get_quantum_operator('comuting_grp_lex')
+            Alo = lo_pool.get_quantum_operator('commuting_grp_lex')
+            Ahi = hi_pool.get_quantum_operator('commuting_grp_lex')
 
             Ulo, plo = trotterize(Alo, trotter_number=self._trotter_number)
             Uhi, phi = trotterize(Ahi, trotter_number=self._trotter_number)

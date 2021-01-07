@@ -14,16 +14,17 @@ class SQOpPool {
     /// default constructor: creates an empty second quantized operator pool
     SQOpPool() {}
 
-    /// add one set of anihilators and/or creators to the second quantized operator pool
+    /// add one set of annihilators and/or creators to the second quantized operator pool
     void add_term(std::complex<double> coeff, const SQOperator& sq_op );
 
-    /// sets the operator pool coefficeints
+    /// sets the operator pool coefficients
     void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
 
-    /// return a vector of terms and thier coeficients
+    /// return a vector of terms and their coeficients
     const std::vector<std::pair< std::complex<double>, SQOperator>>& terms() const;
 
-    /// set the orbtial occupations from a reference
+    /// set the total number of occupied and virtual spatial orbitals from a reference, from the number
+    ///     of occupied spin orbitals of each point group symmetry
     void set_orb_spaces(const std::vector<int>& ref);
 
     /// returns the JW transformed vector of operators
@@ -32,7 +33,7 @@ class SQOpPool {
     /// returns a QuantumOpPool object with one term for each term in terms_
     QuantumOpPool get_quantum_op_pool();
 
-    /// returns a singe QuantumOperator of the JW transformed sq ops
+    /// returns a single QuantumOperator of the JW transformed sq ops
     QuantumOperator get_quantum_operator(const std::string& order_type);
 
     /// builds the sq operator pool
