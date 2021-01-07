@@ -45,6 +45,12 @@ def system_factory(stytem_type = 'molecule', build_type = 'openfermion', **kwarg
                                                        charge = kwargs['charge'],
                                                        filename = kwargs['filename'])
 
+        elif(build_type=='psi4'):
+            my_system_skeleton = MA.Psi4MolAdapter(mol_geometry = kwargs['mol_geometry'],
+                                                   basis = kwargs['basis'],
+                                                   multiplicity = kwargs['multiplicity'],
+                                                   charge = kwargs['charge'])
+
         else:
             raise TypeError("build type not supported, supported type is 'open_fermion'.")
 
