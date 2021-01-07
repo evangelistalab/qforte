@@ -240,24 +240,22 @@ class Psi4MolAdapter(MolAdapter):
     """Builds a qforte Molecule object directly from a psi4 calculation.
     """
 
-    ## 1. define __init__
     def __init__(self, **kwargs):
+
+        kwargs.setdefault('symmetry', 'c1')
+        kwargs.setdefault('charge', 0)
+        kwargs.setdefault('multiplicity', 1)
+
         self._mol_geometry = kwargs['mol_geometry']
         self._basis = kwargs['basis']
         self._multiplicity = kwargs['multiplicity']
         self._charge = kwargs['charge']
-        # self._symmetry = kwargs['symmetry']
-        # self._description = kwargs['description']
-        # self._filename = kwargs['filename']
-        # self._hdf5_dir = kwargs['hdf5_dir']
+        self._symmetry = kwargs['symmetry']
 
         self._qforte_mol = Molecule(mol_geometry = kwargs['mol_geometry'],
                                    basis = kwargs['basis'],
                                    multiplicity = kwargs['multiplicity'],
                                    charge = kwargs['charge'])
-                                   # description = kwargs['description'],
-                                   # filename = kwargs['filename'],
-                                   # hdf5_dir = kwargs['hdf5_dir'])
 
 
     def run(self, **kwargs):
@@ -265,113 +263,127 @@ class Psi4MolAdapter(MolAdapter):
         if not use_psi4:
             raise ImportError("Psi4 was not imported correctely.")
 
-        ### setup psi4 calcualtion
+        kwargs.setdefault('run_scf', 1)
+        kwargs.setdefault('run_mp2', 0)
+        kwargs.setdefault('run_ccsd', 0)
+        kwargs.setdefault('run_cisd', 0)
+        kwargs.setdefault('run_fci', 1)
+
+        # Setup psi4 calcualtion(s)
         psi4.set_memory('2 GB')
         psi4.core.set_output_file('output.dat', False)
 
-        # pass goemetry
-        # p4_mol = psi4.geometry("""
-        # H
-        # H 1 0.75
-        # symmetry c1
-        # units angstrom
-        # """)
+        p4_geom_str =  f"{int(self._charge)}  {int(self._multiplicity)}"
+        for geom_line in self._mol_geometry:
+            p4_geom_str += f"\n{geom_line[0]}  {geom_line[1][0]}  {geom_line[1][1]}  {geom_line[1][2]}"
+        p4_geom_str += f"\nsymmetry {self._symmetry}"
+        p4_geom_str += f"\nunits angstrom"
 
-        p4_mol = psi4.geometry("""
-        H 0.0 0.0 0.00
-        H 0.0 0.0 0.75
-        H 0.0 0.0 1.50
-        H 0.0 0.0 2.25
-        symmetry c1
-        units angstrom
-        """)
+        print(' ==> Psi4 geometry <==')
+        print('-------------------------')
+        print(p4_geom_str)
+
+        p4_mol = psi4.geometry(p4_geom_str)
 
         psi4.set_options({'basis': self._basis,
                   'scf_type': 'pk',
-                  # 'mp2_type': 'conv',
                   'e_convergence': 1e-8,
-                  'd_convergence': 1e-8})
+                  'd_convergence': 1e-8,
+                  'ci_maxiter': 100})
 
-        ### run psi4 caclulation
+        # run psi4 caclulation
+        if(kwargs['run_scf']):
+            p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
 
-        ## optionally run with higher levers of theory
-        p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
+        if(kwargs['run_mp2']):
+            p4_Emp2 = psi4.energy('MP2')
 
+        if(kwargs['run_ccsd']):
+            p4_Eccsd = psi4.energy('CCSD')
 
+        if(kwargs['run_ccsd']):
+            p4_Ecisd = psi4.energy('CISD')
 
-        ### (?) get MO coefficients
-
-        ### set energy properties
-
+        if(kwargs['run_fci']):
+            p4_Efci = psi4.energy('FCI')
 
         # Get integrals using MintsHelper.
         mints = psi4.core.MintsHelper(p4_wfn.basisset())
-        print("type (mints): ", type(mints))
 
         C = p4_wfn.Ca()
+        scalars = p4_wfn.scalar_variables()
 
-        # mo_teis = np.asarray(mints.mo_spin_eri(C, C))
+        p4_Enuc_ref = scalars["NUCLEAR REPULSION ENERGY"]
+
+        # Do MO integral transformation
         mo_teis = np.asarray(mints.mo_eri(C, C, C, C))
-
-        self._mo_tei = mo_teis
-
-        print("\n teis: \n", mo_teis)
-        print('type(mo_teis): ', type(mo_teis))
-
-        # Update H, transform to MO basis and tile for alpha/beta spin
         mo_oeis = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
         mo_oeis = np.einsum('uj,vi,uv', C, C, mo_oeis)
 
+        nmo = np.shape(mo_oeis)[0]
+        nalpha = p4_wfn.nalpha()
+        nbeta = p4_wfn.nbeta()
+        nel = nalpha + nbeta
 
-        print("\n oeis: \n", mo_oeis)
-        print('type(mo_oeis): ', type(mo_oeis))
-        # help(mints)
+        # Make hf_reference
+        hf_reference = []
+        for a in range(2*nmo):
+            if(a<nel):
+                hf_reference.append(1)
+            else:
+                hf_reference.append(0)
 
-        self._mo_oei = mo_oeis
+        # Build second quantized Hamiltonain
+        nmo = np.shape(mo_oeis)[0]
+        Hsq = qforte.SQOperator()
+        Hsq.add_term(p4_Enuc_ref, [])
+        for i in range(nmo):
+            ia = i*2
+            ib = i*2 + 1
+            for j in range(nmo):
+                ja = j*2
+                jb = j*2 + 1
 
-        # from openferion
-        # molecule.one_body_integrals = general_basis_change(
-        #     numpy.asarray(mints.ao_kinetic()), molecule.canonical_orbitals, (1, 0))
-        #
-        # molecule.one_body_integrals += general_basis_change(
-        #     numpy.asarray(mints.ao_potential()), molecule.canonical_orbitals, (1, 0))
-        #
-        # two_body_integrals = numpy.asarray(mints.ao_eri())
-        # two_body_integrals.reshape((molecule.n_orbitals, molecule.n_orbitals,
-        #                             molecule.n_orbitals, molecule.n_orbitals))
-        # two_body_integrals = numpy.einsum('psqr', two_body_integrals)
-        # two_body_integrals = general_basis_change(
-        #     two_body_integrals, molecule.canonical_orbitals, (1, 1, 0, 0))
-        #
-        # molecule.two_body_integrals = two_body_integrals
+                Hsq.add_term(mo_oeis[i,j], [ia, ja])
+                Hsq.add_term(mo_oeis[i,j], [ib, jb])
 
-        ### (?) get integrals
+                for k in range(nmo):
+                    ka = k*2
+                    kb = k*2 + 1
+                    for l in range(nmo):
+                        la = l*2
+                        lb = l*2 + 1
 
+                        if(ia!=jb and kb != la):
+                            Hsq.add_term( mo_teis[i,l,k,j]/2, [ia, jb, kb, la] ) # abba
+                        if(ib!=ja and ka!=lb):
+                            Hsq.add_term( mo_teis[i,l,k,j]/2, [ib, ja, ka, lb] ) # baab
 
+                        if(ia!=ja and ka!=la):
+                            Hsq.add_term( mo_teis[i,l,k,j]/2, [ia, ja, ka, la] ) # aaaa
+                        if(ib!=jb and kb!=lb):
+                            Hsq.add_term( mo_teis[i,l,k,j]/2, [ib, jb, kb, lb] ) # bbbb
 
-        # build sq hamiltonain
-        qforte_sq_hamiltionan = qforte.SQOperator()
-        # qforte_sq_hamiltionan.add_term(external_data['scalar_energy']['data'], [])
-        #
-        # for p, q, h_pq in external_data['oei']['data']:
-        #     qforte_sq_hamiltionan.add_term(h_pq, [p,q])
-        #
-        # for p, q, r, s, h_pqrs in external_data['tei']['data']:
-        #     # qforte_sq_hamiltionan.add_term(h_pqrs, [p,q,r,s])
-        #     qforte_sq_hamiltionan.add_term(h_pqrs/4.0, [p,q,s,r]) # only works in C1 symmetry
-        #
-        # hf_reference = [0 for i in range(external_data['nso']['data'])]
-        # for n in range(external_data['na']['data'] + external_data['nb']['data']):
-        #     hf_reference[n] = 1
-
+        # Set attributes
+        self._qforte_mol.set_nuclear_repulsion_energy(p4_Enuc_ref)
         self._qforte_mol.set_hf_energy(p4_Escf)
+        self._qforte_mol.set_hf_reference(hf_reference)
+        self._qforte_mol.set_mo_oei(mo_oeis)
+        self._qforte_mol.set_mo_tei(mo_teis)
+        self._qforte_mol.set_sq_hamiltonian(Hsq)
+        self._qforte_mol.set_hamiltonian(Hsq.jw_transform())
 
-        # self._qforte_mol.set_hf_reference(hf_reference)
-        #
-        # self._qforte_mol.set_sq_hamiltonian(qforte_sq_hamiltionan)
-        #
-        # self._qforte_mol.set_hamiltonian(qforte_sq_hamiltionan.jw_transform())
+        if(kwargs['run_mp2']):
+            self._qforte_mol.set_mp2_energy(p4_Emp2)
 
+        if(kwargs['run_cisd']):
+            self._qforte_mol.set_cisd_energy(p4_Ecisd)
+
+        if(kwargs['run_ccsd']):
+            self._qforte_mol.set_ccsd_energy(p4_Eccsd)
+
+        if(kwargs['run_fci']):
+            self._qforte_mol.set_fci_energy(p4_Efci)
 
     def get_molecule(self):
         return self._qforte_mol

@@ -96,12 +96,27 @@ class Molecule(object):
     def set_sq_of_ham(self, sq_of_ham):
         self._sq_of_ham = sq_of_ham
 
+    def set_nmo(self, nmo):
+        self._nmo = nmo
+
+    def set_nel(self, nel):
+        self._nel = nel
+
     def set_hf_reference(self, hf_reference):
         self._hf_reference = hf_reference
+
+    def set_mo_oei(self, oei):
+        self._mo_oei = oei
+
+    def set_mo_tei(self, tei):
+        self._mo_tei = tei
 
     def set_ccsd_amps(self, ccsd_singles, ccsd_doubles):
         self._ccsd_singles = ccsd_singles
         self._ccsd_doubles = ccsd_doubles
+
+    def set_nuclear_repulsion_energy(self, nuc_rep_energy):
+        self._nuc_rep_energy = nuc_rep_energy
 
     def set_hf_energy(self, hf_energy):
         self._hf_energy = hf_energy
