@@ -234,10 +234,15 @@ class UCCNVQE(UCCVQE):
 
         self.solve()
 
-        print('\nt operators included from pool: \n', self._tops)
-        print('Final tamplitudes for tops: \n', self._tamps)
-        # Print summary banner (should done for all algorithms).
-        self.print_summary_banner()
+        if(self._verbose):
+            print('\nt operators included from pool: \n', self._tops)
+            print('\nFinal tamplitudes for tops: \n', self._tamps)
+
+        ######### UCCSD-VQE #########
+        self._n_nonzero_params = 0
+        for tmu in self._tamps:
+            if(np.abs(tmu) > 1.0e-12):
+                self._n_nonzero_params += 1
 
         # verify that required attributes were defined
         # (should be called for all algorithms!)
