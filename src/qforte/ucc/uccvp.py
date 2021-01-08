@@ -66,7 +66,7 @@ class UCCVP(UCCVQE):
 
         self._tops = []
         self._tamps = []
-        self._comutator_pool = []
+        self._commutator_pool = []
         self._converged = 0
 
         self._res_vec_evals = 0
@@ -174,7 +174,7 @@ class UCCVP(UCCVQE):
         print('Number of operators in pool:                 ', len(self._pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         # print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
-        # print('Total number of comutator measurements:      ', self.get_num_comut_measurements())
+        # print('Total number of commutator measurements:      ', self.get_num_commut_measurements())
         print('Number of classical parameters used:         ', len(self._tamps))
         print('Number of non-zero parameters used:          ', self._n_nonzero_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
@@ -235,7 +235,7 @@ class UCCVP(UCCVQE):
         self._n_cnot = self.build_Uvqc().get_num_cnots()
         self._n_pauli_trm_measures += self._Nl * res.nfev
         # for m in range(self._n_classical_params):
-        #     self._n_pauli_trm_measures += len(self._comutator_pool.terms()[m][1].terms()) * res.njev
+        #     self._n_pauli_trm_measures += len(self._commutator_pool.terms()[m][1].terms()) * res.njev
 
     def diis_solve(self):
         # draws heavy insiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
@@ -329,7 +329,7 @@ class UCCVP(UCCVQE):
         for param, top in zip(trial_amps, self._tops):
             temp_pool.add_term(param, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('comuting_grp_lex')
+        A = temp_pool.get_quantum_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)
         if U_phase != 1.0 + 0.0j:
             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
@@ -473,10 +473,10 @@ class UCCVP(UCCVQE):
         self._n_ham_measurements = self._final_result.nfev
         return self._n_ham_measurements
 
-    def get_num_comut_measurements(self):
+    def get_num_commut_measurements(self):
         if self._use_analytic_grad:
-            self._n_comut_measurements = self._final_result.njev * (len(self._pool))
-            return self._n_comut_measurements
+            self._n_commut_measurements = self._final_result.njev * (len(self._pool))
+            return self._n_commut_measurements
         else:
             return 0
 

@@ -185,7 +185,7 @@ class ADAPTVQE(UCCVQE):
             optimizer='BFGS',
             use_analytic_grad = True,
             op_select_type='gradient',
-            use_comutator_grad_selection = False,
+            use_commutator_grad_selection = False,
             use_cumulative_thresh = False,
             add_equiv_ops = False):
 
@@ -197,7 +197,7 @@ class ADAPTVQE(UCCVQE):
         self._optimizer = optimizer
         self._pool_type = pool_type
         self._op_select_type = op_select_type
-        self._use_comutator_grad_selection = use_comutator_grad_selection
+        self._use_commutator_grad_selection = use_commutator_grad_selection
         self._use_cumulative_thresh = use_cumulative_thresh
         self._add_equiv_ops = add_equiv_ops
 
@@ -235,10 +235,10 @@ class ADAPTVQE(UCCVQE):
         # if self._op_select_type == 'minimize' and self._use_analytic_grad==False:
         #     pass
         # else:
-        #     self.fill_comutator_pool()
+        #     self.fill_commutator_pool()
 
-        if self._use_comutator_grad_selection:
-            self.fill_comutator_pool()
+        if self._use_commutator_grad_selection:
+            self.fill_commutator_pool()
 
         avqe_iter = 0
         hit_maxiter = 0
@@ -439,15 +439,15 @@ class ADAPTVQE(UCCVQE):
                 print('     op index (m)     N pauli terms              Gradient            Tmu  ')
                 print('  ------------------------------------------------------------------------------')
 
-            if self._use_comutator_grad_selection:
-                grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc)
+            if self._use_commutator_grad_selection:
+                grads = self.measure_commutator_gradient(self._commutator_pool, Uvqc)
             else:
                 # grads = self.measure_gradient(use_entire_pool=True)
                 grads = self.measure_gradient3()
 
             for m, grad_m in enumerate(grads):
-                if self._use_comutator_grad_selection:
-                    self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms())
+                if self._use_commutator_grad_selection:
+                    self._n_pauli_measures_k += len(self._commutator_pool.terms()[m][1].terms())
                 else:
                     # referes to number of times sigma_y must be measured in "stratagies for UCC" grad eval circuit
                     self._n_pauli_measures_k += self._Nl * self._Nm[m]
@@ -466,7 +466,7 @@ class ADAPTVQE(UCCVQE):
                     lgrst_grad_idx = m
 
             curr_norm = np.sqrt(curr_norm)
-            if self._use_comutator_grad_selection:
+            if self._use_commutator_grad_selection:
                 print("\n==> Measring gradients from pool:")
                 print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
                 print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
@@ -514,7 +514,7 @@ class ADAPTVQE(UCCVQE):
         elif(self._op_select_type=='minimize'):
         # TODO(Nick): remove or fix this option to work correctly
 
-            if not self._use_comutator_grad_selection:
+            if not self._use_commutator_grad_selection:
                 raise ValueError("must use computator gradients for 'minimization' selection type")
 
             print("==> Minimizing candidate amplitude from pool:")

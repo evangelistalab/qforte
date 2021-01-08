@@ -391,8 +391,8 @@ class UCCNVQE(UCCVQE):
 
     def get_num_commut_measurements(self):
         # if self._use_analytic_grad:
-        #     self._n_comut_measurements = self._final_result.njev * (len(self._pool))
-        #     return self._n_comut_measurements
+        #     self._n_commut_measurements = self._final_result.njev * (len(self._pool))
+        #     return self._n_commut_measurements
         # else:
         #     return 0
         return 0

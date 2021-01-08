@@ -33,7 +33,7 @@ class RSUCC(UCCVQE):
             res_vec_thresh = 1.0e-5,
             max_residual_iter = 30,
             use_cumulative_thresh=False,
-            use_comutator_grad_selection=False):
+            use_commutator_grad_selection=False):
 
         self._rsucc_thresh = rsucc_thresh
         self._succ_maxiter = succ_maxiter
@@ -53,7 +53,7 @@ class RSUCC(UCCVQE):
             self._M_omega = M_omega
 
         self._use_cumulative_thresh = use_cumulative_thresh
-        self._use_comutator_grad_selection = use_comutator_grad_selection
+        self._use_commutator_grad_selection = use_commutator_grad_selection
 
         self._res_vec_thresh = res_vec_thresh
         self._max_residual_iter = max_residual_iter
@@ -67,7 +67,7 @@ class RSUCC(UCCVQE):
         self._grad_norms = []
         self._tops = []
         self._tamps = []
-        self._comutator_pool = []
+        self._commutator_pool = []
         self._converged = 0
 
         self._num_res_evals = 0
@@ -79,7 +79,7 @@ class RSUCC(UCCVQE):
         self._curr_energy = 0.0
 
         self._n_ham_measurements = 0
-        self._n_comut_measurements = 0
+        self._n_commut_measurements = 0
 
         self._n_classical_params = 0
         self._n_cnot = 0
@@ -238,7 +238,7 @@ class RSUCC(UCCVQE):
         print('Number of operators in pool:                 ', len(self._pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         # print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
-        # print('Total number of comutator measurements:      ', self.get_num_comut_measurements())
+        # print('Total number of commutator measurements:      ', self.get_num_commut_measurements())
         print('Number of classical parameters used:         ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
         print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
@@ -330,7 +330,7 @@ class RSUCC(UCCVQE):
         for param, top in zip(trial_amps, self._tops):
             temp_pool.add_term(param, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('comuting_grp_lex')
+        A = temp_pool.get_quantum_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)
         if U_phase != 1.0 + 0.0j:
             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
@@ -472,14 +472,14 @@ class RSUCC(UCCVQE):
                 print('     op index (m)     N pauli terms            Gradient ')
                 print('  --------------------------------------------------------')
 
-            if self._use_comutator_grad_selection:
-                grads = self.measure_comutator_gradient(self._comutator_pool, Uvqc)
+            if self._use_commutator_grad_selection:
+                grads = self.measure_commutator_gradient(self._commutator_pool, Uvqc)
             else:
                 grads = self.measure_gradient(use_entire_pool=True)
 
             for m, grad_m in enumerate(grads):
-                if self._use_comutator_grad_selection:
-                    self._n_pauli_measures_k += len(self._comutator_pool.terms()[m][1].terms())
+                if self._use_commutator_grad_selection:
+                    self._n_pauli_measures_k += len(self._commutator_pool.terms()[m][1].terms())
                 else:
                     # referes to number of times sigma_y must be measured in "stratagies for UCC" grad eval circuit
                     self._n_pauli_measures_k += self._Nl * self._Nm[m]
@@ -492,7 +492,7 @@ class RSUCC(UCCVQE):
                     lgrst_grad_idx = m
 
             curr_norm = np.sqrt(curr_norm)
-            if self._use_comutator_grad_selection:
+            if self._use_commutator_grad_selection:
                 print("==> Measring gradients from pool:")
                 print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
                 print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
@@ -543,7 +543,7 @@ class RSUCC(UCCVQE):
             for param, top in zip(self._tamps, self._tops):
                 temp_pool.add_term(param, self._pool[top][1])
 
-            A = temp_pool.get_quantum_operator('comuting_grp_lex')
+            A = temp_pool.get_quantum_operator('commuting_grp_lex')
             U, U_phase = trotterize(A, trotter_number=self._trotter_number)
             if U_phase != 1.0 + 0.0j:
                 raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
@@ -718,7 +718,7 @@ class RSUCC(UCCVQE):
             for param, top in zip(self._tamps, self._tops):
                 temp_pool.add_term(param, self._pool[top][1])
 
-            A = temp_pool.get_quantum_operator('comuting_grp_lex')
+            A = temp_pool.get_quantum_operator('commuting_grp_lex')
             U, U_phase = trotterize(A, trotter_number=self._trotter_number)
             if U_phase != 1.0 + 0.0j:
                 raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
@@ -888,7 +888,7 @@ class RSUCC(UCCVQE):
         for tamp, top in zip(new_tamps, new_tops):
             temp_pool.add_term(tamp, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('comuting_grp_lex')
+        A = temp_pool.get_quantum_operator('commuting_grp_lex')
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
         Uvqc = qf.QuantumCircuit()
@@ -913,15 +913,15 @@ class RSUCC(UCCVQE):
             self._n_ham_measurements += res.nfev
         return self._n_ham_measurements
 
-    def get_num_comut_measurements(self):
+    def get_num_commut_measurements(self):
         if(self._op_select_type=='gradient'):
-            self._n_comut_measurements += len(self._tamps) * len(self._pool)
+            self._n_commut_measurements += len(self._tamps) * len(self._pool)
 
         if self._use_analytic_grad:
             for m, res in enumerate(self._results):
-                self._n_comut_measurements += res.njev * (m+1)
+                self._n_commut_measurements += res.njev * (m+1)
 
-        return self._n_comut_measurements
+        return self._n_commut_measurements
 
     def get_final_energy(self, hit_max_avqe_iter=0):
         """

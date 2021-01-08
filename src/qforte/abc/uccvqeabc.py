@@ -191,7 +191,7 @@ class UCCVQE(VQE):
         Parameters
         ----------
         HAm : QuantumOpPool
-            The comutator to measure.
+            The commutator to measure.
 
         Ucirc : QuantumCircuit
             The state preparation circuit.
@@ -290,7 +290,7 @@ class UCCVQE(VQE):
         Parameters
         ----------
         HAm : QuantumOpPool
-            The comutator to measure.
+            The commutator to measure.
 
         Ucirc : QuantumCircuit
             The state preparation circuit.
