@@ -146,8 +146,8 @@ class UCCNVQE(UCCVQE):
         be measured and the _pool.
 
     initialize_ansatz()
-        Adds a parameter and operator to the UCCN-VQE circuit, and checks for
-        convergence.
+        Adds all operators in the pool to the list of operators in the circuit,
+        with amplitude 0.
 
     build_Uprep()
         Returns a QuantumCircuit object corresponding to the state preparation
@@ -317,6 +317,7 @@ class UCCNVQE(UCCVQE):
             The maximum number of iterations for the scipy optimizer.
         """
 
+        # Construct arguments to hand to the minimizer.
         opts = {}
         opts['gtol'] = self._opt_thresh
 
@@ -338,7 +339,7 @@ class UCCNVQE(UCCVQE):
                                     method=self._optimizer,
                                     jac=self.gradient_ary_feval,
                                     options=opts,
-                                    callback=self.callback)
+                                    callback=self.report_iteration)
 
             # account for paulit term measurement for gradient evaluations
             for m in range(len(self._tamps)):
@@ -350,7 +351,7 @@ class UCCNVQE(UCCVQE):
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
                                     options=opts,
-                                    callback=self.callback)
+                                    callback=self.report_iteration)
 
         if(res.success):
             print('  => Minimization successful!')
@@ -381,9 +382,8 @@ class UCCNVQE(UCCVQE):
 
 
     def initialize_ansatz(self):
-        for l in range(len(self._pool)):
-            self._tops.append(l)
-            self._tamps.append(0.0)
+        self._tops = list(range(len(self._pool)))
+        self._tamps = [0.0] * len(self._pool)
 
     def get_num_ham_measurements(self):
         self._n_ham_measurements = self._final_result.nfev

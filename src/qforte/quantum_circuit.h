@@ -10,6 +10,10 @@
 class QuantumGate;
 
 class QuantumCircuit {
+    /* A QuantumCircuit is a product of quantum gates. An individual gate acts on 
+     * at most one or two qubits and must be of the forms we can efficiently prepare,
+     * e.g., CNOT, Hadamard, Rotation.
+     * */
   public:
     /// default constructor: creates an empty circuit
     QuantumCircuit() {}
@@ -32,7 +36,7 @@ class QuantumCircuit {
     /// reset the circuit with a new set of parameters
     void set_parameters(const std::vector<double>& params);
 
-    /// reorders the circuit by increading qubit and retruns the resluting factor
+    /// reorders the circuit by increading qubit and returns the resulting factor
     /// after contracting all pauli gates
     /// (either +/-1.0 or +/-1.0j)
     std::complex<double> canonical_order();

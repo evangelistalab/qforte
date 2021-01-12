@@ -417,7 +417,7 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2a.add_term(1.0/std::sqrt(12), {ab,ba,ia,jb});
                         }
 
-                        // hermetian conjugate
+                        // hermitian conjugate
                         if((ja != ia) && (ba != aa)){
                             temp2a.add_term(-2.0/std::sqrt(12), {ja,ia,ba,aa});
                         }

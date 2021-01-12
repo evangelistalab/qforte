@@ -9,6 +9,9 @@ class SQOperator;
 class QuantumOperator;
 class QuantumOpPool;
 
+// Represents an arbitrary linear combination of second quantized operators.
+// May also represent an array of second quantized operators by ignoring
+// the coefficients.
 class SQOpPool {
   public:
     /// default constructor: creates an empty second quantized operator pool

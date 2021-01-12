@@ -12,6 +12,9 @@ class QuantumGate;
 class QuantumOperator;
 
 class SQOperator {
+    /* A SQOperator is a linear combination (over C) of "elementary" second quantized
+     * operators, which are stored in terms.
+     */
   public:
     /// default constructor: creates an empty second quantized operator
     SQOperator() {}
@@ -26,25 +29,26 @@ class SQOperator {
     /// add an second quantized operator to the second quantized operator
     void add_op(const SQOperator& sqo);
 
-    /// sets the operator coefficeints
+    /// sets the operator coefficients
     void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
 
-    /// multiplies the sq operator coefficeints by multiplier
+    /// multiplies the sq operator coefficients by multiplier
     void mult_coeffs(const std::complex<double>& multiplier);
 
-    /// return a vector of terms and thier coeficients
+    /// return a vector of terms and their coefficients
     const std::vector<std::pair< std::complex<double>, std::vector<size_t>>>& terms() const;
 
-    /// order a single term
+    /// Put a single term into "canonical" form. Canonical form orders orbital indices
+    /// descending.
     void canonical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term );
 
-    /// order each product of ac operators in a standardized fashion
+    /// Canonicalize each term. The order of the terms is unaffected.
     void canonical_order();
 
-    /// simplify the operator (i.e. combine like terms)
+    /// Combine like terms in terms_. As a side-effect, canonicalizes the order.
     void simplify();
 
-    /// return the QuantumOperator ojbect correstponting the the Jordan-Wigner
+    /// return the QuantumOperator object corresponding the the Jordan-Wigner
     /// transform of this sq operator.
     QuantumOperator jw_transform();
 
@@ -52,10 +56,12 @@ class SQOperator {
     std::string str() const;
 
   private:
-    /// the list of circuits
+    /// The linear combination of second quantized operators. Stored in pairs of
+    /// coefficients, and then a vector of N created indices, followed by N annihilated indices.
+    /// Orbital indices start at zero.
     std::vector<std::pair< std::complex<double>, std::vector<size_t>>> terms_;
 
-    /// a function to calculation the parity of permutaiton p
+    /// Calculate the parity of permutation p
     bool permutive_sign_change(std::vector<int> p);
 };
 

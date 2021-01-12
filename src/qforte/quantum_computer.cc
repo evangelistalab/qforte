@@ -214,7 +214,7 @@ std::vector<std::vector<int>> QuantumComputer::measure_readouts(const QuantumCir
         }
     }
 
-    // apply Basis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
+    // apply Basis_rotator circuit to 'trick' qcomputer into measuring in non Z basis
     apply_circuit(Basis_rotator);
     std::vector<double> probs(nbasis_);
     for (size_t k = 0; k < nbasis_; k++) {
@@ -836,6 +836,26 @@ std::complex<double> QuantumComputer::direct_circ_exp_val(const QuantumCircuit& 
 }
 
 std::complex<double> QuantumComputer::direct_pauli_circ_exp_val(const QuantumCircuit& qc) {
+    /* Efficiency optimization that explains the structure of this function:
+     * Because our gates are all Pauli, the operator that represents our circuit is a direct
+     * product of products of Pauli gates acting on individual qubits. These Pauli-products
+     * may generate a coefficient and may flip a bit.
+     * Now, let's say that the lowest qubit we have a non-trivial gate acting on is gate N+1.
+     * Its image under the operator is the identity for the first N gates, and that direct
+     * product for the remaining gates.
+     * Let's divide our basis states into blocks of 2^N. Those are contiguous by construction,
+     * and that's true for any choice of N.
+     * Recall that gates are stored in ascending order, where gate 1 is incremented first, then
+     * gate 2, and so forth. Therefore, the image of each block of 2^N gates is also a contiguous
+     * state of basis states. This depends on both the fact that our operator acts trivially
+     * on them, and the way we order our basis states.
+     * Furthermore, these image states are orthogonal to all basis states except themselves.
+     * That gives us a very convenient trick to compute the direct product: once you've computed
+     * the image of the basis state leading the first block, find the basis state it's not orthogonal
+     * to, and you know how to do the same for the remaining states in the block. Just take the inner
+     * product, which is nice and easy because it's contiguous in memory. Do this for all
+     * blocks, and you're done.
+     */
     std::complex<double> result = 0.0;
     int min_qb_idx = nqubit_ - 1;
     std::vector<int> x_idxs;
