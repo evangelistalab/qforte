@@ -33,7 +33,8 @@ class RSUCC(UCCVQE):
             res_vec_thresh = 1.0e-5,
             max_residual_iter = 30,
             use_cumulative_thresh=False,
-            use_commutator_grad_selection=False):
+            use_commutator_grad_selection=False,
+            use_energy_selection=False):
 
         self._rsucc_thresh = rsucc_thresh
         self._succ_maxiter = succ_maxiter
@@ -47,6 +48,7 @@ class RSUCC(UCCVQE):
         self._op_select_type = op_select_type
         self._dt = dt
         self._use_adaptive_t = use_adaptive_t
+        self._use_energy_selection = use_energy_selection
         if(M_omega != 'inf'):
             self._M_omega = int(M_omega)
         else:
@@ -638,10 +640,69 @@ class RSUCC(UCCVQE):
                     self._n_classical_params_lst.append(len(self._tops))
 
             else:
-                res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in range(len(res_coeffs))]
 
+                # res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in range(len(res_coeffs))]
+
+                if(self._use_energy_selection):
+                    res_sq_init = [ np.real(np.conj(res_coeffs[I]) * res_coeffs[I]) for I in range(len(res_coeffs))]
+                    rsq_over_denom = []
+
+                    # for mu, m in enumerate(self._tops):
+                    for I in range(len(res_coeffs)):
+                        # print("type(self._pool)", type(self._pool))
+                        # print("self._pool", self._pool)
+                        #
+                        # print("type(self._pool[I])", type(self._pool[I]))
+                        # print("self._pool[I]", self._pool[I])
+
+                        # sq_op = self._pool[I][1]
+
+                        sq_op = self.get_op_from_basis_idx(I)
+                        if(sq_op=="null_excitation"):
+                            # I corresponds to the HF state
+                            rsq_over_denom.append(res_sq_init[I])
+                            continue
+                        elif(sq_op=="invalid_op"):
+                            rsq_over_denom.append(0.0)
+                            continue
+
+                        # print("sq_op = self._pool[I][1]", self._pool[I][1])
+
+                        temp_idx = sq_op.terms()[0][1][-1]
+                        if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
+                            sq_sub_tamp ,sq_sub_top = sq_op.terms()[0]
+                        else:
+                            sq_sub_tamp ,sq_sub_top = sq_op.terms()[1]
+
+                        nbody = int(len(sq_sub_top) / 2)
+                        # destroyed = False
+                        denom = 0.0
+
+                        for p, op_idx in enumerate(sq_sub_top):
+                            if(p<nbody):
+                                denom -= self._orb_e[op_idx]
+                            else:
+                                denom += self._orb_e[op_idx]
+
+                        res_I_sq = copy.deepcopy(res_sq_init[I])
+                        res_I_sq /= denom # divide by energy denominator
+
+                        rsq_over_denom.append(np.abs(np.real(res_I_sq)))
+
+
+                    res_sq = [(np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I, rsq_over_denom[I]) for I in range(len(res_coeffs))]
+                    res_sq.sort(key=lambda x: x[2])
+
+                    # print("len(res_coeffs):   ", len(res_coeffs))
+                    # print("len(res_sq):       ", len(res_sq))
+                    # print("len(rsq_over_denom): ", len(rsq_over_denom))
                 ###
-                res_sq.sort()
+                else:
+                    res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in range(len(res_coeffs))]
+                    res_sq.sort()
+
+                # print('\nres_sq\n')
+                # print(res_sq)
 
                 self._curr_res_sq_norm = 0.0
                 for rmu_sq in res_sq[:-1]:
@@ -663,18 +724,23 @@ class RSUCC(UCCVQE):
                     res_sq_sum = 0.0
                     n_ops_added = 0
 
+                    # print("\n")
+
                     if(self._use_cumulative_thresh):
                         for rmu_sq in res_sq[:-1]:
                             res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
+                            # print(f"res_sq_sum:   {res_sq_sum:12.10f}")
                             if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
                                 # print("  Adding operator Imu =", rmu_sq[1])
                                 if(self._verbose):
-                                    print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
+                                    Ktemp = self.get_op_from_basis_idx(rmu_sq[1])
+                                    print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}   {Ktemp.str()}" )
                                 n_ops_added += 1
                                 if(rmu_sq[1] not in self._tops):
                                     self._tops.insert(0,rmu_sq[1])
                                     self._tamps.insert(0,0.0)
                                     self.add_op_from_basis_idx(rmu_sq[1])
+
 
                     else:
                         res_sq.reverse()
@@ -868,6 +934,87 @@ class RSUCC(UCCVQE):
                     # self._pool.insert(0, tuple(1.0, K_temp))
                     # add_term(1.0, t_temp);
                     self._nbody_counts[nbody-1] += 1
+
+    def get_op_from_basis_idx(self, I):
+
+        max_nbody = len(self._nbody_counts)
+
+        nqb = len(self._ref)
+        nel = int(sum(self._ref))
+
+        # TODO(Nick): incorparate more flexability into this
+        na_el = int(nel/2);
+        nb_el = int(nel/2);
+
+        # print('Imu: ', I)
+        basis_I = qf.QuantumBasis(I)
+        # print('basis Imu: ', basis_I.str(nqb))
+
+        nbody = 0
+        pn = 0
+        na_I = 0
+        nb_I = 0
+        holes = [] # i, j, k, ...
+        particles = [] # a, b, c, ...
+        parity = []
+
+        # for ( p=0; p<nel; p++) {
+        for p in range(nel):
+            bit_val = int(basis_I.get_bit(p))
+            nbody += (1 - bit_val)
+            pn += bit_val
+            if(p%2==0):
+                na_I += bit_val
+            else:
+                nb_I += bit_val
+
+            if(bit_val-1):
+                holes.append(p)
+                if(p%2==0):
+                    parity.append(1)
+                else:
+                    parity.append(-1)
+
+        # for ( q=nel; q<nqb; q++)
+        for q in range(nel, nqb):
+            bit_val = int(basis_I.get_bit(q))
+            pn += bit_val
+            if(q%2==0):
+                na_I += bit_val
+            else:
+                nb_I += bit_val
+
+            if(bit_val):
+                particles.append(q)
+                if(q%2==0):
+                    parity.append(1)
+                else:
+                    parity.append(-1)
+
+        if(pn==nel and na_I == na_el and nb_I == nb_el):
+            if (nbody==0):
+                return "null_excitation"
+            if (nbody != 0 and nbody <= max_nbody ):
+
+                total_parity = 1
+                for z in parity:
+                    total_parity *= z
+
+                if(total_parity==1):
+                    excitation = particles + holes
+                    dexcitation = list(reversed(excitation))
+                    sigma_I = [1.0, tuple(excitation)]
+                    # need i, j, a, b
+
+                    K_temp = qf.SQOperator()
+                    K_temp.add_term(+1.0, excitation);
+                    K_temp.add_term(-1.0, dexcitation);
+                    K_temp.simplify();
+
+                    return K_temp
+
+        return "invalid_op"
+
 
     def build_Uvqc2(self, param):
         """ This function returns the QuantumCircuit object built

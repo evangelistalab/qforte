@@ -25,7 +25,7 @@ class UCCVQE(VQE):
         self._pool_obj = qf.SQOpPool()
         self._pool_obj.set_orb_spaces(self._ref)
 
-        if self._pool_type in {'sa_SD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+        if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
             self._pool_obj.fill_pool(self._pool_type)
         else:
             raise ValueError('Invalid operator pool type specified.')
