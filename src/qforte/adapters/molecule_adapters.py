@@ -285,8 +285,14 @@ class Psi4MolAdapter(MolAdapter):
 
         p4_mol = psi4.geometry(p4_geom_str)
 
+        if self._multiplicity == 1:
+            scf_ref_type = 'rhf'
+        else:
+            scf_ref_type = 'rohf'
+
         psi4.set_options({'basis': self._basis,
                   'scf_type': 'pk',
+                  'reference' : scf_ref_type,
                   'e_convergence': 1e-8,
                   'd_convergence': 1e-8,
                   'ci_maxiter': 100})

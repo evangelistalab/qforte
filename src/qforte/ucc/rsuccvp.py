@@ -726,7 +726,10 @@ class RSUCC(UCCVQE):
 
                     # print("\n")
 
+                    # for the canonical SPQE batch addition from |r^2| as a importance criterion
                     if(self._use_cumulative_thresh):
+                        temp_ops = []
+
                         for rmu_sq in res_sq[:-1]:
                             res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
                             # print(f"res_sq_sum:   {res_sq_sum:12.10f}")
@@ -737,9 +740,16 @@ class RSUCC(UCCVQE):
                                     print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}   {Ktemp.str()}" )
                                 n_ops_added += 1
                                 if(rmu_sq[1] not in self._tops):
+                                    temp_ops.insert(0,rmu_sq[1])
+
                                     self._tops.insert(0,rmu_sq[1])
                                     self._tamps.insert(0,0.0)
                                     self.add_op_from_basis_idx(rmu_sq[1])
+
+                        # for temp_op in temp_ops:
+                        #     self._tops.append(temp_op)
+                        #     self._tamps.append(0.0)
+                        #     self.add_op_from_basis_idx(temp_op)
 
 
                     else:
