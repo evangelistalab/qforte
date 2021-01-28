@@ -664,6 +664,7 @@ class RSUCC(UCCVQE):
                     n_ops_added = 0
 
                     if(self._use_cumulative_thresh):
+                        temp_ops = []
                         for rmu_sq in res_sq[:-1]:
                             res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
                             if res_sq_sum > (self._rsucc_thresh * self._rsucc_thresh):
@@ -672,9 +673,15 @@ class RSUCC(UCCVQE):
                                     print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
                                 n_ops_added += 1
                                 if(rmu_sq[1] not in self._tops):
-                                    self._tops.insert(0,rmu_sq[1])
-                                    self._tamps.insert(0,0.0)
+                                    temp_ops.append(rmu_sq[1])
+                                    # self._tops.insert(0,rmu_sq[1])
+                                    # self._tamps.insert(0,0.0)
                                     self.add_op_from_basis_idx(rmu_sq[1])
+
+                        for temp_op in temp_ops[::-1]:
+                            self._tops.insert(0, temp_op)
+                            self._tamps.insert(0, 0.0)
+                            # self.add_op_from_basis_idx(temp_op)
 
                     else:
                         res_sq.reverse()
