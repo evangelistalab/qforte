@@ -372,7 +372,7 @@ class ADAPTVQE(UCCVQE):
         Parameters
         ----------
         fast : bool
-            Wether or not to use the optemized but unphysical energy evaluation
+            Whether or not to use the optemized but unphysical energy evaluation
             function.
         maxiter : int
             The maximum number of iterations for the scipy optimizer.
