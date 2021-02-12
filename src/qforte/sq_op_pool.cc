@@ -71,29 +71,29 @@ QuantumOpPool SQOpPool::get_quantum_op_pool(){
 }
 
 QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type){
-    QuantumOperator A;
+    QuantumOperator parent;
     if(order_type=="unique_lex"){
         for (auto& term : terms_) {
-            QuantumOperator a = term.second.jw_transform();
-            a.mult_coeffs(term.first);
-            A.add_op(a);
+            auto child = term.second.jw_transform();
+            child.mult_coeffs(term.first);
+            parent.add_op(child);
         }
         // TODO: analyze ordering here, eliminating simplify will place commuting
         // terms closer together but may introduce redundancy.
-        A.simplify();
-        A.order_terms();
+        parent.simplify();
+        parent.order_terms();
     } else if (order_type=="commuting_grp_lex") {
         for (auto& term : terms_) {
-            QuantumOperator a = term.second.jw_transform();
-            a.mult_coeffs(term.first);
-            a.simplify();
-            a.order_terms();
-            A.add_op(a);
+            auto child = term.second.jw_transform();
+            child.mult_coeffs(term.first);
+            child.simplify();
+            child.order_terms();
+            parent.add_op(child);
         }
     } else {
         throw std::invalid_argument( "Invalid order_type specified.");
     }
-    return A;
+    return parent;
 }
 
 void SQOpPool::fill_pool(std::string pool_type){
