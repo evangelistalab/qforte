@@ -34,9 +34,16 @@ QuantumCircuit QuantumCircuit::adjoint() {
     return qcirc_adjoint;
 }
 
-std::complex<double> QuantumCircuit::canonical_order() {
+std::complex<double> QuantumCircuit::canonicalize_pauli_circuit() {
     if (gates_.size()==0){
+        // If there are no gates, there's nothing to order.
         return 1.0;
+    }
+    for (const auto& gate: gates_) {
+        const auto& id = gate.gate_id();
+        if (id != "X" && id != "Y" && id != "Z") {
+            throw ("QuantumCircuit::canonicalize_pauli_circuit is undefined for circuits with gates other than X, Y, or Z");
+        }
     }
     //using namespace std::complex_literals;
     std::complex<double> onei(0.0, 1.0);
@@ -58,6 +65,7 @@ std::complex<double> QuantumCircuit::canonical_order() {
         {std::make_pair("I", "Z"), std::make_pair( 1.0,  "Z")}
     };
 
+    // Apply gate commutation to sort gates from those acting on smallest-index qubit to largest.
     std::stable_sort(gates_.begin(), gates_.end(),
         [&](const QuantumGate& a, const QuantumGate& b) {
             return (a.target() < b.target());
@@ -68,54 +76,28 @@ std::complex<double> QuantumCircuit::canonical_order() {
     QuantumCircuit simplified_circ;
     std::complex<double> coeff = 1.0;
     std::string s;
-    int counter = 0;
+    bool first_gate_for_qubit = true;
 
-    for (int i=0; i<n_gates-1; i++) {
-        if(gates_[i].target() == gates_[i+1].target()) {
-            if (counter == 0) {
-                s = gates_[i].gate_id();
-            }
-            coeff *= m[std::make_pair(
-                s,
-                gates_[i+1].gate_id()
-            )].first;
-
-            s = m[std::make_pair(
-                s,
-                gates_[i+1].gate_id()
-            )].second;
-            counter++;
-
+    for (int i=0; i < n_gates; i++) {
+        if (first_gate_for_qubit) {
+            s = gates_[i].gate_id();
+        }
+        if(gates_[i].target() == gates_[i+1].target() && i + 1 != n_gates) {
+            // The upcoming gate also acts on this qubit, and it exists. Time to update s.
+            const auto& qubit_update = m[std::make_pair(s, gates_[i+1].gate_id())];
+            coeff *= qubit_update.first;
+            s = qubit_update.second;
+            first_gate_for_qubit = false;
         } else {
-            // ith gate is only gate to act on target qubit
-            if (counter == 0) {
-                simplified_circ.add_gate(
-                    make_gate(gates_[i].gate_id(), gates_[i].target(), gates_[i].target())
-                );
-            } else if (s != "I") {
+            // The upcoming gate does not act on this qubit or doesn't exist.
+            // Let's add the current qubit, if it's non-trivial.
+            if (s != "I") {
                 simplified_circ.add_gate(
                     make_gate(s, gates_[i].target(), gates_[i].target())
                 );
-                counter = 0;
-            } else {
-                counter = 0;
             }
+            first_gate_for_qubit = true;
         }
-    }
-
-    // imples last elemet is different qbit that the rest
-    if (counter == 0){
-        simplified_circ.add_gate(
-            make_gate(gates_[n_gates-1].gate_id(),
-            gates_[n_gates-1].target(),
-            gates_[n_gates-1].target())
-        );
-    } else if (s != "I"){
-        simplified_circ.add_gate(
-            make_gate(s,
-            gates_[n_gates-1].target(),
-            gates_[n_gates-1].target())
-        );
     }
 
     // copy simplified terms_

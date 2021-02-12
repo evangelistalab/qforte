@@ -50,16 +50,6 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref){
     nvir_ = static_cast<int>(norb - nocc_);
 }
 
-std::vector<QuantumOperator> SQOpPool::get_quantum_operators(){
-    std::vector<QuantumOperator> A;
-    for (auto& term : terms_) {
-        QuantumOperator a = term.second.jw_transform();
-        a.mult_coeffs(term.first);
-        A.push_back(a);
-    }
-    return A;
-}
-
 QuantumOpPool SQOpPool::get_quantum_op_pool(){
     QuantumOpPool A;
     for (auto& term : terms_) {

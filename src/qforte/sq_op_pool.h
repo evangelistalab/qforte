@@ -30,9 +30,6 @@ class SQOpPool {
     ///     of occupied spin orbitals of each point group symmetry
     void set_orb_spaces(const std::vector<int>& ref);
 
-    /// returns the JW transformed vector of operators
-    std::vector<QuantumOperator> get_quantum_operators();
-
     /// returns a QuantumOpPool object with one term for each term in terms_
     QuantumOpPool get_quantum_op_pool();
 

@@ -43,28 +43,6 @@ const std::vector<std::pair<std::complex<double>, QuantumOperator>>& QuantumOpPo
     return terms_;
 }
 
-void QuantumOpPool::set_orb_spaces(const std::vector<int>& ref){
-    int norb = ref.size();
-    if (norb%2 == 0){
-        norb = static_cast<int>(norb/2);
-    } else {
-        throw std::invalid_argument("QForte does not yet support systems with an odd number of spin orbitals.");
-    }
-
-    nocc_ = 0;
-    for (const auto& occupancy : ref){
-        nocc_ += occupancy;
-    }
-
-    if (nocc_%2 == 0){
-        nocc_ = static_cast<int>(nocc_/2);
-    } else {
-        throw std::invalid_argument("QForte does not yet support systems with an odd number of occupied spin orbitals.");
-    }
-
-    nvir_ = static_cast<int>(norb - nocc_);
-}
-
 void QuantumOpPool::square(bool upper_triangle_only){
     std::vector<std::pair<std::complex<double>, QuantumOperator>> temp_terms;
     if(upper_triangle_only){

@@ -74,7 +74,7 @@ void QuantumOperator::order_terms() {
 
 void QuantumOperator::canonical_order() {
     for (auto& term : terms_) {
-        term.first *= term.second.canonical_order();
+        term.first *= term.second.canonicalize_pauli_circuit();
     }
 }
 
