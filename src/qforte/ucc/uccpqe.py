@@ -1,11 +1,12 @@
 """
-uccvp.py
+uccpqe.py
 ====================================
-A class for...
+A class for solving the schrodinger equation via measurement of its projections
+and subsequent updates of the UCC amplitudes.
 """
 
 import qforte
-from qforte.abc.uccvqeabc import UCCVQE
+from qforte.abc.uccpqeabc import UCCPQE
 
 from qforte.experiment import *
 from qforte.utils.transforms import *
@@ -16,16 +17,15 @@ from qforte.utils.trotterization import trotterize
 from qforte.helper.printing import matprint
 
 import numpy as np
-from scipy.optimize import minimize
 from scipy.linalg import lstsq
 
-class UCCVP(UCCVQE):
+class UCCNPQE(UCCPQE):
     """
     A class that encompases the three componants of using the variational
     quantum eigensolver to optemize a parameterized unitary CCSD like wave function.
 
-    UCC-VP: (1) prepares a quantum state on the quantum computer
-    representing the wave function to be simulated, (2) evauates the energy by
+    UCC-PQE: (1) prepares a quantum state on the quantum computer
+    representing the wave function to be simulated, (2) evauates the residuals by
     measurement, and (3) optemizes the wave fuction via projective solution of
     the UCC Schrodinger Equation.
 
@@ -36,37 +36,22 @@ class UCCVP(UCCVQE):
 
     """
     def run(self,
-            opt_thresh=1.0e-5,
-            opt_maxiter=200,
-            optimizer='BFGS',
             pool_type='SD',
-            use_analytic_grad = True,
-            use_htest_gradient=False,
-            use_res_solve=False,
             res_vec_thresh = 1.0e-5,
-            max_residual_iter = 30,
-            use_mp2_guess_amps = False,
+            max_diis_iter = 40,
             noise_factor = 0.0):
 
-        # TODO (cleanup): add option to pre populate cluster amps.
-        self._opt_thresh = opt_thresh
-        self._opt_maxiter = opt_maxiter
-        self._use_analytic_grad = use_analytic_grad
-        self._optimizer = optimizer
         self._pool_type = pool_type
-
-        self._use_res_solve = use_res_solve
-        self._use_htest_gradient = use_htest_gradient
         self._res_vec_thresh = res_vec_thresh
-        self._max_residual_iter = max_residual_iter
+        self._max_diis_iter = max_diis_iter
 
-        self._use_mp2_guess_amps = use_mp2_guess_amps
-
+        self._opt_maxiter = max_diis_iter # satifies abstract class requirement
+        self._opt_thresh = res_vec_thresh # satifies abstract class requirement
+        # self._use_mp2_guess_amps = use_mp2_guess_amps
         self._noise_factor = noise_factor
 
         self._tops = []
         self._tamps = []
-        self._commutator_pool = []
         self._converged = 0
 
         self._res_vec_evals = 0
@@ -75,16 +60,9 @@ class UCCVP(UCCVQE):
         self._n_classical_params = 0
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
+        # self._results = [] #keep for future implementations
 
-        self._n_pauli_measures_k = 0
-
-        self._results = [] # remove this
-
-        # Print options banner (should done for all algorithms).
         self.print_options_banner()
-
-        ######### UCCSD-VQE #########
-
         self.fill_pool()
 
         if self._verbose:
@@ -99,11 +77,8 @@ class UCCVP(UCCVQE):
             print('\nt operators included from pool: \n', self._tops)
             print('Initial tamplitudes for tops: \n', self._tamps)
 
-        if self._use_res_solve:
-            self.build_orb_energies()
-            self.diis_solve()
-        else:
-            self.solve()
+        self.build_orb_energies()
+        self.solve()
 
         if(self._verbose):
             print('\nt operators included from pool: \n', self._tops)
@@ -113,38 +88,29 @@ class UCCVP(UCCVQE):
             for i, tamp in enumerate( self._tamps ):
                 print(f'  {i:4}      {tamp:+12.8f}')
 
-        ######### UCCSD-VQE #########
         self._n_nonzero_params = 0
         for tmu in self._tamps:
             if(np.abs(tmu) > 1.0e-12):
                 self._n_nonzero_params += 1
 
-        self._n_cnot = self.build_Uvqc().get_num_cnots()
-
-        # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
-
-        # verify that required attributes were defined
-        # (should be called for all algorithms!)
         self.verify_run()
 
-    # Define Algorithm abstract methods.
     def run_realistic(self):
-        raise NotImplementedError('run_realistic() is not fully implemented for UCCSD-VQE.')
+        raise NotImplementedError('run_realistic() is not fully implemented for UCCN-PQE.')
 
     def verify_run(self):
         self.verify_required_attributes()
-        self.verify_required_VQE_attributes()
-        self.verify_required_UCCVQE_attributes()
+        self.verify_required_PQE_attributes()
+        self.verify_required_UCCPQE_attributes()
 
     def print_options_banner(self):
         print('\n-----------------------------------------------------')
-        print('           Unitary Coupled Cluster VP   ')
+        print('           Unitary Coupled Cluster PQE   ')
         print('-----------------------------------------------------')
 
-        print('\n\n                 ==> UCC-VP options <==')
+        print('\n\n                 ==> UCC-PQE options <==')
         print('---------------------------------------------------------')
-        # General algorithm options.
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
         print('Trial state preparation method:          ',  self._trial_state_type)
@@ -156,35 +122,28 @@ class UCCVP(UCCVQE):
         else:
             print('Measurement varience thresh:             ',  0.01)
 
+        res_thrsh_str = '{:.2e}'.format(self._res_vec_thresh)
+        print('DIIS maxiter:                            ',  self._max_diis_iter) # RENAME
+        print('DIIS res-norm threshold:                 ',  res_thrsh_str)
 
-        # VQE options.
-        opt_thrsh_str = '{:.2e}'.format(self._opt_thresh)
-        print('Optimization algorithm:                  ',  self._optimizer)
-        print('Optimization maxiter:                    ',  self._opt_maxiter)
-        print('Optimizer grad-norm threshold (theta):   ',  opt_thrsh_str)
-
-        # UCCVQE options.
-        print('Use analytic gradient:                   ',  str(self._use_analytic_grad))
         print('Operator pool type:                      ',  str(self._pool_type))
 
 
     def print_summary_banner(self):
 
-        print('\n\n                   ==> UCC-VP summary <==')
+        print('\n\n                   ==> UCC-PQE summary <==')
         print('-----------------------------------------------------------')
-        print('Final UCCSD-VQE Energy:                     ', round(self._Egs, 10))
+        print('Final UCCN-PQE Energy:                      ', round(self._Egs, 10))
         print('Number of operators in pool:                 ', len(self._pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
-        # print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
-        # print('Total number of commutator measurements:      ', self.get_num_commut_measurements())
         print('Number of classical parameters used:         ', len(self._tamps))
         print('Number of non-zero parameters used:          ', self._n_nonzero_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
-        # print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
+        print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
         print('Number of residual vector evaluations:       ', self._res_vec_evals)
-        print('Number of individual residual evaluations:   ', self._res_m_evals)
+        print('Number of residual element evaluations*:     ', self._res_m_evals)
+        print('Number of non-zero res element evaluations:  ', int(self._res_vec_evals)*self._n_nonzero_params)
 
-    # Define VQE abstract methods.
     def solve(self):
         """
         Parameters
@@ -196,69 +155,26 @@ class UCCVP(UCCVQE):
             The maximum number of iterations for the scipy optimizer.
         """
 
-        opts = {}
-        opts['gtol'] = self._opt_thresh
-        opts['disp'] = False
-        if(self._verbose):
-            opts['disp'] = True
-        opts['maxiter'] = self._opt_maxiter
-        x0 = copy.deepcopy(self._tamps)
-        init_gues_energy = self.energy_feval(x0)
-
-        if self._use_analytic_grad:
-            print('  \n--> Begin opt with analytic graditent:')
-            print('  Initial guess energy: ', round(init_gues_energy,1000))
-            res =  minimize(self.energy_feval, x0,
-                                    method=self._optimizer,
-                                    jac=self.gradient_ary_feval,
-                                    options=opts)
-
-        else:
-            print('  \n--> Begin opt with grad estimated using first-differences:')
-            print('  Initial guess energy: ', round(init_gues_energy,1000))
-            res =  minimize(self.energy_feval, x0,
-                                    method=self._optimizer,
-                                    options=opts)
-
-        if(res.success):
-            print('  minimization successful.')
-            print('  min Energy: ', res.fun)
-            self._Egs = res.fun
-            self._final_result = res
-            self._tamps = list(res.x)
-        else:
-            print('  WARNING: minimization result may not be tightly converged.')
-            print('  min Energy: ', res.fun)
-            self._Egs = res.fun
-            self._final_result = res
-            self._tamps = list(res.x)
-
-        self._n_classical_params = self._n_classical_params = len(self._tamps)
-        self._n_cnot = self.build_Uvqc().get_num_cnots()
-        self._n_pauli_trm_measures += self._Nl * res.nfev
-        # for m in range(self._n_classical_params):
-        #     self._n_pauli_trm_measures += len(self._commutator_pool.terms()[m][1].terms()) * res.njev
+        self.diis_solve()
 
     def diis_solve(self):
         # draws heavy insiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
         diis_dim = 0
-
         t_diis = [copy.deepcopy(self._tamps)]
         e_diis = []
-        # k_counter = 0
         rk_norm = 1.0
         Ek0 = self.energy_feval(self._tamps)
 
-        print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*          ||r||')
+        print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*        ||r||')
         print('---------------------------------------------------------------------------------------------------')
 
         if (self._print_summary_file):
             f = open("summary.dat", "w+", buffering=1)
-            f.write('\n#    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
+            f.write('\n#    k iteration         Energy               dE           Nrvec ev      Nrm ev*        ||r||')
             f.write('\n#--------------------------------------------------------------------------------------------------')
             f.close()
 
-        for k in range(1, self._max_residual_iter+1):
+        for k in range(1, self._max_diis_iter+1):
 
             t_old = copy.deepcopy(self._tamps)
 
@@ -279,13 +195,10 @@ class UCCVP(UCCVQE):
 
             if (self._print_summary_file):
                 f = open("summary.dat", "a", buffering=1)
-                # f.write(f'\n     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}')
                 f.write(f'\n     {k:7}        {Ek:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.12f}')
                 f.close()
 
             if(rk_norm < self._res_vec_thresh):
-                self._results.append('Fake result string')
-                self._final_result = 'nothing'
                 self._Egs = Ek
                 break
 
@@ -301,8 +214,6 @@ class UCCVP(UCCVQE):
 
                 B[-1, -1] = 0.0
                 bsol[-1] = -1.0
-
-                # could be more efficient
                 for i, ei in enumerate(e_diis):
                     for j, ej in enumerate(e_diis):
                         B[i,j] = np.dot(np.real(ei), np.real(ej))
@@ -318,10 +229,10 @@ class UCCVP(UCCVQE):
 
                 self._tamps = copy.deepcopy(t_new)
 
-        self._results.append('Fake result string')
-        self._final_result = 'nothing'
+        self._n_classical_params = self._n_classical_params = len(self._tamps)
+        self._n_cnot = self.build_Uvqc().get_num_cnots()
+        self._n_pauli_trm_measures += 2*self._Nl*k*len(self._tamps) + self._Nl*k
         self._Egs = Ek
-
 
     def get_residual_vector(self, trial_amps):
         if(self._pool_type == 'sa_SD'):
@@ -468,52 +379,11 @@ class UCCVP(UCCVQE):
             self._tops.append(l)
             self._tamps.append(0.0)
 
-        if self._use_mp2_guess_amps:
-            self._tamps = self.get_mp2_guess_amps()
-
-    def get_num_ham_measurements(self):
-        self._n_ham_measurements = self._final_result.nfev
-        return self._n_ham_measurements
-
-    def get_num_commut_measurements(self):
-        if self._use_analytic_grad:
-            self._n_commut_measurements = self._final_result.njev * (len(self._pool))
-            return self._n_commut_measurements
-        else:
-            return 0
+        # TODO: make this a useable option
+        # if self._use_mp2_guess_amps:
+        #     self._tamps = self.get_mp2_guess_amps()
 
     ### totally junk experimental functions
     def get_mp2_guess_amps(self):
-
-        if(self._pool_type != 'SD'):
-            raise ValueError('Must use particle-hole singles and doubles pool to enable mp2 cluster amplitude guess')
-
-        guess_amps = []
-
-        print('of ham\n\n', self._sys._sq_of_hamiltonian.terms)
-
-        for m in self._tops:
-            sq_op = self._pool[m][1]
-            sq_sub_tamp, sq_sub_top = sq_op.terms()[0]
-
-            nbody = int(len(sq_sub_top) / 2)
-            destroyed = False
-
-            if(nbody==1):
-                guess_amps.append( 0.0 )
-
-            if(nbody==2):
-                terms_tup1 = ((sq_sub_top[2], 1), (sq_sub_top[3], 1), (sq_sub_top[1], 0), (sq_sub_top[0],0) )
-                terms_tup2 = ((sq_sub_top[2], 1), (sq_sub_top[3], 1), (sq_sub_top[0], 0), (sq_sub_top[1],0) )
-                num  = self._sys._sq_of_hamiltonian.terms[terms_tup1]
-                num -= self._sys._sq_of_hamiltonian.terms[terms_tup2]
-
-                denom = 0.0
-                denom -= self._orb_e[sq_sub_top[0]] #e_a
-                denom -= self._orb_e[sq_sub_top[1]] #e_b
-                denom += self._orb_e[sq_sub_top[2]] #e_i
-                denom += self._orb_e[sq_sub_top[3]] #e_j
-
-                guess_amps.append(num/denom)
-
-        return guess_amps
+        # TODO: implement, look into generalizd diagonal preconditioners.
+        pass
