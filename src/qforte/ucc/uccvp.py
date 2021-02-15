@@ -119,6 +119,8 @@ class UCCVP(UCCVQE):
             if(np.abs(tmu) > 1.0e-12):
                 self._n_nonzero_params += 1
 
+        self._n_cnot = self.build_Uvqc().get_num_cnots()
+
         # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
 
