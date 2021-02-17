@@ -403,8 +403,8 @@ class UCCPQE(PQE):
         # if self._use_analytic_grad is None:
         #     raise NotImplementedError('Concrete UCCVQE class must define self._use_analytic_grad attribute.')
 
-        if self._pool_type is None:
+        if not hasattr(self, '_pool_type'):
             raise NotImplementedError('Concrete UCCVQE class must define self._pool_type attribute.')
 
-        if self._pool_obj is None:
+        if not hasattr(self, '_pool_obj'):
             raise NotImplementedError('Concrete UCCVQE class must define self._pool_obj attribute.')

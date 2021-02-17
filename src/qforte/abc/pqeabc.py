@@ -20,17 +20,23 @@ class PQE(Algorithm):
         pass
 
     def verify_required_PQE_attributes(self):
-        # if self._optimizer is None:
+        # if not hasattr(self, '_optimizer'):
         #     raise NotImplementedError('Concrete PQE class must define self._optimizer attribute.')
 
-        if self._converged is None:
+        if not hasattr(self, '_converged'):
             raise NotImplementedError('Concrete PQE class must define self._converged attribute.')
 
-        # if self._final_result is None:
+        # if not hasattr(self, '_final_result'):
         #     raise NotImplementedError('Concrete PQE class must define self._final_result attribute.')
 
-        if self._opt_maxiter is None:
-            raise NotImplementedError('Concrete PQE class must define self._opt_maxiter attribute.')
+        # if self._opt_maxiter is None:
+        #     if self._diis_maxiter is None:
+        #         raise NotImplementedError('Concrete PQE class must define self._diis_maxiter OR self._opt_maxiter attribute.')
 
-        if self._opt_thresh is None:
-            raise NotImplementedError('Concrete PQE class must define self._opt_thresh attribute.')
+        if not hasattr(self, '_opt_maxiter'):
+            if not hasattr(self, '_diis_maxiter'):
+                raise NotImplementedError('Concrete PQE class must define self._diis_maxiter OR self._opt_maxiter attribute.')
+
+        if not hasattr(self, '_opt_thresh'):
+            if not hasattr(self, '_res_vec_thresh'):
+                raise NotImplementedError('Concrete PQE class must define self._res_vec_thresh OR self._opt_thresh attribute.')

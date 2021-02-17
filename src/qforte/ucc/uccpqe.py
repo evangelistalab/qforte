@@ -38,15 +38,15 @@ class UCCNPQE(UCCPQE):
     def run(self,
             pool_type='SD',
             res_vec_thresh = 1.0e-5,
-            max_diis_iter = 40,
+            diis_maxiter = 40,
             noise_factor = 0.0):
 
         self._pool_type = pool_type
         self._res_vec_thresh = res_vec_thresh
-        self._max_diis_iter = max_diis_iter
+        self._diis_maxiter = diis_maxiter
 
-        self._opt_maxiter = max_diis_iter # satifies abstract class requirement
-        self._opt_thresh = res_vec_thresh # satifies abstract class requirement
+        # self._opt_maxiter = diis_maxiter # satifies abstract class requirement
+        # self._opt_thresh = res_vec_thresh # satifies abstract class requirement
         # self._use_mp2_guess_amps = use_mp2_guess_amps
         self._noise_factor = noise_factor
 
@@ -123,7 +123,7 @@ class UCCNPQE(UCCPQE):
             print('Measurement varience thresh:             ',  0.01)
 
         res_thrsh_str = '{:.2e}'.format(self._res_vec_thresh)
-        print('DIIS maxiter:                            ',  self._max_diis_iter) # RENAME
+        print('DIIS maxiter:                            ',  self._diis_maxiter) # RENAME
         print('DIIS res-norm threshold:                 ',  res_thrsh_str)
 
         print('Operator pool type:                      ',  str(self._pool_type))
@@ -174,7 +174,7 @@ class UCCNPQE(UCCPQE):
             f.write('\n#--------------------------------------------------------------------------------------------------')
             f.close()
 
-        for k in range(1, self._max_diis_iter+1):
+        for k in range(1, self._diis_maxiter+1):
 
             t_old = copy.deepcopy(self._tamps)
 
