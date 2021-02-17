@@ -69,7 +69,7 @@ class SPQE(UCCPQE):
         self._grad_vec_evals = 0
         self._Nm = []
         self._pool_type = 'full'
-        self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor=1.0j*self._dt, trotter_number=self._trotter_number)
+        self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
         for i, occupation in enumerate(self._ref):
             if(occupation):
@@ -81,9 +81,10 @@ class SPQE(UCCPQE):
         spqe_iter = 0
         hit_maxiter = 0
 
-        f = open("summary.dat", "w+", buffering=1)
-        f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
-        f.write('#-------------------------------------------------------------------------------\n')
+        if(self._print_summary_file):
+            f = open("summary.dat", "w+", buffering=1)
+            f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
+            f.write('#-------------------------------------------------------------------------------\n')
 
         while not self._converged:
 
@@ -102,14 +103,16 @@ class SPQE(UCCPQE):
             if(self._verbose):
                 print('\ntamplitudes for tops post solve: \n', np.real(self._tamps))
 
-            f.write(f'  {spqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
+            if(self._print_summary_file):
+                f.write(f'  {spqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
             spqe_iter += 1
 
             if spqe_iter > self._spqe_maxiter-1:
                 hit_maxiter = 1
                 break
 
-        f.close()
+        if(self._print_summary_file):
+            f.close()
 
         if hit_maxiter:
             self._Egs = self.get_final_energy(hit_max_spqe_iter=1)

@@ -44,10 +44,6 @@ class UCCNPQE(UCCPQE):
         self._pool_type = pool_type
         self._res_vec_thresh = res_vec_thresh
         self._diis_maxiter = diis_maxiter
-
-        # self._opt_maxiter = diis_maxiter # satifies abstract class requirement
-        # self._opt_thresh = res_vec_thresh # satifies abstract class requirement
-        # self._use_mp2_guess_amps = use_mp2_guess_amps
         self._noise_factor = noise_factor
 
         self._tops = []
