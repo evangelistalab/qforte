@@ -66,12 +66,19 @@ class Algorithm(ABC):
         self._Uprep = build_Uprep(reference, trial_state_type)
         # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonain()
         self._qb_ham = system.get_hamiltonian()
+        if hasattr(system, '_hf_energy'):
+            self._hf_energy = system.get_hf_energy()
+        else:
+            self._hf_energy = 0.0
+
         self._Nl = len(self._qb_ham.terms())
         self._trotter_order = trotter_order
         self._trotter_number = trotter_number
         self._fast = fast
         self._verbose = verbose
         self._print_summary_file = print_summary_file
+
+        self._noise_factor = 0.0
 
         # Required attributes, to be defined in concrete class.
         self._Egs = None

@@ -192,16 +192,20 @@ class UCCNVQE(UCCVQE):
     """
     def run(self,
             opt_thresh=1.0e-5,
+            opt_ftol=1.0e-5,
             opt_maxiter=200,
             pool_type='SD',
             optimizer='BFGS',
-            use_analytic_grad = True):
+            use_analytic_grad = True,
+            noise_factor = 0.0):
 
         self._opt_thresh = opt_thresh
+        self._opt_ftol = opt_ftol
         self._opt_maxiter = opt_maxiter
         self._use_analytic_grad = use_analytic_grad
         self._optimizer = optimizer
         self._pool_type = pool_type
+        self._noise_factor = noise_factor
 
         self._tops = []
         self._tamps = []
@@ -224,15 +228,21 @@ class UCCNVQE(UCCVQE):
 
         self.initialize_ansatz()
 
-        print('\nt operators included from pool: \n', self._tops)
-        print('Initial tamplitudes for tops: \n', self._tamps)
+        if(self._verbose):
+            print('\nt operators included from pool: \n', self._tops)
+            print('\nInitial tamplitudes for tops: \n', self._tamps)
 
         self.solve()
 
-        print('\nt operators included from pool: \n', self._tops)
-        print('Final tamplitudes for tops: \n', self._tamps)
-        # Print summary banner (should done for all algorithms).
-        self.print_summary_banner()
+        if(self._verbose):
+            print('\nt operators included from pool: \n', self._tops)
+            print('\nFinal tamplitudes for tops: \n', self._tamps)
+
+        ######### UCCSD-VQE #########
+        self._n_nonzero_params = 0
+        for tmu in self._tamps:
+            if(np.abs(tmu) > 1.0e-12):
+                self._n_nonzero_params += 1
 
         # verify that required attributes were defined
         # (should be called for all algorithms!)
@@ -288,8 +298,12 @@ class UCCNVQE(UCCVQE):
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
         print('Total number of commutator measurements:     ', self.get_num_commut_measurements())
         print('Number of classical parameters used:         ', self._n_classical_params)
+        print('Number of non-zero parameters used:          ', self._n_nonzero_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
         print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
+
+        print('Number of grad vector evaluations:           ', self._grad_vec_evals)
+        print('Number of individual grad evaluations:       ', self._grad_m_evals)
 
     # Define VQE abstract methods.
     def solve(self):
@@ -305,8 +319,15 @@ class UCCNVQE(UCCVQE):
 
         opts = {}
         opts['gtol'] = self._opt_thresh
-        opts['disp'] = False
+
+        opts['fatol'] = self._opt_ftol
+        opts['ftol'] = self._opt_ftol
+        opts['tol'] = self._opt_ftol
+
+        opts['disp'] = True
         opts['maxiter'] = self._opt_maxiter
+        opts['maxfun']  = self._opt_maxiter
+
         x0 = copy.deepcopy(self._tamps)
         init_gues_energy = self.energy_feval(x0)
 
@@ -333,12 +354,24 @@ class UCCNVQE(UCCVQE):
 
         if(res.success):
             print('  => Minimization successful!')
+            print(f'  => Minimum Energy: {res.fun:+12.10f}')
+            self._Egs = res.fun
+            if(self._optimizer == 'POWELL'):
+                print(type(res.fun))
+                print(res.fun)
+                self._Egs = res.fun[()]
+            self._final_result = res
+            self._tamps = list(res.x)
         else:
             print('  => WARNING: minimization result may not be tightly converged.')
-        print(f'  => Minimum Energy: {res.fun:+12.10f}')
-        self._Egs = res.fun
-        self._final_result = res
-        self._tamps = list(res.x)
+            print(f'  => Minimum Energy: {res.fun:+12.10f}')
+            self._Egs = res.fun
+            if(self._optimizer == 'POWELL'):
+                print(type(res.fun))
+                print(res.fun)
+                self._Egs = res.fun[()]
+            self._final_result = res
+            self._tamps = list(res.x)
 
         self._n_classical_params = len(self._tamps)
         self._n_cnot = self.build_Uvqc().get_num_cnots()
@@ -358,8 +391,8 @@ class UCCNVQE(UCCVQE):
 
     def get_num_commut_measurements(self):
         # if self._use_analytic_grad:
-        #     self._n_comut_measurements = self._final_result.njev * (len(self._pool))
-        #     return self._n_comut_measurements
+        #     self._n_commut_measurements = self._final_result.njev * (len(self._pool))
+        #     return self._n_commut_measurements
         # else:
         #     return 0
         return 0

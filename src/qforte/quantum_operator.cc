@@ -90,7 +90,7 @@ void QuantumOperator::simplify() {
     }
     terms_.clear();
     for (const auto &uniqe_trm : uniqe_trms){
-        if (std::abs(uniqe_trm.second) > 1.0e-10) {
+        if (std::abs(uniqe_trm.second) > 1.0e-16) {
             terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
         }
     }
