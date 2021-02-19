@@ -3,7 +3,7 @@ Functions for exponentiation of qubit operator terms (circuits)
 """
 
 import qforte
-import numpy
+import numpy as np
 
 def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_open_cRz=False):
     """
@@ -19,13 +19,13 @@ def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_
         a Pauli string to be exponentiated
     """
     # This function assumes that the factor is imaginary. The following tests for it.
-    if numpy.real(factor) != 0.0:
+    if np.abs(np.real(factor)) > 1.0e-16:
         print("exp factor: ", factor)
         raise ValueError('exponentiate_single_term() called with a real factor')
 
     # If the Pauli string has no terms this is just a phase factor
     if term.size() == 0:
-        return (qforte.QuantumCircuit(), numpy.exp(factor))
+        return (qforte.QuantumCircuit(), np.exp(factor))
 
     exponential = qforte.QuantumCircuit()
     to_z = qforte.QuantumCircuit()
@@ -46,8 +46,8 @@ def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_
         elif (id == 'Y'):
             to_z.add_gate(qforte.make_gate('Rzy', target, control))
             to_original.add_gate(qforte.make_gate('Rzy', target, control))
-#            to_z.add_gate(qforte.make_gate('Rx', target, control, numpy.pi/2.0))
-#            to_original.add_gate(qforte.make_gate('Rx', target, control, -numpy.pi/2.0))
+#            to_z.add_gate(qforte.make_gate('Rx', target, control, np.pi/2.0))
+#            to_original.add_gate(qforte.make_gate('Rx', target, control, -np.pi/2.0))
         elif (id == 'I'):
             continue
 
@@ -61,9 +61,9 @@ def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_
     # TODO(Nick): investigate real/imaginary usage of 'factor' in below expression
 
     if(Use_cRz):
-        z_rot = qforte.make_gate('cRz', max_target, ancilla_idx, -2.0 * numpy.imag(factor))
+        z_rot = qforte.make_gate('cRz', max_target, ancilla_idx, -2.0 * np.imag(factor))
     else:
-        z_rot = qforte.make_gate('Rz', max_target, max_target, -2.0 * numpy.imag(factor))
+        z_rot = qforte.make_gate('Rz', max_target, max_target, -2.0 * np.imag(factor))
 
     #assemble the actual exponential
     exponential.add_circuit(to_z)
