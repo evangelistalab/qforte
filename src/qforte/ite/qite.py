@@ -6,6 +6,7 @@ from qforte.utils.transforms import (get_jw_organizer,
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
 from qforte.helper.printing import *
+import copy
 import numpy as np
 from scipy.linalg import lstsq
 
@@ -131,75 +132,87 @@ class QITE(Algorithm):
             raise ValueError('Invalid expansion type specified.')
 
         self._NI = len(self._sig.terms())
-        self._h = np.ones(self._Nl, dtype=complex)
-        for l, term in enumerate(self._qb_ham.terms()):
-            self._h[l] = term[0]
 
-        self._sigH = qf.QuantumOpPool()
-        self._sig2 = qf.QuantumOpPool()
-        for term in self._sig.terms():
-            self._sigH.add_term(term[0], term[1])
-            self._sig2.add_term(term[0], term[1])
-
-        self._sig2.square(True)
-        self._sigH.join_op_from_right_lazy(self._qb_ham)
-
-        print('\n      Expansion pool successfully built!\n')
 
     def build_S(self):
-        S = np.empty((self._NI,self._NI), dtype=complex)
-        Svec = self._qc.direct_oppl_exp_val(self._sig2)
-        self._n_pauli_trm_measures += len(Svec)
-        for I in range(self._NI):
-            for J in range(I, self._NI):
-                K = I*self._NI - int(I*(I-1)/2) + (J-I)
-                val = Svec[K]
-                S[I][J] = val
-                S[J][I] = val
+        Idim = self._NI
+
+        S = np.zeros((Idim, Idim), dtype=complex)
+
+        Ipsi_qc = qf.QuantumComputer(self._nqb)
+        Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+        CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
+
+        for i in range(1, Idim):
+            S[i-1][i-1] = 1.0
+            Ipsi_qc.apply_operator(self._sig.terms()[i][1])
+            CI[i,:] = copy.deepcopy(Ipsi_qc.get_coeff_vec())
+            for j in range(1, i):
+                val = np.vdot(CI[i,:], CI[j,:])
+                S[i][j] = val
+                S[j][i] = val
+
+            Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
 
         return np.real(S)
+
 
     def build_sparse_S_b(self, b):
         b_sparse = []
         idx_sparse = []
-        K_idx_sparse = []
         for I, bI in enumerate(b):
             if(np.abs(bI) > self._b_thresh):
                 idx_sparse.append(I)
                 b_sparse.append(bI)
 
-        for i in range(len(idx_sparse)):
-            for j in range(i,len(idx_sparse)):
-                k_sp = idx_sparse[i]*self._NI
-                k_sp -= int( idx_sparse[i] * (idx_sparse[i]-1)/2 )
-                k_sp += idx_sparse[j] - idx_sparse[i]
-                K_idx_sparse.append(k_sp)
+        Idim = len(idx_sparse)
+        self._n_pauli_trm_measures += int(Idim*(Idim+1)*0.5)
 
-        self._n_pauli_trm_measures += len(K_idx_sparse)
+        S = np.zeros((len(b_sparse),len(b_sparse)), dtype=complex)
 
-        S = np.empty((len(b_sparse),len(b_sparse)), dtype=complex)
-        Svec = self._qc.direct_idxd_oppl_exp_val(self._sig2, K_idx_sparse)
-        for i in range(len(idx_sparse)):
-            for j in range(i,len(idx_sparse)):
-                k = i*len(b_sparse) - int(i*(i-1)/2) + (j-i)
-                val = Svec[k]
+        Ipsi_qc = qf.QuantumComputer(self._nqb)
+        Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+        CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
+
+        for i in range(1, Idim):
+            S[i-1][i-1] = 1.0
+            Ii = idx_sparse[i]
+            Ipsi_qc.apply_operator(self._sig.terms()[Ii][1])
+            CI[i,:] = copy.deepcopy(Ipsi_qc.get_coeff_vec())
+            for j in range(1, i):
+                val = np.vdot(CI[i,:], CI[j,:])
                 S[i][j] = val
                 S[j][i] = val
+
+            Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
 
         return idx_sparse, np.real(S), np.real(b_sparse)
 
     def build_b(self):
-        fo = np.zeros(self._Nl, dtype=complex)
-        for l, Hl in enumerate(self._qb_ham.terms()):
-            term = np.sqrt(1 - 2*self._db*Hl[0]*self._qc.direct_circ_exp_val(Hl[1]))
-            fo[l] = -1.0j / term
+
+        b  = np.zeros(self._NI, dtype=complex)
+
+        # Now uses normalization for all H rather than for each term Hl.
+        term = np.sqrt(1 - 2*self._db*self._Ekb[-1])
+        fo = -1.0j / term
 
         self._n_pauli_trm_measures += self._Nl * self._NI
-        return np.real(self._qc.direct_oppl_exp_val_w_mults(self._sigH, fo))
+
+        self._Hpsi_qc = qf.QuantumComputer(self._nqb)
+        self._Hpsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+        self._Hpsi_qc.apply_operator(self._qb_ham)
+        C_Hpsi_qc = copy.deepcopy(self._Hpsi_qc.get_coeff_vec())
+
+        for I in range(self._NI):
+            self._Hpsi_qc.apply_operator(self._sig.terms()[I][1])
+            val = np.vdot(self._qc.get_coeff_vec(), self._Hpsi_qc.get_coeff_vec())
+            b[I] = self._sig.terms()[I][0] * val * fo
+            self._Hpsi_qc.set_coeff_vec(C_Hpsi_qc)
+
+        return np.real(b)
 
     def do_quite_step(self):
-        self._qc = qf.QuantumComputer(self._nqb)
-        self._qc.apply_circuit(self._Uqite)
+
         btot = self.build_b()
         A = qf.QuantumOperator()
 
@@ -224,9 +237,6 @@ class QITE(Algorithm):
                     self._n_classical_params += 1
 
         if(self._verbose):
-            print('\nbo:\n ')
-            for val in self._bo:
-                print('  ', val)
             print('\nbtot:\n ', btot)
             print('\n S:  \n')
             matprint(S)
@@ -246,7 +256,8 @@ class QITE(Algorithm):
 
     def evolve(self):
         self._Uqite.add_circuit(self._Uprep)
-
+        self._qc = qf.QuantumComputer(self._nqb)
+        self._qc.apply_circuit(self._Uqite)
 
         print(f"{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
         print('-------------------------------------------------------------------------------')

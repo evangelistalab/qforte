@@ -55,6 +55,7 @@ def build_sqop_from_openfermion(OF_fermiops, time_evo_factor = 1.0):
         operators.
     """
 
+    # TODO(Nick): make sq_op a SQOperator object rather than a python list
     sq_op = []
 
     #for term, coeff in sorted(OF_fermiops.terms.items()):
