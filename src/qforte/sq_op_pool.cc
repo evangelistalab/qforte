@@ -70,7 +70,7 @@ QuantumOpPool SQOpPool::get_quantum_op_pool(){
     return A;
 }
 
-QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type){
+QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type, bool combine_like_terms){
     QuantumOperator A;
     if(order_type=="unique_lex"){
         for (auto& term : terms_) {
@@ -86,7 +86,7 @@ QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type){
         for (auto& term : terms_) {
             QuantumOperator a = term.second.jw_transform();
             a.mult_coeffs(term.first);
-            a.simplify();
+            a.simplify(combine_like_terms=combine_like_terms);
             a.order_terms();
             A.add_op(a);
         }

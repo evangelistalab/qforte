@@ -14,7 +14,7 @@ class QITE(Algorithm):
     def run(self,
             beta=1.0,
             db=0.2,
-            expansion_type='qbGSD',
+            expansion_type='SD',
             sparseSb=True,
             b_thresh=1.0e-6,
             x_thresh=1.0e-8):
@@ -42,7 +42,22 @@ class QITE(Algorithm):
         self.print_options_banner()
 
         # Build expansion pool.
-        self.build_expansion_pool()
+        self.build_expansion_pool2()
+
+        # print('\n sig op pool \n')
+        #
+        #    # qop
+        # for term in self._sig.terms():
+        #     qf.smart_print(term[1])
+        #         # is a circ
+        #     for circ in term[1].terms():
+        #         print(circ[1])
+        #         for gate in circ[1].gates():
+        #             print(gate.gate_id(), gate.target())
+        #
+        #
+        # print('\n\n')
+
         # Do the imaginary time evolution.
         self.evolve()
 
@@ -124,6 +139,79 @@ class QITE(Algorithm):
                         if(uniqe_term not in uniqe_org):
                             uniqe_org.append(uniqe_term)
                             self._sig.add_term(1.0, organizer_to_circuit([uniqe_term]))
+
+        elif(self._expansion_type == 'test'):
+            self._sig.fill_pool("test", self._ref)
+
+        else:
+            raise ValueError('Invalid expansion type specified.')
+
+        self._NI = len(self._sig.terms())
+
+    def build_expansion_pool2(self):
+        print('\n==> Building expansion pool <==')
+        self._sig = qf.QuantumOpPool()
+
+        if(self._expansion_type == 'complete_qubit'):
+            if (self._nqb > 6):
+                raise ValueError('Using complete qubits expansion will reslut in a very large number of terms!')
+            self._sig.fill_pool("complete_qubit", self._ref)
+
+        elif(self._expansion_type == 'cqoy'):
+            self._sig.fill_pool("cqoy", self._ref)
+
+        elif(self._expansion_type == 'ham'):
+            # TODO (opt), put this on C side
+            op_organizer = get_jw_organizer(self._sq_ham, combine=False)
+            uniqe_org = []
+            for term in op_organizer:
+                for coeff, word in term:
+                    nygates = 0
+                    for pgate in word:
+                        if pgate[0] == 'Y':
+                            nygates += 1
+                    if (nygates%2 != 0):
+                        uniqe_term = [1.0, word]
+                        if(uniqe_term not in uniqe_org):
+                            uniqe_org.append(uniqe_term)
+                            self._sig.add_term(1.0, organizer_to_circuit([uniqe_term]))
+
+        elif(self._expansion_type == 'SD' or 'GSD' or 'SDT' or 'SDTQ' or 'SDTQP' or 'SDTQPH'):
+            P = qf.SQOpPool()
+            P.set_orb_spaces(self._ref)
+            P.fill_pool(self._expansion_type)
+            sig_temp = P.get_quantum_operator("commuting_grp_lex", False)
+            # qf.smart_print(sig_temp)
+
+            for alph, rho in sig_temp.terms():
+                nygates = 0
+                temp_rho = qf.QuantumCircuit()
+                for gate in rho.gates():
+                    temp_rho.add_gate(qf.make_gate(gate.gate_id(), gate.target(), gate.control()))
+                    if (gate.gate_id() == "Y"):
+                        nygates += 1
+
+                if (nygates%2 != 0):
+                    rho_op = qf.QuantumOperator()
+                    rho_op.add_term(1.0, temp_rho)
+                    self._sig.add_term(1.0, rho_op)
+
+
+        # elif(self._expansion_type == 'qbGSD'):
+        #     # TODO (opt), put this on C side
+        #     op_organizer = get_jw_organizer(self._sq_ham, combine=False)
+        #     uniqe_org = []
+        #     for term in op_organizer:
+        #         for coeff, word in term:
+        #             nygates = 0
+        #             for pgate in word:
+        #                 if pgate[0] == 'Y':
+        #                     nygates += 1
+        #             if (nygates%2 != 0):
+        #                 uniqe_term = [1.0, word]
+        #                 if(uniqe_term not in uniqe_org):
+        #                     uniqe_org.append(uniqe_term)
+        #                     self._sig.add_term(1.0, organizer_to_circuit([uniqe_term]))
 
         elif(self._expansion_type == 'test'):
             self._sig.fill_pool("test", self._ref)
