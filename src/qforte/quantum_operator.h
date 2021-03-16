@@ -44,7 +44,8 @@ class QuantumOperator {
     /// and contract all pauli operators
     void canonical_order();
 
-    /// simplify the operator using std::unsorted_map (i.e. combine like terms)
+    /// Put all operators in the linear combination in canonical form AND THEN
+    /// combine like terms.
     void simplify();
 
     /// join a new operator to this operator via multiplicaiton
