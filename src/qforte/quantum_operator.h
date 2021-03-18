@@ -42,7 +42,7 @@ class QuantumOperator {
     void canonical_order();
 
     /// simplify the operator using std::unsorted_map (i.e. combine like terms)
-    void simplify();
+    void simplify(bool combine_like_terms=true);
 
     /// join a new operator to this operator via multiplicaiton
     void join_operator(const QuantumOperator& rqo, bool simplify_lop);

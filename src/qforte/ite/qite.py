@@ -6,17 +6,22 @@ from qforte.utils.transforms import (get_jw_organizer,
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
 from qforte.helper.printing import *
+import copy
 import numpy as np
 from scipy.linalg import lstsq
+
+from qforte.maths.eigsolve import canonical_geig_solve
 
 class QITE(Algorithm):
     def run(self,
             beta=1.0,
             db=0.2,
-            expansion_type='qbGSD',
+            expansion_type='SD',
             sparseSb=True,
             b_thresh=1.0e-6,
-            x_thresh=1.0e-8):
+            x_thresh=1.0e-10,
+            do_lanczos=False,
+            lanczos_gap=2):
 
         self._beta = beta
         self._db = db
@@ -33,6 +38,9 @@ class QITE(Algorithm):
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
 
+        self._do_lanczos = do_lanczos
+        self._lanczos_gap = lanczos_gap
+
         qc_ref = qf.QuantumComputer(self._nqb)
         qc_ref.apply_circuit(self._Uprep)
         self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
@@ -42,8 +50,12 @@ class QITE(Algorithm):
 
         # Build expansion pool.
         self.build_expansion_pool()
+
         # Do the imaginary time evolution.
         self.evolve()
+
+        if (self._do_lanczos):
+            self.do_qlanczos()
 
         # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
@@ -86,6 +98,9 @@ class QITE(Algorithm):
         if(self._sparseSb):
             print('b value threshold:                       ',  str(self._b_thresh))
         print('\n')
+        print('Do Quantum Lanczos                       ',  str(self._do_lanczos))
+        if(self._do_lanczos):
+            print('Lanczos gap size                         ',  self._lanczos_gap)
 
     def print_summary_banner(self):
         print('\n\n                        ==> QITE summary <==')
@@ -108,21 +123,25 @@ class QITE(Algorithm):
         elif(self._expansion_type == 'cqoy'):
             self._sig.fill_pool("cqoy", self._ref)
 
-        elif(self._expansion_type == 'qbGSD'):
-            # TODO (opt), put this on C side
-            op_organizer = get_jw_organizer(self._sq_ham, combine=False)
-            uniqe_org = []
-            for term in op_organizer:
-                for coeff, word in term:
-                    nygates = 0
-                    for pgate in word:
-                        if pgate[0] == 'Y':
-                            nygates += 1
-                    if (nygates%2 != 0):
-                        uniqe_term = [1.0, word]
-                        if(uniqe_term not in uniqe_org):
-                            uniqe_org.append(uniqe_term)
-                            self._sig.add_term(1.0, organizer_to_circuit([uniqe_term]))
+        elif(self._expansion_type == 'SD' or 'GSD' or 'SDT' or 'SDTQ' or 'SDTQP' or 'SDTQPH'):
+            P = qf.SQOpPool()
+            P.set_orb_spaces(self._ref)
+            P.fill_pool(self._expansion_type)
+            sig_temp = P.get_quantum_operator("commuting_grp_lex", False)
+            # qf.smart_print(sig_temp)
+
+            for alph, rho in sig_temp.terms():
+                nygates = 0
+                temp_rho = qf.QuantumCircuit()
+                for gate in rho.gates():
+                    temp_rho.add_gate(qf.make_gate(gate.gate_id(), gate.target(), gate.control()))
+                    if (gate.gate_id() == "Y"):
+                        nygates += 1
+
+                if (nygates%2 != 0):
+                    rho_op = qf.QuantumOperator()
+                    rho_op.add_term(1.0, temp_rho)
+                    self._sig.add_term(1.0, rho_op)
 
         elif(self._expansion_type == 'test'):
             self._sig.fill_pool("test", self._ref)
@@ -131,75 +150,86 @@ class QITE(Algorithm):
             raise ValueError('Invalid expansion type specified.')
 
         self._NI = len(self._sig.terms())
-        self._h = np.ones(self._Nl, dtype=complex)
-        for l, term in enumerate(self._qb_ham.terms()):
-            self._h[l] = term[0]
 
-        self._sigH = qf.QuantumOpPool()
-        self._sig2 = qf.QuantumOpPool()
-        for term in self._sig.terms():
-            self._sigH.add_term(term[0], term[1])
-            self._sig2.add_term(term[0], term[1])
-
-        self._sig2.square(True)
-        self._sigH.join_op_from_right_lazy(self._qb_ham)
-
-        print('\n      Expansion pool successfully built!\n')
 
     def build_S(self):
-        S = np.empty((self._NI,self._NI), dtype=complex)
-        Svec = self._qc.direct_oppl_exp_val(self._sig2)
-        self._n_pauli_trm_measures += len(Svec)
-        for I in range(self._NI):
-            for J in range(I, self._NI):
-                K = I*self._NI - int(I*(I-1)/2) + (J-I)
-                val = Svec[K]
-                S[I][J] = val
-                S[J][I] = val
+        Idim = self._NI
+
+        S = np.zeros((Idim, Idim), dtype=complex)
+
+        Ipsi_qc = qf.QuantumComputer(self._nqb)
+        Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+        CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
+
+        for i in range(1, Idim):
+            S[i-1][i-1] = 1.0
+            Ipsi_qc.apply_operator(self._sig.terms()[i][1])
+            CI[i,:] = copy.deepcopy(Ipsi_qc.get_coeff_vec())
+            for j in range(1, i):
+                val = np.vdot(CI[i,:], CI[j,:])
+                S[i][j] = val
+                S[j][i] = val
+
+            Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
 
         return np.real(S)
+
 
     def build_sparse_S_b(self, b):
         b_sparse = []
         idx_sparse = []
-        K_idx_sparse = []
         for I, bI in enumerate(b):
             if(np.abs(bI) > self._b_thresh):
                 idx_sparse.append(I)
                 b_sparse.append(bI)
 
-        for i in range(len(idx_sparse)):
-            for j in range(i,len(idx_sparse)):
-                k_sp = idx_sparse[i]*self._NI
-                k_sp -= int( idx_sparse[i] * (idx_sparse[i]-1)/2 )
-                k_sp += idx_sparse[j] - idx_sparse[i]
-                K_idx_sparse.append(k_sp)
+        Idim = len(idx_sparse)
+        self._n_pauli_trm_measures += int(Idim*(Idim+1)*0.5)
 
-        self._n_pauli_trm_measures += len(K_idx_sparse)
+        S = np.zeros((len(b_sparse),len(b_sparse)), dtype=complex)
 
-        S = np.empty((len(b_sparse),len(b_sparse)), dtype=complex)
-        Svec = self._qc.direct_idxd_oppl_exp_val(self._sig2, K_idx_sparse)
-        for i in range(len(idx_sparse)):
-            for j in range(i,len(idx_sparse)):
-                k = i*len(b_sparse) - int(i*(i-1)/2) + (j-i)
-                val = Svec[k]
+        Ipsi_qc = qf.QuantumComputer(self._nqb)
+        Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+        CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
+
+        for i in range(1, Idim):
+            S[i-1][i-1] = 1.0
+            Ii = idx_sparse[i]
+            Ipsi_qc.apply_operator(self._sig.terms()[Ii][1])
+            CI[i,:] = copy.deepcopy(Ipsi_qc.get_coeff_vec())
+            for j in range(1, i):
+                val = np.vdot(CI[i,:], CI[j,:])
                 S[i][j] = val
                 S[j][i] = val
+
+            Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
 
         return idx_sparse, np.real(S), np.real(b_sparse)
 
     def build_b(self):
-        fo = np.zeros(self._Nl, dtype=complex)
-        for l, Hl in enumerate(self._qb_ham.terms()):
-            term = np.sqrt(1 - 2*self._db*Hl[0]*self._qc.direct_circ_exp_val(Hl[1]))
-            fo[l] = -1.0j / term
+
+        b  = np.zeros(self._NI, dtype=complex)
+
+        term = np.sqrt(1 - 2*self._db*self._Ekb[-1])
+        fo = -1.0j / term
 
         self._n_pauli_trm_measures += self._Nl * self._NI
-        return np.real(self._qc.direct_oppl_exp_val_w_mults(self._sigH, fo))
+
+        self._Hpsi_qc = qf.QuantumComputer(self._nqb)
+        self._Hpsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+        self._Hpsi_qc.apply_operator(self._qb_ham)
+        C_Hpsi_qc = copy.deepcopy(self._Hpsi_qc.get_coeff_vec())
+
+        for I in range(self._NI):
+            self._Hpsi_qc.apply_operator(self._sig.terms()[I][1])
+            val = np.vdot(self._qc.get_coeff_vec(), self._Hpsi_qc.get_coeff_vec())
+            b[I] = self._sig.terms()[I][0] * val * fo
+            self._Hpsi_qc.set_coeff_vec(C_Hpsi_qc)
+
+        return np.real(b)
 
     def do_quite_step(self):
-        self._qc = qf.QuantumComputer(self._nqb)
-        self._qc.apply_circuit(self._Uqite)
+
         btot = self.build_b()
         A = qf.QuantumOperator()
 
@@ -224,9 +254,6 @@ class QITE(Algorithm):
                     self._n_classical_params += 1
 
         if(self._verbose):
-            print('\nbo:\n ')
-            for val in self._bo:
-                print('  ', val)
             print('\nbtot:\n ', btot)
             print('\n S:  \n')
             matprint(S)
@@ -246,6 +273,19 @@ class QITE(Algorithm):
 
     def evolve(self):
         self._Uqite.add_circuit(self._Uprep)
+        self._qc = qf.QuantumComputer(self._nqb)
+        self._qc.apply_circuit(self._Uqite)
+
+        if(self._do_lanczos):
+            self._lancos_vecs = []
+            self._Hlancos_vecs = []
+
+            self._lancos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
+
+            qcSig_temp = qf.QuantumComputer(self._nqb)
+            qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+            qcSig_temp.apply_operator(self._qb_ham)
+            self._Hlancos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
 
 
         print(f"{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
@@ -260,6 +300,15 @@ class QITE(Algorithm):
 
         for kb in range(1, self._nbeta):
             self.do_quite_step()
+            if(self._do_lanczos):
+                if(kb % self._lanczos_gap == 0):
+                    self._lancos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
+
+                    qcSig_temp = qf.QuantumComputer(self._nqb)
+                    qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+                    qcSig_temp.apply_operator(self._qb_ham)
+                    self._Hlancos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
+
             print(f' {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
             if (self._print_summary_file):
                 f.write(f'  {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n')
@@ -272,3 +321,47 @@ class QITE(Algorithm):
         print('\nQITE expansion operators:')
         print('-------------------------')
         print(self._sig.str())
+
+
+    def do_qlanczos(self):
+        """"""
+        n_lancos_vecs = len(self._lancos_vecs)
+        h_mat = np.zeros((n_lancos_vecs,n_lancos_vecs), dtype=complex)
+        s_mat = np.zeros((n_lancos_vecs,n_lancos_vecs), dtype=complex)
+
+        print('\n\n-----------------------------------------------------')
+        print('         Quantum Imaginary Time Lanczos   ')
+        print('-----------------------------------------------------\n\n')
+
+
+        print(f"{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}")
+        print('-------------------------------------------------------------------------------')
+
+        if (self._print_summary_file):
+            f2 = open("lanczos_summary.dat", "w+", buffering=1)
+            f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
+            f2.write('#-------------------------------------------------------------------------------\n')
+
+        for m in range(n_lancos_vecs):
+            for n in range(m+1):
+                h_mat[m][n] = np.vdot(self._lancos_vecs[m], self._Hlancos_vecs[n])
+                h_mat[n][m] = np.conj(h_mat[m][n])
+                s_mat[m][n] = np.vdot(self._lancos_vecs[m], self._lancos_vecs[n])
+                s_mat[n][m] = np.conj(s_mat[m][n])
+
+            k = m+1
+            evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
+                               h_mat[0:k, 0:k],
+                               print_mats=False,
+                               sort_ret_vals=True)
+
+            scond = np.linalg.cond(s_mat[0:k, 0:k])
+
+            print(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} ')
+            if (self._print_summary_file):
+                f2.write(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} \n')
+
+        if (self._print_summary_file):
+            f2.close()
+
+        self._Egs_lanczos = evals[0]

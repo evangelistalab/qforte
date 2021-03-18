@@ -47,7 +47,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_quantum_operators", &SQOpPool::get_quantum_operators)
         .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
-        .def("get_quantum_operator", &SQOpPool::get_quantum_operator)
+        .def("get_quantum_operator", &SQOpPool::get_quantum_operator, py::arg("order_type") ,py::arg("combine_like_terms") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str);
 
