@@ -100,7 +100,7 @@ class QITE(Algorithm):
         print('\n')
         print('Do Quantum Lanczos                       ',  str(self._do_lanczos))
         if(self._do_lanczos):
-            print('Lanczos gap size                         ',  self.lanczos_gap)
+            print('Lanczos gap size                         ',  self._lanczos_gap)
 
     def print_summary_banner(self):
         print('\n\n                        ==> QITE summary <==')
