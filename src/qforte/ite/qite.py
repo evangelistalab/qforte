@@ -10,6 +10,8 @@ import copy
 import numpy as np
 from scipy.linalg import lstsq
 
+from qforte.maths.eigsolve import canonical_geig_solve
+
 class QITE(Algorithm):
     def run(self,
             beta=1.0,
@@ -17,7 +19,9 @@ class QITE(Algorithm):
             expansion_type='SD',
             sparseSb=True,
             b_thresh=1.0e-6,
-            x_thresh=1.0e-8):
+            x_thresh=1.0e-10,
+            do_lanczos=False,
+            lanczos_gap=2):
 
         self._beta = beta
         self._db = db
@@ -34,6 +38,9 @@ class QITE(Algorithm):
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
 
+        self._do_lanczos = do_lanczos
+        self._lanczos_gap = lanczos_gap
+
         qc_ref = qf.QuantumComputer(self._nqb)
         qc_ref.apply_circuit(self._Uprep)
         self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
@@ -42,24 +49,13 @@ class QITE(Algorithm):
         self.print_options_banner()
 
         # Build expansion pool.
-        self.build_expansion_pool2()
-
-        # print('\n sig op pool \n')
-        #
-        #    # qop
-        # for term in self._sig.terms():
-        #     qf.smart_print(term[1])
-        #         # is a circ
-        #     for circ in term[1].terms():
-        #         print(circ[1])
-        #         for gate in circ[1].gates():
-        #             print(gate.gate_id(), gate.target())
-        #
-        #
-        # print('\n\n')
+        self.build_expansion_pool()
 
         # Do the imaginary time evolution.
         self.evolve()
+
+        if (self._do_lanczos):
+            self.do_qlanczos()
 
         # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
@@ -102,6 +98,9 @@ class QITE(Algorithm):
         if(self._sparseSb):
             print('b value threshold:                       ',  str(self._b_thresh))
         print('\n')
+        print('Do Quantum Lanczos                       ',  str(self._do_lanczos))
+        if(self._do_lanczos):
+            print('Lanczos gap size                         ',  self.lanczos_gap)
 
     def print_summary_banner(self):
         print('\n\n                        ==> QITE summary <==')
@@ -124,58 +123,6 @@ class QITE(Algorithm):
         elif(self._expansion_type == 'cqoy'):
             self._sig.fill_pool("cqoy", self._ref)
 
-        elif(self._expansion_type == 'qbGSD'):
-            # TODO (opt), put this on C side
-            op_organizer = get_jw_organizer(self._sq_ham, combine=False)
-            uniqe_org = []
-            for term in op_organizer:
-                for coeff, word in term:
-                    nygates = 0
-                    for pgate in word:
-                        if pgate[0] == 'Y':
-                            nygates += 1
-                    if (nygates%2 != 0):
-                        uniqe_term = [1.0, word]
-                        if(uniqe_term not in uniqe_org):
-                            uniqe_org.append(uniqe_term)
-                            self._sig.add_term(1.0, organizer_to_circuit([uniqe_term]))
-
-        elif(self._expansion_type == 'test'):
-            self._sig.fill_pool("test", self._ref)
-
-        else:
-            raise ValueError('Invalid expansion type specified.')
-
-        self._NI = len(self._sig.terms())
-
-    def build_expansion_pool2(self):
-        print('\n==> Building expansion pool <==')
-        self._sig = qf.QuantumOpPool()
-
-        if(self._expansion_type == 'complete_qubit'):
-            if (self._nqb > 6):
-                raise ValueError('Using complete qubits expansion will reslut in a very large number of terms!')
-            self._sig.fill_pool("complete_qubit", self._ref)
-
-        elif(self._expansion_type == 'cqoy'):
-            self._sig.fill_pool("cqoy", self._ref)
-
-        elif(self._expansion_type == 'ham'):
-            # TODO (opt), put this on C side
-            op_organizer = get_jw_organizer(self._sq_ham, combine=False)
-            uniqe_org = []
-            for term in op_organizer:
-                for coeff, word in term:
-                    nygates = 0
-                    for pgate in word:
-                        if pgate[0] == 'Y':
-                            nygates += 1
-                    if (nygates%2 != 0):
-                        uniqe_term = [1.0, word]
-                        if(uniqe_term not in uniqe_org):
-                            uniqe_org.append(uniqe_term)
-                            self._sig.add_term(1.0, organizer_to_circuit([uniqe_term]))
-
         elif(self._expansion_type == 'SD' or 'GSD' or 'SDT' or 'SDTQ' or 'SDTQP' or 'SDTQPH'):
             P = qf.SQOpPool()
             P.set_orb_spaces(self._ref)
@@ -195,23 +142,6 @@ class QITE(Algorithm):
                     rho_op = qf.QuantumOperator()
                     rho_op.add_term(1.0, temp_rho)
                     self._sig.add_term(1.0, rho_op)
-
-
-        # elif(self._expansion_type == 'qbGSD'):
-        #     # TODO (opt), put this on C side
-        #     op_organizer = get_jw_organizer(self._sq_ham, combine=False)
-        #     uniqe_org = []
-        #     for term in op_organizer:
-        #         for coeff, word in term:
-        #             nygates = 0
-        #             for pgate in word:
-        #                 if pgate[0] == 'Y':
-        #                     nygates += 1
-        #             if (nygates%2 != 0):
-        #                 uniqe_term = [1.0, word]
-        #                 if(uniqe_term not in uniqe_org):
-        #                     uniqe_org.append(uniqe_term)
-        #                     self._sig.add_term(1.0, organizer_to_circuit([uniqe_term]))
 
         elif(self._expansion_type == 'test'):
             self._sig.fill_pool("test", self._ref)
@@ -280,7 +210,6 @@ class QITE(Algorithm):
 
         b  = np.zeros(self._NI, dtype=complex)
 
-        # Now uses normalization for all H rather than for each term Hl.
         term = np.sqrt(1 - 2*self._db*self._Ekb[-1])
         fo = -1.0j / term
 
@@ -347,6 +276,18 @@ class QITE(Algorithm):
         self._qc = qf.QuantumComputer(self._nqb)
         self._qc.apply_circuit(self._Uqite)
 
+        if(self._do_lanczos):
+            self._lancos_vecs = []
+            self._Hlancos_vecs = []
+
+            self._lancos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
+
+            qcSig_temp = qf.QuantumComputer(self._nqb)
+            qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+            qcSig_temp.apply_operator(self._qb_ham)
+            self._Hlancos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
+
+
         print(f"{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
         print('-------------------------------------------------------------------------------')
         print(f' {0.0:7.3f}    {self._Ekb[0]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
@@ -359,6 +300,15 @@ class QITE(Algorithm):
 
         for kb in range(1, self._nbeta):
             self.do_quite_step()
+            if(self._do_lanczos):
+                if(kb % self._lanczos_gap == 0):
+                    self._lancos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
+
+                    qcSig_temp = qf.QuantumComputer(self._nqb)
+                    qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+                    qcSig_temp.apply_operator(self._qb_ham)
+                    self._Hlancos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
+
             print(f' {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
             if (self._print_summary_file):
                 f.write(f'  {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n')
@@ -371,3 +321,47 @@ class QITE(Algorithm):
         print('\nQITE expansion operators:')
         print('-------------------------')
         print(self._sig.str())
+
+
+    def do_qlanczos(self):
+        """"""
+        n_lancos_vecs = len(self._lancos_vecs)
+        h_mat = np.zeros((n_lancos_vecs,n_lancos_vecs), dtype=complex)
+        s_mat = np.zeros((n_lancos_vecs,n_lancos_vecs), dtype=complex)
+
+        print('\n\n-----------------------------------------------------')
+        print('         Quantum Imaginary Time Lanczos   ')
+        print('-----------------------------------------------------\n\n')
+
+
+        print(f"{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}")
+        print('-------------------------------------------------------------------------------')
+
+        if (self._print_summary_file):
+            f2 = open("lanczos_summary.dat", "w+", buffering=1)
+            f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
+            f2.write('#-------------------------------------------------------------------------------\n')
+
+        for m in range(n_lancos_vecs):
+            for n in range(m+1):
+                h_mat[m][n] = np.vdot(self._lancos_vecs[m], self._Hlancos_vecs[n])
+                h_mat[n][m] = np.conj(h_mat[m][n])
+                s_mat[m][n] = np.vdot(self._lancos_vecs[m], self._lancos_vecs[n])
+                s_mat[n][m] = np.conj(s_mat[m][n])
+
+            k = m+1
+            evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
+                               h_mat[0:k, 0:k],
+                               print_mats=False,
+                               sort_ret_vals=True)
+
+            scond = np.linalg.cond(s_mat[0:k, 0:k])
+
+            print(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} ')
+            if (self._print_summary_file):
+                f2.write(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} \n')
+
+        if (self._print_summary_file):
+            f2.close()
+
+        self._Egs_lanczos = evals[0]
