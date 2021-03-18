@@ -78,7 +78,7 @@ void QuantumOperator::canonical_order() {
     }
 }
 
-void QuantumOperator::simplify() {
+void QuantumOperator::simplify(bool combine_like_terms) {
     canonical_order();
     std::unordered_map<QuantumCircuit, std::complex<double>> uniqe_trms;
     for (const auto& term : terms_) {
@@ -89,8 +89,14 @@ void QuantumOperator::simplify() {
         }
     }
     terms_.clear();
-    for (const auto &uniqe_trm : uniqe_trms){
-        if (std::abs(uniqe_trm.second) > 1.0e-16) {
+    if(combine_like_terms){
+        for (const auto &uniqe_trm : uniqe_trms){
+            if (std::abs(uniqe_trm.second) > 1.0e-16) {
+                terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
+            }
+        }
+    } else {
+        for (const auto &uniqe_trm : uniqe_trms){
             terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
         }
     }

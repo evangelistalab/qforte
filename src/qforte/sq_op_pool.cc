@@ -60,8 +60,10 @@ QuantumOpPool SQOpPool::get_quantum_op_pool(){
     return A;
 }
 
-QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type){
+
+QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type, bool combine_like_terms){
     QuantumOperator parent;
+
     if(order_type=="unique_lex"){
         for (auto& term : terms_) {
             auto child = term.second.jw_transform();
@@ -76,9 +78,10 @@ QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type){
         for (auto& term : terms_) {
             auto child = term.second.jw_transform();
             child.mult_coeffs(term.first);
-            child.simplify();
+            child.simplify(combine_like_terms=combine_like_terms);
             child.order_terms();
             parent.add_op(child);
+
         }
     } else {
         throw std::invalid_argument( "Invalid order_type specified.");
