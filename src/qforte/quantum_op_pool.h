@@ -32,9 +32,6 @@ class QuantumOpPool {
     /// return a vector of QuantumOperators multiplied by thier coeficients
     const std::vector<std::pair< std::complex<double>, QuantumOperator>>& operator_terms() const;
 
-    /// set the orbtial occupations from a reference
-    void set_orb_spaces(const std::vector<int>& ref);
-
     /// join an operator to all terms from the right as (i.e. term -> term*Op)
     /// without simplifying
     void join_op_from_right_lazy(const QuantumOperator& q_op);
@@ -58,6 +55,9 @@ class QuantumOpPool {
     std::string str() const;
 
   private:
+    // TODO: Consider if nocc_ and nvir_ are needed as member variables.
+    // These are needed by fill_pool, but why not have those be fill_pool
+    // function variables?
     /// the number of occupied spatial orbitals
     int nocc_;
 

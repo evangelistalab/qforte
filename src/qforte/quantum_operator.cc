@@ -35,7 +35,7 @@ void QuantumOperator::add_op(const QuantumOperator& qo) {
 
 void QuantumOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs) {
     if(new_coeffs.size() != terms_.size()){
-        throw std::invalid_argument( "number of new coeficients for quantum operator must equal " );
+        throw std::invalid_argument( "number of new coefficients for quantum operator must equal " );
     }
     for (size_t l = 0; l < new_coeffs.size(); l++){
         terms_[l].first = new_coeffs[l];
@@ -74,7 +74,7 @@ void QuantumOperator::order_terms() {
 
 void QuantumOperator::canonical_order() {
     for (auto& term : terms_) {
-        term.first *= term.second.canonical_order();
+        term.first *= term.second.canonicalize_pauli_circuit();
     }
 }
 

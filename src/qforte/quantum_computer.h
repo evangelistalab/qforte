@@ -39,12 +39,12 @@ class QuantumComputer {
     /// apply a gate to the quantum computer with optimized algorithm
     void apply_gate(const QuantumGate& qg);
 
-    /// apply a constant to the quantum computer (WARNING, this opperation
+    /// apply a constant to the quantum computer (WARNING, this operation
     /// is not physical as it does not represent a unitary opperation). Only
     /// Exists for 'fast' version of the algorithm for efficiency reasons
     void apply_constant(const std::complex<double> a);
 
-    /// measure the state of the quanum computer with respect to qc
+    /// measure the state of the quantum computer with respect to qc
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
 
     /// measure the readout, i.e. the value of all qubits with indicies form na to nb
@@ -107,8 +107,7 @@ class QuantumComputer {
 
     /// return the number of basis states
     size_t get_nbasis() const { return nbasis_; }
-
-    /// return the number of one-qubit operations
+/// return the number of one-qubit operations
     size_t none_ops() const { return none_ops_; }
 
     /// return the number of two-qubit operations
@@ -138,9 +137,9 @@ class QuantumComputer {
     size_t nbasis_;
     /// the tensor product basis
     std::vector<QuantumBasis> basis_;
-    /// the coefficients of the tensor product basis
+    /// The coefficients of the starting state in the tensor product basis
     std::vector<std::complex<double>> coeff_;
-    /// the coefficients of the tensor product basis
+    /// the coefficients of the ending state in the tensor product basis
     std::vector<std::complex<double>> new_coeff_;
     /// timings and descriptions accessable in python
     std::vector<std::pair<std::string, double>> timings_;

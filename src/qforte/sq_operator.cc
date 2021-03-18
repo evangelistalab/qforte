@@ -10,6 +10,7 @@
 #include <algorithm>
 
 void SQOperator::add_term(std::complex<double> circ_coeff, const std::vector<size_t>& ac_ops) {
+    if ((ac_ops.size() % 2) != 0) throw std::invalid_argument("Term must have N creators and N annihilators, but received odd number of orbital indices");
     terms_.push_back(std::make_pair(circ_coeff, ac_ops));
 }
 
@@ -21,7 +22,7 @@ void SQOperator::add_op(const SQOperator& qo) {
 
 void SQOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs) {
     if(new_coeffs.size() != terms_.size()){
-        throw std::invalid_argument( "number of new coeficients for quantum operator must equal " );
+        throw std::invalid_argument( "number of new coefficients for quantum operator must equal " );
     }
     for (size_t l = 0; l < new_coeffs.size(); l++){
         terms_[l].first = new_coeffs[l];
@@ -59,7 +60,7 @@ void SQOperator::canonical_order_single_term(std::pair< std::complex<double>, st
             term.second[ai] = term_temp.second[a[ai]];
         }
         if (permutive_sign_change(a)) { term.first *= -1.0; }
-        // same as above but for anihilators
+        // same as above but for annihilators
         std::sort(b.begin(), b.end(),
             [&](const int& i, const int& j) {
                 return (term_temp.second[i+nbody] > term_temp.second[j+nbody]);
@@ -123,7 +124,7 @@ QuantumOperator SQOperator::jw_transform() {
     for (const auto& term : terms_) {
         // "term" has form c*(2^, 1^, 4, 2)
         if((term.second.size() % 2) != 0){
-            throw std::invalid_argument( "sq operator term must have equal number of anihilators and creators.");
+            throw std::invalid_argument( "sq operator term must have equal number of annihilators and creators. This error should be unreachable - debugging QForte needed.");
         }
         int nbody = term.second.size() / 2.0;
         if(nbody==0){

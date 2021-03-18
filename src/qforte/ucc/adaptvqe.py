@@ -372,7 +372,7 @@ class ADAPTVQE(UCCVQE):
         Parameters
         ----------
         fast : bool
-            Wether or not to use the optemized but unphysical energy evaluation
+            Whether or not to use the optemized but unphysical energy evaluation
             function.
         maxiter : int
             The maximum number of iterations for the scipy optimizer.
@@ -394,7 +394,7 @@ class ADAPTVQE(UCCVQE):
                                     method=self._optimizer,
                                     jac=self.gradient_ary_feval,
                                     options=opts,
-                                    callback=self.callback)
+                                    callback=self.report_iteration)
 
             # account for energy evaluations
             self._n_pauli_measures_k += self._Nl * res.nfev
@@ -409,7 +409,7 @@ class ADAPTVQE(UCCVQE):
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
                                     options=opts,
-                                    callback=self.callback)
+                                    callback=self.report_iteration)
 
             self._n_pauli_measures_k += self._Nl * res.nfev
 

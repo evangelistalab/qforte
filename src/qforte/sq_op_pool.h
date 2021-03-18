@@ -9,6 +9,9 @@ class SQOperator;
 class QuantumOperator;
 class QuantumOpPool;
 
+// Represents an arbitrary linear combination of second quantized operators.
+// May also represent an array of second quantized operators by ignoring
+// the coefficients.
 class SQOpPool {
   public:
     /// default constructor: creates an empty second quantized operator pool
@@ -26,9 +29,6 @@ class SQOpPool {
     /// set the total number of occupied and virtual spatial orbitals from a reference, from the number
     ///     of occupied spin orbitals of each point group symmetry
     void set_orb_spaces(const std::vector<int>& ref);
-
-    /// returns the JW transformed vector of operators
-    std::vector<QuantumOperator> get_quantum_operators();
 
     /// returns a QuantumOpPool object with one term for each term in terms_
     QuantumOpPool get_quantum_op_pool();

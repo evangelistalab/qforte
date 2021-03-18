@@ -21,7 +21,6 @@ class UCCVQE(VQE):
         pass
 
     def fill_pool(self):
-
         self._pool_obj = qf.SQOpPool()
         self._pool_obj.set_orb_spaces(self._ref)
 
@@ -30,6 +29,9 @@ class UCCVQE(VQE):
         else:
             raise ValueError('Invalid operator pool type specified.')
 
+        # TODO: Having both a _pool and a _pool_obj seems redundant.
+        # Can we define magic methods so that we can just work with
+        # the pool objects, without an alias for self._pool being needed?
         self._pool = self._pool_obj.terms()
 
         self._grad_vec_evals = 0
@@ -53,30 +55,28 @@ class UCCVQE(VQE):
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, params=None):
         """ This function returns the QuantumCircuit object built
-        from the appropiate ampltudes (tops)
+        from the appropriate amplitudes (tops)
 
         Parameters
         ----------
         params : list
-            A list of parameters define the variational degress of freedom in
-            the state preparation circuit Uvqc.
+            A list of parameters define the variational degrees of freedom in
+            the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
         temp_pool = qf.SQOpPool()
-        if params is None:
-            for tamp, top in zip(self._tamps, self._tops):
-                temp_pool.add_term(tamp, self._pool[top][1])
-        else:
-            for param, top in zip(params, self._tops):
-                temp_pool.add_term(param, self._pool[top][1])
+        tamps = self._tamps if params is None else params
+        for tamp, top in zip(tamps, self._tops):
+            temp_pool.add_term(tamp, self._pool[top][1])
 
         A = temp_pool.get_quantum_operator('commuting_grp_lex')
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
+        if phase1 != 1.0 + 0.0j:
+            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+
         Uvqc = qforte.QuantumCircuit()
         Uvqc.add_circuit(self._Uprep)
         Uvqc.add_circuit(U)
-        if phase1 != 1.0 + 0.0j:
-            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
 
         return Uvqc
 
@@ -380,7 +380,7 @@ class UCCVQE(VQE):
 
         return np.asarray(grads)
 
-    def callback(self, x):
+    def report_iteration(self, x):
         # print(f"\n -Minimum energy this iteration:    {self.energy_feval(x):+12.10f}")
 
         self._k_counter += 1

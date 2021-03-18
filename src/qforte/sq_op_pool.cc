@@ -50,16 +50,6 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref){
     nvir_ = static_cast<int>(norb - nocc_);
 }
 
-std::vector<QuantumOperator> SQOpPool::get_quantum_operators(){
-    std::vector<QuantumOperator> A;
-    for (auto& term : terms_) {
-        QuantumOperator a = term.second.jw_transform();
-        a.mult_coeffs(term.first);
-        A.push_back(a);
-    }
-    return A;
-}
-
 QuantumOpPool SQOpPool::get_quantum_op_pool(){
     QuantumOpPool A;
     for (auto& term : terms_) {
@@ -70,30 +60,33 @@ QuantumOpPool SQOpPool::get_quantum_op_pool(){
     return A;
 }
 
+
 QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type, bool combine_like_terms){
-    QuantumOperator A;
+    QuantumOperator parent;
+
     if(order_type=="unique_lex"){
         for (auto& term : terms_) {
-            QuantumOperator a = term.second.jw_transform();
-            a.mult_coeffs(term.first);
-            A.add_op(a);
+            auto child = term.second.jw_transform();
+            child.mult_coeffs(term.first);
+            parent.add_op(child);
         }
         // TODO: analyze ordering here, eliminating simplify will place commuting
         // terms closer together but may introduce redundancy.
-        A.simplify();
-        A.order_terms();
+        parent.simplify();
+        parent.order_terms();
     } else if (order_type=="commuting_grp_lex") {
         for (auto& term : terms_) {
-            QuantumOperator a = term.second.jw_transform();
-            a.mult_coeffs(term.first);
-            a.simplify(combine_like_terms=combine_like_terms);
-            a.order_terms();
-            A.add_op(a);
+            auto child = term.second.jw_transform();
+            child.mult_coeffs(term.first);
+            child.simplify(combine_like_terms=combine_like_terms);
+            child.order_terms();
+            parent.add_op(child);
+
         }
     } else {
         throw std::invalid_argument( "Invalid order_type specified.");
     }
-    return A;
+    return parent;
 }
 
 void SQOpPool::fill_pool(std::string pool_type){
@@ -417,7 +410,7 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2a.add_term(1.0/std::sqrt(12), {ab,ba,ia,jb});
                         }
 
-                        // hermetian conjugate
+                        // hermitian conjugate
                         if((ja != ia) && (ba != aa)){
                             temp2a.add_term(-2.0/std::sqrt(12), {ja,ia,ba,aa});
                         }
