@@ -55,15 +55,6 @@ class QuantumOpPool {
     std::string str() const;
 
   private:
-    // TODO: Consider if nocc_ and nvir_ are needed as member variables.
-    // These are needed by fill_pool, but why not have those be fill_pool
-    // function variables?
-    /// the number of occupied spatial orbitals
-    int nocc_;
-
-    /// the number of virtual spatial orbitals
-    int nvir_;
-
     /// the list of sq operators in the pool
     std::vector<std::pair<std::complex<double>, QuantumOperator>> terms_;
 
