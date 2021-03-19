@@ -12,8 +12,8 @@ class QuantumGate;
 class QuantumOperator;
 
 class SQOperator {
-    /* A SQOperator is a linear combination (over C) of "elementary" second quantized
-     * operators, which are stored in terms.
+    /* A SQOperator is a linear combination (over C) of vaccuum-normal, particle-conserving
+     * products of fermionic second quantized operators.
      */
   public:
     /// default constructor: creates an empty second quantized operator
@@ -48,8 +48,8 @@ class SQOperator {
     /// Combine like terms in terms_. As a side-effect, canonicalizes the order.
     void simplify();
 
-    /// return the QuantumOperator object corresponding the the Jordan-Wigner
-    /// transform of this sq operator.
+    /// Return the QuantumOperator object corresponding the the Jordan-Wigner
+    /// transform of this sq operator. Calls simplify as a side-effect.
     QuantumOperator jw_transform();
 
     /// return a vector of string representing this quantum operator

@@ -51,7 +51,7 @@ void QuantumOpPool::square(bool upper_triangle_only){
             for (int J=I; J<terms_.size(); J++) {
                 QuantumOperator IJ;
                 IJ.add_op(terms_[I].second);
-                IJ.join_operator(terms_[J].second, false);
+                IJ.operator_product(terms_[J].second, false);
                 IJ.simplify();
                 temp_terms.push_back(
                     std::make_pair(std::conj(terms_[I].first) * terms_[J].first, IJ)
@@ -64,7 +64,7 @@ void QuantumOpPool::square(bool upper_triangle_only){
             for (auto& J : terms_) {
                 QuantumOperator IJ;
                 IJ.add_op(I.second);
-                IJ.join_operator(J.second, false);
+                IJ.operator_product(J.second, false);
                 IJ.simplify();
                 temp_terms.push_back(
                     std::make_pair(std::conj(I.first) * J.first, IJ)
@@ -77,14 +77,14 @@ void QuantumOpPool::square(bool upper_triangle_only){
 
 void QuantumOpPool::join_op_from_right(const QuantumOperator& q_op){
     for (auto& term : terms_) {
-        term.second.join_operator(q_op, false);
+        term.second.operator_product(q_op, false);
         term.second.simplify();
     }
 }
 
 void QuantumOpPool::join_op_from_right_lazy(const QuantumOperator& q_op){
     for (auto& term : terms_) {
-        term.second.join_operator_lazy(q_op);
+        term.second.operator_product(q_op, false, false);
     }
 }
 
@@ -93,7 +93,7 @@ void QuantumOpPool::join_op_from_left(const QuantumOperator& q_op){
     for (const auto& term : terms_) {
         QuantumOperator temp_op;
         temp_op.add_op(q_op);
-        temp_op.join_operator(term.second, false);
+        temp_op.operator_product(term.second, false);
         temp_op.simplify();
         temp_terms.push_back(std::make_pair(term.first, temp_op));
     }
@@ -106,15 +106,13 @@ void QuantumOpPool::join_as_commutator(const QuantumOperator& q_op){
         // build HAm
         QuantumOperator HAm;
         HAm.add_op(q_op);
-        HAm.join_operator(term.second, false);
-        // HAm.simplify();
+        HAm.operator_product(term.second, false);
 
         // build -AmH
         QuantumOperator AmH;
         AmH.add_op(term.second);
-        AmH.join_operator(q_op, false);
+        AmH.operator_product(q_op, false);
         AmH.mult_coeffs(-1.0);
-        // AmH.simplify();
 
         HAm.add_op(AmH);
         HAm.simplify();

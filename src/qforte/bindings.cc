@@ -60,8 +60,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("order_terms", &QuantumOperator::order_terms)
         .def("canonical_order", &QuantumOperator::canonical_order)
         .def("simplify", &QuantumOperator::simplify)
-        .def("join_operator", &QuantumOperator::join_operator)
-        .def("join_operator_lazy", &QuantumOperator::join_operator_lazy)
+        .def("operator_product", &QuantumOperator::operator_product)
         .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
         .def("str", &QuantumOperator::str);
 

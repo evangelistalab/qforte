@@ -116,47 +116,56 @@ bool SQOperator::permutive_sign_change(std::vector<int> p) {
 }
 
 QuantumOperator SQOperator::jw_transform() {
-    //using namespace std::complex_literals;
     std::complex<double> halfi(0.0, 0.5);
-    simplify();
+    simplify(); // This isn't needed for the logic - just an efficiency optimization.
     QuantumOperator qo;
-    // loop through terms in sq_operator
-    for (const auto& term : terms_) {
-        // "term" has form c*(2^, 1^, 4, 2)
-        if((term.second.size() % 2) != 0){
+
+    for (const auto& fermion_operator : terms_) {
+        if((fermion_operator.second.size() % 2) != 0){
             throw std::invalid_argument( "sq operator term must have equal number of annihilators and creators. This error should be unreachable - debugging QForte needed.");
         }
-        int nbody = term.second.size() / 2.0;
-        if(nbody==0){
+        int nbody = fermion_operator.second.size() / 2.0;
+
+        if (nbody == 0) {
+            // Scalars need special logic.
             QuantumCircuit scalar_circ;
             QuantumOperator scalar_op;
             scalar_op.add_term(term.first, scalar_circ);
             qo.add_op(scalar_op);
+            continue;
         }
         QuantumOperator temp1;
-        for (int ai=0; ai<2*nbody; ai++){
+        for (int ai=0; ai<2*nbody; ai++) {
             QuantumOperator temp2;
+            // Our qubit operator is (X +/- i Y) phase-factor-Z gates.
+            // We need two circuits in our linear combination.
             QuantumCircuit Xcirc;
             QuantumCircuit Ycirc;
 
-            if(term.second[ai]>0) {
-                for(int k=0; k<term.second[ai]; k++){
-                    Xcirc.add_gate(make_gate("Z", k, k));
-                    Ycirc.add_gate(make_gate("Z", k, k));
-                }
+            // Z gates for the phase factor
+            for(int k=0; k<term.second[ai]; k++){
+                Xcirc.add_gate(make_gate("Z", k, k));
+                Ycirc.add_gate(make_gate("Z", k, k));
             }
+
             Xcirc.add_gate(make_gate("X", term.second[ai], term.second[ai]));
             Ycirc.add_gate(make_gate("Y", term.second[ai], term.second[ai]));
             temp2.add_term(0.5, Xcirc);
+
+            // TODO: Remove below code's assumptions of vacuum-normal and particle-conserving.
+            // Will certainly require changing the innards of SQOperator.
             if(ai < nbody){
+                // We have an annihilation operator.
                 temp2.add_term(-halfi, Ycirc);
             } else {
+                // We have a creation operator.
                 temp2.add_term(halfi, Ycirc);
             }
-            if(ai==0){
+
+            if (ai == 0) {
                 temp1.add_op(temp2);
             } else {
-                temp1.join_operator(temp2, true);
+                temp1.operator_product(temp2);
             }
         }
         temp1.mult_coeffs(term.first);
