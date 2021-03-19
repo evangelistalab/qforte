@@ -53,18 +53,18 @@ class UCCVQE(VQE):
         print('==> Commutator pool construction complete.')
 
     # TODO (opt major): write a C function that prepares this super efficiently
-    def build_Uvqc(self, params=None):
+    def build_Uvqc(self, amplitudes=None):
         """ This function returns the QuantumCircuit object built
         from the appropriate amplitudes (tops)
 
         Parameters
         ----------
-        params : list
+        amplitudes : list
             A list of parameters define the variational degrees of freedom in
             the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
         temp_pool = qf.SQOpPool()
-        tamps = self._tamps if params is None else params
+        tamps = self._tamps if amplitudes is None else amplitudes
         for tamp, top in zip(tamps, self._tops):
             temp_pool.add_term(tamp, self._pool[top][1])
 
@@ -351,7 +351,7 @@ class UCCVQE(VQE):
         return val
 
     def energy_feval(self, params):
-        Ucirc = self.build_Uvqc(params=params)
+        Ucirc = self.build_Uvqc(amplitudes=params)
         # self._prev_energy = self._curr_energy
         Energy = self.measure_energy(Ucirc)
 
