@@ -5,27 +5,27 @@ Functions for exponentiation of qubit operator terms (circuits)
 import qforte
 import numpy as np
 
-def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_open_cRz=False):
+def exponentiate_single_term(coefficient, term, Use_cRz=False, ancilla_idx=None, Use_open_cRz=False):
     """
-    returns the exponential of an string of Pauli operators multiplied by an imaginary factor
+    returns the exponential of an string of Pauli operators multiplied by an imaginary coefficient
 
-        exp(factor * term)
+        exp(coefficient * term)
 
     Parameters
     ----------
-    :param factor: float
-        an imaginary factor that multiplies the Pauli string
+    :param coefficient: float
+        an imaginary coefficient that multiplies the Pauli string
     :param term: QuantumCircuit
         a Pauli string to be exponentiated
     """
     # This function assumes that the factor is imaginary. The following tests for it.
-    if np.abs(np.real(factor)) > 1.0e-16:
-        print("exp factor: ", factor)
-        raise ValueError('exponentiate_single_term() called with a real factor')
+    if np.abs(np.real(coefficient)) > 1.0e-16:
+        print("exp factor: ", coefficient)
+        raise ValueError('exponentiate_single_term() called with a real coefficient')
 
     # If the Pauli string has no terms this is just a phase factor
     if term.size() == 0:
-        return (qforte.QuantumCircuit(), np.exp(factor))
+        return (qforte.QuantumCircuit(), np.exp(coefficient))
 
     exponential = qforte.QuantumCircuit()
     to_z = qforte.QuantumCircuit()
@@ -46,8 +46,6 @@ def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_
         elif (id == 'Y'):
             to_z.add_gate(qforte.make_gate('Rzy', target, control))
             to_original.add_gate(qforte.make_gate('Rzy', target, control))
-#            to_z.add_gate(qforte.make_gate('Rx', target, control, np.pi/2.0))
-#            to_original.add_gate(qforte.make_gate('Rx', target, control, -np.pi/2.0))
         elif (id == 'I'):
             continue
 
@@ -57,15 +55,15 @@ def exponentiate_single_term(factor, term, Use_cRz=False, ancilla_idx=None, Use_
         prev_target = target
         max_target = target
 
-    #gate that actually contains the parameterization for the term
+    # Gate that actually contains the parameterization for the term
     # TODO(Nick): investigate real/imaginary usage of 'factor' in below expression
 
     if(Use_cRz):
-        z_rot = qforte.make_gate('cRz', max_target, ancilla_idx, -2.0 * np.imag(factor))
+        z_rot = qforte.make_gate('cRz', max_target, ancilla_idx, -2.0 * np.imag(coefficient))
     else:
-        z_rot = qforte.make_gate('Rz', max_target, max_target, -2.0 * np.imag(factor))
+        z_rot = qforte.make_gate('Rz', max_target, max_target, -2.0 * np.imag(coefficient))
 
-    #assemble the actual exponential
+    # Assemble the actual exponential
     exponential.add_circuit(to_z)
     exponential.add_circuit(cX_circ)
 

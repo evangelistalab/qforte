@@ -10,6 +10,9 @@ class SQOperator;
 class QuantumOperator;
 
 class QuantumOpPool {
+    /* A QuantumOpPool is a set of QuantumOperators, equipped with utility functions for
+     * common operations on these objects.
+     */
   public:
     /// default constructor: creates an empty second quantized operator pool
     QuantumOpPool() {}
@@ -26,10 +29,10 @@ class QuantumOpPool {
     /// sets the operator pool coefficeints
     void set_op_coeffs(const std::vector<std::complex<double>>& new_coeffs);
 
-    /// return a vector of terms and thier coeficients
+    /// return a vector of terms and their coefficients
     const std::vector<std::pair<std::complex<double>, QuantumOperator>>& terms() const;
 
-    /// return a vector of QuantumOperators multiplied by thier coeficients
+    /// return a vector of QuantumOperators multiplied by thier coefficients
     const std::vector<std::pair< std::complex<double>, QuantumOperator>>& operator_terms() const;
 
     /// join an operator to all terms from the right as (i.e. term -> term*Op)

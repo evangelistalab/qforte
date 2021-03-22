@@ -232,7 +232,7 @@ class UCCNPQE(UCCPQE):
 
     def get_residual_vector(self, trial_amps):
         if(self._pool_type == 'sa_SD'):
-            raise ValueError('Must use single term particle-hole nbody operators for residual calcultion')
+            raise ValueError('Must use single term particle-hole nbody operators for residual calculation')
 
         temp_pool = qforte.SQOpPool()
         for param, top in zip(trial_amps, self._tops):
@@ -304,7 +304,7 @@ class UCCNPQE(UCCPQE):
 
                 res_m = coeffs[I] * sign_adjust # * sq_sub_tamp
                 if(np.imag(res_m) > 0.0):
-                    raise ValueError("residual has imaginary component, someting went wrong!!")
+                    raise ValueError("residual has imaginary component, something went wrong!!")
 
                 if(self._noise_factor > 1e-12):
                     res_m = np.random.normal(np.real(res_m), self._noise_factor)

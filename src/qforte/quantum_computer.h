@@ -57,10 +57,10 @@ class QuantumComputer {
     /// perfectly measure the state of the quanum computer in basis of circuit
     double perfect_measure_circuit(const QuantumCircuit& qc);
 
-    /// measure expectaion value of all operators in an operator pool
+    /// Measure expectation value of all operators in an operator pool
     std::vector<std::complex<double>> direct_oppl_exp_val(const QuantumOpPool& qopl);
 
-    /// measure expectaion value for specific operators in an operator pool
+    /// measure expectation value for specific operators in an operator pool
     std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QuantumOpPool& qopl, const std::vector<int>& idxs);
 
     /// measure expectaion value of all operators in an operator pool, where the
