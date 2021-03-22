@@ -73,37 +73,6 @@ class UCCPQE(PQE):
 
         return Uvqc
 
-    # def measure_commutator_gradient(self, HAm, Ucirc, idxs=[], params=None):
-    #     """
-    #     Parameters
-    #     ----------
-    #     HAm : QuantumOpPool
-    #         The commutator to measure.
-    #
-    #     Ucirc : QuantumCircuit
-    #         The state preparation circuit.
-    #     """
-    #
-    #     if self._fast:
-    #         myQC = qforte.QuantumComputer(self._nqb)
-    #         myQC.apply_circuit(Ucirc)
-    #         if(len(idxs)==0):
-    #             grads = myQC.direct_oppl_exp_val(HAm)
-    #         else:
-    #             grads = myQC.direct_idxd_oppl_exp_val(HAm, idxs)
-    #
-    #     else:
-    #         pass
-    #         # TODO (cleanup): remove N_samples as argument (implement variance based thresh)
-    #         # TODO: need to implement this as a for loop over terms in QuantumOpPool
-    #         # Exp = qforte.Experiment(self._nqb, Ucirc, HAm, 1000)
-    #         # empty_params = []
-    #         # val = Exp.perfect_experimental_avg(empty_params)
-    #     for val in grads:
-    #         assert(np.isclose(np.imag(val), 0.0))
-    #
-    #     return np.real(grads)
-
     # def measure_gradient2(self, params=None):
     #     """
     #     Parameters

@@ -80,32 +80,37 @@ class UCCVQE(VQE):
 
         return Uvqc
 
-    def measure_commutator_gradient(self, HAm, Ucirc, idxs=[], params=None):
+    def measure_operators(self, operators, Ucirc, idxs=[]):
         """
         Parameters
         ----------
-        HAm : QuantumOpPool
-            The commutator to measure.
+        operators : QuantumOpPool
+            All operators to be measured
 
         Ucirc : QuantumCircuit
             The state preparation circuit.
+
+        idxs : list of int
+            The indices of select operators in the pool of operators. If provided, only these
+            operators will be measured.
         """
 
         if self._fast:
             myQC = qforte.QuantumComputer(self._nqb)
             myQC.apply_circuit(Ucirc)
-            if(len(idxs)==0):
-                grads = myQC.direct_oppl_exp_val(HAm)
+            if not idxs:
+                grads = myQC.direct_oppl_exp_val(operators)
             else:
-                grads = myQC.direct_idxd_oppl_exp_val(HAm, idxs)
+                grads = myQC.direct_idxd_oppl_exp_val(operators, idxs)
 
         else:
-            pass
+            raise NotImplementedError("Must have self._fast to measure an operator.")
             # TODO (cleanup): remove N_samples as argument (implement variance based thresh)
             # TODO: need to implement this as a for loop over terms in QuantumOpPool
             # Exp = qforte.Experiment(self._nqb, Ucirc, HAm, 1000)
             # empty_params = []
             # val = Exp.perfect_experimental_avg(empty_params)
+
         for val in grads:
             assert(np.isclose(np.imag(val), 0.0))
 
