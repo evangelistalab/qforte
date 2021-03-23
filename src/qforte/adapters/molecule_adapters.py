@@ -206,14 +206,14 @@ class OpenFermionMolAdapter(MolAdapter):
         else:
             print('Using standard openfermion hamiltonian ordering!')
             qubit_hamiltonian = jordan_wigner(fermion_hamiltonian)
-            qforte_hamiltionan = build_from_openfermion(qubit_hamiltonian)
+            qforte_hamiltonian = build_from_openfermion(qubit_hamiltonian)
 
             # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
             # for term in qforte_hamiltionan.terms():
             #     print(term[0])
             #     print(term[1].str())
 
-        self._qforte_mol.set_hamiltonian(qforte_hamiltionan)
+        self._qforte_mol.set_hamiltonian(qforte_hamiltonian)
 
         self._qforte_mol.set_sq_hamiltonian( build_sqop_from_openfermion(fermion_hamiltonian) )
 

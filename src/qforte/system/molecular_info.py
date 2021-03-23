@@ -28,10 +28,9 @@ class Molecule(object):
         electrons to be considered).
 
     _description : optional, string
-        Recomeded to use to distingush various runs
-        (for example with differnet bond lengths or geometric configurations),
+        Recommended to use to distinguish various runs
+        (for example with different bond lengths or geometric configurations),
         if populated using a OpenFermionMolAdapter.
-
 
     _filename : optional, string
         Specifies the name of the .hdf5 file molecular data from psi4/pyscf
@@ -87,11 +86,11 @@ class Molecule(object):
         self.filename = filename
         self.hdf5_dir = hdf5_dir
 
-    def set_hamiltonian(self, hamiltonain_operator):
-        self._hamiltonian = hamiltonain_operator
+    def set_hamiltonian(self, hamiltonian_operator):
+        self._hamiltonian = hamiltonian_operator
 
-    def set_sq_hamiltonian(self, sq_hamiltonain_operator):
-        self._sq_hamiltonian = sq_hamiltonain_operator
+    def set_sq_hamiltonian(self, sq_hamiltonian_operator):
+        self._sq_hamiltonian = sq_hamiltonian_operator
 
     def set_sq_of_ham(self, sq_of_ham):
         self._sq_of_ham = sq_of_ham

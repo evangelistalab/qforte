@@ -37,12 +37,6 @@ class UCCPQE(PQE):
         for m in range(len(self._pool_obj.terms())):
             self._Nm.append(len(self._pool_obj.terms()[m][1].jw_transform().terms()))
 
-    # def fill_commutator_pool(self):
-    #     print('\n\n==> Building commutator pool for gradient measurement.')
-    #     self._commutator_pool = self._pool_obj.get_quantum_op_pool()
-    #     self._commutator_pool.join_as_commutator(self._qb_ham)
-    #     print('==> Commutator pool construction complete.')
-
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, params=None):
         """ This function returns the QuantumCircuit object built
@@ -246,52 +240,6 @@ class UCCPQE(PQE):
             assert(np.isclose(np.imag(val), 0.0))
 
         return grads
-
-    # def measure_gradient3(self):
-    #     """
-    #     Parameters
-    #     ----------
-    #     HAm : QuantumOpPool
-    #         The commutator to measure.
-    #
-    #     Ucirc : QuantumCircuit
-    #         The state preparation circuit.
-    #     """
-    #
-    #     if self._fast==False:
-    #         raise ValueError("self._fast must be True for gradient measurement.")
-    #
-    #     M = len(self._pool)
-    #     pool_amps = np.zeros(M)
-    #     for tamp, top in zip(self._tamps, self._tops):
-    #         pool_amps[top] = tamp
-    #
-    #     grads = np.zeros(M)
-    #     Utot = self.build_Uvqc()
-    #
-    #
-    #     qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according ADAPT-VQE analytial grad section
-    #     qc_psi.apply_circuit(Utot)
-    #     psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
-    #
-    #     qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according ADAPT-VQE analytial grad section
-    #     qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
-    #     qc_sig.apply_operator(self._qb_ham)
-    #
-    #     mu = M-1
-    #
-    #     for mu in range(M):
-    #         Kmu = self._pool[mu][1].jw_transform()
-    #         Kmu.mult_coeffs(self._pool[mu][0])
-    #         qc_psi.apply_operator(Kmu)
-    #         grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
-    #         qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
-    #
-    #     for val in grads:
-    #         assert(np.isclose(np.imag(val), 0.0))
-    #
-    #     return grads
-
 
     def measure_energy(self, Ucirc):
         """

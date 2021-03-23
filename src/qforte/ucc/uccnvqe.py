@@ -94,18 +94,16 @@ class UCCNVQE(UCCVQE):
         An SDOpPool object corresponding to the specified operators of
         interest.
 
-    _pool : list of lists with tuple and float
-        The list of (optionally symmetrized) single and double excitation
-        operators to consider. represented in the form,
-        [ [(p,q), t_pq], .... , [(p,q,s,r), t_pqrs], ... ]
-        where p, q, r, s are indices of normal ordered creation or annihilation
-        operators.
+    _pool : list of tuple(complex, SqOperator)
+        The linear combination of (optionally symmetrized) single and double
+        excitation operators to consider. This is represented as a list.
+        Each entry is a pair of a complex coefficient and an SqOperator object.
 
     _tops : list
         A list of indices representing selected operators in the pool.
 
     _tamps : list
-        A list of amplitudes (to be optemized) representing selected
+        A list of amplitudes (to be optimized) representing selected
         operators in the pool.
 
     _commutator_pool : list

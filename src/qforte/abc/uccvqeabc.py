@@ -111,8 +111,7 @@ class UCCVQE(VQE):
             # empty_params = []
             # val = Exp.perfect_experimental_avg(empty_params)
 
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
         return np.real(grads)
 
@@ -184,13 +183,13 @@ class UCCVQE(VQE):
             grads.append( 2.0*qc.get_coeff_vec()[omega_o] )
 
 
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
         # self._curr_grad_norm = np.linalg.norm(grads)
 
         return np.real(grads)
 
+    # TODO: Why is this function here? It seems ADAPT-VQE specific?
     def measure_gradient(self, params=None, use_entire_pool=False):
         """
         Parameters
@@ -285,25 +284,16 @@ class UCCVQE(VQE):
 
         # self._curr_grad_norm = np.linalg.norm(grads)
 
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
         return grads
 
     def measure_gradient3(self):
-        """
-        Parameters
-        ----------
-        HAm : QuantumOpPool
-            The commutator to measure.
-
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
-        """
 
         if self._fast==False:
             raise ValueError("self._fast must be True for gradient measurement.")
 
+        # Initialize amplitudes
         M = len(self._pool)
         pool_amps = np.zeros(M)
         for tamp, top in zip(self._tamps, self._tops):
@@ -312,13 +302,13 @@ class UCCVQE(VQE):
         grads = np.zeros(M)
         Utot = self.build_Uvqc()
 
-
-        qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according ADAPT-VQE analytial grad section
+        qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according to ADAPT-VQE analytical grad section
         qc_psi.apply_circuit(Utot)
         psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
 
-        qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according ADAPT-VQE analytial grad section
-        qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
+        qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according to ADAPT-VQE analytical grad section
+        # TODO: Check if it's faster to recompute psi_i or copy it.
+        qc_sig.set_coeff_vec(copy.deepcopy(psi_i))
         qc_sig.apply_operator(self._qb_ham)
 
         mu = M-1
@@ -330,8 +320,7 @@ class UCCVQE(VQE):
             grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
             qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
 
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
         return grads
 

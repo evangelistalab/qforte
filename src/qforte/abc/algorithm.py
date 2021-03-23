@@ -12,7 +12,7 @@ class Algorithm(ABC):
         The number of qubits the calculation empolys.
 
     _qb_ham : QuantumOperator
-        The operator to be measured (usually the Hamiltonain), mapped to a
+        The operator to be measured (usually the Hamiltonian), mapped to a
         qubit representation.
 
     _fast : bool

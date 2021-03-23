@@ -38,6 +38,7 @@ class QuantumBasis {
 
     void zero() { state_ = static_cast<basis_t>(0); }
 
+    // TODO: Rename to get_state.
     size_t add() const { return state_; }
 
     std::string str(size_t nqubit) const;
