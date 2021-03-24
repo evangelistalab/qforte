@@ -130,7 +130,7 @@ QuantumOperator SQOperator::jw_transform() {
             // Scalars need special logic.
             QuantumCircuit scalar_circ;
             QuantumOperator scalar_op;
-            scalar_op.add_term(term.first, scalar_circ);
+            scalar_op.add_term(fermion_operator.first, scalar_circ);
             qo.add_op(scalar_op);
             continue;
         }
@@ -143,13 +143,13 @@ QuantumOperator SQOperator::jw_transform() {
             QuantumCircuit Ycirc;
 
             // Z gates for the phase factor
-            for(int k=0; k<term.second[ai]; k++){
+            for(int k=0; k<fermion_operator.second[ai]; k++){
                 Xcirc.add_gate(make_gate("Z", k, k));
                 Ycirc.add_gate(make_gate("Z", k, k));
             }
 
-            Xcirc.add_gate(make_gate("X", term.second[ai], term.second[ai]));
-            Ycirc.add_gate(make_gate("Y", term.second[ai], term.second[ai]));
+            Xcirc.add_gate(make_gate("X", fermion_operator.second[ai], fermion_operator.second[ai]));
+            Ycirc.add_gate(make_gate("Y", fermion_operator.second[ai], fermion_operator.second[ai]));
             temp2.add_term(0.5, Xcirc);
 
             // TODO: Remove below code's assumptions of vacuum-normal and particle-conserving.
@@ -168,7 +168,7 @@ QuantumOperator SQOperator::jw_transform() {
                 temp1.operator_product(temp2);
             }
         }
-        temp1.mult_coeffs(term.first);
+        temp1.mult_coeffs(fermion_operator.first);
         qo.add_op(temp1);
     }
     qo.simplify();
