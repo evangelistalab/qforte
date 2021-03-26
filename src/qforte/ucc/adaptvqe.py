@@ -88,7 +88,7 @@ class ADAPTVQE(UCCVQE):
         operators.
 
     _tops : list
-        A list of indicies representing selected operators in the pool.
+        A list of indices representing selected operators in the pool.
 
     _tamps : list
         A list of amplitudes (to be optemized) representing selected
@@ -124,7 +124,7 @@ class ADAPTVQE(UCCVQE):
     Methods
     -------
     fill_pool()
-        Fills the pool_ with indicies pertaining spin-complete, single and
+        Fills the pool_ with indices pertaining spin-complete, single and
         double excitation operators according to _nocc and _nvir.
 
     fill_commutator_pool()

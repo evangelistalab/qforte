@@ -35,7 +35,7 @@ def build_from_openfermion(OF_qubitops, time_evo_factor = 1.0):
 
 def build_sqop_from_openfermion(OF_fermiops, time_evo_factor = 1.0):
     """Builds a list representing the normal ordered operator OF_fermiops that includes
-    the indicies of spin orbital anihilators and creators, and the respective
+    the indices of spin orbital anihilators and creators, and the respective
     coefficient. The OF_fermiops must be alredy normal ordered.
 
     Arguments
@@ -62,7 +62,7 @@ def build_sqop_from_openfermion(OF_fermiops, time_evo_factor = 1.0):
     for term, coeff in OF_fermiops.terms.items():
 
         if (int(len(term) % 2) != 0):
-            raise ValueError("OF_fermiops mush have equal number of anihilators and creators.")
+            raise ValueError("OF_fermiops mush have equal number of annihilators and creators.")
         nbody = int(len(term)/2)
         sq_term = []
         sq_term_op = []
@@ -70,12 +70,12 @@ def build_sqop_from_openfermion(OF_fermiops, time_evo_factor = 1.0):
         if np.isclose(coeff, 0.0):
             continue
 
-        for k, fermiop in enumerate(term): # a sinlge anihilator or creator
+        for k, fermiop in enumerate(term): # a single annihilator or creator
             index, action = fermiop
             if k < nbody and action == 0:
-                raise ValueError("OF_fermiops mush have only normal ordered terms!")
+                raise ValueError("OF_fermiops must have only normal ordered terms!")
             if k >= nbody and action == 1:
-                raise ValueError("OF_fermiops mush have only normal ordered terms!")
+                raise ValueError("OF_fermiops must have only normal ordered terms!")
 
             sq_term_op.append(index)
 

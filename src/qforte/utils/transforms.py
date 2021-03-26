@@ -219,7 +219,7 @@ def join_organizers(L_op_org, R_op_org):
 # def get_word_idxs(word):
 #     """Gets a list of indexes corresponing to a word
 #     """
-#     indicies = []
+#     indices = []
 #     pass
 
 # works similarly to join_orgainzers() but assumes H and Am as operators
@@ -227,8 +227,8 @@ def join_organizers(L_op_org, R_op_org):
 def join_H_Am_organizers(H_org, Am_org):
     # word =>[ ("X", i), ("X", j),  ("X", k), ...  ]
 
-    # find what indicies are present in Am_org
-    # Am_indicies = []
+    # find what indices are present in Am_org
+    # Am_indices = []
     # for Rcoeff, Rword in Am_org:
     #     for Rletter in Rword:
     #         idx = Rword
