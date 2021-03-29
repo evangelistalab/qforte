@@ -88,7 +88,7 @@ class ADAPTVQE(UCCVQE):
         operators.
 
     _tops : list
-        A list of indicies representing selected operators in the pool.
+        A list of indices representing selected operators in the pool.
 
     _tamps : list
         A list of amplitudes (to be optemized) representing selected
@@ -124,7 +124,7 @@ class ADAPTVQE(UCCVQE):
     Methods
     -------
     fill_pool()
-        Fills the pool_ with indicies pertaining spin-complete, single and
+        Fills the pool_ with indices pertaining spin-complete, single and
         double excitation operators according to _nocc and _nvir.
 
     fill_commutator_pool()
@@ -440,7 +440,7 @@ class ADAPTVQE(UCCVQE):
                 print('  ------------------------------------------------------------------------------')
 
             if self._use_commutator_grad_selection:
-                grads = self.measure_commutator_gradient(self._commutator_pool, Uvqc)
+                grads = self.measure_operators(self._commutator_pool, Uvqc)
             else:
                 # grads = self.measure_gradient(use_entire_pool=True)
                 grads = self.measure_gradient3()
@@ -449,10 +449,10 @@ class ADAPTVQE(UCCVQE):
                 if self._use_commutator_grad_selection:
                     self._n_pauli_measures_k += len(self._commutator_pool.terms()[m][1].terms())
                 else:
-                    # referes to number of times sigma_y must be measured in "stratagies for UCC" grad eval circuit
+                    # refers to number of times sigma_y must be measured in "stratagies for UCC" grad eval circuit
                     self._n_pauli_measures_k += self._Nl * self._Nm[m]
 
-                curr_norm += grad_m*grad_m
+                curr_norm += grad_m ** 2
                 if (self._verbose):
                     print(f'       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}      {self._pool[m][1].terms()[0][1]}')
 
@@ -515,7 +515,7 @@ class ADAPTVQE(UCCVQE):
         # TODO(Nick): remove or fix this option to work correctly
 
             if not self._use_commutator_grad_selection:
-                raise ValueError("must use computator gradients for 'minimization' selection type")
+                raise ValueError("must use commutator gradients for 'minimization' selection type")
 
             print("==> Minimizing candidate amplitude from pool:")
             opts = {}
@@ -620,7 +620,7 @@ class ADAPTVQE(UCCVQE):
     # this fuction needs to change to use updated gradient measurement
     def gradient_ary_feval2(self, param):
         Uvqc = self.build_Uvqc2(params[0])
-        grads = self.measure_commutator_gradient(self._commutator_pool, Uvqc, [self._trial_op])
+        grads = self.measure_operators(self._commutator_pool, Uvqc, [self._trial_op])
         return grads
 
     def conv_status(self):

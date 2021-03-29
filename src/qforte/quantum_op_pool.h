@@ -10,6 +10,9 @@ class SQOperator;
 class QuantumOperator;
 
 class QuantumOpPool {
+    /* A QuantumOpPool is a set of QuantumOperators, equipped with utility functions for
+     * common operations on these objects.
+     */
   public:
     /// default constructor: creates an empty second quantized operator pool
     QuantumOpPool() {}
@@ -26,10 +29,10 @@ class QuantumOpPool {
     /// sets the operator pool coefficeints
     void set_op_coeffs(const std::vector<std::complex<double>>& new_coeffs);
 
-    /// return a vector of terms and thier coeficients
+    /// return a vector of terms and their coefficients
     const std::vector<std::pair<std::complex<double>, QuantumOperator>>& terms() const;
 
-    /// return a vector of QuantumOperators multiplied by thier coeficients
+    /// return a vector of QuantumOperators multiplied by thier coefficients
     const std::vector<std::pair< std::complex<double>, QuantumOperator>>& operator_terms() const;
 
     /// join an operator to all terms from the right as (i.e. term -> term*Op)
@@ -55,15 +58,6 @@ class QuantumOpPool {
     std::string str() const;
 
   private:
-    // TODO: Consider if nocc_ and nvir_ are needed as member variables.
-    // These are needed by fill_pool, but why not have those be fill_pool
-    // function variables?
-    /// the number of occupied spatial orbitals
-    int nocc_;
-
-    /// the number of virtual spatial orbitals
-    int nvir_;
-
     /// the list of sq operators in the pool
     std::vector<std::pair<std::complex<double>, QuantumOperator>> terms_;
 

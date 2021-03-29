@@ -21,12 +21,12 @@ from scipy.linalg import lstsq
 
 class UCCNPQE(UCCPQE):
     """
-    A class that encompases the three componants of using the variational
-    quantum eigensolver to optemize a parameterized unitary CCSD like wave function.
+    A class that encompasses the three components of using the variational
+    quantum eigensolver to optimize a parameterized unitary CCSD like wave function.
 
     UCC-PQE: (1) prepares a quantum state on the quantum computer
-    representing the wave function to be simulated, (2) evauates the residuals by
-    measurement, and (3) optemizes the wave fuction via projective solution of
+    representing the wave function to be simulated, (2) evaluates the residuals by
+    measurement, and (3) optimizes the wave fuction via projective solution of
     the UCC Schrodinger Equation.
 
     Attributes
@@ -177,6 +177,7 @@ class UCCNPQE(UCCPQE):
             #do regular update
             r_k = self.get_residual_vector(self._tamps)
             rk_norm = np.linalg.norm(r_k)
+
             r_k = self.get_res_over_mpdenom(r_k)
             self._tamps = list(np.add(self._tamps, r_k))
 
@@ -204,7 +205,7 @@ class UCCNPQE(UCCPQE):
             if(k >= 1):
                 diis_dim = len(t_diis) - 1
 
-                #consturct diis B matrix (following Crawford Group github tutorial)
+                # Construct diis B matrix (following Crawford Group github tutorial)
                 B = np.ones((diis_dim+1, diis_dim+1)) * -1
                 bsol = np.zeros(diis_dim+1)
 
@@ -232,7 +233,7 @@ class UCCNPQE(UCCPQE):
 
     def get_residual_vector(self, trial_amps):
         if(self._pool_type == 'sa_SD'):
-            raise ValueError('Must use single term particle-hole nbody operators for residual calcultion')
+            raise ValueError('Must use single term particle-hole nbody operators for residual calculation')
 
         temp_pool = qforte.SQOpPool()
         for param, top in zip(trial_amps, self._tops):
@@ -253,66 +254,68 @@ class UCCNPQE(UCCPQE):
         residuals = []
 
         for m in self._tops:
+
+            # 1. Identify the excitation operator
             sq_op = self._pool[m][1]
             # occ => i,j,k,...
             # vir => a,b,c,...
             # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
 
             temp_idx = sq_op.terms()[0][1][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
-                sq_sub_tamp ,sq_sub_top = sq_op.terms()[0]
+            # TODO: This code assumes that the first N orbitals are occupied, and the others are virtual.
+            # Use some other mechanism to identify the occupied orbitals, so we can use use PQE on excited
+            # determinants.
+            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
+                sq_ex_op = sq_op.terms()[0][1]
             else:
-                sq_sub_tamp ,sq_sub_top = sq_op.terms()[1]
+                sq_ex_op = sq_op.terms()[1][1]
 
-            nbody = int(len(sq_sub_top) / 2)
+            # 2. Get the bit representation of the sq_ex_op acting on the reference.
+            # We determine the projective condition for this amplitude by zero'ing this residual.
+            nbody = int(len(sq_ex_op) / 2)
+            # `destroyed` exists solely for error catching.
             destroyed = False
-            denom = 1.0
 
-            basis_I = qforte.QuantumBasis(self._nqb)
+            excited_det = qforte.QuantumBasis(self._nqb)
             for k, occ in enumerate(self._ref):
-                basis_I.set_bit(k, occ)
+                excited_det.set_bit(k, occ)
 
-            # loop over anihilators
+            # loop over annihilators
             for p in reversed(range(nbody, 2*nbody)):
-                if( basis_I.get_bit(sq_sub_top[p]) == 0):
+                if( excited_det.get_bit(sq_ex_op[p]) == 0):
                     destroyed=True
                     break
 
-                basis_I.set_bit(sq_sub_top[p], 0)
+                excited_det.set_bit(sq_ex_op[p], 0)
 
             # then over creators
             for p in reversed(range(0, nbody)):
-                if (basis_I.get_bit(sq_sub_top[p]) == 1):
+                if (excited_det.get_bit(sq_ex_op[p]) == 1):
                     destroyed=True
                     break
 
-                basis_I.set_bit(sq_sub_top[p], 1)
+                excited_det.set_bit(sq_ex_op[p], 1)
 
-            if not destroyed:
-
-                I = basis_I.add()
-
-                ## check for correct dets
-                det_I = integer_to_ref(I, self._nqb)
-                nel_I = sum(det_I)
-                cor_spin_I = correct_spin(det_I, 0)
-
-                qc_temp = qforte.QuantumComputer(self._nqb)
-                qc_temp.apply_circuit(self._Uprep)
-                qc_temp.apply_operator(sq_op.jw_transform())
-                sign_adjust = qc_temp.get_coeff_vec()[I]
-
-                res_m = coeffs[I] * sign_adjust # * sq_sub_tamp
-                if(np.imag(res_m) > 0.0):
-                    raise ValueError("residual has imaginary component, someting went wrong!!")
-
-                if(self._noise_factor > 1e-12):
-                    res_m = np.random.normal(np.real(res_m), self._noise_factor)
-
-                residuals.append(res_m)
-
-            else:
+            if destroyed:
                 raise ValueError("no ops should destroy reference, something went wrong!!")
+
+            I = excited_det.add()
+
+            # 3. Compute the phase of the operator, relative to its determinant. 
+            qc_temp = qforte.QuantumComputer(self._nqb)
+            qc_temp.apply_circuit(self._Uprep)
+            qc_temp.apply_operator(sq_op.jw_transform())
+            phase_factor = qc_temp.get_coeff_vec()[I]
+
+            # 4. Get the residual element, after accounting for numerical noise.
+            res_m = coeffs[I] * phase_factor
+            if(np.imag(res_m) != 0.0):
+                raise ValueError("residual has imaginary component, something went wrong!!")
+
+            if(self._noise_factor > 1e-12):
+                res_m = np.random.normal(np.real(res_m), self._noise_factor)
+
+            residuals.append(res_m)
 
         return residuals
 
@@ -325,13 +328,12 @@ class UCCNPQE(UCCPQE):
             sq_op = self._pool[m][1]
 
             temp_idx = sq_op.terms()[0][1][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
-                sq_sub_tamp ,sq_sub_top = sq_op.terms()[0]
+            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
+                sq_sub_top = sq_op.terms()[0][1]
             else:
-                sq_sub_tamp ,sq_sub_top = sq_op.terms()[1]
+                sq_sub_top = sq_op.terms()[1][1]
 
             nbody = int(len(sq_sub_top) / 2)
-            destroyed = False
             denom = 0.0
 
             for p, op_idx in enumerate(sq_sub_top):

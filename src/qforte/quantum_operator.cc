@@ -102,10 +102,9 @@ void QuantumOperator::simplify(bool combine_like_terms) {
     }
 }
 
-void QuantumOperator::join_operator(const QuantumOperator& rqo, bool simplify_lop ) {
-    if(simplify_lop){
+void QuantumOperator::operator_product(const QuantumOperator& rqo, bool pre_simplify, bool post_simplify) {
+    if (pre_simplify) {
         simplify();
-        // rqo.simplify();
     }
 
     QuantumOperator LR;
@@ -118,21 +117,12 @@ void QuantumOperator::join_operator(const QuantumOperator& rqo, bool simplify_lo
         }
     }
     terms_ = std::move(LR.terms());
-    simplify();
-}
 
-void QuantumOperator::join_operator_lazy(const QuantumOperator& rqo) {
-    QuantumOperator LR;
-    for (auto& term_l : terms_) {
-        for (auto& term_r : rqo.terms()){
-            QuantumCircuit temp_circ;
-            temp_circ.add_circuit(term_l.second);
-            temp_circ.add_circuit(term_r.second);
-            LR.add_term(term_l.first * term_r.first, temp_circ);
-        }
+    if (post_simplify) {
+        simplify();
+    } else {
+        canonical_order();
     }
-    terms_ = std::move(LR.terms());
-    canonical_order();
 }
 
 const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& QuantumOperator::terms() const {

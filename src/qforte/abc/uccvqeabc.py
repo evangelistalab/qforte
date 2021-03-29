@@ -53,18 +53,18 @@ class UCCVQE(VQE):
         print('==> Commutator pool construction complete.')
 
     # TODO (opt major): write a C function that prepares this super efficiently
-    def build_Uvqc(self, params=None):
+    def build_Uvqc(self, amplitudes=None):
         """ This function returns the QuantumCircuit object built
         from the appropriate amplitudes (tops)
 
         Parameters
         ----------
-        params : list
+        amplitudes : list
             A list of parameters define the variational degrees of freedom in
             the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
         temp_pool = qf.SQOpPool()
-        tamps = self._tamps if params is None else params
+        tamps = self._tamps if amplitudes is None else amplitudes
         for tamp, top in zip(tamps, self._tops):
             temp_pool.add_term(tamp, self._pool[top][1])
 
@@ -80,34 +80,38 @@ class UCCVQE(VQE):
 
         return Uvqc
 
-    def measure_commutator_gradient(self, HAm, Ucirc, idxs=[], params=None):
+    def measure_operators(self, operators, Ucirc, idxs=[]):
         """
         Parameters
         ----------
-        HAm : QuantumOpPool
-            The commutator to measure.
+        operators : QuantumOpPool
+            All operators to be measured
 
         Ucirc : QuantumCircuit
             The state preparation circuit.
+
+        idxs : list of int
+            The indices of select operators in the pool of operators. If provided, only these
+            operators will be measured.
         """
 
         if self._fast:
             myQC = qforte.QuantumComputer(self._nqb)
             myQC.apply_circuit(Ucirc)
-            if(len(idxs)==0):
-                grads = myQC.direct_oppl_exp_val(HAm)
+            if not idxs:
+                grads = myQC.direct_oppl_exp_val(operators)
             else:
-                grads = myQC.direct_idxd_oppl_exp_val(HAm, idxs)
+                grads = myQC.direct_idxd_oppl_exp_val(operators, idxs)
 
         else:
-            pass
+            raise NotImplementedError("Must have self._fast to measure an operator.")
             # TODO (cleanup): remove N_samples as argument (implement variance based thresh)
             # TODO: need to implement this as a for loop over terms in QuantumOpPool
             # Exp = qforte.Experiment(self._nqb, Ucirc, HAm, 1000)
             # empty_params = []
             # val = Exp.perfect_experimental_avg(empty_params)
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
+
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
         return np.real(grads)
 
@@ -179,13 +183,13 @@ class UCCVQE(VQE):
             grads.append( 2.0*qc.get_coeff_vec()[omega_o] )
 
 
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
         # self._curr_grad_norm = np.linalg.norm(grads)
 
         return np.real(grads)
 
+    # TODO: Why is this function here? It seems ADAPT-VQE specific?
     def measure_gradient(self, params=None, use_entire_pool=False):
         """
         Parameters
@@ -280,25 +284,16 @@ class UCCVQE(VQE):
 
         # self._curr_grad_norm = np.linalg.norm(grads)
 
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
         return grads
 
     def measure_gradient3(self):
-        """
-        Parameters
-        ----------
-        HAm : QuantumOpPool
-            The commutator to measure.
-
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
-        """
 
         if self._fast==False:
             raise ValueError("self._fast must be True for gradient measurement.")
 
+        # Initialize amplitudes
         M = len(self._pool)
         pool_amps = np.zeros(M)
         for tamp, top in zip(self._tamps, self._tops):
@@ -307,13 +302,13 @@ class UCCVQE(VQE):
         grads = np.zeros(M)
         Utot = self.build_Uvqc()
 
-
-        qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according ADAPT-VQE analytial grad section
+        qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according to ADAPT-VQE analytical grad section
         qc_psi.apply_circuit(Utot)
         psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
 
-        qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according ADAPT-VQE analytial grad section
-        qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
+        qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according to ADAPT-VQE analytical grad section
+        # TODO: Check if it's faster to recompute psi_i or copy it.
+        qc_sig.set_coeff_vec(copy.deepcopy(psi_i))
         qc_sig.apply_operator(self._qb_ham)
 
         mu = M-1
@@ -325,8 +320,7 @@ class UCCVQE(VQE):
             grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
             qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
 
-        for val in grads:
-            assert(np.isclose(np.imag(val), 0.0))
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
         return grads
 
@@ -351,7 +345,7 @@ class UCCVQE(VQE):
         return val
 
     def energy_feval(self, params):
-        Ucirc = self.build_Uvqc(params=params)
+        Ucirc = self.build_Uvqc(amplitudes=params)
         # self._prev_energy = self._curr_energy
         Energy = self.measure_energy(Ucirc)
 

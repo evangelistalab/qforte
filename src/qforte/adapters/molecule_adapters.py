@@ -128,8 +128,8 @@ class OpenFermionMolAdapter(MolAdapter):
         kwargs.setdefault('run_fci', 1)
         kwargs.setdefault('store_uccsd_amps', False)
         kwargs.setdefault('buld_uccsd_circ_from_ccsd', False)
-        kwargs.setdefault('frozen_indicies', None)
-        kwargs.setdefault('virtual_indicies', None)
+        kwargs.setdefault('frozen_indices', None)
+        kwargs.setdefault('virtual_indices', None)
 
         skeleton_mol = MolecularData(geometry = self._mol_geometry,
                                      basis = self._basis,
@@ -150,22 +150,22 @@ class OpenFermionMolAdapter(MolAdapter):
         # Set qforte hamiltonian from openfermion
         molecular_hamiltonian = openfermion_mol.get_molecular_hamiltonian()
 
-        if(kwargs['frozen_indicies'] is not None):
+        if(kwargs['frozen_indices'] is not None):
             fermion_hamiltonian = normal_ordered(
                 freeze_orbitals(get_fermion_operator(molecular_hamiltonian),
-                                kwargs['frozen_indicies'],
-                                unoccupied=kwargs['virtual_indicies']))
+                                kwargs['frozen_indices'],
+                                unoccupied=kwargs['virtual_indices']))
         else:
             fermion_hamiltonian = normal_ordered(get_fermion_operator(molecular_hamiltonian))
 
         if(kwargs['order_sq_ham'] or kwargs['order_jw_ham']):
 
             if(kwargs['order_sq_ham'] and kwargs['order_jw_ham']):
-                raise ValueError("Can't use more than one hamiltonain ordering option!")
+                raise ValueError("Can't use more than one hamiltonian ordering option!")
 
             if(kwargs['order_sq_ham']):
                 # Optionally sort the hamiltonian terms
-                print('using |largest|->|smallest| sq hamiltioan ordering!')
+                print('using |largest|->|smallest| sq hamiltonian ordering!')
                 sorted_terms = sorted(fermion_hamiltonian.terms.items(), key=lambda kv: np.abs(kv[1]), reverse=True)
                 # print('\n\nsorted terms\n\n', sorted_terms)
 
@@ -206,14 +206,14 @@ class OpenFermionMolAdapter(MolAdapter):
         else:
             print('Using standard openfermion hamiltonian ordering!')
             qubit_hamiltonian = jordan_wigner(fermion_hamiltonian)
-            qforte_hamiltionan = build_from_openfermion(qubit_hamiltonian)
+            qforte_hamiltonian = build_from_openfermion(qubit_hamiltonian)
 
             # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
             # for term in qforte_hamiltionan.terms():
             #     print(term[0])
             #     print(term[1].str())
 
-        self._qforte_mol.set_hamiltonian(qforte_hamiltionan)
+        self._qforte_mol.set_hamiltonian(qforte_hamiltonian)
 
         self._qforte_mol.set_sq_hamiltonian( build_sqop_from_openfermion(fermion_hamiltonian) )
 

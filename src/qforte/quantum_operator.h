@@ -40,7 +40,7 @@ class QuantumOperator {
     /// order the terms by increasing coefficient value
     void order_terms();
 
-    /// order the gates by increasing quibits in each QuantumCircuit in terms_
+    /// order the gates by increasing qubits in each QuantumCircuit in terms_
     /// and contract all pauli operators
     void canonical_order();
 
@@ -48,12 +48,10 @@ class QuantumOperator {
     /// combine like terms.
     void simplify(bool combine_like_terms=true);
 
-    /// join a new operator to this operator via multiplicaiton
-    void join_operator(const QuantumOperator& rqo, bool simplify_lop);
-
-    /// join a new operator to this operator via multiplicaiton without
-    /// simplifying the result
-    void join_operator_lazy(const QuantumOperator& rqo);
+    /// Multiply this operator (on the right) by rqo.
+    /// pre_simplify simplifies this operator before the multiplication.
+    /// post_simplify simplifies this operator after the multiplication, as opposed to just canoncalizing.
+    void operator_product(const QuantumOperator& rqo, bool pre_simplify = true, bool post_simplify = true);
 
     /// check if this operator is equivalent to another operator qo
     /// mostly used for testing

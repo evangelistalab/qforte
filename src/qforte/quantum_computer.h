@@ -47,7 +47,7 @@ class QuantumComputer {
     /// measure the state of the quantum computer with respect to qc
     std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
 
-    /// measure the readout, i.e. the value of all qubits with indicies form na to nb
+    /// measure the readout, i.e. the value of all qubits with indices from na to nb
     std::vector<std::vector<int>> measure_z_readouts_fast(size_t na, size_t nb, size_t n_measurements);
 
     /// measure the readout, i.e. the value of all target qubits, for the state of the
@@ -57,10 +57,10 @@ class QuantumComputer {
     /// perfectly measure the state of the quanum computer in basis of circuit
     double perfect_measure_circuit(const QuantumCircuit& qc);
 
-    /// measure expectaion value of all operators in an operator pool
+    /// Measure expectation value of all operators in an operator pool
     std::vector<std::complex<double>> direct_oppl_exp_val(const QuantumOpPool& qopl);
 
-    /// measure expectaion value for specific operators in an operator pool
+    /// measure expectation value for specific operators in an operator pool
     std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QuantumOpPool& qopl, const std::vector<int>& idxs);
 
     /// measure expectaion value of all operators in an operator pool, where the

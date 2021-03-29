@@ -48,14 +48,14 @@ class SDOpPool(object):
         are not specified.
 
     get_singlet_SD_op_pool()
-        Retruns a list with indicies pertaining spin-complete, single and
+        Retruns a list with indices pertaining spin-complete, single and
         double excitation operators according to _nocc and _nvir.
 
     get_canonical_order()
         Takes a subterm and returns the normal ordered verion of it.
 
     simplify_single_term()
-        Takes a list of operator indicies pertainig to a single spin-complete
+        Takes a list of operator indices pertainig to a single spin-complete
         operator and normal orders all subterms, then combines like subterms.
 
     get_simplified_SD_pool()
