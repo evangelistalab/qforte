@@ -34,18 +34,18 @@ class SRQK(QSD):
         Construct a reference state for the MRSQK algorithm as some root of the Hamiltonian in the space
         of H U_n φ where U_m = exp(-i m dt H) and φ a single determinant.
 
-        _s : int
-            The greatest m to use in unitaries
-        _nstates : int
-            The number of states
-        _dt : float
-            The dt used in the unitaries
-        _target_root : int
-            Which root of the quantum Krylov subspace should be taken?
         _diagonalize_each_step : bool
             For diagnostic purposes, should the eigenvalue of the target root of the quantum Krylov subspace
             be printed after each new unitary? We recommend passing an s so the change in the eigenvalue is
             small.
+        _dt : float
+            The dt used in the unitaries
+        _nstates : int
+            The number of states
+        _s : int
+            The greatest m to use in unitaries
+        _target_root : int
+            Which root of the quantum Krylov subspace should be taken?
         """
 
         self._s = s
@@ -168,7 +168,8 @@ class SRQK(QSD):
         h_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
         s_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
 
-        omega_lst = []
+        # Store these vectors for the aid of MRSQK
+        self._omega_lst = []
         Homega_lst = []
 
         if(self._diagonalize_each_step):
@@ -197,17 +198,17 @@ class SRQK(QSD):
             QC = qforte.QuantumComputer(self._nqb)
             QC.apply_circuit(Um)
             QC.apply_constant(phase1)
-            omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
+            self._omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
             # Compute H U_m |φ>
             QC.apply_operator(self._qb_ham)
             Homega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
             # Compute S_mn = <φ| U_m^\dagger U_n |φ> and H_mn = <φ| U_m^\dagger H U_n |φ>
-            for n in range(len(omega_lst)):
-                h_mat[m][n] = np.vdot(omega_lst[m], Homega_lst[n])
+            for n in range(len(self._omega_lst)):
+                h_mat[m][n] = np.vdot(self._omega_lst[m], Homega_lst[n])
                 h_mat[n][m] = np.conj(h_mat[m][n])
-                s_mat[m][n] = np.vdot(omega_lst[m], omega_lst[n])
+                s_mat[m][n] = np.vdot(self._omega_lst[m], self._omega_lst[n])
                 s_mat[n][m] = np.conj(s_mat[m][n])
 
             if (self._diagonalize_each_step):
