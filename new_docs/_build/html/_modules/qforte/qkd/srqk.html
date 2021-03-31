@@ -1,0 +1,618 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>qforte.qkd.srqk &mdash; qForte  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> qForte
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">qForte</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>qforte.qkd.srqk</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for qforte.qkd.srqk</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">srqk.py</span>
+<span class="sd">=================================================</span>
+<span class="sd">A module for calculating the energies of quantum-</span>
+<span class="sd">mechanical systems the multireference selected</span>
+<span class="sd">quantum Krylov algorithm.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">qforte</span>
+<span class="kn">from</span> <span class="nn">qforte.abc.qsdabc</span> <span class="kn">import</span> <span class="n">QSD</span>
+<span class="kn">from</span> <span class="nn">qforte.helper.printing</span> <span class="kn">import</span> <span class="n">matprint</span>
+<span class="c1"># from qforte.utils.transforms import (circuit_to_organizer,</span>
+<span class="c1">#                                     organizer_to_circuit,</span>
+<span class="c1">#                                     join_organizers,</span>
+<span class="c1">#                                     get_jw_organizer)</span>
+
+<span class="kn">from</span> <span class="nn">qforte.maths.eigsolve</span> <span class="kn">import</span> <span class="n">canonical_geig_solve</span>
+
+<span class="kn">from</span> <span class="nn">qforte.utils.state_prep</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">qforte.utils.trotterization</span> <span class="kn">import</span> <span class="p">(</span><span class="n">trotterize</span><span class="p">,</span>
+                                         <span class="n">trotterize_w_cRz</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">lstsq</span>
+
+<div class="viewcode-block" id="SRQK"><a class="viewcode-back" href="../../../index.html#qforte.qkd.srqk.SRQK">[docs]</a><span class="k">class</span> <span class="nc">SRQK</span><span class="p">(</span><span class="n">QSD</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">s</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">dt</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">target_root</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">diagonalize_each_step</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_s</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span> <span class="o">=</span> <span class="n">s</span><span class="o">+</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span> <span class="o">=</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target_root</span> <span class="o">=</span> <span class="n">target_root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_each_step</span> <span class="o">=</span> <span class="n">diagonalize_each_step</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Print options banner (should done for all algorithms).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_options_banner</span><span class="p">()</span>
+
+        <span class="c1">######### SRQK #########</span>
+
+        <span class="c1"># Build S and H matricies</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_S</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Hbar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_qk_mats</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_S</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Hbar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_qk_mats_realistic</span><span class="p">()</span>
+
+        <span class="c1"># Set the condition number of QSD overlap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Scond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_S</span><span class="p">)</span>
+
+        <span class="c1"># Get eigenvalues and eigenvectors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvectors</span> \
+        <span class="o">=</span> <span class="n">canonical_geig_solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_S</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_Hbar</span><span class="p">,</span>
+                               <span class="n">print_mats</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">,</span>
+                               <span class="n">sort_ret_vals</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">       ==&gt; QK eigenvalues &lt;==&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----------------------------------------&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  root  </span><span class="si">{}</span><span class="s1">  </span><span class="si">{:.8f}</span><span class="s1">    </span><span class="si">{:.8f}</span><span class="s1">j&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span>
+
+        <span class="c1"># Set ground state energy.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># Set target state energy.</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_root</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Ets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Ets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_root</span><span class="p">])</span>
+
+        <span class="c1">######### SRQK #########</span>
+
+        <span class="c1"># Print summary banner (should done for all algorithms).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_summary_banner</span><span class="p">()</span>
+
+        <span class="c1"># verify that required attributes were defined</span>
+        <span class="c1"># (should be called for all algorithms!)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_run</span><span class="p">()</span>
+
+    <span class="c1"># Define Algorithm abstract methods.</span>
+    <span class="k">def</span> <span class="nf">run_realistic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;run_realistic() is not fully implemented for SRQK.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">verify_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_required_attributes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_required_QSD_attributes</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">print_options_banner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-----------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;           Single Reference Quantum Krylov   &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-----------------------------------------------------&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">                     ==&gt; QK options &lt;==&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-----------------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="c1"># General algorithm options.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trial reference state:                   &#39;</span><span class="p">,</span>  <span class="n">ref_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of Hamiltonian Pauli terms:       &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trial state preparation method:          &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_trial_state_type</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trotter order (rho):                     &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_trotter_order</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trotter number (m):                      &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_trotter_number</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Use fast version of algorithm:           &#39;</span><span class="p">,</span>  <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">))</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Measurement varience thresh:             &#39;</span><span class="p">,</span>  <span class="s1">&#39;NA&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Measurement varience thresh:             &#39;</span><span class="p">,</span>  <span class="mf">0.01</span><span class="p">)</span>
+
+        <span class="c1"># Specific SRQK options.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Dimension of Krylov space (N):           &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Delta t (in a.u.):                       &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Target root:                             &#39;</span><span class="p">,</span>  <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_root</span><span class="p">))</span>
+
+
+    <span class="k">def</span> <span class="nf">print_summary_banner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cs_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:.2e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Scond</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">                     ==&gt; QK summary &lt;==&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-----------------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Condition number of overlap mat k(S):      &#39;</span><span class="p">,</span> <span class="n">cs_str</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Final SRQK ground state Energy:           &#39;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Final SRQK target state Energy:           &#39;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Ets</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of classical parameters used:       &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of CNOT gates in deepest circuit:   &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of Pauli term measurements:         &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span><span class="p">)</span>
+
+    <span class="c1"># Define QK abstract methods.</span>
+<div class="viewcode-block" id="SRQK.build_qk_mats"><a class="viewcode-back" href="../../../index.html#qforte.qkd.srqk.SRQK.build_qk_mats">[docs]</a>    <span class="k">def</span> <span class="nf">build_qk_mats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns matrices S and Hbar with dim (s+1)x(s+1) based on the evolutio of</span>
+<span class="sd">        two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt *H)</span>
+<span class="sd">        on a reference state |Phi_o&gt;, with (Q) and without (P) respect to</span>
+<span class="sd">        measuring the operator H.</span>
+
+<span class="sd">        Elements S_mn are given by &lt;Phi_o| Um^dag Un | Phi_o&gt;.</span>
+
+<span class="sd">        Elements Hbar_mn are given by &lt;Phi_o| Um^dag H Un | Phi_o&gt;.</span>
+
+<span class="sd">        This function builds S and Hbar in an efficient manor and gives the same result</span>
+<span class="sd">        as M built from &#39;matrix_element&#39;, but is unphysical for a quantum computer.</span>
+
+<span class="sd">            Arguments</span>
+<span class="sd">            ---------</span>
+
+<span class="sd">            ref : list</span>
+<span class="sd">                The the reference state |Phi_o&gt;.</span>
+
+<span class="sd">            dt : float</span>
+<span class="sd">                The real time step value (delta t).</span>
+
+<span class="sd">            nstates : int</span>
+<span class="sd">                The number of Krylov states to generate.</span>
+
+<span class="sd">            H : QuantumOperator</span>
+<span class="sd">                The operator to time evolove and measure with respect to</span>
+<span class="sd">                (usually the Hamiltonain).</span>
+
+<span class="sd">            nqubits : int</span>
+<span class="sd">                The number of qubits</span>
+
+<span class="sd">            trot_number : int</span>
+<span class="sd">                The number of trotter steps (m) to perform when approximating the matrix</span>
+<span class="sd">                exponentials (Um or Un). For the exponential of two non commuting terms</span>
+<span class="sd">                e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is</span>
+<span class="sd">                exact in the infinite m limit.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            s_mat : ndarray</span>
+<span class="sd">                A numpy array containing the elements P_mn</span>
+
+<span class="sd">            h_mat : ndarray</span>
+<span class="sd">                A numpy array containing the elements Q_mn</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">h_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="n">s_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+        <span class="n">omega_lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">Homega_lst</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_each_step</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;k(S)&#39;</span><span class="si">:</span><span class="s2">&gt;7</span><span class="si">}{</span><span class="s1">&#39;E(Npar)&#39;</span><span class="si">:</span><span class="s2">&gt;19</span><span class="si">}{</span><span class="s1">&#39;N(params)&#39;</span><span class="si">:</span><span class="s2">&gt;14</span><span class="si">}{</span><span class="s1">&#39;N(CNOT)&#39;</span><span class="si">:</span><span class="s2">&gt;18</span><span class="si">}{</span><span class="s1">&#39;N(measure)&#39;</span><span class="si">:</span><span class="s2">&gt;20</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------------------------------------------------------------&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print_summary_file</span><span class="p">):</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;summary.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">,</span> <span class="n">buffering</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#</span><span class="si">{</span><span class="s1">&#39;k(S)&#39;</span><span class="si">:</span><span class="s2">&gt;7</span><span class="si">}{</span><span class="s1">&#39;E(Npar)&#39;</span><span class="si">:</span><span class="s2">&gt;19</span><span class="si">}{</span><span class="s1">&#39;N(params)&#39;</span><span class="si">:</span><span class="s2">&gt;14</span><span class="si">}{</span><span class="s1">&#39;N(CNOT)&#39;</span><span class="si">:</span><span class="s2">&gt;18</span><span class="si">}{</span><span class="s1">&#39;N(measure)&#39;</span><span class="si">:</span><span class="s2">&gt;20</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;#-------------------------------------------------------------------------------</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">):</span>
+            <span class="n">Um</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+            <span class="n">Um</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Uprep</span><span class="p">)</span>
+            <span class="n">phase1</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="n">m</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">):</span>
+                <span class="n">fact</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="o">-</span><span class="mf">1.0</span><span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">m</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span>
+                <span class="n">expn_op1</span><span class="p">,</span> <span class="n">phase1</span> <span class="o">=</span> <span class="n">trotterize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qb_ham</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="n">fact</span><span class="p">,</span> <span class="n">trotter_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_trotter_number</span><span class="p">)</span>
+                <span class="n">Um</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="n">expn_op1</span><span class="p">)</span>
+
+            <span class="n">QC</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumComputer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="p">)</span>
+            <span class="n">QC</span><span class="o">.</span><span class="n">apply_circuit</span><span class="p">(</span><span class="n">Um</span><span class="p">)</span>
+            <span class="n">QC</span><span class="o">.</span><span class="n">apply_constant</span><span class="p">(</span><span class="n">phase1</span><span class="p">)</span>
+            <span class="n">omega_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">QC</span><span class="o">.</span><span class="n">get_coeff_vec</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">))</span>
+
+            <span class="n">QC</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qb_ham</span><span class="p">)</span>
+            <span class="n">Homega_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">QC</span><span class="o">.</span><span class="n">get_coeff_vec</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">omega_lst</span><span class="p">)):</span>
+                <span class="n">h_mat</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">omega_lst</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="n">Homega_lst</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+                <span class="n">h_mat</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">h_mat</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">n</span><span class="p">])</span>
+                <span class="n">s_mat</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">omega_lst</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="n">omega_lst</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+                <span class="n">s_mat</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">s_mat</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">n</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_each_step</span><span class="p">):</span>
+                <span class="c1"># TODO (cleanup): have this print to a separate file</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">m</span><span class="o">+</span><span class="mi">1</span>
+                <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">canonical_geig_solve</span><span class="p">(</span><span class="n">s_mat</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">],</span>
+                                   <span class="n">h_mat</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">],</span>
+                                   <span class="n">print_mats</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                   <span class="n">sort_ret_vals</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="n">scond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">s_mat</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span> <span class="o">=</span> <span class="n">k</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Um</span><span class="o">.</span><span class="n">get_num_cnots</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span>  <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">+=</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">+=</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; </span><span class="si">{</span><span class="n">scond</span><span class="si">:</span><span class="s1">7.2e</span><span class="si">}</span><span class="s1">    </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_root</span><span class="p">])</span><span class="si">:</span><span class="s1">+15.9f</span><span class="si">}</span><span class="s1">    </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span><span class="si">:</span><span class="s1">8</span><span class="si">}</span><span class="s1">        </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span><span class="si">:</span><span class="s1">10</span><span class="si">}</span><span class="s1">        </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span><span class="si">:</span><span class="s1">12</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print_summary_file</span><span class="p">):</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">scond</span><span class="si">:</span><span class="s1">7.2e</span><span class="si">}</span><span class="s1">    </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_root</span><span class="p">])</span><span class="si">:</span><span class="s1">+15.9f</span><span class="si">}</span><span class="s1">    </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span><span class="si">:</span><span class="s1">8</span><span class="si">}</span><span class="s1">        </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span><span class="si">:</span><span class="s1">10</span><span class="si">}</span><span class="s1">        </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span><span class="si">:</span><span class="s1">12</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_each_step</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_summary_file</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Um</span><span class="o">.</span><span class="n">get_num_cnots</span><span class="p">()</span>
+        <span class="c1"># diagonal terms of Hbar</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span>
+        <span class="c1"># off-diagonal of Hbar (&lt;X&gt; and &lt;Y&gt; of Hadamard test)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span>
+        <span class="c1"># off-diagonal of S (&lt;X&gt; and &lt;Y&gt; of Hadamard test)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">s_mat</span><span class="p">,</span> <span class="n">h_mat</span></div>
+
+    <span class="k">def</span> <span class="nf">build_qk_mats_realistic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">h_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="n">s_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nstates</span><span class="p">):</span>
+                <span class="n">h_mat</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix_element</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">use_op</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">h_mat</span><span class="p">[</span><span class="n">q</span><span class="p">][</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">h_mat</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">q</span><span class="p">])</span>
+                <span class="n">s_mat</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix_element</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">use_op</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">s_mat</span><span class="p">[</span><span class="n">q</span><span class="p">][</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">s_mat</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">q</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">s_mat</span><span class="p">,</span> <span class="n">h_mat</span>
+
+
+<div class="viewcode-block" id="SRQK.matrix_element"><a class="viewcode-back" href="../../../index.html#qforte.qkd.srqk.SRQK.matrix_element">[docs]</a>    <span class="k">def</span> <span class="nf">matrix_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">use_op</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a single matrix element M_mn based on the evolutio of</span>
+<span class="sd">        two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt *H)</span>
+<span class="sd">        on a reference state |Phi_o&gt;, (optionally) with respect to an operator A.</span>
+<span class="sd">        Specifically, M_mn is given by &lt;Phi_o| Um^dag Un | Phi_o&gt; or</span>
+<span class="sd">        (optionally if A is specified) &lt;Phi_o| Um^dag A Un | Phi_o&gt;.</span>
+
+<span class="sd">            Arguments</span>
+<span class="sd">            ---------</span>
+
+<span class="sd">            ref : list</span>
+<span class="sd">                The the reference state |Phi_o&gt;.</span>
+
+<span class="sd">            dt : float</span>
+<span class="sd">                The real time step value (delta t).</span>
+
+<span class="sd">            m : int</span>
+<span class="sd">                The number of time steps for the Um evolution.</span>
+
+<span class="sd">            n : int</span>
+<span class="sd">                The number of time steps for the Un evolution.</span>
+
+<span class="sd">            H : QuantumOperator</span>
+<span class="sd">                The operator to time evolove with respect to (usually the Hamiltonain).</span>
+
+<span class="sd">            nqubits : int</span>
+<span class="sd">                The number of qubits</span>
+
+<span class="sd">            A : QuantumOperator</span>
+<span class="sd">                The overal operator to measure with respect to (optional).</span>
+
+<span class="sd">            trot_number : int</span>
+<span class="sd">                The number of trotter steps (m) to perform when approximating the matrix</span>
+<span class="sd">                exponentials (Um or Un). For the exponential of two non commuting terms</span>
+<span class="sd">                e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is</span>
+<span class="sd">                exact in the infinite m limit.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            value : complex</span>
+<span class="sd">                The outcome of measuring &lt;X&gt; and &lt;Y&gt; to determine &lt;2*sigma_+&gt;,</span>
+<span class="sd">                ultimately the value of the matrix elemet.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">ancilla_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span>
+        <span class="n">Uk</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+        <span class="n">temp_op1</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumOperator</span><span class="p">()</span>
+        <span class="c1"># TODO (opt): move to C side.</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qb_ham</span><span class="o">.</span><span class="n">terms</span><span class="p">():</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">op</span> <span class="o">=</span> <span class="n">t</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span> <span class="o">*</span> <span class="n">c</span>
+            <span class="n">temp_op1</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+        <span class="n">expn_op1</span><span class="p">,</span> <span class="n">phase1</span> <span class="o">=</span> <span class="n">trotterize_w_cRz</span><span class="p">(</span><span class="n">temp_op1</span><span class="p">,</span>
+                                            <span class="n">ancilla_idx</span><span class="p">,</span>
+                                            <span class="n">trotter_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_trotter_number</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">expn_op1</span><span class="o">.</span><span class="n">gates</span><span class="p">():</span>
+            <span class="n">Uk</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">gate</span><span class="p">)</span>
+
+        <span class="n">Ub</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+
+        <span class="n">temp_op2</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumOperator</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qb_ham</span><span class="o">.</span><span class="n">terms</span><span class="p">():</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">op</span> <span class="o">=</span> <span class="n">t</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="n">m</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span> <span class="o">*</span> <span class="n">c</span>
+            <span class="n">temp_op2</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+        <span class="n">expn_op2</span><span class="p">,</span> <span class="n">phase2</span> <span class="o">=</span> <span class="n">trotterize_w_cRz</span><span class="p">(</span><span class="n">temp_op2</span><span class="p">,</span>
+                                            <span class="n">ancilla_idx</span><span class="p">,</span>
+                                            <span class="n">trotter_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_trotter_number</span><span class="p">,</span>
+                                            <span class="n">Use_open_cRz</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">expn_op2</span><span class="o">.</span><span class="n">gates</span><span class="p">():</span>
+            <span class="n">Ub</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">gate</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">use_op</span><span class="p">:</span>
+            <span class="c1"># TODO (opt): use Uprep</span>
+            <span class="n">cir</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ref</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">cir</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+            <span class="n">cir</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+
+            <span class="n">cir</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="n">Uk</span><span class="p">)</span>
+
+            <span class="n">cir</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+            <span class="n">cir</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="n">Ub</span><span class="p">)</span>
+            <span class="n">cir</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+
+            <span class="n">X_op</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumOperator</span><span class="p">()</span>
+            <span class="n">x_circ</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+            <span class="n">Y_op</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumOperator</span><span class="p">()</span>
+            <span class="n">y_circ</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+
+            <span class="n">x_circ</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+            <span class="n">y_circ</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+
+            <span class="n">X_op</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">x_circ</span><span class="p">)</span>
+            <span class="n">Y_op</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_circ</span><span class="p">)</span>
+
+            <span class="n">X_exp</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">cir</span><span class="p">,</span> <span class="n">X_op</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+            <span class="n">Y_exp</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">cir</span><span class="p">,</span> <span class="n">Y_op</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+            <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span>
+            <span class="n">x_value</span> <span class="o">=</span> <span class="n">X_exp</span><span class="o">.</span><span class="n">perfect_experimental_avg</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">y_value</span> <span class="o">=</span> <span class="n">Y_exp</span><span class="o">.</span><span class="n">perfect_experimental_avg</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+            <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_value</span> <span class="o">+</span> <span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="n">y_value</span><span class="p">)</span> <span class="o">*</span> <span class="n">phase1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">phase2</span><span class="p">)</span>
+
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qb_ham</span><span class="o">.</span><span class="n">terms</span><span class="p">():</span>
+                <span class="n">c</span><span class="p">,</span> <span class="n">V_l</span> <span class="o">=</span> <span class="n">t</span>
+
+                <span class="c1"># TODO (opt):</span>
+                <span class="n">cV_l</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">V_l</span><span class="o">.</span><span class="n">gates</span><span class="p">():</span>
+                    <span class="n">gate_str</span> <span class="o">=</span> <span class="n">gate</span><span class="o">.</span><span class="n">gate_id</span><span class="p">()</span>
+                    <span class="n">target</span> <span class="o">=</span> <span class="n">gate</span><span class="o">.</span><span class="n">target</span><span class="p">()</span>
+                    <span class="n">control_gate_str</span> <span class="o">=</span> <span class="s1">&#39;c&#39;</span> <span class="o">+</span> <span class="n">gate_str</span>
+                    <span class="n">cV_l</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="n">control_gate_str</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+
+                <span class="n">cir</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+                <span class="c1"># TODO (opt): use Uprep</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ref</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">cir</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+                <span class="n">cir</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+
+                <span class="n">cir</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="n">Uk</span><span class="p">)</span>
+                <span class="n">cir</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="n">cV_l</span><span class="p">)</span>
+
+                <span class="n">cir</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+                <span class="n">cir</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="n">Ub</span><span class="p">)</span>
+                <span class="n">cir</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+
+                <span class="n">X_op</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumOperator</span><span class="p">()</span>
+                <span class="n">x_circ</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+                <span class="n">Y_op</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumOperator</span><span class="p">()</span>
+                <span class="n">y_circ</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">()</span>
+
+                <span class="n">x_circ</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+                <span class="n">y_circ</span><span class="o">.</span><span class="n">add_gate</span><span class="p">(</span><span class="n">qforte</span><span class="o">.</span><span class="n">make_gate</span><span class="p">(</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">,</span> <span class="n">ancilla_idx</span><span class="p">))</span>
+
+                <span class="n">X_op</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">x_circ</span><span class="p">)</span>
+                <span class="n">Y_op</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_circ</span><span class="p">)</span>
+
+                <span class="n">X_exp</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">cir</span><span class="p">,</span> <span class="n">X_op</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+                <span class="n">Y_exp</span> <span class="o">=</span> <span class="n">qforte</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">cir</span><span class="p">,</span> <span class="n">Y_op</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+                <span class="c1"># TODO (cleanup): Remove params as required arg (Nick)</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span>
+                <span class="n">x_value</span> <span class="o">=</span> <span class="n">X_exp</span><span class="o">.</span><span class="n">perfect_experimental_avg</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+                <span class="n">y_value</span> <span class="o">=</span> <span class="n">Y_exp</span><span class="o">.</span><span class="n">perfect_experimental_avg</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+                <span class="n">element</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_value</span> <span class="o">+</span> <span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="n">y_value</span><span class="p">)</span> <span class="o">*</span> <span class="n">phase1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">phase2</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">+=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">element</span>
+
+        <span class="k">return</span> <span class="n">value</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, The Evangelista Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

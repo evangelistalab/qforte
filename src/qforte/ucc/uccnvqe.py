@@ -1,8 +1,8 @@
 """
-uccsdvqe.py
+uccnvqe.py
 ====================================
-A class for using an experiment to execute the variational quantum eigensolver
-for a trotterized UCCN anxatz.
+A module for using the variational quantum eigensolver
+with a trotterized UCCN anxatz.
 """
 
 import qforte

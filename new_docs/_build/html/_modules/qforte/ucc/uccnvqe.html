@@ -1,0 +1,580 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>qforte.ucc.uccnvqe &mdash; qForte  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> qForte
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">qForte</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>qforte.ucc.uccnvqe</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for qforte.ucc.uccnvqe</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">uccnvqe.py</span>
+<span class="sd">====================================</span>
+<span class="sd">A module for using the variational quantum eigensolver</span>
+<span class="sd">with a trotterized UCCN anxatz.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">qforte</span>
+<span class="kn">from</span> <span class="nn">qforte.abc.uccvqeabc</span> <span class="kn">import</span> <span class="n">UCCVQE</span>
+
+<span class="kn">from</span> <span class="nn">qforte.experiment</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">qforte.utils.transforms</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">qforte.utils.op_pools</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">qforte.utils.state_prep</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">qforte.utils.trotterization</span> <span class="kn">import</span> <span class="n">trotterize</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+
+<div class="viewcode-block" id="UCCNVQE"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE">[docs]</a><span class="k">class</span> <span class="nc">UCCNVQE</span><span class="p">(</span><span class="n">UCCVQE</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class that encompasses the three components of using the variational</span>
+<span class="sd">    quantum eigensolver to optimize a parameterized unitary CCN-like wave function.</span>
+
+<span class="sd">    UCCN-VQE: (1) prepares a quantum state on the quantum computer</span>
+<span class="sd">    representing the wave function to be simulated, (2) evauates the energy by</span>
+<span class="sd">    measurement, and (3) optemizes the the wave funciton by minimizing the energy.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    _ref : list</span>
+<span class="sd">        The set of 1s and 0s indicating the initial quantum state.</span>
+
+<span class="sd">    _nqubits : int</span>
+<span class="sd">        The number of qubits the calculation empolys.</span>
+
+<span class="sd">    _operator : QuantumOperator</span>
+<span class="sd">        The operator to be measured (usually the Hamiltonian), mapped to a</span>
+<span class="sd">        qubit representation.</span>
+
+<span class="sd">    _avqe_thresh : float</span>
+<span class="sd">        The gradient norm threshold to determine when the UCCN-VQE</span>
+<span class="sd">        algorithm has converged.</span>
+
+<span class="sd">    _opt_thresh : float</span>
+<span class="sd">        The gradient norm threshold to determine when the classical optimizer</span>
+<span class="sd">        algorithm has converged.</span>
+
+<span class="sd">    _use_fast_measurement : bool</span>
+<span class="sd">        Whether or not to use a faster version of the algorithm that bypasses</span>
+<span class="sd">        measurment (unphysical for quantum computer).</span>
+
+<span class="sd">    _use_analytic_grad : bool</span>
+<span class="sd">        Whether or not to use an analytic function for the gradient to pass to</span>
+<span class="sd">        the optimizer. If false, the optimizer will use self-generated approximate</span>
+<span class="sd">        gradients (if BFGS algorithm is used).</span>
+
+<span class="sd">    _optimizer : string</span>
+<span class="sd">        The type of optimizer to use for the classical portion of VQE. Suggested</span>
+<span class="sd">        algorithms are &#39;BFGS&#39; or &#39;Nelder-Mead&#39; although there are many options</span>
+<span class="sd">        (see SciPy.optimize.minimize documentation).</span>
+
+<span class="sd">    _pool_type : string</span>
+<span class="sd">        A string specifying the kinds of tamplitudes allowed in the UCCN-VQE</span>
+<span class="sd">        parameterization.</span>
+<span class="sd">            SA_SD: At most two orbital excitations. Assumes a singlet wavefunction and closed-shell Slater determinant</span>
+<span class="sd">                   reducing the number of amplitudes.</span>
+<span class="sd">            SD: At most two orbital excitations.</span>
+<span class="sd">            SDT: At most three orbital excitations.</span>
+<span class="sd">            SDTQ: At most four orbital excitations.</span>
+<span class="sd">            SDTQP: At most five orbital excitations.</span>
+<span class="sd">            SDTQPH: At most six orbital excitations.</span>
+
+<span class="sd">    _trott_num : int</span>
+<span class="sd">        The Trotter number for the calculation</span>
+<span class="sd">        (exact in the infinte limit).</span>
+
+<span class="sd">    _results : list</span>
+<span class="sd">        The optimizer result objects from each iteration of UCCN-VQE.</span>
+
+<span class="sd">    _energies : list</span>
+<span class="sd">        The optimized energies from each iteration of UCCN-VQE.</span>
+
+<span class="sd">    _grad_norms : list</span>
+<span class="sd">        The gradient norms from each iteration of UCCN-VQE.</span>
+
+<span class="sd">    _curr_grad_norm : float</span>
+<span class="sd">        The gradient norm for the current iteration of UCCN-VQE.</span>
+
+<span class="sd">    _initial_guess_energy</span>
+<span class="sd">        The initial guess energy from each iteration of UCCN-VQE.</span>
+
+<span class="sd">    _pool_obj : SDOpPool</span>
+<span class="sd">        An SDOpPool object corresponding to the specified operators of</span>
+<span class="sd">        interest.</span>
+
+<span class="sd">    _pool : list of tuple(complex, SqOperator)</span>
+<span class="sd">        The linear combination of (optionally symmetrized) single and double</span>
+<span class="sd">        excitation operators to consider. This is represented as a list.</span>
+<span class="sd">        Each entry is a pair of a complex coefficient and an SqOperator object.</span>
+
+<span class="sd">    _tops : list</span>
+<span class="sd">        A list of indices representing selected operators in the pool.</span>
+
+<span class="sd">    _tamps : list</span>
+<span class="sd">        A list of amplitudes (to be optimized) representing selected</span>
+<span class="sd">        operators in the pool.</span>
+
+<span class="sd">    _commutator_pool : list</span>
+<span class="sd">        The QuantumOperator objects representing the commutators [H, Am] of the</span>
+<span class="sd">        Hamiltonian (H) and each member of the operator pool (Am).</span>
+
+<span class="sd">    _N_samples : int</span>
+<span class="sd">        The number of times to measure each term in _operator</span>
+<span class="sd">        (not yet functional).</span>
+
+<span class="sd">    _converged : bool</span>
+<span class="sd">        Whether or not the UCCN-VQE has converged according to the gradient-norm</span>
+<span class="sd">        threshold.</span>
+
+<span class="sd">    _final_energy : float</span>
+<span class="sd">        The final UCCN-VQE energy value.</span>
+
+<span class="sd">    _final_result : Result</span>
+<span class="sd">        The last result object from the optimizer.</span>
+
+<span class="sd">    _n_ham_measurements : int</span>
+<span class="sd">        The total number of times the energy was evaluated via</span>
+<span class="sd">        measurement of the Hamiltonian</span>
+
+<span class="sd">    _n_commut_measurements : int</span>
+<span class="sd">        The total number of times the commutator was evaluated via</span>
+<span class="sd">        measurement of [H, Am].</span>
+
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    fill_pool()</span>
+<span class="sd">        Fills the _pool with orbital indices of UCC amplitudes specified</span>
+<span class="sd">        by the pool_type. Indices are according to _nocc and _nvir.</span>
+
+<span class="sd">    fill_commutator_pool()</span>
+<span class="sd">        Fills the _commutator_pool with circuits considering the _operator to</span>
+<span class="sd">        be measured and the _pool.</span>
+
+<span class="sd">    initialize_ansatz()</span>
+<span class="sd">        Adds all operators in the pool to the list of operators in the circuit,</span>
+<span class="sd">        with amplitude 0.</span>
+
+<span class="sd">    build_Uprep()</span>
+<span class="sd">        Returns a QuantumCircuit object corresponding to the state preparation</span>
+<span class="sd">        circuit for the UCCN-VQE ansatz on a given iteration.</span>
+
+<span class="sd">    measure_gradient()</span>
+<span class="sd">        Returns the measured energy gradient with respect to a single</span>
+<span class="sd">        parameter Am.</span>
+
+<span class="sd">    measure_energy()</span>
+<span class="sd">        Returns the measured energy.</span>
+
+<span class="sd">    energy_feval()</span>
+<span class="sd">        Builds a state preparation circuit given a parameter list and returns</span>
+<span class="sd">        the measured energy. Used as the function the minimizer calls.</span>
+
+<span class="sd">    gradient_ary_feval()</span>
+<span class="sd">        Computes the gradients with respect to all operators currently in the</span>
+<span class="sd">        UCCN-VQE ansatz. Used as the jacobian the minimizer calls.</span>
+
+<span class="sd">    solve()</span>
+<span class="sd">        Runs the optimizer to mimimize the energy. Sets certain optimizer</span>
+<span class="sd">        parameters internally.</span>
+
+<span class="sd">    conv_status()</span>
+<span class="sd">        Sets the convergence states.</span>
+
+<span class="sd">    get_num_ham_measurements()</span>
+<span class="sd">        Returns the total number of times the energy was evaluated via</span>
+<span class="sd">        measurement of the Hamiltoanin.</span>
+
+<span class="sd">    get_num_commut_measurements()</span>
+<span class="sd">        Returns the total number of times the commutator was evaluated via</span>
+<span class="sd">        measurement of [H, Am].</span>
+
+<span class="sd">    get_final_energy()</span>
+<span class="sd">        Returns the final energy.</span>
+
+<span class="sd">    get_final_result()</span>
+<span class="sd">        Returns the final optimization result from the optimizer. Contains</span>
+<span class="sd">        the final amplitudes used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">opt_thresh</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">,</span>
+            <span class="n">opt_ftol</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">,</span>
+            <span class="n">opt_maxiter</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+            <span class="n">pool_type</span><span class="o">=</span><span class="s1">&#39;SD&#39;</span><span class="p">,</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;BFGS&#39;</span><span class="p">,</span>
+            <span class="n">use_analytic_grad</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">noise_factor</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opt_thresh</span> <span class="o">=</span> <span class="n">opt_thresh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opt_ftol</span> <span class="o">=</span> <span class="n">opt_ftol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opt_maxiter</span> <span class="o">=</span> <span class="n">opt_maxiter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use_analytic_grad</span> <span class="o">=</span> <span class="n">use_analytic_grad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pool_type</span> <span class="o">=</span> <span class="n">pool_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_noise_factor</span> <span class="o">=</span> <span class="n">noise_factor</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tops</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conmutator_pool</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_converged</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Print options banner (should done for all algorithms).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_options_banner</span><span class="p">()</span>
+
+        <span class="c1">######### UCCN-VQE #########</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill_pool</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pool_obj</span><span class="o">.</span><span class="n">print_pool</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_ansatz</span><span class="p">()</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">t operators included from pool: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tops</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Initial tamplitudes for tops: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">t operators included from pool: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tops</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Final tamplitudes for tops: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span><span class="p">)</span>
+
+        <span class="c1">######### UCCSD-VQE #########</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_nonzero_params</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">tmu</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tmu</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.0e-12</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_nonzero_params</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># verify that required attributes were defined</span>
+        <span class="c1"># (should be called for all algorithms!)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_run</span><span class="p">()</span>
+
+    <span class="c1"># Define Algorithm abstract methods.</span>
+    <span class="k">def</span> <span class="nf">run_realistic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;run_realistic() is not fully implemented for UCCN-VQE.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">verify_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_required_attributes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_required_VQE_attributes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_required_UCCVQE_attributes</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">print_options_banner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-----------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;          Unitary Coupled Cluster VQE   &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-----------------------------------------------------&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">               ==&gt; UCCN-VQE options &lt;==&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---------------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="c1"># General algorithm options.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trial reference state:                   &#39;</span><span class="p">,</span>  <span class="n">ref_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of Hamiltonian Pauli terms:       &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trial state preparation method:          &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_trial_state_type</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trotter order (rho):                     &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_trotter_order</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trotter number (m):                      &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_trotter_number</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Use fast version of algorithm:           &#39;</span><span class="p">,</span>  <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">))</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Measurement variance thresh:             &#39;</span><span class="p">,</span>  <span class="s1">&#39;NA&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Measurement variance thresh:             &#39;</span><span class="p">,</span>  <span class="mf">0.01</span><span class="p">)</span>
+
+
+        <span class="c1"># VQE options.</span>
+        <span class="n">opt_thrsh_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:.2e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opt_thresh</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Optimization algorithm:                  &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Optimization maxiter:                    &#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_opt_maxiter</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Optimizer grad-norm threshold (theta):   &#39;</span><span class="p">,</span>  <span class="n">opt_thrsh_str</span><span class="p">)</span>
+
+        <span class="c1"># UCCVQE options.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Use analytic gradient:                   &#39;</span><span class="p">,</span>  <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_use_analytic_grad</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Operator pool type:                      &#39;</span><span class="p">,</span>  <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool_type</span><span class="p">))</span>
+
+
+    <span class="k">def</span> <span class="nf">print_summary_banner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">                ==&gt; UCCN-VQE summary &lt;==&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-----------------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Final UCCN-VQE Energy:                      &#39;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of operators in pool:                 &#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Final number of amplitudes in ansatz:        &#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total number of Hamiltonian measurements:    &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_ham_measurements</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total number of commutator measurements:     &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_commut_measurements</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of classical parameters used:         &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of non-zero parameters used:          &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_nonzero_params</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of CNOT gates in deepest circuit:     &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of Pauli term measurements:           &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of grad vector evaluations:           &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grad_vec_evals</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of individual grad evaluations:       &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grad_m_evals</span><span class="p">)</span>
+
+    <span class="c1"># Define VQE abstract methods.</span>
+<div class="viewcode-block" id="UCCNVQE.solve"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fast : bool</span>
+<span class="sd">            Whether or not to use the optimized but unphysical energy evaluation</span>
+<span class="sd">            function.</span>
+<span class="sd">        maxiter : int</span>
+<span class="sd">            The maximum number of iterations for the scipy optimizer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Construct arguments to hand to the minimizer.</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;gtol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt_thresh</span>
+
+        <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;fatol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt_ftol</span>
+        <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;ftol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt_ftol</span>
+        <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt_ftol</span>
+
+        <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;disp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;maxiter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt_maxiter</span>
+        <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;maxfun&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt_maxiter</span>
+
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span><span class="p">)</span>
+        <span class="n">init_gues_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_feval</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_analytic_grad</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  </span><span class="se">\n</span><span class="s1">--&gt; Begin opt with analytic gradient:&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Initial guess energy:              </span><span class="si">{</span><span class="n">init_gues_energy</span><span class="si">:</span><span class="s2">+12.10f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span>  <span class="n">minimize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_feval</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
+                                    <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="p">,</span>
+                                    <span class="n">jac</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gradient_ary_feval</span><span class="p">,</span>
+                                    <span class="n">options</span><span class="o">=</span><span class="n">opts</span><span class="p">,</span>
+                                    <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">report_iteration</span><span class="p">)</span>
+
+            <span class="c1"># account for paulit term measurement for gradient evaluations</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nm</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span> <span class="o">*</span> <span class="n">res</span><span class="o">.</span><span class="n">njev</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  </span><span class="se">\n</span><span class="s1">--&gt; Begin opt with grad estimated using first-differences:&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Initial guess energy:              </span><span class="si">{</span><span class="n">init_gues_energy</span><span class="si">:</span><span class="s2">+12.10f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span>  <span class="n">minimize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_feval</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
+                                    <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="p">,</span>
+                                    <span class="n">options</span><span class="o">=</span><span class="n">opts</span><span class="p">,</span>
+                                    <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">report_iteration</span><span class="p">)</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">success</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  =&gt; Minimization successful!&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  =&gt; Minimum Energy: </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s1">+12.10f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">fun</span>
+            <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">==</span> <span class="s1">&#39;POWELL&#39;</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="p">[()]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_final_result</span> <span class="o">=</span> <span class="n">res</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  =&gt; WARNING: minimization result may not be tightly converged.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  =&gt; Minimum Energy: </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s1">+12.10f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">fun</span>
+            <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">==</span> <span class="s1">&#39;POWELL&#39;</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="p">[()]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_final_result</span> <span class="o">=</span> <span class="n">res</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_Uvqc</span><span class="p">()</span><span class="o">.</span><span class="n">get_num_cnots</span><span class="p">()</span>
+
+        <span class="c1"># account for pauli term measurement for energy evaluations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span> <span class="o">*</span> <span class="n">res</span><span class="o">.</span><span class="n">nfev</span></div>
+
+
+<div class="viewcode-block" id="UCCNVQE.initialize_ansatz"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE.initialize_ansatz">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_ansatz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UCCNVQE.get_num_ham_measurements"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE.get_num_ham_measurements">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_ham_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_ham_measurements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_final_result</span><span class="o">.</span><span class="n">nfev</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_ham_measurements</span></div>
+
+<div class="viewcode-block" id="UCCNVQE.get_num_commut_measurements"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE.get_num_commut_measurements">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_commut_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># if self._use_analytic_grad:</span>
+        <span class="c1">#     self._n_commut_measurements = self._final_result.njev * (len(self._pool))</span>
+        <span class="c1">#     return self._n_commut_measurements</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     return 0</span>
+        <span class="k">return</span> <span class="mi">0</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, The Evangelista Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
