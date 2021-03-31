@@ -1,8 +1,8 @@
 """
 srqk.py
 =================================================
-A module for calculating the energies of quantum-
-mechanical systems the multireference selected
+A module for calculating reference states for quantum
+mechanical systems for the multireference selected
 quantum Krylov algorithm.
 """
 
@@ -30,6 +30,23 @@ class SRQK(QSD):
             target_root=0,
             diagonalize_each_step=True
             ):
+        """
+        Construct a reference state for the MRSQK algorithm as some root of the Hamiltonian in the space
+        of H U_n φ where U_m = exp(-i m dt H) and φ a single determinant.
+
+        _s : int
+            The greatest m to use in unitaries
+        _nstates : int
+            The number of states
+        _dt : float
+            The dt used in the unitaries
+        _target_root : int
+            Which root of the quantum Krylov subspace should be taken?
+        _diagonalize_each_step : bool
+            For diagnostic purposes, should the eigenvalue of the target root of the quantum Krylov subspace
+            be printed after each new unitary? We recommend passing an s so the change in the eigenvalue is
+            small.
+        """
 
         self._s = s
         self._nstates = s+1
@@ -130,53 +147,22 @@ class SRQK(QSD):
         print('Number of CNOT gates in deepest circuit:   ', self._n_cnot)
         print('Number of Pauli term measurements:         ', self._n_pauli_trm_measures)
 
-    # Define QK abstract methods.
     def build_qk_mats(self):
-        """Returns matrices S and Hbar with dim (s+1)x(s+1) based on the evolutio of
-        two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt *H)
-        on a reference state |Phi_o>, with (Q) and without (P) respect to
-        measuring the operator H.
+        """Returns matrices S and H needed for the MRSQK algorithm using the Trotterized
+        form of the unitary operators U_n = exp(-i n dt H)
 
-        Elements S_mn are given by <Phi_o| Um^dag Un | Phi_o>.
+        The mathematical operations of this function are unphysical for a quantum
+        computer, but efficient for a simulator.
 
-        Elements Hbar_mn are given by <Phi_o| Um^dag H Un | Phi_o>.
+        Returns
+        -------
+        s_mat : ndarray
+            A numpy array containing the elements S_mn = <Phi | Um^dag Un | Phi>.
+            _nstates by _nstates
 
-        This function builds S and Hbar in an efficient manor and gives the same result
-        as M built from 'matrix_element', but is unphysical for a quantum computer.
-
-            Arguments
-            ---------
-
-            ref : list
-                The the reference state |Phi_o>.
-
-            dt : float
-                The real time step value (delta t).
-
-            nstates : int
-                The number of Krylov states to generate.
-
-            H : QuantumOperator
-                The operator to time evolove and measure with respect to
-                (usually the Hamiltonain).
-
-            nqubits : int
-                The number of qubits
-
-            trot_number : int
-                The number of trotter steps (m) to perform when approximating the matrix
-                exponentials (Um or Un). For the exponential of two non commuting terms
-                e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
-                exact in the infinite m limit.
-
-            Returns
-            -------
-            s_mat : ndarray
-                A numpy array containing the elements P_mn
-
-            h_mat : ndarray
-                A numpy array containing the elements Q_mn
-
+        h_mat : ndarray
+            A numpy array containing the elements H_mn = <Phi | Um^dag H Un | Phi>
+            _nstates by _nstates
         """
 
         h_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
@@ -197,6 +183,7 @@ class SRQK(QSD):
                 f.write('#-------------------------------------------------------------------------------\n')
 
         for m in range(self._nstates):
+            # Compute U_m = exp(-i m dt H)
             Um = qforte.QuantumCircuit()
             Um.add_circuit(self._Uprep)
             phase1 = 1.0
@@ -206,14 +193,17 @@ class SRQK(QSD):
                 expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
                 Um.add_circuit(expn_op1)
 
+            # Compute U_m |φ>
             QC = qforte.QuantumComputer(self._nqb)
             QC.apply_circuit(Um)
             QC.apply_constant(phase1)
             omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
+            # Compute H U_m |φ>
             QC.apply_operator(self._qb_ham)
             Homega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
+            # Compute S_mn = <φ| U_m^\dagger U_n |φ> and H_mn = <φ| U_m^\dagger H U_n |φ>
             for n in range(len(omega_lst)):
                 h_mat[m][n] = np.vdot(omega_lst[m], Homega_lst[n])
                 h_mat[n][m] = np.conj(h_mat[m][n])
@@ -269,7 +259,7 @@ class SRQK(QSD):
 
 
     def matrix_element(self, m, n, use_op=False):
-        """Returns a single matrix element M_mn based on the evolutio of
+        """Returns a single matrix element M_mn based on the evolution of
         two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt *H)
         on a reference state |Phi_o>, (optionally) with respect to an operator A.
         Specifically, M_mn is given by <Phi_o| Um^dag Un | Phi_o> or
