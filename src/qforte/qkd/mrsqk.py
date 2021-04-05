@@ -39,9 +39,39 @@ class MRSQK(QSD):
             dt_o=0.25,
             trotter_order_o=1,
             trotter_number_o=1,
-            aci_sigma=0.1,
             diagonalize_each_step=True
             ):
+        """
+        _d : int
+            The number of reference states.
+        _diagonalize_each_step : bool
+            For diagnostic purposes, should the eigenvalue of the target root of the quantum Krylov subspace
+            be printed after each new unitary? We recommend passing an s so the change in the eigenvalue is
+            small.
+        _ninitial_states : bool
+        _nstates : int
+            The number of states
+        _nstates_per_ref : int
+            The number of states for a generated reference.
+        _reference_generator : {"SRQK"}
+            Specifies an algorithm to choose the reference state.
+        _s : int
+            The greatest m to use in unitaries
+        _target_root : int
+            Which root of the quantum Krylov subspace should be taken?
+        _use_phase_based_selection : bool
+        _use_spin_adapted_refs : bool
+
+        SRQK Reference Specific Keywords
+        _dt_o : float
+            dt for SRQK.
+        _s_o : int
+            s for SRQK.
+        _trotter_number_o : int
+            The number of Trotter steps to be used in the SRQK algorithm.
+        _trotter_order_o : int
+            The operator ordering to be used in the Trotter product.
+        """
 
         self._d = d
         self._s = s
@@ -58,7 +88,6 @@ class MRSQK(QSD):
         self._dt_o = dt_o
         self._trotter_order_o = trotter_order_o
         self._trotter_number_o = trotter_number_o
-        self._aci_sigma = aci_sigma
 
         self._diagonalize_each_step=diagonalize_each_step
 
@@ -67,11 +96,9 @@ class MRSQK(QSD):
 
         ######### MRSQK #########
 
-        # State 'Running <SRQK, ACI, ...> to generate references.'
-
-        # Build references or spin-adapted references.
+        # 1. Build the reference wavefunctions.
         if(reference_generator=='SRQK'):
-            print('\n  ==> Beginning SRQK for reference selction.')
+            print('\n  ==> Beginning SRQK for reference selection.')
             self._srqk = SRQK(self._sys,
                               self._ref,
                               trotter_order=self._trotter_order_o,
@@ -81,12 +108,12 @@ class MRSQK(QSD):
                            dt=self._dt_o)
 
             self._n_classical_params = self._srqk._n_classical_params
-            self._n_cnot = self._srqk._n_cnot # maybe not
+            self._n_cnot = self._srqk._n_cnot
             self._n_pauli_trm_measures = self._srqk._n_pauli_trm_measures
 
             self.build_refs_from_srqk()
 
-            print('\n  ==> SRQK reference selction complete.')
+            print('\n  ==> SRQK reference selection complete.')
 
         elif(reference_generator=='ACI'):
             raise NotImplementedError('ACI reference generation not yet available in qforte.')
@@ -96,6 +123,7 @@ class MRSQK(QSD):
         else:
             raise ValueError("Incorrect value passed for reference_generator, can be 'SRQK' or 'ACI'.")
 
+        # 2. Build the S and H matrices.
         # Build S and H matricies
         if(self._fast):
             if(self._use_spin_adapted_refs):
@@ -108,6 +136,7 @@ class MRSQK(QSD):
         # Set the condition number of QSD overlap
         self._Scond = np.linalg.cond(self._S)
 
+        # 3. Solve the generalized eigenproblem
         # Get eigenvalues and eigenvectors
         self._eigenvalues, self._eigenvectors \
         = canonical_geig_solve(self._S,
@@ -115,6 +144,7 @@ class MRSQK(QSD):
                                print_mats=self._verbose,
                                sort_ret_vals=True)
 
+        # 4. Report and set results.
         print('\n       ==> MRSQK eigenvalues <==')
         print('----------------------------------------')
         for i, val in enumerate(self._eigenvalues):
@@ -194,8 +224,6 @@ class MRSQK(QSD):
             print('Dimension of inital Krylov space (N_o):  ',  self._ninitial_states)
             print('Initial delta t_o (in a.u.):             ',  self._dt_o)
             print('\n')
-        if(self._reference_generator=='ACI'):
-            print('ACI energy threshold (sigma):            ',  self._aci_sigma)
 
     def print_summary_banner(self):
         cs_str = '{:.2e}'.format(self._Scond)
@@ -567,56 +595,17 @@ class MRSQK(QSD):
             sorted_evals[n]   = self._srqk._eigenvalues[old_idx]
             sorted_evecs[:,n] = self._srqk._eigenvectors[:,old_idx]
 
-        sorted_sq_mod_evecs = np.zeros((Nis_untruncated, self._ninitial_states), dtype=complex)
+        sorted_sq_mod_evecs = sorted_evecs * np.conjugate(sorted_evecs)
 
-        for p in range(Nis_untruncated):
-            for q in range(self._ninitial_states):
-                sorted_sq_mod_evecs[p][q] = sorted_evecs[p][q] * np.conj(sorted_evecs[p][q])
-
-        # TODO (opt): make a numpy array
-        basis_coeff_vec_lst = []
-
-        # TODO (opt): |e^-int phi> should be stored and used here, not rebuilt
-        for n in range(Nis_untruncated):
-            if(self._fast):
-
-                Uk = qforte.QuantumCircuit()
-                # TODO (opt): use (Uprep)
-                for j in range(self._nqb):
-                    if self._ref[j] == 1:
-                        Uk.add_gate(qforte.make_gate('X', j, j))
-
-                # TODO (opt): move to C
-                temp_op1 = qforte.QuantumOperator()
-                for t in self._qb_ham.terms():
-                    c, op = t
-                    phase = -1.0j * n * self._dt_o * c
-                    temp_op1.add_term(phase, op)
-
-                # Always use a single trotter step for tomography
-                expn_op1, phase1 = trotterize(temp_op1, trotter_number=self._trotter_number_o)
-                for gate in expn_op1.gates():
-                    Uk.add_gate(gate)
-
-                qc = qforte.QuantumComputer(self._nqb)
-                qc.apply_circuit(Uk)
-
-                #TODO (opt): make numpy array.
-                basis_coeff_vec_lst.append(qc.get_coeff_vec())
-
-            else:
-                raise NotImplementedError('Measurement-based selection of new refs not yet implemented.')
-
-        basis_coeff_mat = np.array(basis_coeff_vec_lst)
-
+        basis_coeff_mat = np.array(self._srqk._omega_lst)
         Cprime = (np.conj(sorted_evecs.transpose())).dot(basis_coeff_mat)
         for n in range(self._ninitial_states):
             for i, val in enumerate(Cprime[n]):
                 Cprime[n][i] *= np.conj(val)
 
         for n in range(self._ninitial_states):
-            for i, val in enumerate(basis_coeff_vec_lst[n]):
-                basis_coeff_vec_lst[n][i] *= np.conj(val)
+            for i, val in enumerate(basis_coeff_mat[n]):
+                basis_coeff_mat[n][i] *= np.conj(val)
 
         Cprime_sq_mod = (sorted_sq_mod_evecs.transpose()).dot(basis_coeff_mat)
 

@@ -12,7 +12,35 @@ from scipy.linalg import lstsq
 
 from qforte.maths.eigsolve import canonical_geig_solve
 
+### Throughout this file, we'll refer to DOI 10.1038/s41567-019-0704-4 as Motta.
+
 class QITE(Algorithm):
+    """
+    Attributes
+    ----------
+
+    _b_thresh :
+    _beta : float
+    _db : float
+    _do_lanczos : bool
+    _Ekb : list of float
+        The list of energies for each step of the algorithm.
+    _expansion_type: {'complete_qubit', 'cqoy', 'SD', 'GSD', 'SDT', SDTQ', 'SDTQP', 'SDTQPH', 'test'}
+        The family of operators that each evolution operator will be built of.
+    _lanczos_gap : int
+    _nbeta: int
+        How many QITE steps should be taken?
+    _NI : int
+        The number of operators in _sig.
+    _sig : QuantumOpPool
+        The basis of operators allowed in a unitary evolution step.
+    _sparseSb : bool
+    _sq_ham : SqOperator
+        The second-quantized, fermionic Hamiltonian
+    _total_phase : complex
+    _Uqite: QuantumCircuit
+    _x_thresh : float
+    """
     def run(self,
             beta=1.0,
             db=0.2,
@@ -84,10 +112,8 @@ class QITE(Algorithm):
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
         print('Use fast version of algorithm:           ',  str(self._fast))
-        if(self._fast):
-            print('Measurement varience thresh:             ',  'NA')
-        else:
-            print('Measurement varience thresh:             ',  0.01)
+        if(not self._fast):
+            print('Measurement variance thresh:             ',  0.01)
 
         # Specific QITE options.
         print('Total imaginary evolution time (beta):   ',  self._beta)
@@ -117,19 +143,22 @@ class QITE(Algorithm):
 
         if(self._expansion_type == 'complete_qubit'):
             if (self._nqb > 6):
-                raise ValueError('Using complete qubits expansion will reslut in a very large number of terms!')
+                raise ValueError('Using complete qubits expansion will result in a very large number of terms!')
             self._sig.fill_pool("complete_qubit", self._ref)
 
         elif(self._expansion_type == 'cqoy'):
             self._sig.fill_pool("cqoy", self._ref)
 
-        elif(self._expansion_type == 'SD' or 'GSD' or 'SDT' or 'SDTQ' or 'SDTQP' or 'SDTQPH'):
+        elif(self._expansion_type in {'SD', 'GSD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}):
             P = qf.SQOpPool()
             P.set_orb_spaces(self._ref)
             P.fill_pool(self._expansion_type)
             sig_temp = P.get_quantum_operator("commuting_grp_lex", False)
-            # qf.smart_print(sig_temp)
 
+            # Filter the generated operators, so that only those with an odd number of Y gates are allowed.
+            # See section "Real Hamiltonians and states" in the SI of Motta for theoretical justification.
+            # Briefly, this method solves Ax=b, but all b elements with an odd number of Y gates are imaginary and
+            # thus vanish. This method will not be correct for non-real Hamiltonians or states.
             for alph, rho in sig_temp.terms():
                 nygates = 0
                 temp_rho = qf.QuantumCircuit()
@@ -138,7 +167,7 @@ class QITE(Algorithm):
                     if (gate.gate_id() == "Y"):
                         nygates += 1
 
-                if (nygates%2 != 0):
+                if (nygates % 2 == 1):
                     rho_op = qf.QuantumOperator()
                     rho_op.add_term(1.0, temp_rho)
                     self._sig.add_term(1.0, rho_op)
@@ -153,23 +182,24 @@ class QITE(Algorithm):
 
 
     def build_S(self):
+        """
+        Construct the matrix S (eq. 5a) of Motta.
+        """
         Idim = self._NI
 
         S = np.zeros((Idim, Idim), dtype=complex)
 
         Ipsi_qc = qf.QuantumComputer(self._nqb)
         Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+        # CI[I][J] = (σ_I Ψ)_J
         CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
 
-        for i in range(1, Idim):
-            S[i-1][i-1] = 1.0
+        for i in range(Idim):
+            S[i][i] = 1.0 # With Pauli strings, this is always the inner product
             Ipsi_qc.apply_operator(self._sig.terms()[i][1])
             CI[i,:] = copy.deepcopy(Ipsi_qc.get_coeff_vec())
-            for j in range(1, i):
-                val = np.vdot(CI[i,:], CI[j,:])
-                S[i][j] = val
-                S[j][i] = val
-
+            for j in range(i):
+                S[i][j] = S[j][i] = np.vdot(CI[i,:], CI[j,:])
             Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
 
         return np.real(S)
@@ -182,7 +212,6 @@ class QITE(Algorithm):
             if(np.abs(bI) > self._b_thresh):
                 idx_sparse.append(I)
                 b_sparse.append(bI)
-
         Idim = len(idx_sparse)
         self._n_pauli_trm_measures += int(Idim*(Idim+1)*0.5)
 
@@ -192,43 +221,43 @@ class QITE(Algorithm):
         Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
         CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
 
-        for i in range(1, Idim):
-            S[i-1][i-1] = 1.0
+        for i in range(Idim):
+            S[i][i] = 1.0 # With Pauli strings, this is always the inner product
             Ii = idx_sparse[i]
             Ipsi_qc.apply_operator(self._sig.terms()[Ii][1])
             CI[i,:] = copy.deepcopy(Ipsi_qc.get_coeff_vec())
-            for j in range(1, i):
-                val = np.vdot(CI[i,:], CI[j,:])
-                S[i][j] = val
-                S[j][i] = val
-
+            for j in range(i):
+                S[i][j] = S[j][i] = np.vdot(CI[i,:], CI[j,:])
             Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
 
         return idx_sparse, np.real(S), np.real(b_sparse)
 
     def build_b(self):
+        """
+        Construct the vector b (eq. 5b) of Motta, with h[m] the full Hamiltonian.
+        """
 
         b  = np.zeros(self._NI, dtype=complex)
 
-        term = np.sqrt(1 - 2*self._db*self._Ekb[-1])
-        fo = -1.0j / term
+        denom = np.sqrt(1 - 2*self._db*self._Ekb[-1])
+        prefactor = -1.0j / denom
 
         self._n_pauli_trm_measures += self._Nl * self._NI
 
-        self._Hpsi_qc = qf.QuantumComputer(self._nqb)
-        self._Hpsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
-        self._Hpsi_qc.apply_operator(self._qb_ham)
-        C_Hpsi_qc = copy.deepcopy(self._Hpsi_qc.get_coeff_vec())
+        Hpsi_qc = qf.QuantumComputer(self._nqb)
+        Hpsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
+        Hpsi_qc.apply_operator(self._qb_ham)
+        C_Hpsi_qc = copy.deepcopy(Hpsi_qc.get_coeff_vec())
 
-        for I in range(self._NI):
-            self._Hpsi_qc.apply_operator(self._sig.terms()[I][1])
-            val = np.vdot(self._qc.get_coeff_vec(), self._Hpsi_qc.get_coeff_vec())
-            b[I] = self._sig.terms()[I][0] * val * fo
-            self._Hpsi_qc.set_coeff_vec(C_Hpsi_qc)
+        for I, (op_coefficient, operator) in enumerate(self._sig.terms()):
+            Hpsi_qc.apply_operator(operator)
+            exp_val = np.vdot(self._qc.get_coeff_vec(), Hpsi_qc.get_coeff_vec())
+            b[I] = prefactor * op_coefficient * exp_val
+            Hpsi_qc.set_coeff_vec(C_Hpsi_qc)
 
         return np.real(b)
 
-    def do_quite_step(self):
+    def do_qite_step(self):
 
         btot = self.build_b()
         A = qf.QuantumOperator()
@@ -277,15 +306,15 @@ class QITE(Algorithm):
         self._qc.apply_circuit(self._Uqite)
 
         if(self._do_lanczos):
-            self._lancos_vecs = []
-            self._Hlancos_vecs = []
+            self._lanczos_vecs = []
+            self._Hlanczos_vecs = []
 
-            self._lancos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
+            self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
 
             qcSig_temp = qf.QuantumComputer(self._nqb)
             qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
             qcSig_temp.apply_operator(self._qb_ham)
-            self._Hlancos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
+            self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
 
 
         print(f"{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
@@ -299,15 +328,15 @@ class QITE(Algorithm):
             f.write(f'  {0.0:7.3f}    {self._Ekb[0]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n')
 
         for kb in range(1, self._nbeta):
-            self.do_quite_step()
+            self.do_qite_step()
             if(self._do_lanczos):
                 if(kb % self._lanczos_gap == 0):
-                    self._lancos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
+                    self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
 
                     qcSig_temp = qf.QuantumComputer(self._nqb)
                     qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
                     qcSig_temp.apply_operator(self._qb_ham)
-                    self._Hlancos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
+                    self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
 
             print(f' {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
             if (self._print_summary_file):
@@ -325,9 +354,9 @@ class QITE(Algorithm):
 
     def do_qlanczos(self):
         """"""
-        n_lancos_vecs = len(self._lancos_vecs)
-        h_mat = np.zeros((n_lancos_vecs,n_lancos_vecs), dtype=complex)
-        s_mat = np.zeros((n_lancos_vecs,n_lancos_vecs), dtype=complex)
+        n_lanczos_vecs = len(self._lanczos_vecs)
+        h_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
+        s_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
 
         print('\n\n-----------------------------------------------------')
         print('         Quantum Imaginary Time Lanczos   ')
@@ -342,11 +371,11 @@ class QITE(Algorithm):
             f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
             f2.write('#-------------------------------------------------------------------------------\n')
 
-        for m in range(n_lancos_vecs):
+        for m in range(n_lanczos_vecs):
             for n in range(m+1):
-                h_mat[m][n] = np.vdot(self._lancos_vecs[m], self._Hlancos_vecs[n])
+                h_mat[m][n] = np.vdot(self._lanczos_vecs[m], self._Hlanczos_vecs[n])
                 h_mat[n][m] = np.conj(h_mat[m][n])
-                s_mat[m][n] = np.vdot(self._lancos_vecs[m], self._lancos_vecs[n])
+                s_mat[m][n] = np.vdot(self._lanczos_vecs[m], self._lanczos_vecs[n])
                 s_mat[n][m] = np.conj(s_mat[m][n])
 
             k = m+1
