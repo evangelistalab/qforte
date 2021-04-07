@@ -10,16 +10,9 @@ Welcome to qforte's documentation!
    :maxdepth: 3
    :caption: Contents:
 
-.. automodule:: qforte
-    :members:
-
-.. automodule:: qforte.ucc.uccnvqe
-    :members:
-
-.. automodule:: qforte.qkd.srqk
-    :members:
-
-
+   abc/algorithm
+   abc/uccvqeabc
+   ucc/uccnvqe
 
 
 

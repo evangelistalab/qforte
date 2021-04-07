@@ -21,10 +21,9 @@ class UCCNVQE(UCCVQE):
     """
     A class that encompasses the three components of using the variational
     quantum eigensolver to optimize a parameterized unitary CCN-like wave function.
-
-    UCCN-VQE: (1) prepares a quantum state on the quantum computer
-    representing the wave function to be simulated, (2) evauates the energy by
-    measurement, and (3) optemizes the the wave funciton by minimizing the energy.
+    (1) prepares a quantum state on the quantum computer
+    representing the wave function to be simulated, (2) evauates the energy and
+    gradients (3) optemizes the the wave funciton by minimizing the energy.
 
     Attributes
     ----------

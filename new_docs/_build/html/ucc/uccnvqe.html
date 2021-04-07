@@ -1,0 +1,639 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Subsubclass for ucc-type algorithms &mdash; qForte  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="UCC-VQE abstract base classes" href="../abc/uccvqeabc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> qForte
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../abc/algorithm.html">Abstract base class for all algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../abc/uccvqeabc.html">UCC-VQE abstract base classes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Subsubclass for ucc-type algorithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#uccnvqe-py">uccnvqe.py</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">qForte</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Subsubclass for ucc-type algorithms</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/ucc/uccnvqe.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-qforte.ucc.uccnvqe">
+<span id="subsubclass-for-ucc-type-algorithms"></span><h1>Subsubclass for ucc-type algorithms<a class="headerlink" href="#module-qforte.ucc.uccnvqe" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="uccnvqe-py">
+<h2>uccnvqe.py<a class="headerlink" href="#uccnvqe-py" title="Permalink to this headline">¶</a></h2>
+<p>A module for using the variational quantum eigensolver
+with a trotterized UCCN anxatz.</p>
+<dl class="py class">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">qforte.ucc.uccnvqe.</span></code><code class="sig-name descname"><span class="pre">UCCNVQE</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_state_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reference'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_summary_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/ucc/uccnvqe.html#UCCNVQE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class that encompasses the three components of using the variational
+quantum eigensolver to optimize a parameterized unitary CCN-like wave function.
+(1) prepares a quantum state on the quantum computer
+representing the wave function to be simulated, (2) evauates the energy and
+gradients (3) optemizes the the wave funciton by minimizing the energy.</p>
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._ref">
+<code class="sig-name descname"><span class="pre">_ref</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>The set of 1s and 0s indicating the initial quantum state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._nqubits">
+<code class="sig-name descname"><span class="pre">_nqubits</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._nqubits" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of qubits the calculation empolys.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._operator">
+<code class="sig-name descname"><span class="pre">_operator</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator to be measured (usually the Hamiltonian), mapped to a
+qubit representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>QuantumOperator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._avqe_thresh">
+<code class="sig-name descname"><span class="pre">_avqe_thresh</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._avqe_thresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The gradient norm threshold to determine when the UCCN-VQE
+algorithm has converged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._opt_thresh">
+<code class="sig-name descname"><span class="pre">_opt_thresh</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._opt_thresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The gradient norm threshold to determine when the classical optimizer
+algorithm has converged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._use_fast_measurement">
+<code class="sig-name descname"><span class="pre">_use_fast_measurement</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._use_fast_measurement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not to use a faster version of the algorithm that bypasses
+measurment (unphysical for quantum computer).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._use_analytic_grad">
+<code class="sig-name descname"><span class="pre">_use_analytic_grad</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._use_analytic_grad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not to use an analytic function for the gradient to pass to
+the optimizer. If false, the optimizer will use self-generated approximate
+gradients (if BFGS algorithm is used).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._optimizer">
+<code class="sig-name descname"><span class="pre">_optimizer</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>The type of optimizer to use for the classical portion of VQE. Suggested
+algorithms are ‘BFGS’ or ‘Nelder-Mead’ although there are many options
+(see SciPy.optimize.minimize documentation).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._pool_type">
+<code class="sig-name descname"><span class="pre">_pool_type</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._pool_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>A string specifying the kinds of tamplitudes allowed in the UCCN-VQE
+parameterization.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>SA_SD: At most two orbital excitations. Assumes a singlet wavefunction and closed-shell Slater determinant</dt><dd><p>reducing the number of amplitudes.</p>
+</dd>
+</dl>
+<p>SD: At most two orbital excitations.
+SDT: At most three orbital excitations.
+SDTQ: At most four orbital excitations.
+SDTQP: At most five orbital excitations.
+SDTQPH: At most six orbital excitations.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._trott_num">
+<code class="sig-name descname"><span class="pre">_trott_num</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._trott_num" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Trotter number for the calculation
+(exact in the infinte limit).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._results">
+<code class="sig-name descname"><span class="pre">_results</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._results" title="Permalink to this definition">¶</a></dt>
+<dd><p>The optimizer result objects from each iteration of UCCN-VQE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._energies">
+<code class="sig-name descname"><span class="pre">_energies</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._energies" title="Permalink to this definition">¶</a></dt>
+<dd><p>The optimized energies from each iteration of UCCN-VQE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._grad_norms">
+<code class="sig-name descname"><span class="pre">_grad_norms</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._grad_norms" title="Permalink to this definition">¶</a></dt>
+<dd><p>The gradient norms from each iteration of UCCN-VQE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._curr_grad_norm">
+<code class="sig-name descname"><span class="pre">_curr_grad_norm</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._curr_grad_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The gradient norm for the current iteration of UCCN-VQE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._initial_guess_energy">
+<code class="sig-name descname"><span class="pre">_initial_guess_energy</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._initial_guess_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The initial guess energy from each iteration of UCCN-VQE.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._pool_obj">
+<code class="sig-name descname"><span class="pre">_pool_obj</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._pool_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>An SDOpPool object corresponding to the specified operators of
+interest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>SDOpPool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._pool">
+<code class="sig-name descname"><span class="pre">_pool</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>The linear combination of (optionally symmetrized) single and double
+excitation operators to consider. This is represented as a list.
+Each entry is a pair of a complex coefficient and an SqOperator object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of tuple(complex, SqOperator)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._tops">
+<code class="sig-name descname"><span class="pre">_tops</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._tops" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of indices representing selected operators in the pool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._tamps">
+<code class="sig-name descname"><span class="pre">_tamps</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._tamps" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of amplitudes (to be optimized) representing selected
+operators in the pool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._commutator_pool">
+<code class="sig-name descname"><span class="pre">_commutator_pool</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._commutator_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>The QuantumOperator objects representing the commutators [H, Am] of the
+Hamiltonian (H) and each member of the operator pool (Am).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._N_samples">
+<code class="sig-name descname"><span class="pre">_N_samples</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._N_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of times to measure each term in _operator
+(not yet functional).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._converged">
+<code class="sig-name descname"><span class="pre">_converged</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._converged" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not the UCCN-VQE has converged according to the gradient-norm
+threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._final_energy">
+<code class="sig-name descname"><span class="pre">_final_energy</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._final_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The final UCCN-VQE energy value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._final_result">
+<code class="sig-name descname"><span class="pre">_final_result</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._final_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>The last result object from the optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Result</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._n_ham_measurements">
+<code class="sig-name descname"><span class="pre">_n_ham_measurements</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._n_ham_measurements" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total number of times the energy was evaluated via
+measurement of the Hamiltonian</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE._n_commut_measurements">
+<code class="sig-name descname"><span class="pre">_n_commut_measurements</span></code><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE._n_commut_measurements" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total number of times the commutator was evaluated via
+measurement of [H, Am].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.fill_pool">
+<code class="sig-name descname"><span class="pre">fill_pool</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.fill_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills the _pool with orbital indices of UCC amplitudes specified
+by the pool_type. Indices are according to _nocc and _nvir.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.fill_commutator_pool">
+<code class="sig-name descname"><span class="pre">fill_commutator_pool</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.fill_commutator_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills the _commutator_pool with circuits considering the _operator to
+be measured and the _pool.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.initialize_ansatz">
+<code class="sig-name descname"><span class="pre">initialize_ansatz</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/ucc/uccnvqe.html#UCCNVQE.initialize_ansatz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.initialize_ansatz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds all operators in the pool to the list of operators in the circuit,
+with amplitude 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.build_Uprep">
+<code class="sig-name descname"><span class="pre">build_Uprep</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.build_Uprep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a QuantumCircuit object corresponding to the state preparation
+circuit for the UCCN-VQE ansatz on a given iteration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.measure_gradient">
+<code class="sig-name descname"><span class="pre">measure_gradient</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.measure_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the measured energy gradient with respect to a single
+parameter Am.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.measure_energy">
+<code class="sig-name descname"><span class="pre">measure_energy</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.measure_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the measured energy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.energy_feval">
+<code class="sig-name descname"><span class="pre">energy_feval</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.energy_feval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a state preparation circuit given a parameter list and returns
+the measured energy. Used as the function the minimizer calls.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.gradient_ary_feval">
+<code class="sig-name descname"><span class="pre">gradient_ary_feval</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.gradient_ary_feval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the gradients with respect to all operators currently in the
+UCCN-VQE ansatz. Used as the jacobian the minimizer calls.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.solve">
+<code class="sig-name descname"><span class="pre">solve</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/ucc/uccnvqe.html#UCCNVQE.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the optimizer to mimimize the energy. Sets certain optimizer
+parameters internally.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.conv_status">
+<code class="sig-name descname"><span class="pre">conv_status</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.conv_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the convergence states.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.get_num_ham_measurements">
+<code class="sig-name descname"><span class="pre">get_num_ham_measurements</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/ucc/uccnvqe.html#UCCNVQE.get_num_ham_measurements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.get_num_ham_measurements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total number of times the energy was evaluated via
+measurement of the Hamiltoanin.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.get_num_commut_measurements">
+<code class="sig-name descname"><span class="pre">get_num_commut_measurements</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/ucc/uccnvqe.html#UCCNVQE.get_num_commut_measurements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.get_num_commut_measurements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total number of times the commutator was evaluated via
+measurement of [H, Am].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.get_final_energy">
+<code class="sig-name descname"><span class="pre">get_final_energy</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.get_final_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the final energy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.ucc.uccnvqe.UCCNVQE.get_final_result">
+<code class="sig-name descname"><span class="pre">get_final_result</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.ucc.uccnvqe.UCCNVQE.get_final_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the final optimization result from the optimizer. Contains
+the final amplitudes used.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id0">
+<code class="sig-name descname"><span class="pre">solve</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/ucc/uccnvqe.html#UCCNVQE.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fast</strong> (<em>bool</em>) – Whether or not to use the optimized but unphysical energy evaluation
+function.</p></li>
+<li><p><strong>maxiter</strong> (<em>int</em>) – The maximum number of iterations for the scipy optimizer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../abc/uccvqeabc.html" class="btn btn-neutral float-left" title="UCC-VQE abstract base classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, The Evangelista Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

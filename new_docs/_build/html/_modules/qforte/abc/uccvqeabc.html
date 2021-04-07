@@ -77,8 +77,13 @@
               
             
             
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../abc/algorithm.html">Abstract base class for all algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../abc/uccvqeabc.html">UCC-VQE abstract base classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
+</ul>
+
             
           
         </div>
@@ -152,7 +157,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="k">class</span> <span class="nc">UCCVQE</span><span class="p">(</span><span class="n">VQE</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCVQE"><a class="viewcode-back" href="../../../abc/uccvqeabc.html#qforte.abc.uccvqeabc.UCCVQE">[docs]</a><span class="k">class</span> <span class="nc">UCCVQE</span><span class="p">(</span><span class="n">VQE</span><span class="p">):</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">get_num_ham_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -195,7 +200,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;==&gt; Commutator pool construction complete.&#39;</span><span class="p">)</span>
 
     <span class="c1"># TODO (opt major): write a C function that prepares this super efficiently</span>
-    <span class="k">def</span> <span class="nf">build_Uvqc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amplitudes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCVQE.build_Uvqc"><a class="viewcode-back" href="../../../abc/uccvqeabc.html#qforte.abc.uccvqeabc.UCCVQE.build_Uvqc">[docs]</a>    <span class="k">def</span> <span class="nf">build_Uvqc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amplitudes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; This function returns the QuantumCircuit object built</span>
 <span class="sd">        from the appropriate amplitudes (tops)</span>
 
@@ -220,9 +225,9 @@
         <span class="n">Uvqc</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Uprep</span><span class="p">)</span>
         <span class="n">Uvqc</span><span class="o">.</span><span class="n">add_circuit</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">Uvqc</span>
+        <span class="k">return</span> <span class="n">Uvqc</span></div>
 
-    <span class="k">def</span> <span class="nf">measure_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operators</span><span class="p">,</span> <span class="n">Ucirc</span><span class="p">,</span> <span class="n">idxs</span><span class="o">=</span><span class="p">[]):</span>
+<div class="viewcode-block" id="UCCVQE.measure_operators"><a class="viewcode-back" href="../../../abc/uccvqeabc.html#qforte.abc.uccvqeabc.UCCVQE.measure_operators">[docs]</a>    <span class="k">def</span> <span class="nf">measure_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operators</span><span class="p">,</span> <span class="n">Ucirc</span><span class="p">,</span> <span class="n">idxs</span><span class="o">=</span><span class="p">[]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -255,9 +260,9 @@
 
         <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">grads</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">grads</span><span class="p">),</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">measure_gradient2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCVQE.measure_gradient2"><a class="viewcode-back" href="../../../abc/uccvqeabc.html#qforte.abc.uccvqeabc.UCCVQE.measure_gradient2">[docs]</a>    <span class="k">def</span> <span class="nf">measure_gradient2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -329,10 +334,10 @@
 
         <span class="c1"># self._curr_grad_norm = np.linalg.norm(grads)</span>
 
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span></div>
 
     <span class="c1"># TODO: Why is this function here? It seems ADAPT-VQE specific?</span>
-    <span class="k">def</span> <span class="nf">measure_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_entire_pool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCVQE.measure_gradient"><a class="viewcode-back" href="../../../abc/uccvqeabc.html#qforte.abc.uccvqeabc.UCCVQE.measure_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">measure_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_entire_pool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -428,7 +433,7 @@
 
         <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">grads</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">grads</span><span class="p">),</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">grads</span>
+        <span class="k">return</span> <span class="n">grads</span></div>
 
     <span class="k">def</span> <span class="nf">measure_gradient3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -467,7 +472,7 @@
         <span class="k">return</span> <span class="n">grads</span>
 
 
-    <span class="k">def</span> <span class="nf">measure_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ucirc</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCVQE.measure_energy"><a class="viewcode-back" href="../../../abc/uccvqeabc.html#qforte.abc.uccvqeabc.UCCVQE.measure_energy">[docs]</a>    <span class="k">def</span> <span class="nf">measure_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ucirc</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -484,7 +489,7 @@
             <span class="n">val</span> <span class="o">=</span> <span class="n">Exp</span><span class="o">.</span><span class="n">perfect_experimental_avg</span><span class="p">(</span><span class="n">empty_params</span><span class="p">)</span>
 
         <span class="k">assert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">val</span><span class="p">),</span><span class="mf">0.0</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">val</span></div>
 
     <span class="k">def</span> <span class="nf">energy_feval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
         <span class="n">Ucirc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_Uvqc</span><span class="p">(</span><span class="n">amplitudes</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
@@ -550,7 +555,7 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Concrete UCCVQE class must define self._pool_type attribute.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Concrete UCCVQE class must define self._pool_obj attribute.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Concrete UCCVQE class must define self._pool_obj attribute.&#39;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

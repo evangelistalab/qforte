@@ -77,8 +77,13 @@
               
             
             
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../abc/algorithm.html">Abstract base class for all algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../abc/uccvqeabc.html">UCC-VQE abstract base classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
+</ul>
+
             
           
         </div>
@@ -159,14 +164,13 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
 
-<div class="viewcode-block" id="UCCNVQE"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE">[docs]</a><span class="k">class</span> <span class="nc">UCCNVQE</span><span class="p">(</span><span class="n">UCCVQE</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCNVQE"><a class="viewcode-back" href="../../../ucc/uccnvqe.html#qforte.ucc.uccnvqe.UCCNVQE">[docs]</a><span class="k">class</span> <span class="nc">UCCNVQE</span><span class="p">(</span><span class="n">UCCVQE</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class that encompasses the three components of using the variational</span>
 <span class="sd">    quantum eigensolver to optimize a parameterized unitary CCN-like wave function.</span>
-
-<span class="sd">    UCCN-VQE: (1) prepares a quantum state on the quantum computer</span>
-<span class="sd">    representing the wave function to be simulated, (2) evauates the energy by</span>
-<span class="sd">    measurement, and (3) optemizes the the wave funciton by minimizing the energy.</span>
+<span class="sd">    (1) prepares a quantum state on the quantum computer</span>
+<span class="sd">    representing the wave function to be simulated, (2) evauates the energy and</span>
+<span class="sd">    gradients (3) optemizes the the wave funciton by minimizing the energy.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -446,7 +450,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of individual grad evaluations:       &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grad_m_evals</span><span class="p">)</span>
 
     <span class="c1"># Define VQE abstract methods.</span>
-<div class="viewcode-block" id="UCCNVQE.solve"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCNVQE.solve"><a class="viewcode-back" href="../../../ucc/uccnvqe.html#qforte.ucc.uccnvqe.UCCNVQE.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -521,15 +525,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span> <span class="o">*</span> <span class="n">res</span><span class="o">.</span><span class="n">nfev</span></div>
 
 
-<div class="viewcode-block" id="UCCNVQE.initialize_ansatz"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE.initialize_ansatz">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_ansatz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCNVQE.initialize_ansatz"><a class="viewcode-back" href="../../../ucc/uccnvqe.html#qforte.ucc.uccnvqe.UCCNVQE.initialize_ansatz">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_ansatz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="p">)))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tamps</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="UCCNVQE.get_num_ham_measurements"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE.get_num_ham_measurements">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_ham_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCNVQE.get_num_ham_measurements"><a class="viewcode-back" href="../../../ucc/uccnvqe.html#qforte.ucc.uccnvqe.UCCNVQE.get_num_ham_measurements">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_ham_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_n_ham_measurements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_final_result</span><span class="o">.</span><span class="n">nfev</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_ham_measurements</span></div>
 
-<div class="viewcode-block" id="UCCNVQE.get_num_commut_measurements"><a class="viewcode-back" href="../../../index.html#qforte.ucc.uccnvqe.UCCNVQE.get_num_commut_measurements">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_commut_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UCCNVQE.get_num_commut_measurements"><a class="viewcode-back" href="../../../ucc/uccnvqe.html#qforte.ucc.uccnvqe.UCCNVQE.get_num_commut_measurements">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_commut_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># if self._use_analytic_grad:</span>
         <span class="c1">#     self._n_commut_measurements = self._final_result.njev * (len(self._pool))</span>
         <span class="c1">#     return self._n_commut_measurements</span>

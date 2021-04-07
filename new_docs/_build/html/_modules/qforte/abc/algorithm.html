@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>qforte.abc.algorithm &mdash; qForte  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> qForte
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../abc/algorithm.html">Abstract base class for all algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../abc/uccvqeabc.html">UCC-VQE abstract base classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">qForte</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>qforte.abc.algorithm</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for qforte.abc.algorithm</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">algorithm.py</span>
+<span class="sd">====================================</span>
+<span class="sd">The abstract base clase inherited by all algorithm subclasses.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">qforte.utils.state_prep</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="Algorithm"><a class="viewcode-back" href="../../../abc/algorithm.html#qforte.abc.algorithm.Algorithm">[docs]</a><span class="k">class</span> <span class="nc">Algorithm</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    _ref : list</span>
+<span class="sd">        The set of 1s and 0s indicating the initial quantum state.</span>
+
+<span class="sd">    _nqb : int</span>
+<span class="sd">        The number of qubits the calculation empolys.</span>
+
+<span class="sd">    _qb_ham : QuantumOperator</span>
+<span class="sd">        The operator to be measured (usually the Hamiltonian), mapped to a</span>
+<span class="sd">        qubit representation.</span>
+
+<span class="sd">    _fast : bool</span>
+<span class="sd">        Whether or not to use a faster version of the algorithm that bypasses</span>
+<span class="sd">        measurment (unphysical for quantum computer). Most algorithms only</span>
+<span class="sd">        have a fast implentation.</span>
+
+<span class="sd">    _trotter_order : int</span>
+<span class="sd">        The Trotter order to use for exponentiated operators.</span>
+<span class="sd">        (exact in the infinte limit).</span>
+
+<span class="sd">    _trotter_number : int</span>
+<span class="sd">        The Trotter number (or the number of trotter steps)</span>
+<span class="sd">        to use for exponentiated operators.</span>
+<span class="sd">        (exact in the infinte limit).</span>
+
+<span class="sd">    _Egs : float</span>
+<span class="sd">        The final ground state energy value.</span>
+
+<span class="sd">    _Umaxdepth : QuantumCircuit</span>
+<span class="sd">        The deepest circuit used during any part of the algorithm.</span>
+
+<span class="sd">    _n_classical_params : int</span>
+<span class="sd">        The number of classical parameters used by the algorithm.</span>
+
+<span class="sd">    _n_cnot : int</span>
+<span class="sd">        The number of controlled-not (CNOT) opperations used in the (deepest)</span>
+<span class="sd">        quantum circuit (_Umaxdepth).</span>
+
+<span class="sd">    _n_pauli_trm_measures : int</span>
+<span class="sd">        The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)</span>
+<span class="sd">        mesaured over the entire algorithm.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    print_options_banner()</span>
+<span class="sd">        Prints the run options used for algorithm.</span>
+
+<span class="sd">    print_summary_banner()</span>
+<span class="sd">        Prints a summary of the post-run information.</span>
+
+<span class="sd">    run()</span>
+<span class="sd">        Execute the algorithm.</span>
+
+<span class="sd">    run_realistic()</span>
+<span class="sd">        Executes the algorithm using only operations physically possable for</span>
+<span class="sd">        quantum hardware. Not implented for most algorithms.</span>
+
+<span class="sd">    verify_run()</span>
+<span class="sd">        Verifies that the abstract sub-class(es) define the required attributes.</span>
+
+<span class="sd">    get_gs_energy():</span>
+<span class="sd">        Returns the final ground state energy</span>
+
+<span class="sd">    def get_Umaxdepth(self):</span>
+<span class="sd">        Returns the deepest circuit used during any part of the</span>
+<span class="sd">        algorithm (_Umaxdepth).</span>
+
+<span class="sd">    def verify_required_attributes(self):</span>
+<span class="sd">        Verifies that the concrete sub-class(es) define the required attributes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">system</span><span class="p">,</span>
+                 <span class="n">reference</span><span class="p">,</span>
+                 <span class="n">trial_state_type</span><span class="o">=</span><span class="s1">&#39;reference&#39;</span><span class="p">,</span>
+                 <span class="n">trotter_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">trotter_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">print_summary_file</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sys</span> <span class="o">=</span> <span class="n">system</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ref</span> <span class="o">=</span> <span class="n">reference</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nqb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trial_state_type</span> <span class="o">=</span> <span class="n">trial_state_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Uprep</span> <span class="o">=</span> <span class="n">build_Uprep</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">trial_state_type</span><span class="p">)</span>
+        <span class="c1"># TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonain()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qb_ham</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">get_hamiltonian</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="s1">&#39;_hf_energy&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hf_energy</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">get_hf_energy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hf_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nl</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qb_ham</span><span class="o">.</span><span class="n">terms</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trotter_order</span> <span class="o">=</span> <span class="n">trotter_order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trotter_number</span> <span class="o">=</span> <span class="n">trotter_number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fast</span> <span class="o">=</span> <span class="n">fast</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_summary_file</span> <span class="o">=</span> <span class="n">print_summary_file</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_noise_factor</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="c1"># Required attributes, to be defined in concrete class.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Umaxdepth</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="Algorithm.print_options_banner"><a class="viewcode-back" href="../../../abc/algorithm.html#qforte.abc.algorithm.Algorithm.print_options_banner">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">print_options_banner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Algorithm.print_summary_banner"><a class="viewcode-back" href="../../../abc/algorithm.html#qforte.abc.algorithm.Algorithm.print_summary_banner">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">print_summary_banner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Algorithm.run"><a class="viewcode-back" href="../../../abc/algorithm.html#qforte.abc.algorithm.Algorithm.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Algorithm.run_realistic"><a class="viewcode-back" href="../../../abc/algorithm.html#qforte.abc.algorithm.Algorithm.run_realistic">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run_realistic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Algorithm.verify_run"><a class="viewcode-back" href="../../../abc/algorithm.html#qforte.abc.algorithm.Algorithm.verify_run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">verify_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="nf">get_gs_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span>
+
+    <span class="k">def</span> <span class="nf">get_Umaxdepth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">get_tot_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">get_tot_state_preparations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">verify_required_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Egs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Concrete Algorithm class must define self._Egs attribute.&#39;</span><span class="p">)</span>
+
+<span class="c1">#         if self._Umaxdepth is None:</span>
+<span class="c1">#             raise NotImplementedError(&#39;Concrete Algorithm class must define self._Umaxdepth attribute.&#39;)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_classical_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Concrete Algorithm class must define self._n_classical_params attribute.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_cnot</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Concrete Algorithm class must define self._n_cnot attribute.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_pauli_trm_measures</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Concrete Algorithm class must define self._n_pauli_trm_measures attribute.&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, The Evangelista Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

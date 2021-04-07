@@ -1,0 +1,395 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Abstract base class for all algorithms &mdash; qForte  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="UCC-VQE abstract base classes" href="uccvqeabc.html" />
+    <link rel="prev" title="Welcome to qforte’s documentation!" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> qForte
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Abstract base class for all algorithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#algorithm-py">algorithm.py</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="uccvqeabc.html">UCC-VQE abstract base classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">qForte</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Abstract base class for all algorithms</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/abc/algorithm.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-qforte.abc.algorithm">
+<span id="abstract-base-class-for-all-algorithms"></span><h1>Abstract base class for all algorithms<a class="headerlink" href="#module-qforte.abc.algorithm" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="algorithm-py">
+<h2>algorithm.py<a class="headerlink" href="#algorithm-py" title="Permalink to this headline">¶</a></h2>
+<p>The abstract base clase inherited by all algorithm subclasses.</p>
+<dl class="py class">
+<dt id="qforte.abc.algorithm.Algorithm">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">qforte.abc.algorithm.</span></code><code class="sig-name descname"><span class="pre">Algorithm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_state_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reference'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_summary_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/algorithm.html#Algorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.algorithm.Algorithm" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._ref">
+<code class="sig-name descname"><span class="pre">_ref</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>The set of 1s and 0s indicating the initial quantum state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._nqb">
+<code class="sig-name descname"><span class="pre">_nqb</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._nqb" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of qubits the calculation empolys.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._qb_ham">
+<code class="sig-name descname"><span class="pre">_qb_ham</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._qb_ham" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator to be measured (usually the Hamiltonian), mapped to a
+qubit representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>QuantumOperator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._fast">
+<code class="sig-name descname"><span class="pre">_fast</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._fast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not to use a faster version of the algorithm that bypasses
+measurment (unphysical for quantum computer). Most algorithms only
+have a fast implentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._trotter_order">
+<code class="sig-name descname"><span class="pre">_trotter_order</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._trotter_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Trotter order to use for exponentiated operators.
+(exact in the infinte limit).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._trotter_number">
+<code class="sig-name descname"><span class="pre">_trotter_number</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._trotter_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Trotter number (or the number of trotter steps)
+to use for exponentiated operators.
+(exact in the infinte limit).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._Egs">
+<code class="sig-name descname"><span class="pre">_Egs</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._Egs" title="Permalink to this definition">¶</a></dt>
+<dd><p>The final ground state energy value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._Umaxdepth">
+<code class="sig-name descname"><span class="pre">_Umaxdepth</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._Umaxdepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>The deepest circuit used during any part of the algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>QuantumCircuit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._n_classical_params">
+<code class="sig-name descname"><span class="pre">_n_classical_params</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._n_classical_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of classical parameters used by the algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._n_cnot">
+<code class="sig-name descname"><span class="pre">_n_cnot</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._n_cnot" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of controlled-not (CNOT) opperations used in the (deepest)
+quantum circuit (_Umaxdepth).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.algorithm.Algorithm._n_pauli_trm_measures">
+<code class="sig-name descname"><span class="pre">_n_pauli_trm_measures</span></code><a class="headerlink" href="#qforte.abc.algorithm.Algorithm._n_pauli_trm_measures" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)
+mesaured over the entire algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.algorithm.Algorithm.print_options_banner">
+<code class="sig-name descname"><span class="pre">print_options_banner</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/algorithm.html#Algorithm.print_options_banner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.algorithm.Algorithm.print_options_banner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints the run options used for algorithm.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.algorithm.Algorithm.print_summary_banner">
+<code class="sig-name descname"><span class="pre">print_summary_banner</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/algorithm.html#Algorithm.print_summary_banner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.algorithm.Algorithm.print_summary_banner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints a summary of the post-run information.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.algorithm.Algorithm.run">
+<code class="sig-name descname"><span class="pre">run</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/algorithm.html#Algorithm.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.algorithm.Algorithm.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the algorithm.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.algorithm.Algorithm.run_realistic">
+<code class="sig-name descname"><span class="pre">run_realistic</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/algorithm.html#Algorithm.run_realistic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.algorithm.Algorithm.run_realistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the algorithm using only operations physically possable for
+quantum hardware. Not implented for most algorithms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.algorithm.Algorithm.verify_run">
+<code class="sig-name descname"><span class="pre">verify_run</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/algorithm.html#Algorithm.verify_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.algorithm.Algorithm.verify_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verifies that the abstract sub-class(es) define the required attributes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname"><span class="pre">get_gs_energy():</span></code></dt>
+<dd><p>Returns the final ground state energy</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname"><span class="pre">def</span> <span class="pre">get_Umaxdepth(self):</span></code></dt>
+<dd><p>Returns the deepest circuit used during any part of the
+algorithm (_Umaxdepth).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname"><span class="pre">def</span> <span class="pre">verify_required_attributes(self):</span></code></dt>
+<dd><p>Verifies that the concrete sub-class(es) define the required attributes.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="uccvqeabc.html" class="btn btn-neutral float-right" title="UCC-VQE abstract base classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to qforte’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, The Evangelista Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
