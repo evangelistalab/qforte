@@ -82,7 +82,10 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="algorithm.html">Abstract base class for all algorithms</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">UCC-VQE abstract base classes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">UCC-VQE abstract base classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#uccvqeabc-py">uccvqeabc.py</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
 </ul>
 
@@ -150,10 +153,193 @@
             
   <div class="section" id="module-qforte.abc.uccvqeabc">
 <span id="ucc-vqe-abstract-base-classes"></span><h1>UCC-VQE abstract base classes<a class="headerlink" href="#module-qforte.abc.uccvqeabc" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="uccvqeabc-py">
+<h2>uccvqeabc.py<a class="headerlink" href="#uccvqeabc-py" title="Permalink to this headline">¶</a></h2>
+<p>The abstract base class inherited by subclasses that perform
+variants unitary coupled cluster VQE.</p>
 <dl class="py class">
 <dt id="qforte.abc.uccvqeabc.UCCVQE">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">qforte.abc.uccvqeabc.</span></code><code class="sig-name descname"><span class="pre">UCCVQE</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_state_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reference'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_summary_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._ref">
+<code class="sig-name descname"><span class="pre">_ref</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>The set of 1s and 0s indicating the initial quantum state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._nqb">
+<code class="sig-name descname"><span class="pre">_nqb</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._nqb" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of qubits the calculation empolys.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._qb_ham">
+<code class="sig-name descname"><span class="pre">_qb_ham</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._qb_ham" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator to be measured (usually the Hamiltonian), mapped to a
+qubit representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>QuantumOperator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._fast">
+<code class="sig-name descname"><span class="pre">_fast</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._fast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not to use a faster version of the algorithm that bypasses
+measurment (unphysical for quantum computer). Most algorithms only
+have a fast implentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._trotter_order">
+<code class="sig-name descname"><span class="pre">_trotter_order</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._trotter_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Trotter order to use for exponentiated operators.
+(exact in the infinte limit).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._trotter_number">
+<code class="sig-name descname"><span class="pre">_trotter_number</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._trotter_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Trotter number (or the number of trotter steps)
+to use for exponentiated operators.
+(exact in the infinte limit).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._Egs">
+<code class="sig-name descname"><span class="pre">_Egs</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._Egs" title="Permalink to this definition">¶</a></dt>
+<dd><p>The final ground state energy value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._Umaxdepth">
+<code class="sig-name descname"><span class="pre">_Umaxdepth</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._Umaxdepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>The deepest circuit used during any part of the algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>QuantumCircuit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._n_classical_params">
+<code class="sig-name descname"><span class="pre">_n_classical_params</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._n_classical_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of classical parameters used by the algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._n_cnot">
+<code class="sig-name descname"><span class="pre">_n_cnot</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._n_cnot" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of controlled-not (CNOT) opperations used in the (deepest)
+quantum circuit (_Umaxdepth).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._n_pauli_trm_measures">
+<code class="sig-name descname"><span class="pre">_n_pauli_trm_measures</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._n_pauli_trm_measures" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)
+mesaured over the entire algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.uccvqeabc.UCCVQE.print_options_banner">
+<code class="sig-name descname"><span class="pre">print_options_banner</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.print_options_banner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints the run options used for algorithm.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.uccvqeabc.UCCVQE.print_summary_banner">
+<code class="sig-name descname"><span class="pre">print_summary_banner</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.print_summary_banner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints a summary of the post-run information.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.uccvqeabc.UCCVQE.run">
+<code class="sig-name descname"><span class="pre">run</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the algorithm.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.uccvqeabc.UCCVQE.run_realistic">
+<code class="sig-name descname"><span class="pre">run_realistic</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.run_realistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the algorithm using only operations physically possable for
+quantum hardware. Not implented for most algorithms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.uccvqeabc.UCCVQE.verify_run">
+<code class="sig-name descname"><span class="pre">verify_run</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.verify_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verifies that the abstract sub-class(es) define the required attributes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname"><span class="pre">get_gs_energy():</span></code></dt>
+<dd><p>Returns the final ground state energy</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname"><span class="pre">def</span> <span class="pre">get_Umaxdepth():</span></code></dt>
+<dd><p>Returns the deepest circuit used during any part of the
+algorithm (_Umaxdepth).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname"><span class="pre">def</span> <span class="pre">verify_required_attributes():</span></code></dt>
+<dd><p>Verifies that the concrete sub-class(es) define the required attributes.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="qforte.abc.uccvqeabc.UCCVQE.build_Uvqc">
 <code class="sig-name descname"><span class="pre">build_Uvqc</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amplitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.build_Uvqc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.build_Uvqc" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function returns the QuantumCircuit object built
@@ -219,6 +405,7 @@ operators will be measured.</p></li>
 
 </dd></dl>
 
+</div>
 </div>
 
 

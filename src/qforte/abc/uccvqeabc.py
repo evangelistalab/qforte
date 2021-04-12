@@ -1,3 +1,10 @@
+"""
+uccvqeabc.py
+====================================
+The abstract base class inherited by subclasses that perform
+variants unitary coupled cluster VQE.
+"""
+
 import qforte as qf
 from abc import abstractmethod
 from qforte.abc.vqeabc import VQE
@@ -11,6 +18,79 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 
 class UCCVQE(VQE):
+    """
+    Attributes
+    ----------
+    _ref : list
+        The set of 1s and 0s indicating the initial quantum state.
+
+    _nqb : int
+        The number of qubits the calculation empolys.
+
+    _qb_ham : QuantumOperator
+        The operator to be measured (usually the Hamiltonian), mapped to a
+        qubit representation.
+
+    _fast : bool
+        Whether or not to use a faster version of the algorithm that bypasses
+        measurment (unphysical for quantum computer). Most algorithms only
+        have a fast implentation.
+
+    _trotter_order : int
+        The Trotter order to use for exponentiated operators.
+        (exact in the infinte limit).
+
+    _trotter_number : int
+        The Trotter number (or the number of trotter steps)
+        to use for exponentiated operators.
+        (exact in the infinte limit).
+
+    _Egs : float
+        The final ground state energy value.
+
+    _Umaxdepth : QuantumCircuit
+        The deepest circuit used during any part of the algorithm.
+
+    _n_classical_params : int
+        The number of classical parameters used by the algorithm.
+
+    _n_cnot : int
+        The number of controlled-not (CNOT) opperations used in the (deepest)
+        quantum circuit (_Umaxdepth).
+
+    _n_pauli_trm_measures : int
+        The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)
+        mesaured over the entire algorithm.
+
+    Methods
+    -------
+    print_options_banner()
+        Prints the run options used for algorithm.
+
+    print_summary_banner()
+        Prints a summary of the post-run information.
+
+    run()
+        Execute the algorithm.
+
+    run_realistic()
+        Executes the algorithm using only operations physically possable for
+        quantum hardware. Not implented for most algorithms.
+
+    verify_run()
+        Verifies that the abstract sub-class(es) define the required attributes.
+
+    get_gs_energy()
+        Returns the final ground state energy
+
+    def get_Umaxdepth()
+        Returns the deepest circuit used during any part of the
+        algorithm (_Umaxdepth).
+
+    def verify_required_attributes()
+        Verifies that the concrete sub-class(es) define the required attributes.
+
+    """
 
     @abstractmethod
     def get_num_ham_measurements(self):

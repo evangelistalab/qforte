@@ -12,6 +12,7 @@ Welcome to qforte's documentation!
 
    abc/algorithm
    abc/uccvqeabc
+   abc/vqeabc
    ucc/uccnvqe
 
 

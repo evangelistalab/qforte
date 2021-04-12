@@ -1,7 +1,7 @@
 """
 algorithm.py
 ====================================
-The abstract base clase inherited by all algorithm subclasses.
+The abstract base class inherited by all algorithm subclasses.
 """
 
 from abc import ABC, abstractmethod
@@ -70,14 +70,14 @@ class Algorithm(ABC):
     verify_run()
         Verifies that the abstract sub-class(es) define the required attributes.
 
-    get_gs_energy():
+    get_gs_energy()
         Returns the final ground state energy
 
-    def get_Umaxdepth(self):
+    def get_Umaxdepth()
         Returns the deepest circuit used during any part of the
         algorithm (_Umaxdepth).
 
-    def verify_required_attributes(self):
+    def verify_required_attributes()
         Verifies that the concrete sub-class(es) define the required attributes.
 
     """

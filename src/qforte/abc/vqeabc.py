@@ -1,7 +1,58 @@
+"""
+vqeabc.py
+====================================
+The abstract base class inherited by subclasses that
+execute general variational quantum eigensolvers.
+"""
 from abc import abstractmethod
 from qforte.abc.algorithm import Algorithm
 
 class VQE(Algorithm):
+    """
+    Attributes
+    ----------
+    _ompimizer : string
+        The string specifying what classical optimization algorithm will be used.
+
+    _converged : bool
+        Whether or not the classical optimzation has converged
+
+    _final_result : object
+        The result object returned by the scipy optimizer at the end of the
+        optimization.
+
+    _opt_maxiter : int
+        The maximum number of iterations for the classical optimizer
+
+    _opt_thresh : float
+        The numerical convergence threshold for the specified classical
+        optimization algorithm. Is usually the norm of the gradient, but
+        is algorithm dependant, see scipy.minimize.optimize for detials.
+
+    Methods
+    -------
+    build_Uvqc()
+        Returns the QuantumCircuit object corresponding to the variational
+        quantum circuit unitary (Uprep) used to prepare the VQE state.
+
+    measure_gradient()
+        Returns the energy gradient aray pertaining to the variational
+        paramaters used in the preparation circuit Uvqc.
+
+    measure_energy()
+        Returns the energy expectation value of the state prepared with Uvqc.
+
+    energy_feval()
+        The cost function called by the optimizer to be minimized.
+
+    gradient_ary_feval()
+        The gradeint function called by the optimizer.
+
+    solve()
+        Exectues the overall optimization, encompassing iterative evaluation of
+        the energy and gradients, and update of the parameters.
+
+    """
 
     @abstractmethod
     def build_Uvqc(self):

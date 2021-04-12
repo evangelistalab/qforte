@@ -155,7 +155,7 @@
 <span id="abstract-base-class-for-all-algorithms"></span><h1>Abstract base class for all algorithms<a class="headerlink" href="#module-qforte.abc.algorithm" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="algorithm-py">
 <h2>algorithm.py<a class="headerlink" href="#algorithm-py" title="Permalink to this headline">¶</a></h2>
-<p>The abstract base clase inherited by all algorithm subclasses.</p>
+<p>The abstract base class inherited by all algorithm subclasses.</p>
 <dl class="py class">
 <dt id="qforte.abc.algorithm.Algorithm">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">qforte.abc.algorithm.</span></code><code class="sig-name descname"><span class="pre">Algorithm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_state_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reference'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_summary_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/algorithm.html#Algorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.algorithm.Algorithm" title="Permalink to this definition">¶</a></dt>
@@ -327,14 +327,14 @@ quantum hardware. Not implented for most algorithms.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">def</span> <span class="pre">get_Umaxdepth(self):</span></code></dt>
+<code class="sig-name descname"><span class="pre">def</span> <span class="pre">get_Umaxdepth():</span></code></dt>
 <dd><p>Returns the deepest circuit used during any part of the
 algorithm (_Umaxdepth).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">def</span> <span class="pre">verify_required_attributes(self):</span></code></dt>
+<code class="sig-name descname"><span class="pre">def</span> <span class="pre">verify_required_attributes():</span></code></dt>
 <dd><p>Verifies that the concrete sub-class(es) define the required attributes.</p>
 </dd></dl>
 
