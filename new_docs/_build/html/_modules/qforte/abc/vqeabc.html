@@ -80,9 +80,9 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../abc/algorithm.html">Abstract base class for all algorithms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../abc/uccvqeabc.html">UCC-VQE abstract base classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../abc/vqeabc.html">Abstract base class for VQE algorithms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../abc/uccvqeabc.html">Abstract base class for disentangled UCC-VQE type algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../abc/vqeabc.html">Abstract base class for general VQE algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ucc/uccnvqe.html">Classes for all disentangled UCC type algorithms</a></li>
 </ul>
 
             
@@ -160,7 +160,9 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    _ompimizer : string</span>
-<span class="sd">        The string specifying what classical optimization algorithm will be used.</span>
+<span class="sd">        The type of optimizer to use for the classical portion of VQE. Suggested</span>
+<span class="sd">        algorithms are &#39;BFGS&#39; or &#39;Nelder-Mead&#39; although there are many options</span>
+<span class="sd">        (see SciPy.optimize.minimize documentation).</span>
 
 <span class="sd">    _converged : bool</span>
 <span class="sd">        Whether or not the classical optimzation has converged</span>
@@ -170,7 +172,7 @@
 <span class="sd">        optimization.</span>
 
 <span class="sd">    _opt_maxiter : int</span>
-<span class="sd">        The maximum number of iterations for the classical optimizer</span>
+<span class="sd">        The maximum number of iterations for the classical optimizer.</span>
 
 <span class="sd">    _opt_thresh : float</span>
 <span class="sd">        The numerical convergence threshold for the specified classical</span>
@@ -179,52 +181,52 @@
 
 <span class="sd">    Methods</span>
 <span class="sd">    -------</span>
-<span class="sd">    build_Uvqc():</span>
+<span class="sd">    build_Uvqc()</span>
 <span class="sd">        Returns the QuantumCircuit object corresponding to the variational</span>
 <span class="sd">        quantum circuit unitary (Uprep) used to prepare the VQE state.</span>
 
-<span class="sd">    measure_gradient():</span>
+<span class="sd">    measure_gradient()</span>
 <span class="sd">        Returns the energy gradient aray pertaining to the variational</span>
 <span class="sd">        paramaters used in the preparation circuit Uvqc.</span>
 
-<span class="sd">    measure_energy():</span>
+<span class="sd">    measure_energy()</span>
 <span class="sd">        Returns the energy expectation value of the state prepared with Uvqc.</span>
 
-<span class="sd">    energy_feval():</span>
+<span class="sd">    energy_feval()</span>
 <span class="sd">        The cost function called by the optimizer to be minimized.</span>
 
-<span class="sd">    gradient_ary_feval():</span>
+<span class="sd">    gradient_ary_feval()</span>
 <span class="sd">        The gradeint function called by the optimizer.</span>
 
-<span class="sd">    solve():</span>
+<span class="sd">    solve()</span>
 <span class="sd">        Exectues the overall optimization, encompassing iterative evaluation of</span>
 <span class="sd">        the energy and gradients, and update of the parameters.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="VQE.build_Uvqc"><a class="viewcode-back" href="../../../abc/vqeabc.html#qforte.abc.vqeabc.VQE.build_Uvqc">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">build_Uvqc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="VQE.measure_gradient"><a class="viewcode-back" href="../../../abc/vqeabc.html#qforte.abc.vqeabc.VQE.measure_gradient">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">measure_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="VQE.measure_energy"><a class="viewcode-back" href="../../../abc/vqeabc.html#qforte.abc.vqeabc.VQE.measure_energy">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">measure_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="VQE.energy_feval"><a class="viewcode-back" href="../../../abc/vqeabc.html#qforte.abc.vqeabc.VQE.energy_feval">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">energy_feval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="VQE.gradient_ary_feval"><a class="viewcode-back" href="../../../abc/vqeabc.html#qforte.abc.vqeabc.VQE.gradient_ary_feval">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">gradient_ary_feval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="VQE.solve"><a class="viewcode-back" href="../../../abc/vqeabc.html#qforte.abc.vqeabc.VQE.solve">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
     <span class="k">def</span> <span class="nf">verify_required_VQE_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

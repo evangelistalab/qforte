@@ -1,6 +1,6 @@
 
-Subsubclass for ucc-type algorithms
-===================================
+Classes for all disentangled UCC type algorithms
+================================================
 
 .. sectionauthor:: Nicholas H. Stair
 

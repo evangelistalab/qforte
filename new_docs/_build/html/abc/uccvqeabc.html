@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UCC-VQE abstract base classes &mdash; qForte  documentation</title>
+  <title>Abstract base class for disentangled UCC-VQE type algorithms &mdash; qForte  documentation</title>
   
 
   
@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Subsubclass for ucc-type algorithms" href="../ucc/uccnvqe.html" />
+    <link rel="next" title="Abstract base class for general VQE algorithms" href="vqeabc.html" />
     <link rel="prev" title="Abstract base class for all algorithms" href="algorithm.html" /> 
 </head>
 
@@ -82,11 +82,12 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="algorithm.html">Abstract base class for all algorithms</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">UCC-VQE abstract base classes</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Abstract base class for disentangled UCC-VQE type algorithms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#uccvqeabc-py">uccvqeabc.py</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vqeabc.html">Abstract base class for general VQE algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ucc/uccnvqe.html">Classes for all disentangled UCC type algorithms</a></li>
 </ul>
 
             
@@ -132,7 +133,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>UCC-VQE abstract base classes</li>
+      <li>Abstract base class for disentangled UCC-VQE type algorithms</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -152,29 +153,79 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-qforte.abc.uccvqeabc">
-<span id="ucc-vqe-abstract-base-classes"></span><h1>UCC-VQE abstract base classes<a class="headerlink" href="#module-qforte.abc.uccvqeabc" title="Permalink to this headline">¶</a></h1>
+<span id="abstract-base-class-for-disentangled-ucc-vqe-type-algorithms"></span><h1>Abstract base class for disentangled UCC-VQE type algorithms<a class="headerlink" href="#module-qforte.abc.uccvqeabc" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="uccvqeabc-py">
 <h2>uccvqeabc.py<a class="headerlink" href="#uccvqeabc-py" title="Permalink to this headline">¶</a></h2>
 <p>The abstract base class inherited by subclasses that perform
-variants unitary coupled cluster VQE.</p>
+variants of disentangeld unitary coupled cluster using the variational
+quantum eigensolver approach.</p>
 <dl class="py class">
 <dt id="qforte.abc.uccvqeabc.UCCVQE">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">qforte.abc.uccvqeabc.</span></code><code class="sig-name descname"><span class="pre">UCCVQE</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_state_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reference'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_summary_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._ref">
-<code class="sig-name descname"><span class="pre">_ref</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._ref" title="Permalink to this definition">¶</a></dt>
-<dd><p>The set of 1s and 0s indicating the initial quantum state.</p>
+<dt id="qforte.abc.uccvqeabc.UCCVQE._pool_obj">
+<code class="sig-name descname"><span class="pre">_pool_obj</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._pool_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>The second quantzed operator pool object that contains the excitation
+and deexcitaion operators used in the UCC-type ansatz.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p>SQOpPool</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._nqb">
-<code class="sig-name descname"><span class="pre">_nqb</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._nqb" title="Permalink to this definition">¶</a></dt>
-<dd><p>The number of qubits the calculation empolys.</p>
+<dt id="qforte.abc.uccvqeabc.UCCVQE._pool_type">
+<code class="sig-name descname"><span class="pre">_pool_type</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._pool_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the kinds of tamplitudes allowed in the UCCN-VQE
+parameterization.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>SA_SD: At most two orbital excitations. Assumes a singlet wavefunction and closed-shell Slater determinant</dt><dd><p>reducing the number of amplitudes.</p>
+</dd>
+</dl>
+<p>SD: At most two orbital excitations.
+SDT: At most three orbital excitations.
+SDTQ: At most four orbital excitations.
+SDTQP: At most five orbital excitations.
+SDTQPH: At most six orbital excitations.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._pool">
+<code class="sig-name descname"><span class="pre">_pool</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>A python list containing the coefficients (cluster amplitudes) and operator
+indicies for the operator pool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of tuples</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="id0">
+<code class="sig-name descname"><span class="pre">_pool</span></code><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>The linear combination of (optionally symmetrized) single and double
+excitation operators to consider. This is represented as a list.
+Each entry is a pair of a complex coefficient and an SqOperator object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of tuple(complex, SqOperator)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._grad_vec_evals">
+<code class="sig-name descname"><span class="pre">_grad_vec_evals</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._grad_vec_evals" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of gradient vector evalutions over the course of the optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>int</p>
@@ -183,35 +234,9 @@ variants unitary coupled cluster VQE.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._qb_ham">
-<code class="sig-name descname"><span class="pre">_qb_ham</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._qb_ham" title="Permalink to this definition">¶</a></dt>
-<dd><p>The operator to be measured (usually the Hamiltonian), mapped to a
-qubit representation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>QuantumOperator</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._fast">
-<code class="sig-name descname"><span class="pre">_fast</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._fast" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether or not to use a faster version of the algorithm that bypasses
-measurment (unphysical for quantum computer). Most algorithms only
-have a fast implentation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._trotter_order">
-<code class="sig-name descname"><span class="pre">_trotter_order</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._trotter_order" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Trotter order to use for exponentiated operators.
-(exact in the infinte limit).</p>
+<dt id="qforte.abc.uccvqeabc.UCCVQE._grad_m_evals">
+<code class="sig-name descname"><span class="pre">_grad_m_evals</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._grad_m_evals" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of gradient element evalutions over the course of the optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>int</p>
@@ -220,22 +245,9 @@ have a fast implentation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._trotter_number">
-<code class="sig-name descname"><span class="pre">_trotter_number</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._trotter_number" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Trotter number (or the number of trotter steps)
-to use for exponentiated operators.
-(exact in the infinte limit).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._Egs">
-<code class="sig-name descname"><span class="pre">_Egs</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._Egs" title="Permalink to this definition">¶</a></dt>
-<dd><p>The final ground state energy value.</p>
+<dt id="qforte.abc.uccvqeabc.UCCVQE._prev_energy">
+<code class="sig-name descname"><span class="pre">_prev_energy</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._prev_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The energy from the previous iteration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float</p>
@@ -244,20 +256,32 @@ to use for exponentiated operators.
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._Umaxdepth">
-<code class="sig-name descname"><span class="pre">_Umaxdepth</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._Umaxdepth" title="Permalink to this definition">¶</a></dt>
-<dd><p>The deepest circuit used during any part of the algorithm.</p>
+<dt id="qforte.abc.uccvqeabc.UCCVQE._curr_energy">
+<code class="sig-name descname"><span class="pre">_curr_energy</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._curr_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The energy from the current iteration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>QuantumCircuit</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._n_classical_params">
-<code class="sig-name descname"><span class="pre">_n_classical_params</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._n_classical_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>The number of classical parameters used by the algorithm.</p>
+<dt id="qforte.abc.uccvqeabc.UCCVQE._curr_grad_norm">
+<code class="sig-name descname"><span class="pre">_curr_grad_norm</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._curr_grad_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current norm of the gradient</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="qforte.abc.uccvqeabc.UCCVQE._Nm">
+<code class="sig-name descname"><span class="pre">_Nm</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._Nm" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list containing the number of pauli terms in each Jordan-Wigner
+transformed excitaiton/de-excitaion operator in the pool.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>int</p>
@@ -266,83 +290,22 @@ to use for exponentiated operators.
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._n_cnot">
-<code class="sig-name descname"><span class="pre">_n_cnot</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._n_cnot" title="Permalink to this definition">¶</a></dt>
-<dd><p>The number of controlled-not (CNOT) opperations used in the (deepest)
-quantum circuit (_Umaxdepth).</p>
+<dt id="qforte.abc.uccvqeabc.UCCVQE._use_analytic_grad">
+<code class="sig-name descname"><span class="pre">_use_analytic_grad</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._use_analytic_grad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not to use an analytic function for the gradient to pass to
+the optimizer. If false, the optimizer will use self-generated approximate
+gradients from finite differences (if BFGS algorithm is used).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="qforte.abc.uccvqeabc.UCCVQE._n_pauli_trm_measures">
-<code class="sig-name descname"><span class="pre">_n_pauli_trm_measures</span></code><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE._n_pauli_trm_measures" title="Permalink to this definition">¶</a></dt>
-<dd><p>The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)
-mesaured over the entire algorithm.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="qforte.abc.uccvqeabc.UCCVQE.print_options_banner">
-<code class="sig-name descname"><span class="pre">print_options_banner</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.print_options_banner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints the run options used for algorithm.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="qforte.abc.uccvqeabc.UCCVQE.print_summary_banner">
-<code class="sig-name descname"><span class="pre">print_summary_banner</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.print_summary_banner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints a summary of the post-run information.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="qforte.abc.uccvqeabc.UCCVQE.run">
-<code class="sig-name descname"><span class="pre">run</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute the algorithm.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="qforte.abc.uccvqeabc.UCCVQE.run_realistic">
-<code class="sig-name descname"><span class="pre">run_realistic</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.run_realistic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Executes the algorithm using only operations physically possable for
-quantum hardware. Not implented for most algorithms.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="qforte.abc.uccvqeabc.UCCVQE.verify_run">
-<code class="sig-name descname"><span class="pre">verify_run</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.verify_run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Verifies that the abstract sub-class(es) define the required attributes.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_gs_energy():</span></code></dt>
-<dd><p>Returns the final ground state energy</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">def</span> <span class="pre">get_Umaxdepth():</span></code></dt>
-<dd><p>Returns the deepest circuit used during any part of the
-algorithm (_Umaxdepth).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">def</span> <span class="pre">verify_required_attributes():</span></code></dt>
-<dd><p>Verifies that the concrete sub-class(es) define the required attributes.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="qforte.abc.uccvqeabc.UCCVQE.build_Uvqc">
 <code class="sig-name descname"><span class="pre">build_Uvqc</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amplitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.build_Uvqc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.build_Uvqc" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the QuantumCircuit object built
+<dd><p>Returns the QuantumCircuit object built
 from the appropriate amplitudes (tops)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -353,23 +316,23 @@ the state preparation circuit Uvqc. This is needed for the scipy minimizer.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="qforte.abc.uccvqeabc.UCCVQE.measure_energy">
-<code class="sig-name descname"><span class="pre">measure_energy</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ucirc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.measure_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.measure_energy" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>Ucirc</strong> (<em>QuantumCircuit</em>) – The state preparation circuit.</p>
-</dd>
-</dl>
+<dt id="qforte.abc.uccvqeabc.UCCVQE.fill_pool">
+<code class="sig-name descname"><span class="pre">fill_pool</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.fill_pool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.fill_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constucts the pool of second quantuized operators specified
+by excitation order.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="qforte.abc.uccvqeabc.UCCVQE.measure_gradient">
 <code class="sig-name descname"><span class="pre">measure_gradient</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_entire_pool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.measure_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.measure_gradient" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Returns the disentangeld (factorized) UCC gradient, using a
+recursive approach.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>HAm</strong> (<em>QuantumOpPool</em>) – The commutator to measure.</p></li>
-<li><p><strong>Ucirc</strong> (<em>QuantumCircuit</em>) – The state preparation circuit.</p></li>
+<li><p><strong>params</strong> (<em>list of floats</em>) – The variational parameters which characterize _Uvqc.</p></li>
+<li><p><strong>use_entire_pool</strong> (<em>bool</em>) – Whether or not the gradient is calculated for the entire pool or
+just the operators currently in _Uvqc.</p></li>
 </ul>
 </dd>
 </dl>
@@ -378,27 +341,34 @@ the state preparation circuit Uvqc. This is needed for the scipy minimizer.</p>
 <dl class="py method">
 <dt id="qforte.abc.uccvqeabc.UCCVQE.measure_gradient2">
 <code class="sig-name descname"><span class="pre">measure_gradient2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.measure_gradient2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.measure_gradient2" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Returns the disentangeld (factorized) UCC gradient. Generally not
+used as the recusive apprach taken in measure_gradient is more
+efficient.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>HAm</strong> (<em>QuantumOpPool</em>) – The commutator to measure.</p></li>
-<li><p><strong>Ucirc</strong> (<em>QuantumCircuit</em>) – The state preparation circuit.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>params</strong> (<em>list of floats</em>) – The variational parameters which characterize _Uvqc.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="qforte.abc.uccvqeabc.UCCVQE.measure_operators">
-<code class="sig-name descname"><span class="pre">measure_operators</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ucirc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idxs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.measure_operators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.measure_operators" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dt id="qforte.abc.uccvqeabc.UCCVQE.measure_gradient3">
+<code class="sig-name descname"><span class="pre">measure_gradient3</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.measure_gradient3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.measure_gradient3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calcualtes the so-called residual gradient, defined by &lt;[H, t_mu]&gt;
+which gives the gradient only with respect to operaotrs t_mu which would
+be added to the end of Uprep. Primaraly used in ADAPT-VQE operator
+selection.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qforte.abc.uccvqeabc.UCCVQE.report_iteration">
+<code class="sig-name descname"><span class="pre">report_iteration</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/uccvqeabc.html#UCCVQE.report_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.uccvqeabc.UCCVQE.report_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints information about the current iteration. Works as a callback
+function for the scipy optimizer.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>operators</strong> (<em>QuantumOpPool</em>) – All operators to be measured</p></li>
-<li><p><strong>Ucirc</strong> (<em>QuantumCircuit</em>) – The state preparation circuit.</p></li>
-<li><p><strong>idxs</strong> (<em>list of int</em>) – The indices of select operators in the pool of operators. If provided, only these
-operators will be measured.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>x</strong> (<em>list of floats</em>) – The variational parameters which characterize _Uvqc. Are not acually
+used by this funciton, but have to pass for callback purpouses.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -416,7 +386,7 @@ operators will be measured.</p></li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../ucc/uccnvqe.html" class="btn btn-neutral float-right" title="Subsubclass for ucc-type algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="vqeabc.html" class="btn btn-neutral float-right" title="Abstract base class for general VQE algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="algorithm.html" class="btn btn-neutral float-left" title="Abstract base class for all algorithms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

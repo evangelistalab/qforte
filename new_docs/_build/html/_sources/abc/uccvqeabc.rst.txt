@@ -1,6 +1,6 @@
 
-UCC-VQE abstract base classes
-=============================
+Abstract base class for disentangled UCC-VQE type algorithms
+============================================================
 
 .. sectionauthor:: Nicholas H. Stair
 

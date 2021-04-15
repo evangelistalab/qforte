@@ -2,7 +2,8 @@
 uccvqeabc.py
 ====================================
 The abstract base class inherited by subclasses that perform
-variants unitary coupled cluster VQE.
+variants of disentangeld unitary coupled cluster using the variational
+quantum eigensolver approach.
 """
 
 import qforte as qf
@@ -21,74 +22,54 @@ class UCCVQE(VQE):
     """
     Attributes
     ----------
-    _ref : list
-        The set of 1s and 0s indicating the initial quantum state.
+    _pool_obj : SQOpPool
+        The second quantzed operator pool object that contains the excitation
+        and deexcitaion operators used in the UCC-type ansatz.
 
-    _nqb : int
-        The number of qubits the calculation empolys.
+    _pool_type : string
+        Specifies the kinds of tamplitudes allowed in the UCCN-VQE
+        parameterization.
+            SA_SD: At most two orbital excitations. Assumes a singlet wavefunction and closed-shell Slater determinant
+                   reducing the number of amplitudes.
+            SD: At most two orbital excitations.
+            SDT: At most three orbital excitations.
+            SDTQ: At most four orbital excitations.
+            SDTQP: At most five orbital excitations.
+            SDTQPH: At most six orbital excitations.
 
-    _qb_ham : QuantumOperator
-        The operator to be measured (usually the Hamiltonian), mapped to a
-        qubit representation.
+    _pool : list of tuples
+        A python list containing the coefficients (cluster amplitudes) and operator
+        indicies for the operator pool.
 
-    _fast : bool
-        Whether or not to use a faster version of the algorithm that bypasses
-        measurment (unphysical for quantum computer). Most algorithms only
-        have a fast implentation.
+    _pool : list of tuple(complex, SqOperator)
+        The linear combination of (optionally symmetrized) single and double
+        excitation operators to consider. This is represented as a list.
+        Each entry is a pair of a complex coefficient and an SqOperator object.
 
-    _trotter_order : int
-        The Trotter order to use for exponentiated operators.
-        (exact in the infinte limit).
+    _grad_vec_evals : int
+        The number of gradient vector evalutions over the course of the optimization.
 
-    _trotter_number : int
-        The Trotter number (or the number of trotter steps)
-        to use for exponentiated operators.
-        (exact in the infinte limit).
+    _grad_m_evals : int
+        The number of gradient element evalutions over the course of the optimization.
 
-    _Egs : float
-        The final ground state energy value.
+    _prev_energy : float
+        The energy from the previous iteration.
 
-    _Umaxdepth : QuantumCircuit
-        The deepest circuit used during any part of the algorithm.
+    _curr_energy : float
+        The energy from the current iteration.
 
-    _n_classical_params : int
-        The number of classical parameters used by the algorithm.
+    _curr_grad_norm : float
+        The current norm of the gradient
 
-    _n_cnot : int
-        The number of controlled-not (CNOT) opperations used in the (deepest)
-        quantum circuit (_Umaxdepth).
+    _Nm : int
+        A list containing the number of pauli terms in each Jordan-Wigner
+        transformed excitaiton/de-excitaion operator in the pool.
 
-    _n_pauli_trm_measures : int
-        The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)
-        mesaured over the entire algorithm.
+    _use_analytic_grad : bool
+        Whether or not to use an analytic function for the gradient to pass to
+        the optimizer. If false, the optimizer will use self-generated approximate
+        gradients from finite differences (if BFGS algorithm is used).
 
-    Methods
-    -------
-    print_options_banner()
-        Prints the run options used for algorithm.
-
-    print_summary_banner()
-        Prints a summary of the post-run information.
-
-    run()
-        Execute the algorithm.
-
-    run_realistic()
-        Executes the algorithm using only operations physically possable for
-        quantum hardware. Not implented for most algorithms.
-
-    verify_run()
-        Verifies that the abstract sub-class(es) define the required attributes.
-
-    get_gs_energy()
-        Returns the final ground state energy
-
-    def get_Umaxdepth()
-        Returns the deepest circuit used during any part of the
-        algorithm (_Umaxdepth).
-
-    def verify_required_attributes()
-        Verifies that the concrete sub-class(es) define the required attributes.
 
     """
 
@@ -101,6 +82,9 @@ class UCCVQE(VQE):
         pass
 
     def fill_pool(self):
+        """ Constucts the pool of second quantuized operators specified
+        by excitation order.
+        """
         self._pool_obj = qf.SQOpPool()
         self._pool_obj.set_orb_spaces(self._ref)
 
@@ -127,6 +111,7 @@ class UCCVQE(VQE):
             self._Nm.append(len(self._pool_obj.terms()[m][1].jw_transform().terms()))
 
     def fill_commutator_pool(self):
+        # TODO: depricate this function
         print('\n\n==> Building commutator pool for gradient measurement.')
         self._commutator_pool = self._pool_obj.get_quantum_op_pool()
         self._commutator_pool.join_as_commutator(self._qb_ham)
@@ -134,7 +119,7 @@ class UCCVQE(VQE):
 
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
-        """ This function returns the QuantumCircuit object built
+        """ Returns the QuantumCircuit object built
         from the appropriate amplitudes (tops)
 
         Parameters
@@ -161,19 +146,7 @@ class UCCVQE(VQE):
         return Uvqc
 
     def measure_operators(self, operators, Ucirc, idxs=[]):
-        """
-        Parameters
-        ----------
-        operators : QuantumOpPool
-            All operators to be measured
-
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
-
-        idxs : list of int
-            The indices of select operators in the pool of operators. If provided, only these
-            operators will be measured.
-        """
+        # TODO: depricate this function
 
         if self._fast:
             myQC = qforte.QuantumComputer(self._nqb)
@@ -196,14 +169,16 @@ class UCCVQE(VQE):
         return np.real(grads)
 
     def measure_gradient2(self, params=None):
-        """
+        # TODO: maybe depricate this function
+        """ Returns the disentangeld (factorized) UCC gradient. Generally not
+        used as the recusive apprach taken in measure_gradient is more
+        efficient.
+
         Parameters
         ----------
-        HAm : QuantumOpPool
-            The commutator to measure.
+        params : list of floats
+            The variational parameters which characterize _Uvqc.
 
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
         """
 
         if self._fast==False:
@@ -271,14 +246,18 @@ class UCCVQE(VQE):
 
     # TODO: Why is this function here? It seems ADAPT-VQE specific?
     def measure_gradient(self, params=None, use_entire_pool=False):
-        """
+        """ Returns the disentangeld (factorized) UCC gradient, using a
+        recursive approach.
+
+
         Parameters
         ----------
-        HAm : QuantumOpPool
-            The commutator to measure.
+        params : list of floats
+            The variational parameters which characterize _Uvqc.
 
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
+        use_entire_pool : bool
+            Whether or not the gradient is calculated for the entire pool or
+            just the operators currently in _Uvqc.
         """
 
         if self._fast==False:
@@ -369,6 +348,12 @@ class UCCVQE(VQE):
         return grads
 
     def measure_gradient3(self):
+        """ Calcualtes the so-called residual gradient, defined by <[H, t_mu]>
+        which gives the gradient only with respect to operaotrs t_mu which would
+        be added to the end of Uprep. Primaraly used in ADAPT-VQE operator
+        selection.
+
+        """
 
         if self._fast==False:
             raise ValueError("self._fast must be True for gradient measurement.")
@@ -406,12 +391,6 @@ class UCCVQE(VQE):
 
 
     def measure_energy(self, Ucirc):
-        """
-        Parameters
-        ----------
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
-        """
         if self._fast:
             myQC = qforte.QuantumComputer(self._nqb)
             myQC.apply_circuit(Ucirc)
@@ -455,7 +434,17 @@ class UCCVQE(VQE):
         return np.asarray(grads)
 
     def report_iteration(self, x):
-        # print(f"\n -Minimum energy this iteration:    {self.energy_feval(x):+12.10f}")
+        """ Prints information about the current iteration. Works as a callback
+        function for the scipy optimizer.
+
+
+        Parameters
+        ----------
+        x : list of floats
+            The variational parameters which characterize _Uvqc. Are not acually
+            used by this funciton, but have to pass for callback purpouses.
+
+        """
 
         self._k_counter += 1
 

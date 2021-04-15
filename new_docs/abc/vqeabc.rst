@@ -1,5 +1,5 @@
-Abstract base class for VQE algorithms
-======================================
+Abstract base class for general VQE algorithms
+==============================================
 
 .. sectionauthor:: Nicholas H. Stair
 

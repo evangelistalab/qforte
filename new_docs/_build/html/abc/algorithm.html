@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="UCC-VQE abstract base classes" href="uccvqeabc.html" />
+    <link rel="next" title="Abstract base class for disentangled UCC-VQE type algorithms" href="uccvqeabc.html" />
     <link rel="prev" title="Welcome to qforte’s documentation!" href="../index.html" /> 
 </head>
 
@@ -85,8 +85,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#algorithm-py">algorithm.py</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="uccvqeabc.html">UCC-VQE abstract base classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uccvqeabc.html">Abstract base class for disentangled UCC-VQE type algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vqeabc.html">Abstract base class for general VQE algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ucc/uccnvqe.html">Classes for all disentangled UCC type algorithms</a></li>
 </ul>
 
             
@@ -320,21 +321,21 @@ quantum hardware. Not implented for most algorithms.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_gs_energy():</span></code></dt>
+<dt id="qforte.abc.algorithm.Algorithm.get_gs_energy">
+<code class="sig-name descname"><span class="pre">get_gs_energy</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/algorithm.html#Algorithm.get_gs_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.algorithm.Algorithm.get_gs_energy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the final ground state energy</p>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">def</span> <span class="pre">get_Umaxdepth():</span></code></dt>
+<code class="sig-name descname"><span class="pre">def</span> <span class="pre">get_Umaxdepth()</span></code></dt>
 <dd><p>Returns the deepest circuit used during any part of the
 algorithm (_Umaxdepth).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">def</span> <span class="pre">verify_required_attributes():</span></code></dt>
+<code class="sig-name descname"><span class="pre">def</span> <span class="pre">verify_required_attributes()</span></code></dt>
 <dd><p>Verifies that the concrete sub-class(es) define the required attributes.</p>
 </dd></dl>
 
@@ -351,7 +352,7 @@ algorithm (_Umaxdepth).</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="uccvqeabc.html" class="btn btn-neutral float-right" title="UCC-VQE abstract base classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="uccvqeabc.html" class="btn btn-neutral float-right" title="Abstract base class for disentangled UCC-VQE type algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to qforte’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

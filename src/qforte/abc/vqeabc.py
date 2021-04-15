@@ -12,7 +12,9 @@ class VQE(Algorithm):
     Attributes
     ----------
     _ompimizer : string
-        The string specifying what classical optimization algorithm will be used.
+        The type of optimizer to use for the classical portion of VQE. Suggested
+        algorithms are 'BFGS' or 'Nelder-Mead' although there are many options
+        (see SciPy.optimize.minimize documentation).
 
     _converged : bool
         Whether or not the classical optimzation has converged
@@ -22,7 +24,7 @@ class VQE(Algorithm):
         optimization.
 
     _opt_maxiter : int
-        The maximum number of iterations for the classical optimizer
+        The maximum number of iterations for the classical optimizer.
 
     _opt_thresh : float
         The numerical convergence threshold for the specified classical

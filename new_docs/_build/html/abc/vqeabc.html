@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Abstract base class for VQE algorithms &mdash; qForte  documentation</title>
+  <title>Abstract base class for general VQE algorithms &mdash; qForte  documentation</title>
   
 
   
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Subsubclass for ucc-type algorithms" href="../ucc/uccnvqe.html" />
-    <link rel="prev" title="UCC-VQE abstract base classes" href="uccvqeabc.html" /> 
+    <link rel="next" title="Classes for all disentangled UCC type algorithms" href="../ucc/uccnvqe.html" />
+    <link rel="prev" title="Abstract base class for disentangled UCC-VQE type algorithms" href="uccvqeabc.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -82,12 +82,12 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="algorithm.html">Abstract base class for all algorithms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="uccvqeabc.html">UCC-VQE abstract base classes</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Abstract base class for VQE algorithms</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="uccvqeabc.html">Abstract base class for disentangled UCC-VQE type algorithms</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Abstract base class for general VQE algorithms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#vqeabc-py">vqeabc.py</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../ucc/uccnvqe.html">Subsubclass for ucc-type algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ucc/uccnvqe.html">Classes for all disentangled UCC type algorithms</a></li>
 </ul>
 
             
@@ -133,7 +133,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Abstract base class for VQE algorithms</li>
+      <li>Abstract base class for general VQE algorithms</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -153,7 +153,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-qforte.abc.vqeabc">
-<span id="abstract-base-class-for-vqe-algorithms"></span><h1>Abstract base class for VQE algorithms<a class="headerlink" href="#module-qforte.abc.vqeabc" title="Permalink to this headline">¶</a></h1>
+<span id="abstract-base-class-for-general-vqe-algorithms"></span><h1>Abstract base class for general VQE algorithms<a class="headerlink" href="#module-qforte.abc.vqeabc" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="vqeabc-py">
 <h2>vqeabc.py<a class="headerlink" href="#vqeabc-py" title="Permalink to this headline">¶</a></h2>
 <p>The abstract base class inherited by subclasses that
@@ -164,7 +164,9 @@ execute general variational quantum eigensolvers.</p>
 <dd><dl class="py attribute">
 <dt id="qforte.abc.vqeabc.VQE._ompimizer">
 <code class="sig-name descname"><span class="pre">_ompimizer</span></code><a class="headerlink" href="#qforte.abc.vqeabc.VQE._ompimizer" title="Permalink to this definition">¶</a></dt>
-<dd><p>The string specifying what classical optimization algorithm will be used.</p>
+<dd><p>The type of optimizer to use for the classical portion of VQE. Suggested
+algorithms are ‘BFGS’ or ‘Nelder-Mead’ although there are many options
+(see SciPy.optimize.minimize documentation).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>string</p>
@@ -198,7 +200,7 @@ optimization.</p>
 <dl class="py attribute">
 <dt id="qforte.abc.vqeabc.VQE._opt_maxiter">
 <code class="sig-name descname"><span class="pre">_opt_maxiter</span></code><a class="headerlink" href="#qforte.abc.vqeabc.VQE._opt_maxiter" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum number of iterations for the classical optimizer</p>
+<dd><p>The maximum number of iterations for the classical optimizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>int</p>
@@ -220,40 +222,40 @@ is algorithm dependant, see scipy.minimize.optimize for detials.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">build_Uvqc():</span></code></dt>
+<dt id="qforte.abc.vqeabc.VQE.build_Uvqc">
+<code class="sig-name descname"><span class="pre">build_Uvqc</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/vqeabc.html#VQE.build_Uvqc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.vqeabc.VQE.build_Uvqc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the QuantumCircuit object corresponding to the variational
 quantum circuit unitary (Uprep) used to prepare the VQE state.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">measure_gradient():</span></code></dt>
+<dt id="qforte.abc.vqeabc.VQE.measure_gradient">
+<code class="sig-name descname"><span class="pre">measure_gradient</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/vqeabc.html#VQE.measure_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.vqeabc.VQE.measure_gradient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the energy gradient aray pertaining to the variational
 paramaters used in the preparation circuit Uvqc.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">measure_energy():</span></code></dt>
+<dt id="qforte.abc.vqeabc.VQE.measure_energy">
+<code class="sig-name descname"><span class="pre">measure_energy</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/vqeabc.html#VQE.measure_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.vqeabc.VQE.measure_energy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the energy expectation value of the state prepared with Uvqc.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">energy_feval():</span></code></dt>
+<dt id="qforte.abc.vqeabc.VQE.energy_feval">
+<code class="sig-name descname"><span class="pre">energy_feval</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/vqeabc.html#VQE.energy_feval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.vqeabc.VQE.energy_feval" title="Permalink to this definition">¶</a></dt>
 <dd><p>The cost function called by the optimizer to be minimized.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">gradient_ary_feval():</span></code></dt>
+<dt id="qforte.abc.vqeabc.VQE.gradient_ary_feval">
+<code class="sig-name descname"><span class="pre">gradient_ary_feval</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/vqeabc.html#VQE.gradient_ary_feval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.vqeabc.VQE.gradient_ary_feval" title="Permalink to this definition">¶</a></dt>
 <dd><p>The gradeint function called by the optimizer.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">solve():</span></code></dt>
+<dt id="qforte.abc.vqeabc.VQE.solve">
+<code class="sig-name descname"><span class="pre">solve</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qforte/abc/vqeabc.html#VQE.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qforte.abc.vqeabc.VQE.solve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exectues the overall optimization, encompassing iterative evaluation of
 the energy and gradients, and update of the parameters.</p>
 </dd></dl>
@@ -271,10 +273,10 @@ the energy and gradients, and update of the parameters.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../ucc/uccnvqe.html" class="btn btn-neutral float-right" title="Subsubclass for ucc-type algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../ucc/uccnvqe.html" class="btn btn-neutral float-right" title="Classes for all disentangled UCC type algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="uccvqeabc.html" class="btn btn-neutral float-left" title="UCC-VQE abstract base classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="uccvqeabc.html" class="btn btn-neutral float-left" title="Abstract base class for disentangled UCC-VQE type algorithms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
