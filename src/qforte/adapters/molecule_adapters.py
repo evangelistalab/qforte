@@ -257,11 +257,13 @@ class Psi4MolAdapter(MolAdapter):
         kwargs.setdefault('charge', 0)
         kwargs.setdefault('multiplicity', 1)
 
+
         self._mol_geometry = kwargs['mol_geometry']
         self._basis = kwargs['basis']
         self._multiplicity = kwargs['multiplicity']
         self._charge = kwargs['charge']
         self._symmetry = kwargs['symmetry']
+
 
         self._qforte_mol = Molecule(mol_geometry = kwargs['mol_geometry'],
                                    basis = kwargs['basis'],
@@ -279,10 +281,13 @@ class Psi4MolAdapter(MolAdapter):
         kwargs.setdefault('run_ccsd', 0)
         kwargs.setdefault('run_cisd', 0)
         kwargs.setdefault('run_fci', 1)
+        kwargs.setdefault('e_and_d_converge', 1e-8)
+
+        self._e_and_d_converge = kwargs['e_and_d_converge']
 
         # Setup psi4 calcualtion(s)
         psi4.set_memory('2 GB')
-        psi4.core.set_output_file('output.dat', False)
+        psi4.core.set_output_file('psi4_output.dat', False)
 
         p4_geom_str =  f"{int(self._charge)}  {int(self._multiplicity)}"
         for geom_line in self._mol_geometry:
@@ -293,6 +298,9 @@ class Psi4MolAdapter(MolAdapter):
         print(' ==> Psi4 geometry <==')
         print('-------------------------')
         print(p4_geom_str)
+        print('\n')
+        print(f' Psi4 SCF Econv: {self._e_and_d_converge}')
+        print(f' Psi4 SCF Dconv: {self._e_and_d_converge}')
 
         p4_mol = psi4.geometry(p4_geom_str)
 
@@ -304,8 +312,8 @@ class Psi4MolAdapter(MolAdapter):
         psi4.set_options({'basis': self._basis,
                   'scf_type': 'pk',
                   'reference' : scf_ref_type,
-                  'e_convergence': 1e-8,
-                  'd_convergence': 1e-8,
+                  'e_convergence': self._e_and_d_converge,
+                  'd_convergence': self._e_and_d_converge,
                   'ci_maxiter': 100})
 
         # run psi4 caclulation
