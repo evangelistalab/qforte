@@ -338,6 +338,9 @@ class Psi4MolAdapter(MolAdapter):
         C = p4_wfn.Ca()
         scalars = p4_wfn.scalar_variables()
 
+        # print(C.to_array().dot(C.to_array().transpose()))
+        print(C.to_array())
+
         p4_Enuc_ref = scalars["NUCLEAR REPULSION ENERGY"]
 
         # Do MO integral transformation
