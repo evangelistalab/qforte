@@ -30,6 +30,8 @@ cd qforte
 python setup.py develop
 ```
 
+To supply custom arguments to `cmake` for installation, you can either edit `setup.py` or `CMakeLists.txt`.
+
 #### run tests:
 ```bash
 python setup.py test
