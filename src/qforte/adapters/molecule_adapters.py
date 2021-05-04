@@ -174,7 +174,7 @@ class OpenFermionMolAdapter(MolAdapter):
                 # print('\nsorted_sq_excitations:\n', sorted_sq_excitations)
                 sorted_organizer = tf.get_ucc_jw_organizer(sorted_sq_excitations, already_anti_herm=True)
                 # print('\nsorted_organizer:\n', sorted_organizer)
-                qforte_hamiltionan = tf.organizer_to_circuit(sorted_organizer)
+                qforte_hamiltonian = tf.organizer_to_circuit(sorted_organizer)
                 # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
                 # for term in qforte_hamiltionan.terms():
                 #     print(term[0])
@@ -195,7 +195,7 @@ class OpenFermionMolAdapter(MolAdapter):
                 sorted_organizer = sorted(unsorted_organizer, key = lambda x: np.abs(x[0]), reverse=True)
 
 
-                qforte_hamiltionan = tf.organizer_to_circuit(sorted_organizer)
+                qforte_hamiltonian = tf.organizer_to_circuit(sorted_organizer)
                 # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
 
                 # for term in qforte_hamiltionan.terms():
