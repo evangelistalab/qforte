@@ -1,6 +1,6 @@
 from qforte.adapters import molecule_adapters as MA
 
-def system_factory(stytem_type = 'molecule', build_type = 'openfermion', **kwargs):
+def system_factory(system_type = 'molecule', build_type = 'openfermion', **kwargs):
 
     """Builds an empty system object of type ('molecule', 'hubbard', 'jellium', etc...) using
        adapters specified by build_type.
@@ -30,29 +30,19 @@ def system_factory(stytem_type = 'molecule', build_type = 'openfermion', **kwarg
     kwargs.setdefault('filename', "")
     kwargs.setdefault('hdf5_dir', None)
 
-    if (stytem_type=='molecule'):
-        if (build_type=='openfermion'):
-            my_system_skeleton = MA.OpenFermionMolAdapter(mol_geometry = kwargs['mol_geometry'],
-                                                          basis = kwargs['basis'],
-                                                          multiplicity = kwargs['multiplicity'],
-                                                          charge = kwargs['charge'],
-                                                          description = kwargs['description'],
-                                                          filename = kwargs['filename'],
-                                                          hdf5_dir = kwargs['hdf5_dir'])
+    adapters = {
+        "openfermion": MA.OpenFermionMolAdapter,
+        "external": MA.ExternalMolAdapter,
+        "psi4": MA.Psi4MolAdapter
+    }
 
-        elif(build_type=='external'):
-            my_system_skeleton = MA.ExternalMolAdapter(multiplicity = kwargs['multiplicity'],
-                                                       charge = kwargs['charge'],
-                                                       filename = kwargs['filename'])
+    if (system_type=='molecule'):
+        try:
+            adapter = adapters[build_type]
+        except:
+            raise TypeError(f"build type {build_type} not supported, supported types are: " + ", ".join(adapters.keys()))
 
-        elif(build_type=='psi4'):
-            my_system_skeleton = MA.Psi4MolAdapter(mol_geometry = kwargs['mol_geometry'],
-                                                   basis = kwargs['basis'],
-                                                   multiplicity = kwargs['multiplicity'],
-                                                   charge = kwargs['charge'])
-
-        else:
-            raise TypeError("build type not supported, supported type is 'open_fermion'.")
+        my_system_skeleton = adapter(**kwargs)
 
     else:
         raise TypeError("system type not supported, supported type is 'molecule'.")
