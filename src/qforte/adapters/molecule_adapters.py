@@ -41,7 +41,7 @@ except:
 class MolAdapter(ABC):
     """Abstract class for the aquiring system information from external electronic
     structure calculations. The run() method calculates the desired properties and
-    data for the molecular system. Infromation is then stored in the
+    data for the molecular system. Information is then stored in the
     self._qforte_mol attribuite.
     """
 
@@ -127,7 +127,6 @@ class OpenFermionMolAdapter(MolAdapter):
         kwargs.setdefault('run_cisd', 0)
         kwargs.setdefault('run_fci', 1)
         kwargs.setdefault('store_uccsd_amps', False)
-        kwargs.setdefault('buld_uccsd_circ_from_ccsd', False)
         kwargs.setdefault('frozen_indices', None)
         kwargs.setdefault('virtual_indices', None)
 
@@ -150,7 +149,12 @@ class OpenFermionMolAdapter(MolAdapter):
         # Set qforte hamiltonian from openfermion
         molecular_hamiltonian = openfermion_mol.get_molecular_hamiltonian()
 
-        if(kwargs['frozen_indices'] is not None):
+        if(kwargs['frozen_indices'] is not None or kwargs['virtual_indices'] is not None):
+            if kwargs['frozen_indices'] is None:
+                # We want to freeze virtuals but not core. Openfermion requires frozen_indices to be non-empty.
+                # As of 5/5/21, this is because freeze_orbitals assumes you can call "in" on the frozen_indices.
+                kwargs['frozen_indices'] = []
+
             fermion_hamiltonian = normal_ordered(
                 freeze_orbitals(get_fermion_operator(molecular_hamiltonian),
                                 kwargs['frozen_indices'],
@@ -167,21 +171,14 @@ class OpenFermionMolAdapter(MolAdapter):
                 # Optionally sort the hamiltonian terms
                 print('using |largest|->|smallest| sq hamiltonian ordering!')
                 sorted_terms = sorted(fermion_hamiltonian.terms.items(), key=lambda kv: np.abs(kv[1]), reverse=True)
-                # print('\n\nsorted terms\n\n', sorted_terms)
 
                 # Try converting with qforte jw functions
                 sorted_sq_excitations = tf.fermop_to_sq_excitation(sorted_terms)
-                # print('\nsorted_sq_excitations:\n', sorted_sq_excitations)
                 sorted_organizer = tf.get_ucc_jw_organizer(sorted_sq_excitations, already_anti_herm=True)
-                # print('\nsorted_organizer:\n', sorted_organizer)
-                qforte_hamiltionan = tf.organizer_to_circuit(sorted_organizer)
-                # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
-                # for term in qforte_hamiltionan.terms():
-                #     print(term[0])
-                #     print(term[1].str())
+                qforte_hamiltonian = tf.organizer_to_circuit(sorted_organizer)
 
             if(kwargs['order_jw_ham']):
-                print('using |largest|->|smallest| jw hamiltonain ordering!')
+                print('using |largest|->|smallest| jw hamiltonian ordering!')
                 unsorted_terms = [(k, v) for k, v in fermion_hamiltonian.terms.items()]
 
                 # Try converting with qforte jw functions
@@ -195,43 +192,30 @@ class OpenFermionMolAdapter(MolAdapter):
                 sorted_organizer = sorted(unsorted_organizer, key = lambda x: np.abs(x[0]), reverse=True)
 
 
-                qforte_hamiltionan = tf.organizer_to_circuit(sorted_organizer)
-                # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
-
-                # for term in qforte_hamiltionan.terms():
-                #     print(term[0])
-                #     print(term[1].str())
-
+                qforte_hamiltonian = tf.organizer_to_circuit(sorted_organizer)
 
         else:
             print('Using standard openfermion hamiltonian ordering!')
             qubit_hamiltonian = jordan_wigner(fermion_hamiltonian)
             qforte_hamiltonian = build_from_openfermion(qubit_hamiltonian)
 
-            # print('\nqforte_hamiltionan:\n', '  len: ', len(qforte_hamiltionan.terms()))
-            # for term in qforte_hamiltionan.terms():
-            #     print(term[0])
-            #     print(term[1].str())
-
         self._qforte_mol.set_hamiltonian(qforte_hamiltonian)
 
         self._qforte_mol.set_sq_hamiltonian( build_sqop_from_openfermion(fermion_hamiltonian) )
 
-        ##
         self._qforte_mol.set_sq_of_ham(fermion_hamiltonian)
-        ##
 
         # Set qforte energies from openfermion
-        if(kwargs['run_scf']==1):
+        if(kwargs['run_scf']):
             self._qforte_mol.set_hf_energy(openfermion_mol.hf_energy)
 
-        if(kwargs['run_mp2']==1):
+        if(kwargs['run_mp2']):
             self._qforte_mol.set_mp2_energy(openfermion_mol.mp2_energy)
 
-        if(kwargs['run_cisd']==1):
+        if(kwargs['run_cisd']):
             self._qforte_mol.set_cisd_energy(openfermion_mol.cisd_energy)
 
-        if(kwargs['run_ccsd']==1):
+        if(kwargs['run_ccsd']):
             self._qforte_mol.set_ccsd_energy(openfermion_mol.ccsd_energy)
 
             # Store uccsd circuit with initial guess from ccsd amplitudes
@@ -239,7 +223,7 @@ class OpenFermionMolAdapter(MolAdapter):
                 self._qforte_mol.set_ccsd_amps(openfermion_mol.ccsd_single_amps,
                               openfermion_mol.ccsd_double_amps)
 
-        if(kwargs['run_fci']==1):
+        if(kwargs['run_fci']):
             self._qforte_mol.set_fci_energy(openfermion_mol.fci_energy)
 
 
@@ -274,13 +258,13 @@ class Psi4MolAdapter(MolAdapter):
         if not use_psi4:
             raise ImportError("Psi4 was not imported correctely.")
 
-        kwargs.setdefault('run_scf', 1)
+        # run_scf is not read, because we always run SCF to get a wavefunction object.
         kwargs.setdefault('run_mp2', 0)
         kwargs.setdefault('run_ccsd', 0)
         kwargs.setdefault('run_cisd', 0)
         kwargs.setdefault('run_fci', 1)
 
-        # Setup psi4 calcualtion(s)
+        # Setup psi4 calculation(s)
         psi4.set_memory('2 GB')
         psi4.core.set_output_file('output.dat', False)
 
@@ -309,8 +293,7 @@ class Psi4MolAdapter(MolAdapter):
                   'ci_maxiter': 100})
 
         # run psi4 caclulation
-        if(kwargs['run_scf']):
-            p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
+        p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
 
         if(kwargs['run_mp2']):
             p4_Emp2 = psi4.energy('MP2')
@@ -343,14 +326,9 @@ class Psi4MolAdapter(MolAdapter):
         nel = nalpha + nbeta
 
         # Make hf_reference
-        hf_reference = []
-        for a in range(2*nmo):
-            if(a<nel):
-                hf_reference.append(1)
-            else:
-                hf_reference.append(0)
+        hf_reference = [1] * nel + [0] * (2 * nmo - nel)
 
-        # Build second quantized Hamiltonain
+        # Build second quantized Hamiltonian
         nmo = np.shape(mo_oeis)[0]
         Hsq = qforte.SQOperator()
         Hsq.add_term(p4_Enuc_ref, [])
@@ -428,15 +406,14 @@ class ExternalMolAdapter(MolAdapter):
             external_data = json.load(f)
 
         # build sq hamiltonain
-        qforte_sq_hamiltionan = qforte.SQOperator()
-        qforte_sq_hamiltionan.add_term(external_data['scalar_energy']['data'], [])
+        qforte_sq_hamiltonian = qforte.SQOperator()
+        qforte_sq_hamiltonian.add_term(external_data['scalar_energy']['data'], [])
 
         for p, q, h_pq in external_data['oei']['data']:
-            qforte_sq_hamiltionan.add_term(h_pq, [p,q])
+            qforte_sq_hamiltonian.add_term(h_pq, [p,q])
 
         for p, q, r, s, h_pqrs in external_data['tei']['data']:
-            # qforte_sq_hamiltionan.add_term(h_pqrs, [p,q,r,s])
-            qforte_sq_hamiltionan.add_term(h_pqrs/4.0, [p,q,s,r]) # only works in C1 symmetry
+            qforte_sq_hamiltonian.add_term(h_pqrs/4.0, [p,q,s,r]) # only works in C1 symmetry
 
         hf_reference = [0 for i in range(external_data['nso']['data'])]
         for n in range(external_data['na']['data'] + external_data['nb']['data']):
@@ -444,9 +421,9 @@ class ExternalMolAdapter(MolAdapter):
 
         self._qforte_mol.set_hf_reference(hf_reference)
 
-        self._qforte_mol.set_sq_hamiltonian(qforte_sq_hamiltionan)
+        self._qforte_mol.set_sq_hamiltonian(qforte_sq_hamiltonian)
 
-        self._qforte_mol.set_hamiltonian(qforte_sq_hamiltionan.jw_transform())
+        self._qforte_mol.set_hamiltonian(qforte_sq_hamiltonian.jw_transform())
 
 
     def get_molecule(self):
