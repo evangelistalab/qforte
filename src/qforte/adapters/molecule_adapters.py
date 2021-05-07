@@ -154,6 +154,8 @@ class OpenFermionMolAdapter(MolAdapter):
                 # We want to freeze virtuals but not core. Openfermion requires frozen_indices to be non-empty.
                 # As of 5/5/21, this is because freeze_orbitals assumes you can call "in" on the frozen_indices.
                 kwargs['frozen_indices'] = []
+            if any(x >= molecular_hamiltonian.n_qubits for x in kwargs['frozen_indices'] + kwargs['virtual_indices']):
+                raise ValueError(f"The orbitals to freeze are inconsistent with the fact that we only have {molecular_hamiltonian.n_qubits} qubits.")
 
             fermion_hamiltonian = normal_ordered(
                 freeze_orbitals(get_fermion_operator(molecular_hamiltonian),

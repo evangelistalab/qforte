@@ -48,7 +48,7 @@ class UccTests(unittest.TestCase):
                                      basis='cc-pvdz',
                                      mol_geometry = [('He', (0, 0, 0))])
 
-        mol_adapter.run(virtual_indices=[9, 10])
+        mol_adapter.run(virtual_indices=[8, 9])
         mol = mol_adapter.get_molecule()
 
         ref = [1,1,0,0,0,0,0,0]

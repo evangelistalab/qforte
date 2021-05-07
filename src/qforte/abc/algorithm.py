@@ -36,7 +36,7 @@ class Algorithm(ABC):
 
     _n_ham_measurements : int
         The total number of times the energy was evaluated via
-        measurement of the Hamiltoanin
+        measurement of the Hamiltonian
 
 
 
@@ -66,6 +66,8 @@ class Algorithm(ABC):
         self._Uprep = build_Uprep(reference, trial_state_type)
         # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonain()
         self._qb_ham = system.get_hamiltonian()
+        if self._qb_ham.num_qubits() < self._nqb:
+            raise ValueError("The reference has more qubits than the Hamiltonian. Check your reference.")
         if hasattr(system, '_hf_energy'):
             self._hf_energy = system.get_hf_energy()
         else:

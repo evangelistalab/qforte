@@ -155,3 +155,11 @@ std::string QuantumOperator::str() const {
     }
     return join(s, "\n");
 }
+
+size_t QuantumOperator::num_qubits() const {
+    size_t max = 0;
+    for (const auto& summand : terms_) {
+        max = std::max(max, summand.second.num_qubits());
+    }
+    return max;
+}

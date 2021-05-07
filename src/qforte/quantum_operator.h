@@ -60,6 +60,8 @@ class QuantumOperator {
     /// return a string representing this quantum operator
     std::string str() const;
 
+    size_t num_qubits() const;
+
   private:
     /// the linear combination of circuits
     std::vector<std::pair<std::complex<double>, QuantumCircuit>> terms_;

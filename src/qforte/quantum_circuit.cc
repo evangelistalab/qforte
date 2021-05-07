@@ -124,6 +124,14 @@ std::string QuantumCircuit::str() const {
     return "[" + join(s, " ") + "]";
 }
 
+size_t QuantumCircuit::num_qubits() const {
+    size_t max = 0;
+    for (const auto& gate: gates_) {
+        max = std::max({max, gate.target() + 1, gate.control() + 1});
+    }
+    return max;
+}
+
 // std::vector<double> QuantumCircuit::get_parameters() {
 //     // need a loop over only gates in state preparation circuit that
 //     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
