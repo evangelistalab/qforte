@@ -47,6 +47,8 @@ class QuantumCircuit {
     /// return a vector of string representing this circuit
     std::string str() const;
 
+    size_t num_qubits() const;
+
   private:
     /// the list of gates
     std::vector<QuantumGate> gates_;

@@ -62,7 +62,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("simplify", &QuantumOperator::simplify)
         .def("operator_product", &QuantumOperator::operator_product)
         .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
-        .def("str", &QuantumOperator::str);
+        .def("str", &QuantumOperator::str)
+        .def("num_qubits", &QuantumOperator::num_qubits);
 
     py::class_<QuantumOpPool>(m, "QuantumOpPool")
         .def(py::init<>())
