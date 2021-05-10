@@ -95,9 +95,6 @@ class Molecule(object):
     def set_sq_of_ham(self, sq_of_ham):
         self._sq_of_ham = sq_of_ham
 
-    def set_nmo(self, nmo):
-        self._nmo = nmo
-
     def set_nel(self, nel):
         self._nel = nel
 
