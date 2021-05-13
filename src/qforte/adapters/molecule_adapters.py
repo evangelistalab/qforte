@@ -365,8 +365,6 @@ class Psi4MolAdapter(MolAdapter):
         self._qforte_mol.set_nuclear_repulsion_energy(p4_Enuc_ref)
         self._qforte_mol.set_hf_energy(p4_Escf)
         self._qforte_mol.set_hf_reference(hf_reference)
-        self._qforte_mol.set_mo_oei(mo_oeis)
-        self._qforte_mol.set_mo_tei(mo_teis)
         self._qforte_mol.set_sq_hamiltonian(Hsq)
         self._qforte_mol.set_hamiltonian(Hsq.jw_transform())
 
