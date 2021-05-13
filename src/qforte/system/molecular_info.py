@@ -101,12 +101,6 @@ class Molecule(object):
     def set_hf_reference(self, hf_reference):
         self._hf_reference = hf_reference
 
-    def set_mo_oei(self, oei):
-        self._mo_oei = oei
-
-    def set_mo_tei(self, tei):
-        self._mo_tei = tei
-
     def set_ccsd_amps(self, ccsd_singles, ccsd_doubles):
         self._ccsd_singles = ccsd_singles
         self._ccsd_doubles = ccsd_doubles
