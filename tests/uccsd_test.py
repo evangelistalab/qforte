@@ -18,13 +18,10 @@ class UccTests(unittest.TestCase):
         # The Nuclear repulsion energy
         Enuc =  0.0
 
-        mol_adapter = system_factory(system_type = 'molecule',
+        mol = system_factory(system_type = 'molecule',
                                      build_type = 'external',
                                      basis='cc-pvdz',
                                      filename=data_path)
-
-        mol_adapter.run()
-        mol = mol_adapter.get_molecule()
 
         ref = [1,1,0,0,0,0,0,0,0,0]
 
@@ -43,13 +40,11 @@ class UccTests(unittest.TestCase):
         # The Nuclear repulsion energy
         Enuc =  0.0
 
-        mol_adapter = system_factory(system_type = 'molecule',
+        mol = system_factory(system_type = 'molecule',
                                      build_type = 'openfermion',
                                      basis='cc-pvdz',
-                                     mol_geometry = [('He', (0, 0, 0))])
-
-        mol_adapter.run(virtual_indices=[8, 9])
-        mol = mol_adapter.get_molecule()
+                                     mol_geometry = [('He', (0, 0, 0))],
+                                     virtual_indices = [8, 9])
 
         ref = [1,1,0,0,0,0,0,0]
 
@@ -61,7 +56,6 @@ class UccTests(unittest.TestCase):
         Egs = Egs_elec + Enuc
         self.assertLess(abs(Egs-Efci), 1.0e-10)
 
-
     def test_He_uccsd_pqe_exact(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis
@@ -69,13 +63,10 @@ class UccTests(unittest.TestCase):
         # The Nuclear repulsion energy
         Enuc =  0.0
 
-        mol_adapter = system_factory(system_type = 'molecule',
+        mol = system_factory(system_type = 'molecule',
                                      build_type = 'external',
                                      basis='cc-pvdz',
                                      filename=data_path)
-
-        mol_adapter.run()
-        mol = mol_adapter.get_molecule()
 
         ref = [1,1,0,0,0,0,0,0,0,0]
 

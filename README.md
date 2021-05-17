@@ -54,9 +54,7 @@ from qforte.system import system_factory
 H2geom = [('H', (0., 0., 0.)), ('H', (0., 0., 1.50))]
 H2ref = [1,1,0,0]
 
-adapter = system_factory(mol_geometry=H2geom)
-adapter.run()
-H2mol = adapter.get_molecule()
+H2mol = system_factory(mol_geometry=H2geom)
 
 alg = QPE(H2mol, H2ref, trotter_number=2)
 alg.run(t = 0.4,
