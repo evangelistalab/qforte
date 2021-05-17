@@ -33,6 +33,29 @@ class UccTests(unittest.TestCase):
         Egs = Egs_elec + Enuc
         self.assertLess(abs(Egs-Efci), 1.0e-11)
 
+    def test_He_uccsd_vqe_exact_psi(self):
+        print('\n')
+        # The FCI energy for He atom in a cc-pvdz basis
+        Efci = -2.887594831090938
+        # The Nuclear repulsion energy
+        Enuc =  0.0
+
+        mol = system_factory(system_type = 'molecule',
+                                     build_type = 'psi4',
+                                     basis='cc-pvdz',
+                                     mol_geometry = [('He', (0, 0, 0))],
+                                     filename=data_path)
+
+        ref = [1,1,0,0,0,0,0,0,0,0]
+
+        alg = UCCNVQE(mol, ref)
+        alg.run(pool_type = 'SD',
+                use_analytic_grad = True)
+
+        Egs_elec = alg.get_gs_energy()
+        Egs = Egs_elec + Enuc
+        self.assertLess(abs(Egs-Efci), 1.0e-11)
+
     def test_He_uccsd_vqe_frozen_virtual(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis, according to Psi, one frozen virtual

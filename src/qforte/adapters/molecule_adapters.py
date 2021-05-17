@@ -222,7 +222,7 @@ def create_psi_mol(**kwargs):
     multiplicity = kwargs['multiplicity']
     charge = kwargs['charge']
 
-    self._qforte_mol = Molecule(mol_geometry = mol_geometry,
+    qforte_mol = Molecule(mol_geometry = mol_geometry,
                                basis = basis,
                                multiplicity = multiplicity,
                                charge = charge)
@@ -254,7 +254,7 @@ def create_psi_mol(**kwargs):
 
     scf_ref_type = "rhf" if multiplicity == 1 else "rohf"
 
-    psi4.set_options({'basis': self._basis,
+    psi4.set_options({'basis': basis,
               'scf_type': 'pk',
               'reference' : scf_ref_type,
               'e_convergence': 1e-8,
@@ -280,6 +280,7 @@ def create_psi_mol(**kwargs):
     mints = psi4.core.MintsHelper(p4_wfn.basisset())
 
     C = p4_wfn.Ca()
+
     scalars = p4_wfn.scalar_variables()
 
     p4_Enuc_ref = scalars["NUCLEAR REPULSION ENERGY"]
