@@ -279,7 +279,7 @@ def create_psi_mol(**kwargs):
     # Get integrals using MintsHelper.
     mints = psi4.core.MintsHelper(p4_wfn.basisset())
 
-    C = p4_wfn.Ca()
+    C = p4_wfn.Ca_subset("AO", "ALL")
 
     scalars = p4_wfn.scalar_variables()
 

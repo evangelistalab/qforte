@@ -44,7 +44,8 @@ class UccTests(unittest.TestCase):
                                      build_type = 'psi4',
                                      basis='cc-pvdz',
                                      mol_geometry = [('He', (0, 0, 0))],
-                                     filename=data_path)
+                                     filename=data_path,
+                                     symmetry = "c2v")
 
         ref = [1,1,0,0,0,0,0,0,0,0]
 
