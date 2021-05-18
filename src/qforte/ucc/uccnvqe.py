@@ -246,6 +246,8 @@ class UCCNVQE(UCCVQE):
         # (should be called for all algorithms!)
         self.verify_run()
 
+        self.print_summary_banner()
+
     # Define Algorithm abstract methods.
     def run_realistic(self):
         raise NotImplementedError('run_realistic() is not fully implemented for UCCN-VQE.')
