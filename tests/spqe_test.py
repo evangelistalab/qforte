@@ -18,13 +18,11 @@ class SPQETests(unittest.TestCase):
         # The Nuclear repulsion energy
         Enuc =  3.057468328315556
 
-        mol_adapter = system_factory(stytem_type = 'molecule',
+        mol = system_factory(stytem_type = 'molecule',
                                      build_type = 'external',
                                      basis='sto-6g',
                                      filename=data_path)
 
-        mol_adapter.run()
-        mol = mol_adapter.get_molecule()
         Hnonzero = qforte.QuantumOperator()
         for term in mol._hamiltonian.terms():
             if abs(term[0]) > 1.0e-14:

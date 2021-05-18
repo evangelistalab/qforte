@@ -64,10 +64,10 @@ class Algorithm(ABC):
         self._nqb = len(reference)
         self._trial_state_type = trial_state_type
         self._Uprep = build_Uprep(reference, trial_state_type)
-        # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonain()
+        # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonian()
         self._qb_ham = system.get_hamiltonian()
-        if self._qb_ham.num_qubits() < self._nqb:
-            raise ValueError("The reference has more qubits than the Hamiltonian. Check your reference.")
+        if self._qb_ham.num_qubits() != self._nqb:
+            raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
         if hasattr(system, '_hf_energy'):
             self._hf_energy = system.get_hf_energy()
         else:
