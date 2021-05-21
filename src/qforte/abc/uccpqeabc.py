@@ -1,6 +1,7 @@
 import qforte as qf
 from abc import abstractmethod
 from qforte.abc.pqeabc import PQE
+from qforte.abc.ansatz import UCC
 from qforte.utils.op_pools import *
 
 from qforte.experiment import *
@@ -45,16 +46,9 @@ class UCCPQE(PQE):
             A list of parameters that define the variational degrees of freedom in
             the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
-        temp_pool = qf.SQOpPool()
-        tamps = self._tamps if amplitudes is None else amplitudes
-        for tamp, top in zip(tamps, self._tops):
-            temp_pool.add_term(tamp, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('commuting_grp_lex')
-
-        U, phase1 = trotterize(A, trotter_number=self._trotter_number)
-        if phase1 != 1.0 + 0.0j:
-            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+        ansatz = UCC(self._trotter_number, self._tamps, self._tops, self._pool)
+        U = ansatz.ansatz_circuit(amplitudes)
 
         Uvqc = qforte.QuantumCircuit()
         Uvqc.add_circuit(self._Uprep)
@@ -80,13 +74,6 @@ class UCCPQE(PQE):
 
         assert(np.isclose(np.imag(val),0.0))
         return val
-
-    def energy_feval(self, params):
-        Ucirc = self.build_Uvqc(amplitudes=params)
-        Energy = self.measure_energy(Ucirc)
-
-        self._curr_energy = Energy
-        return Energy
 
     def verify_required_UCCPQE_attributes(self):
 

@@ -1,6 +1,7 @@
 import qforte as qf
 from abc import abstractmethod
 from qforte.abc.vqeabc import VQE
+from qforte.abc.ansatz import UCC
 from qforte.utils.op_pools import *
 
 from qforte.experiment import *
@@ -51,7 +52,7 @@ class UCCVQE(VQE):
         print('==> Commutator pool construction complete.')
 
     # TODO (opt major): write a C function that prepares this super efficiently
-    def build_Uvqc(self, amplitudes=None, operators=None):
+    def build_Uvqc(self, amplitudes=None):
         """ This function returns the QuantumCircuit object built
         from the appropriate amplitudes (tops)
 
@@ -61,17 +62,9 @@ class UCCVQE(VQE):
             A list of parameters that define the variational degrees of freedom in
             the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
-        temp_pool = qf.SQOpPool()
-        tamps = self._tamps if amplitudes is None else amplitudes
-        tops = self._tops if operators is None else operators
-        for tamp, top in zip(tamps, tops):
-            temp_pool.add_term(tamp, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('commuting_grp_lex')
-
-        U, phase1 = trotterize(A, trotter_number=self._trotter_number)
-        if phase1 != 1.0 + 0.0j:
-            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+        ansatz = UCC(self._trotter_number, self._tamps, self._tops, self._pool)
+        U = ansatz.ansatz_circuit(amplitudes)
 
         Uvqc = qforte.QuantumCircuit()
         Uvqc.add_circuit(self._Uprep)
@@ -259,13 +252,6 @@ class UCCVQE(VQE):
 
         assert(np.isclose(np.imag(val),0.0))
         return val
-
-    def energy_feval(self, params):
-        Ucirc = self.build_Uvqc(amplitudes=params)
-        Energy = self.measure_energy(Ucirc)
-
-        self._curr_energy = Energy
-        return Energy
 
     def gradient_ary_feval(self, params):
         grads = self.measure_gradient(params)

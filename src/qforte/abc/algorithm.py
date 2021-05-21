@@ -137,3 +137,30 @@ class Algorithm(ABC):
 
         if self._n_pauli_trm_measures is None:
             raise NotImplementedError('Concrete Algorithm class must define self._n_pauli_trm_measures attribute.')
+
+class AnsatzAlgorithm(Algorithm):
+    """
+    Attributes
+    ----------
+    _curr_energy: float
+        The energy at the current iteration step.
+    """
+
+    @abstractmethod
+    def build_Uvqc(self):
+        pass
+
+    @abstractmethod
+    def measure_energy(self):
+        pass
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._curr_energy = 0
+
+    def energy_feval(self, params):
+        Ucirc = self.build_Uvqc(amplitudes=params)
+        Energy = self.measure_energy(Ucirc)
+
+        self._curr_energy = Energy
+        return Energy
