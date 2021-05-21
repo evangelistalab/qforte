@@ -233,26 +233,6 @@ class UCCVQE(VQE):
 
         return grads
 
-
-    def measure_energy(self, Ucirc):
-        """
-        Parameters
-        ----------
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
-        """
-        if self._fast:
-            myQC = qforte.QuantumComputer(self._nqb)
-            myQC.apply_circuit(Ucirc)
-            val = np.real(myQC.direct_op_exp_val(self._qb_ham))
-        else:
-            Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
-            empty_params = []
-            val = Exp.perfect_experimental_avg(empty_params)
-
-        assert(np.isclose(np.imag(val),0.0))
-        return val
-
     def gradient_ary_feval(self, params):
         grads = self.measure_gradient(params)
 

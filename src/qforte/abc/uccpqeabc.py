@@ -56,25 +56,6 @@ class UCCPQE(PQE):
 
         return Uvqc
 
-    def measure_energy(self, Ucirc):
-        """
-        Parameters
-        ----------
-        Ucirc : QuantumCircuit
-            The state preparation circuit.
-        """
-        if self._fast:
-            myQC = qforte.QuantumComputer(self._nqb)
-            myQC.apply_circuit(Ucirc)
-            val = np.real(myQC.direct_op_exp_val(self._qb_ham))
-        else:
-            Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
-            empty_params = []
-            val = Exp.perfect_experimental_avg(empty_params)
-
-        assert(np.isclose(np.imag(val),0.0))
-        return val
-
     def verify_required_UCCPQE_attributes(self):
 
         if not hasattr(self, '_pool_type'):

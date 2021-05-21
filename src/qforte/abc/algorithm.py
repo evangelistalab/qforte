@@ -150,9 +150,24 @@ class AnsatzAlgorithm(Algorithm):
     def build_Uvqc(self):
         pass
 
-    @abstractmethod
-    def measure_energy(self):
-        pass
+    def measure_energy(self, Ucirc):
+        """
+        Parameters
+        ----------
+        Ucirc : QuantumCircuit
+            The state preparation circuit.
+        """
+        if self._fast:
+            myQC = qforte.QuantumComputer(self._nqb)
+            myQC.apply_circuit(Ucirc)
+            val = np.real(myQC.direct_op_exp_val(self._qb_ham))
+        else:
+            Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
+            val = Exp.perfect_experimental_avg([])
+
+        assert np.isclose(np.imag(val), 0.0)
+
+        return val
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
