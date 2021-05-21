@@ -397,7 +397,7 @@ class ADAPTVQE(UCCVQE):
 
         else:
             print('  \n--> Begin opt with grad estimated using first-differences:')
-            print(f" Initail guess energy:              {init_gues_energy:+12.10f}")
+            print(f" Initial guess energy:              {init_gues_energy:+12.10f}")
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
                                     options=opts,

@@ -377,11 +377,3 @@ class UCCNPQE(UCCPQE):
             self._tops.append(l)
             self._tamps.append(0.0)
 
-        # TODO: make this a useable option
-        # if self._use_mp2_guess_amps:
-        #     self._tamps = self.get_mp2_guess_amps()
-
-    ### totally junk experimental functions
-    def get_mp2_guess_amps(self):
-        # TODO: implement, look into generalizd diagonal preconditioners.
-        pass
