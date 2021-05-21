@@ -55,7 +55,7 @@ class QPETests(unittest.TestCase):
         mol = Molecule()
         mol.set_hamiltonian(H2_qubit_hamiltonian)
 
-        alg = QPE(mol, ref, trotter_number=2)
+        alg = QPE(mol, reference=ref, trotter_number=2)
         alg.run(t = 0.4,
                 nruns = 100,
                 success_prob = 0.5,

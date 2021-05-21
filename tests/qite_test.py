@@ -75,7 +75,7 @@ class QITETests(unittest.TestCase):
         mol.set_hamiltonian(H2_qubit_hamiltonian)
         mol.set_sq_hamiltonian(H2_sq_hamiltonian)
 
-        alg = QITE(mol, ref)
+        alg = QITE(mol, reference=ref)
         alg.run(beta=18.0, do_lanczos=True, lanczos_gap=49)
         Egs = alg.get_gs_energy()
         self.assertLess(abs(Egs-E_fci), 1.0e-10)

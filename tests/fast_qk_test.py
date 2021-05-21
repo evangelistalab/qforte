@@ -396,13 +396,13 @@ class QKDTests(unittest.TestCase):
         mol.set_hamiltonian(H4_qubit_hamiltonian)
 
         MRSQK
-        alg2 = MRSQK(mol, ref, trotter_number=100)
+        alg2 = MRSQK(mol, reference=ref, trotter_number=100)
         alg2.run(s=3, d=3)
         Egs2 = alg2.get_gs_energy()
         self.assertLess(abs(Egs2-E_fci), 1.0e-6)
 
         SRQK
-        alg1 = SRQK(mol, ref, trotter_number=100)
+        alg1 = SRQK(mol, reference=ref, trotter_number=100)
         alg1.run(s=6)
         Egs1 = alg1.get_gs_energy()
         self.assertLess(abs(Egs1-E_fci), 1.0e-4)

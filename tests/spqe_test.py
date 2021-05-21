@@ -30,9 +30,7 @@ class SPQETests(unittest.TestCase):
         mol._hamiltonian = Hnonzero
         qforte.smart_print(Hnonzero)
 
-        ref = [1, 1, 1, 1, 0, 0, 0, 0]
-
-        alg = SPQE(mol, ref, print_summary_file=False)
+        alg = SPQE(mol, print_summary_file=False)
         alg.run(spqe_maxiter=20,
                 spqe_thresh=1.0e-4,
                 res_vec_thresh=1.0e-5,

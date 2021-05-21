@@ -51,7 +51,7 @@ class Algorithm(ABC):
 
     def __init__(self,
                  system,
-                 reference,
+                 reference=None,
                  trial_state_type='reference',
                  trotter_order=1,
                  trotter_number=1,
@@ -60,10 +60,14 @@ class Algorithm(ABC):
                  print_summary_file=False):
 
         self._sys = system
-        self._ref = reference
-        self._nqb = len(reference)
+        if(reference==None):
+            self._ref = system.get_hf_reference()
+        else:
+            self._ref = reference
+
+        self._nqb = len(self._ref)
         self._trial_state_type = trial_state_type
-        self._Uprep = build_Uprep(reference, trial_state_type)
+        self._Uprep = build_Uprep(self._ref, trial_state_type)
         # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonian()
         self._qb_ham = system.get_hamiltonian()
         if self._qb_ham.num_qubits() != self._nqb:
