@@ -280,14 +280,9 @@ class UCCVQE(VQE):
         self._grad_vec_evals += 1
         self._grad_m_evals += len(self._tamps)
 
-        # iter_str = str(int(self._grad_vec_evals))
-        # np.savetxt(f"qf_gsd_grad_{iter_str}.dat", np.real(grads))
-        # np.savetxt(f"qf_gsd_params_{iter_str}.dat", np.real(params))
-
         return np.asarray(grads)
 
     def report_iteration(self, x):
-        # print(f"\n -Minimum energy this iteration:    {self.energy_feval(x):+12.10f}")
 
         self._k_counter += 1
 
