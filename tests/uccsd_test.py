@@ -23,9 +23,8 @@ class UccTests(unittest.TestCase):
                                      basis='cc-pvdz',
                                      filename=data_path)
 
-        ref = [1,1,0,0,0,0,0,0,0,0]
 
-        alg = UCCNVQE(mol, ref)
+        alg = UCCNVQE(mol)
         alg.run(pool_type = 'SD',
                 use_analytic_grad = True)
 
@@ -47,9 +46,7 @@ class UccTests(unittest.TestCase):
                                      filename=data_path,
                                      symmetry = "c2v")
 
-        ref = [1,1,0,0,0,0,0,0,0,0]
-
-        alg = UCCNVQE(mol, ref)
+        alg = UCCNVQE(mol)
         alg.run(pool_type = 'SD',
                 use_analytic_grad = True)
 
@@ -70,9 +67,7 @@ class UccTests(unittest.TestCase):
                                      mol_geometry = [('He', (0, 0, 0))],
                                      virtual_indices = [8, 9])
 
-        ref = [1,1,0,0,0,0,0,0]
-
-        alg = UCCNVQE(mol, ref)
+        alg = UCCNVQE(mol)
         alg.run(pool_type = 'SD',
                 use_analytic_grad = True)
 
@@ -92,9 +87,7 @@ class UccTests(unittest.TestCase):
                                      basis='cc-pvdz',
                                      filename=data_path)
 
-        ref = [1,1,0,0,0,0,0,0,0,0]
-
-        alg = UCCNPQE(mol, ref)
+        alg = UCCNPQE(mol)
         alg.run(pool_type = 'SD',
                 res_vec_thresh = 1.0e-7)
 

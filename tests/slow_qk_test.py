@@ -396,7 +396,7 @@ class PhysicalQKDTests(unittest.TestCase):
         mol.set_hamiltonian(H4_qubit_hamiltonian)
 
         # SRQK
-        alg1 = SRQK(mol, ref, trotter_number=1, fast=False)
+        alg1 = SRQK(mol, reference=ref, trotter_number=1, fast=False)
         alg1.run(s=3)
         Egs1 = alg1.get_gs_energy()
 

@@ -23,9 +23,8 @@ class ADAPTVQETests(unittest.TestCase):
                                      basis='sto-6g',
                                      filename=data_path)
 
-        ref = [1, 1, 1, 1, 0, 0, 0, 0]
+        alg = ADAPTVQE(mol, print_summary_file=False)
 
-        alg = ADAPTVQE(mol, ref, print_summary_file=False)
         alg.run(adapt_maxiter=20,
                 avqe_thresh=1.0e-4,
                 opt_thresh=1.0e-5,

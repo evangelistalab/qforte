@@ -134,8 +134,13 @@ def create_openfermion_mol(**kwargs):
             freeze_orbitals(get_fermion_operator(molecular_hamiltonian),
                             kwargs['frozen_indices'],
                             unoccupied=kwargs['virtual_indices']))
+
+        hf_reference = [1] * (openfermion_mol.n_electrons - len(kwargs['frozen_indices'])) + [0] * (openfermion_mol.n_qubits - openfermion_mol.n_electrons - len(kwargs['virtual_indices']))
+
     else:
         fermion_hamiltonian = normal_ordered(get_fermion_operator(molecular_hamiltonian))
+
+        hf_reference = [1] * openfermion_mol.n_electrons + [0] * (openfermion_mol.n_qubits - openfermion_mol.n_electrons)
 
     if(kwargs['order_sq_ham'] or kwargs['order_jw_ham']):
 
@@ -171,13 +176,13 @@ def create_openfermion_mol(**kwargs):
 
     else:
         print('Using standard openfermion hamiltonian ordering!')
+
         qubit_hamiltonian = jordan_wigner(fermion_hamiltonian)
         qforte_hamiltonian = build_from_openfermion(qubit_hamiltonian)
 
+    qforte_mol.set_hf_reference(hf_reference)
     qforte_mol.set_hamiltonian(qforte_hamiltonian)
-
     qforte_mol.set_sq_hamiltonian( build_sqop_from_openfermion(fermion_hamiltonian) )
-
     qforte_mol.set_sq_of_ham(fermion_hamiltonian)
 
     # Set qforte energies from openfermion
