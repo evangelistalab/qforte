@@ -746,26 +746,11 @@ std::vector<std::complex<double>> QuantumComputer::direct_oppl_exp_val(
     const QuantumOpPool& qopl) {
 
     std::vector<std::complex<double>> results;
-    if(parallelism_enabled){
-        for (const auto& pl_term : qopl.terms()){
-            std::complex<double> val = direct_op_exp_val(pl_term.second);
-            results.push_back(val*pl_term.first);
-        }
-    } else {
-        std::vector<std::complex<double>> old_coeff = coeff_;
-        for (const auto& pl_term : qopl.terms()){
-            apply_operator(pl_term.second);
-            std::complex<double> val = std::inner_product(old_coeff.begin(),
-                                                          old_coeff.end(),
-                                                          coeff_.begin(),
-                                                          std::complex<double>(0.0, 0.0),
-                                                          add_c<double>,
-                                                          complex_prod<double>);
 
-            results.push_back(val*pl_term.first);
-            coeff_ = old_coeff;
-        }
+    for (const auto& pl_term : qopl.terms()) {
+        results.push_back(direct_op_exp_val(pl_term.second) * pl_term.first);
     }
+
     return results;
 }
 
