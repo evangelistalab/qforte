@@ -144,11 +144,43 @@ class AnsatzAlgorithm(Algorithm):
     ----------
     _curr_energy: float
         The energy at the current iteration step.
+
+    _pool : list of tuple(complex, SqOperator)
+        The linear combination of (optionally symmetrized) single and double
+        excitation operators to consider. This is represented as a list.
+        Each entry is a pair of a complex coefficient and an SqOperator object.
+
+    _tops : list
+        A list of indices representing selected operators in the pool.
+
+    _tamps : list
+        A list of amplitudes (to be optimized) representing selected
+        operators in the pool.
     """
 
     @abstractmethod
-    def build_Uvqc(self):
+    def ansatz_circuit(self):
         pass
+
+    # TODO (opt major): write a C function that prepares this super efficiently
+    def build_Uvqc(self, amplitudes=None):
+        """ This function returns the QuantumCircuit object built
+        from the appropriate amplitudes (tops)
+
+        Parameters
+        ----------
+        amplitudes : list
+            A list of parameters that define the variational degrees of freedom in
+            the state preparation circuit Uvqc. This is needed for the scipy minimizer.
+        """
+
+        U = self.ansatz_circuit(amplitudes)
+
+        Uvqc = qforte.QuantumCircuit()
+        Uvqc.add_circuit(self._Uprep)
+        Uvqc.add_circuit(U)
+
+        return Uvqc
 
     def measure_energy(self, Ucirc):
         """
@@ -172,6 +204,9 @@ class AnsatzAlgorithm(Algorithm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
+        self._tamps = []
+        self._tops = []
+        self._pool = []
 
     def energy_feval(self, params):
         Ucirc = self.build_Uvqc(amplitudes=params)

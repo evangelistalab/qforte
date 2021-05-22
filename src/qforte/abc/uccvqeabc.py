@@ -11,7 +11,7 @@ from qforte.utils.trotterization import trotterize
 
 import numpy as np
 
-class UCCVQE(VQE):
+class UCCVQE(VQE, UCC):
 
     @abstractmethod
     def get_num_ham_measurements(self):
@@ -50,27 +50,6 @@ class UCCVQE(VQE):
         self._commutator_pool = self._pool_obj.get_quantum_op_pool()
         self._commutator_pool.join_as_commutator(self._qb_ham)
         print('==> Commutator pool construction complete.')
-
-    # TODO (opt major): write a C function that prepares this super efficiently
-    def build_Uvqc(self, amplitudes=None):
-        """ This function returns the QuantumCircuit object built
-        from the appropriate amplitudes (tops)
-
-        Parameters
-        ----------
-        amplitudes : list
-            A list of parameters that define the variational degrees of freedom in
-            the state preparation circuit Uvqc. This is needed for the scipy minimizer.
-        """
-
-        ansatz = UCC(self._trotter_number, self._tamps, self._tops, self._pool)
-        U = ansatz.ansatz_circuit(amplitudes)
-
-        Uvqc = qforte.QuantumCircuit()
-        Uvqc.add_circuit(self._Uprep)
-        Uvqc.add_circuit(U)
-
-        return Uvqc
 
     def measure_operators(self, operators, Ucirc, idxs=[]):
         """

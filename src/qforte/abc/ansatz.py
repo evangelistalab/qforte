@@ -1,18 +1,9 @@
 import qforte as qf
-from abc import ABC
+from qforte.abc.algorithm import AnsatzAlgorithm
 
 from qforte.utils.trotterization import trotterize
 
-class Ansatz(ABC):
-    pass
-
-class UCC(Ansatz):
-
-    def __init__(self, trotter_number, amplitudes, operators, pool):
-        self._trotter_number = trotter_number
-        self._tamps = amplitudes
-        self._tops = operators
-        self._pool = pool
+class UCC(AnsatzAlgorithm):
 
     def ansatz_circuit(self, amplitudes=None):
         """ This function returns the QuantumCircuit object built
