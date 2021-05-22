@@ -53,7 +53,6 @@ class SPQE(UCCPQE):
         self._res_vec_evals = 0
         self._res_m_evals = 0
 
-        self._prev_energy = 0.0
         self._curr_energy = 0.0
 
         self._n_classical_params = 0

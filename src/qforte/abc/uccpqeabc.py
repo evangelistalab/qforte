@@ -13,28 +13,6 @@ import numpy as np
 
 class UCCPQE(PQE, UCC):
 
-    def fill_pool(self):
-
-        self._pool_obj = qf.SQOpPool()
-        self._pool_obj.set_orb_spaces(self._ref)
-
-        if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
-            self._pool_obj.fill_pool(self._pool_type)
-        else:
-            raise ValueError('Invalid operator pool type specified.')
-
-        self._pool = self._pool_obj.terms()
-
-        self._grad_vec_evals = 0
-        self._grad_m_evals = 0
-        self._k_counter = 0
-        self._grad_m_evals = 0
-        self._prev_energy = self._hf_energy
-        self._curr_energy = 0.0
-        self._curr_grad_norm = 0.0
-
-        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj.terms()]
-
     def verify_required_UCCPQE_attributes(self):
 
         if not hasattr(self, '_pool_type'):

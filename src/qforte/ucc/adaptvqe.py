@@ -217,6 +217,14 @@ class ADAPTVQE(UCCVQE):
         self._n_pauli_trm_measures = 0
         self._n_pauli_trm_measures_lst = []
 
+        self._grad_vec_evals = 0
+        self._grad_m_evals = 0
+        self._k_counter = 0
+        self._grad_m_evals = 0
+
+        self._curr_grad_norm = 0.0
+        self._prev_energy = self._hf_energy
+
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 

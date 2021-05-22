@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import qforte as qf
 from qforte.utils.state_prep import *
 
 class Algorithm(ABC):
@@ -145,10 +146,16 @@ class AnsatzAlgorithm(Algorithm):
     _curr_energy: float
         The energy at the current iteration step.
 
+    _Nm: list of int
+        Number of circuits for each operator in the pool.
+
     _pool : list of tuple(complex, SqOperator)
         The linear combination of (optionally symmetrized) single and double
         excitation operators to consider. This is represented as a list.
         Each entry is a pair of a complex coefficient and an SqOperator object.
+
+    _pool_obj : SqOpPool
+        A pool of second quantized operators we use in the ansatz.
 
     _tops : list
         A list of indices representing selected operators in the pool.
@@ -182,6 +189,20 @@ class AnsatzAlgorithm(Algorithm):
 
         return Uvqc
 
+    def fill_pool(self):
+
+        self._pool_obj = qf.SQOpPool()
+        self._pool_obj.set_orb_spaces(self._ref)
+
+        if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+            self._pool_obj.fill_pool(self._pool_type)
+        else:
+            raise ValueError('Invalid operator pool type specified.')
+
+        self._pool = self._pool_obj.terms()
+
+        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool]
+
     def measure_energy(self, Ucirc):
         """
         Parameters
@@ -204,9 +225,11 @@ class AnsatzAlgorithm(Algorithm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
+        self._Nm = []
         self._tamps = []
         self._tops = []
         self._pool = []
+        self._pool_obj = qf.SQOpPool()
 
     def energy_feval(self, params):
         Ucirc = self.build_Uvqc(amplitudes=params)

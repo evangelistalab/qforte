@@ -21,30 +21,6 @@ class UCCVQE(VQE, UCC):
     def get_num_commut_measurements(self):
         pass
 
-    def fill_pool(self):
-        self._pool_obj = qf.SQOpPool()
-        self._pool_obj.set_orb_spaces(self._ref)
-
-        if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
-            self._pool_obj.fill_pool(self._pool_type)
-        else:
-            raise ValueError('Invalid operator pool type specified.')
-
-        # TODO: Having both a _pool and a _pool_obj seems redundant.
-        # Can we define magic methods so that we can just work with
-        # the pool objects, without an alias for self._pool being needed?
-        self._pool = self._pool_obj.terms()
-
-        self._grad_vec_evals = 0
-        self._grad_m_evals = 0
-        self._k_counter = 0
-        self._grad_m_evals = 0
-        self._prev_energy = self._hf_energy
-        self._curr_energy = 0.0
-        self._curr_grad_norm = 0.0
-
-        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj.terms()]
-
     def fill_commutator_pool(self):
         print('\n\n==> Building commutator pool for gradient measurement.')
         self._commutator_pool = self._pool_obj.get_quantum_op_pool()
@@ -216,10 +192,7 @@ class UCCVQE(VQE, UCC):
         grads = self.measure_gradient(params)
 
         if(self._noise_factor > 1e-14):
-            noisy_grads = []
-            for grad_m in grads:
-                noisy_grads.append(np.random.normal(np.real(grad_m), self._noise_factor))
-            grads = noisy_grads
+            grads = [np.random.normal(np.real(grad_m), self._noise_factor) for grad_m in grads]
 
         self._curr_grad_norm = np.linalg.norm(grads)
         self._grad_vec_evals += 1
