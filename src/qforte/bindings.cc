@@ -2,6 +2,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
 
+#include "fmt/format.h"
+
 #include "quantum_basis.h"
 #include "quantum_circuit.h"
 #include "quantum_gate.h"
@@ -141,16 +143,53 @@ PYBIND11_MODULE(qforte, m) {
         .def("get", &local_timer::get);
 
     m.def(
-        "make_gate",
+        "gate",
         [](std::string type, size_t target, std::complex<double> parameter) {
-            return make_gate(type, target, target, parameter);
+            // only single qubit gates accept this synthax
+            auto vec = {"X",  "Y", "Z", "H", "R", "Rx",  "Ry",
+                        "Rz", "V", "S", "T", "I", "Rzy", "rU1"};
+            if (std::find(vec.begin(), vec.end(), type) != vec.end()) {
+                return make_gate(type, target, target, parameter);
+            }
+            std::string msg =
+                fmt::format("make_gate()\ttarget = {}, parameter = {} + {} i, is not a valid "
+                            "quantum gate input for type = {}",
+                            target, parameter.real(), parameter.imag(), type);
+            throw std::invalid_argument(msg);
         },
-        "type"_a, "target"_a, "parameter"_a = 0.0);
+        "type"_a, "target"_a, "parameter"_a = 0.0, "Make a gate.");
+
     m.def(
-        "make_gate",
+        "gate",
+        [](std::string type, size_t target, size_t control) {
+            // test for two-qubit gates that require no parameters
+            auto vec = {"SWAP", "cV", "CNOT", "cX", "cY", "cZ"};
+            if (std::find(vec.begin(), vec.end(), type) != vec.end()) {
+                return make_gate(type, target, control, 0.0);
+            }
+            // test for one-qubit gates that require no parameters but were specified with both
+            // target and control
+            if (target == control) {
+                auto vec2 = {
+                    "X", "Y", "Z", "H", "V", "S", "T", "I", "Rzy",
+                };
+                if (std::find(vec2.begin(), vec2.end(), type) != vec2.end()) {
+                    return make_gate(type, target, control, 0.0);
+                }
+            }
+            std::string msg = fmt::format("make_gate()\ttarget = {}, control = {}, is not a valid "
+                                          "quantum gate input for type = {}",
+                                          target, control, type);
+            throw std::invalid_argument(msg);
+        },
+        "type"_a, "target"_a, "control"_a, "Make a gate.");
+
+    m.def(
+        "gate",
         [](std::string type, size_t target, size_t control, std::complex<double> parameter) {
             return make_gate(type, target, control, parameter);
         },
-        "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
-    m.def("make_control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);
+        "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0, "Make a gate.");
+
+    m.def("control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);
 }
