@@ -9,11 +9,11 @@ class BuilderTests(unittest.TestCase):
         trial_state = qforte.QuantumComputer(4)
 
         trial_prep = [None]*5
-        trial_prep[0] = qforte.make_gate('H',0,0)
-        trial_prep[1] = qforte.make_gate('H',1,1)
-        trial_prep[2] = qforte.make_gate('H',2,2)
-        trial_prep[3] = qforte.make_gate('H',3,3)
-        trial_prep[4] = qforte.make_gate('cX',0,1)
+        trial_prep[0] = qforte.gate('H',0,0)
+        trial_prep[1] = qforte.gate('H',1,1)
+        trial_prep[2] = qforte.gate('H',2,2)
+        trial_prep[3] = qforte.gate('H',3,3)
+        trial_prep[4] = qforte.gate('cX',0,1)
 
         trial_circ = qforte.QuantumCircuit()
 

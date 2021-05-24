@@ -59,10 +59,10 @@ class ExperimentTests(unittest.TestCase):
         qc = qforte.QuantumComputer(3)
 
         # build HF state
-        qc.apply_gate(qforte.make_gate('X', 0, 0))
+        qc.apply_gate(qforte.gate('X', 0, 0))
 
         # put ancilla in |1> state
-        qc.apply_gate(qforte.make_gate('X', 2, 2))
+        qc.apply_gate(qforte.gate('X', 2, 2))
 
         # apply the troterized minus_iH
         qc.apply_circuit(Utrot)
@@ -80,7 +80,7 @@ class ExperimentTests(unittest.TestCase):
         qc = qforte.QuantumComputer(3)
 
         # build HF state
-        qc.apply_gate(qforte.make_gate('X', 0, 0))
+        qc.apply_gate(qforte.gate('X', 0, 0))
 
         # apply the troterized minus_iH
         qc.apply_circuit(Utrot)

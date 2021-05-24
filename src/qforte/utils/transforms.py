@@ -68,7 +68,7 @@ def organizer_to_circuit(op_organizer):
     for coeff, word in op_organizer:
         circ = qforte.QuantumCircuit()
         for letter in word:
-            circ.add_gate(qforte.make_gate(letter[0], letter[1], letter[1]))
+            circ.add_gate(qforte.gate(letter[0], letter[1], letter[1]))
 
         operator.add_term(coeff, circ)
 
