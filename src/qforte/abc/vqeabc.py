@@ -1,22 +1,10 @@
 from abc import abstractmethod
-from qforte.abc.algorithm import Algorithm
+from qforte.abc.algorithm import AnsatzAlgorithm
 
-class VQE(Algorithm):
-
-    @abstractmethod
-    def build_Uvqc(self):
-        pass
+class VQE(AnsatzAlgorithm):
 
     @abstractmethod
     def measure_gradient(self):
-        pass
-
-    @abstractmethod
-    def measure_energy(self):
-        pass
-
-    @abstractmethod
-    def energy_feval(self):
         pass
 
     @abstractmethod

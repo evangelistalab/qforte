@@ -2,7 +2,7 @@
 uccsdvqe.py
 ====================================
 A class for using an experiment to execute the variational quantum eigensolver
-for a trotterized UCCN anxatz.
+for a trotterized UCCN ansatz.
 """
 
 import qforte
@@ -93,18 +93,6 @@ class UCCNVQE(UCCVQE):
     _pool_obj : SDOpPool
         An SDOpPool object corresponding to the specified operators of
         interest.
-
-    _pool : list of tuple(complex, SqOperator)
-        The linear combination of (optionally symmetrized) single and double
-        excitation operators to consider. This is represented as a list.
-        Each entry is a pair of a complex coefficient and an SqOperator object.
-
-    _tops : list
-        A list of indices representing selected operators in the pool.
-
-    _tamps : list
-        A list of amplitudes (to be optimized) representing selected
-        operators in the pool.
 
     _commutator_pool : list
         The QuantumOperator objects representing the commutators [H, Am] of the
@@ -213,6 +201,13 @@ class UCCNVQE(UCCVQE):
         self._n_classical_params = 0
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
+        self._grad_vec_evals = 0
+        self._grad_m_evals = 0
+        self._k_counter = 0
+        self._grad_m_evals = 0
+
+        self._curr_grad_norm = 0.0
+        self._prev_energy = self._hf_energy
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()

@@ -217,6 +217,14 @@ class ADAPTVQE(UCCVQE):
         self._n_pauli_trm_measures = 0
         self._n_pauli_trm_measures_lst = []
 
+        self._grad_vec_evals = 0
+        self._grad_m_evals = 0
+        self._k_counter = 0
+        self._grad_m_evals = 0
+
+        self._curr_grad_norm = 0.0
+        self._prev_energy = self._hf_energy
+
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
@@ -397,7 +405,7 @@ class ADAPTVQE(UCCVQE):
 
         else:
             print('  \n--> Begin opt with grad estimated using first-differences:')
-            print(f" Initail guess energy:              {init_gues_energy:+12.10f}")
+            print(f" Initial guess energy:              {init_gues_energy:+12.10f}")
             res =  minimize(self.energy_feval, x0,
                                     method=self._optimizer,
                                     options=opts,
