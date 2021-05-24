@@ -20,13 +20,13 @@ def Toffoli(i,j,k):
     :param k: target qubit
     """
 
-    T1 = qforte.make_gate('T', i, i)
-    T2 = qforte.make_gate('T', j, j)
-    T3 = qforte.make_gate('T', k, k)
-    C12 = qforte.make_gate('cX', j, i)
-    C13 = qforte.make_gate('cX', k, i)
-    C23 = qforte.make_gate('cX', k, j)
-    H3 = qforte.make_gate('H', k, k)
+    T1 = qforte.gate('T', i, i)
+    T2 = qforte.gate('T', j, j)
+    T3 = qforte.gate('T', k, k)
+    C12 = qforte.gate('cX', j, i)
+    C13 = qforte.gate('cX', k, i)
+    C23 = qforte.gate('cX', k, j)
+    H3 = qforte.gate('H', k, k)
 
     T_circ = qforte.QuantumCircuit()
     T_circ.add_gate(H3)
@@ -58,10 +58,10 @@ def Fredkin(i,j,k):
     :param k: swap qubit 2
     """
 
-    C12 = qforte.make_gate('cX', j, i)
-    C32 = qforte.make_gate('cX', j, k)
-    CV23 = qforte.make_gate('cV', k, j)
-    CV13 = qforte.make_gate('cV', k, i)
+    C12 = qforte.gate('cX', j, i)
+    C32 = qforte.gate('cX', j, k)
+    CV23 = qforte.gate('cV', k, j)
+    CV13 = qforte.gate('cV', k, i)
 
     F_circ = qforte.QuantumCircuit()
     F_circ.add_gate(C32)

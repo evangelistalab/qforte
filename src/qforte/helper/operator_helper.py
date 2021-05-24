@@ -25,7 +25,7 @@ def build_from_openfermion(OF_qubitops, time_evo_factor = 1.0):
             action_string = OF_qubitops.action_strings[OF_qubitops.actions.index(action)]
 
             #Make qforte gates and add to circuit
-            gate_this = qforte.make_gate(action_string, index, index)
+            gate_this = qforte.gate(action_string, index, index)
             circ_term.add_gate(gate_this)
 
         #Add this term to operator

@@ -302,7 +302,7 @@ class MRSQK(QSD):
                 Um = qforte.QuantumCircuit()
                 for j in range(self._nqb):
                     if ref[j] == 1:
-                        Um.add_gate(qforte.make_gate('X', j, j))
+                        Um.add_gate(qforte.gate('X', j, j))
                         phase1 = 1.0
 
                 if(m>0):
@@ -368,7 +368,7 @@ class MRSQK(QSD):
             Un = qforte.QuantumCircuit()
             for j in range(self._nqb):
                 if ref[j] == 1:
-                    Un.add_gate(qforte.make_gate('X', j, j))
+                    Un.add_gate(qforte.gate('X', j, j))
 
             QC = qforte.QuantumComputer(self._nqb)
             QC.apply_circuit(Un)
