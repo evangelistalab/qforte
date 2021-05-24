@@ -48,7 +48,7 @@ except:
 def create_openfermion_mol(**kwargs):
     """Builds a Molecule object using openfermion as a backend.
     By default, it runs a scf calcuation and stores the qubit hamiltonian
-    (hamiltonian in poly word representation).
+    (hamiltonian in Pauli word representation).
 
     Variables
     ---------
