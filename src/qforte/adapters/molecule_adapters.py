@@ -12,23 +12,26 @@ from qforte.helper.operator_helper import build_from_openfermion, build_sqop_fro
 from qforte.system.molecular_info import Molecule
 from qforte.utils import transforms as tf
 
-from openfermion.ops import FermionOperator, QubitOperator
 
 try:
     from openfermion.chem import MolecularData
-except:
-    from openfermion.hamiltonians import MolecularData
-
-from openfermion.transforms import get_fermion_operator, jordan_wigner
-
-try:
+    from openfermion.transforms import get_fermion_operator, jordan_wigner
     from openfermion.transforms.opconversions import normal_ordered
     from openfermion.transforms.repconversions import freeze_orbitals
     from openfermion.utils import hermitian_conjugated
 except:
-    from openfermion.utils import hermitian_conjugated, normal_ordered, freeze_orbitals
+    try:
+        from openfermion.hamiltonians import MolecularData
+        from openfermion.transforms import get_fermion_operator, jordan_wigner
+        from openfermion.utils import hermitian_conjugated, normal_ordered, freeze_orbitals
+    except:
+        use_openfermion = False
 
-from openfermionpsi4 import run_psi4
+
+try:
+    from openfermionpsi4 import run_psi4
+except:
+    use_openfermion_psi4 = False
 
 import json
 
