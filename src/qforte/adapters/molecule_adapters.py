@@ -19,17 +19,20 @@ try:
     from openfermion.transforms.opconversions import normal_ordered
     from openfermion.transforms.repconversions import freeze_orbitals
     from openfermion.utils import hermitian_conjugated
+    use_openfermion = True
 except:
     try:
         from openfermion.hamiltonians import MolecularData
         from openfermion.transforms import get_fermion_operator, jordan_wigner
         from openfermion.utils import hermitian_conjugated, normal_ordered, freeze_orbitals
+        use_openfermion = True
     except:
         use_openfermion = False
 
 
 try:
     from openfermionpsi4 import run_psi4
+    use_openfermion_psi4 = True
 except:
     use_openfermion_psi4 = False
 
