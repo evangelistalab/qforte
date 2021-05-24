@@ -12,23 +12,29 @@ from qforte.helper.operator_helper import build_from_openfermion, build_sqop_fro
 from qforte.system.molecular_info import Molecule
 from qforte.utils import transforms as tf
 
-from openfermion.ops import FermionOperator, QubitOperator
 
 try:
     from openfermion.chem import MolecularData
-except:
-    from openfermion.hamiltonians import MolecularData
-
-from openfermion.transforms import get_fermion_operator, jordan_wigner
-
-try:
+    from openfermion.transforms import get_fermion_operator, jordan_wigner
     from openfermion.transforms.opconversions import normal_ordered
     from openfermion.transforms.repconversions import freeze_orbitals
     from openfermion.utils import hermitian_conjugated
+    use_openfermion = True
 except:
-    from openfermion.utils import hermitian_conjugated, normal_ordered, freeze_orbitals
+    try:
+        from openfermion.hamiltonians import MolecularData
+        from openfermion.transforms import get_fermion_operator, jordan_wigner
+        from openfermion.utils import hermitian_conjugated, normal_ordered, freeze_orbitals
+        use_openfermion = True
+    except:
+        use_openfermion = False
 
-from openfermionpsi4 import run_psi4
+
+try:
+    from openfermionpsi4 import run_psi4
+    use_openfermion_psi4 = True
+except:
+    use_openfermion_psi4 = False
 
 import json
 
@@ -42,7 +48,7 @@ except:
 def create_openfermion_mol(**kwargs):
     """Builds a Molecule object using openfermion as a backend.
     By default, it runs a scf calcuation and stores the qubit hamiltonian
-    (hamiltonian in poly word representation).
+    (hamiltonian in Pauli word representation).
 
     Variables
     ---------
@@ -82,6 +88,12 @@ def create_openfermion_mol(**kwargs):
     Molecule
         The qforte Molecule object which holds the molecular information.
     """
+
+    if not use_openfermion:
+        raise ImportError("openfermion was not imported correctely.")
+
+    if not use_openfermion_psi4:
+        raise ImportError("openfermion-psi4 was not imported correctely.")
 
     qforte_mol = Molecule(mol_geometry = kwargs['mol_geometry'],
                                basis = kwargs['basis'],

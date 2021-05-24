@@ -1,5 +1,4 @@
 import qforte
-from openfermion.ops import QubitOperator
 import numpy as np
 
 def build_from_openfermion(OF_qubitops, time_evo_factor = 1.0):
