@@ -385,7 +385,7 @@ class SPQE(UCCPQE):
         for i in range(self._nqb):
             qc = qforte.QuantumComputer(self._nqb)
             qc.apply_circuit(build_Uprep(self._ref, 'reference'))
-            qc.apply_gate(qforte.make_gate('X', i, i))
+            qc.apply_gate(qforte.gate('X', i, i))
             Ei = qc.direct_op_exp_val(self._qb_ham)
 
             if(i<sum(self._ref)):

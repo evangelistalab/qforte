@@ -83,12 +83,12 @@ def build_circuit(Inputstr):
     for i in range(len(sepstr)):
         inputgate = sepstr[i].split('_')
         if len(inputgate) == 2:
-            circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1])))
+            circ.add_gate(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[1])))
         else:
             if 'R' in inputgate[0]:
-                circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[1]), float(inputgate[2])))
+                circ.add_gate(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[1]), float(inputgate[2])))
             else:
-                circ.add_gate(qforte.make_gate(inputgate[0], int(inputgate[1]), int(inputgate[2])))
+                circ.add_gate(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[2])))
 
     return circ
 

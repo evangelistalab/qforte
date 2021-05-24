@@ -44,8 +44,8 @@ import qforte
 
 # Construct a Bell state.
 computer = qforte.QuantumComputer(2)
-computer.apply_gate(qforte.make_gate('H',0,0))
-computer.apply_gate(qforte.make_gate('cX',1,0))
+computer.apply_gate(qforte.gate('H',0))
+computer.apply_gate(qforte.gate('cX',1,0))
 
 # Run quantum phase estimation on H2.
 from qforte.qpea.qpe import QPE

@@ -6,7 +6,7 @@ def build_Uprep(ref, trial_state_type):
     if trial_state_type == 'reference':
         for j in range(len(ref)):
             if ref[j] == 1:
-                Uprep.add_gate(qforte.make_gate('X', j, j))
+                Uprep.add_gate(qforte.gate('X', j, j))
     else:
         raise ValueError("Only 'reference' supported as state preparation type")
 

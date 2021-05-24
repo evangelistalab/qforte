@@ -13,7 +13,7 @@ class GatesTests(unittest.TestCase):
         basis0 = make_basis('0')
         basis1 = make_basis('1')
         computer = qforte.QuantumComputer(nqubits)
-        X = qforte.make_gate('X',0,0);
+        X = qforte.gate('X',0);
         # test X|0> = |1>
         computer.apply_gate(X)
         coeff0 = computer.coeff(basis0)
@@ -35,7 +35,7 @@ class GatesTests(unittest.TestCase):
         basis0 = make_basis('0')
         basis1 = make_basis('1')
         computer = qforte.QuantumComputer(nqubits)
-        Y = qforte.make_gate('Y',0,0);
+        Y = qforte.gate('Y',0,0);
         # test Y|0> = i|1>
         computer.apply_gate(Y)
         coeff0 = computer.coeff(basis0)
@@ -57,7 +57,7 @@ class GatesTests(unittest.TestCase):
         basis0 = make_basis('0')
         basis1 = make_basis('1')
         computer = qforte.QuantumComputer(nqubits)
-        Z = qforte.make_gate('Z',0,0);
+        Z = qforte.gate('Z',0,0);
         # test Z|0> = |0>
         computer.apply_gate(Z)
         coeff0 = computer.coeff(basis0)
@@ -80,7 +80,7 @@ class GatesTests(unittest.TestCase):
         basis2 = make_basis('10') # basis2:|01>
         basis3 = make_basis('11') # basis3:|11>
         computer = qforte.QuantumComputer(nqubits)
-        CNOT = qforte.make_gate('CNOT',0,1);
+        CNOT = qforte.gate('CNOT',0,1);
 
         # test CNOT|00> = |00>
         computer.set_state([(basis0,1.0)])
@@ -130,6 +130,10 @@ class GatesTests(unittest.TestCase):
         self.assertAlmostEqual(coeff2, 0.0 + 0.0j)
         self.assertAlmostEqual(coeff3, 0.0 + 0.0j)
 
+        with self.assertRaises(ValueError) as context:
+            qforte.gate('CNOT',0,1.0)
+            self.assertTrue(')' in str(context.exception))
+
     def test_cY_gate(self):
         # test the cY gate
         nqubits = 2
@@ -138,7 +142,7 @@ class GatesTests(unittest.TestCase):
         basis2 = make_basis('10') # basis2:|01>
         basis3 = make_basis('11') # basis3:|11>
         computer = qforte.QuantumComputer(nqubits)
-        cY = qforte.make_gate('cY',0,1);
+        cY = qforte.gate('cY',0,1);
 
         # test cY|00> = |00>
         computer.set_state([(basis0,1.0)])
@@ -194,25 +198,25 @@ class GatesTests(unittest.TestCase):
         # test that 1 - 1 = 0
 
         # print('\n'.join(qc.str()))
-        X = qforte.make_gate('X',0,0);
+        X = qforte.gate('X',0,0);
         print(X)
-        Y = qforte.make_gate('Y',0,0);
+        Y = qforte.gate('Y',0,0);
         print(Y)
-        Z = qforte.make_gate('Z',0,0);
+        Z = qforte.gate('Z',0,0);
         print(Z)
-        H = qforte.make_gate('H',0,0);
+        H = qforte.gate('H',0,0);
         print(H)
-        R = qforte.make_gate('R',0,0,0.1);
+        R = qforte.gate('R',0,0,0.1);
         print(R)
-        S = qforte.make_gate('S',0,0);
+        S = qforte.gate('S',0,0);
         print(S)
-        T = qforte.make_gate('T',0,0);
+        T = qforte.gate('T',0,0);
         print(T)
-        cX = qforte.make_gate('cX',0,1);
+        cX = qforte.gate('cX',0,1);
         print(cX)
-        cY = qforte.make_gate('cY',0,1);
+        cY = qforte.gate('cY',0,1);
         print(cY)
-        cZ = qforte.make_gate('cZ',0,1);
+        cZ = qforte.gate('cZ',0,1);
         print(cZ)
        # qcircuit = qforte.QuantumCircuit()
        # qcircuit.add_gate(qg)
@@ -236,11 +240,11 @@ class GatesTests(unittest.TestCase):
         trial_state = qforte.QuantumComputer(4)
 
         trial_prep = [None]*5
-        trial_prep[0] = qforte.make_gate('H',0,0)
-        trial_prep[1] = qforte.make_gate('H',1,1)
-        trial_prep[2] = qforte.make_gate('H',2,2)
-        trial_prep[3] = qforte.make_gate('H',3,3)
-        trial_prep[4] = qforte.make_gate('cX',0,1)
+        trial_prep[0] = qforte.gate('H',0,0)
+        trial_prep[1] = qforte.gate('H',1,1)
+        trial_prep[2] = qforte.gate('H',2,2)
+        trial_prep[3] = qforte.gate('H',3,3)
+        trial_prep[4] = qforte.gate('cX',0,1)
 
         trial_circ = qforte.QuantumCircuit()
 
@@ -252,10 +256,10 @@ class GatesTests(unittest.TestCase):
         trial_state.apply_circuit(trial_circ)
 
         # gates needed for [a1^ a2] operator
-        X1 = qforte.make_gate('X',1,1)
-        X2 = qforte.make_gate('X',2,2)
-        Y1 = qforte.make_gate('Y',1,1)
-        Y2 = qforte.make_gate('Y',2,2)
+        X1 = qforte.gate('X',1,1)
+        X2 = qforte.gate('X',2,2)
+        Y1 = qforte.gate('Y',1,1)
+        Y2 = qforte.gate('Y',2,2)
 
         # initialize circuits to make operator
         circ1 = qforte.QuantumCircuit()

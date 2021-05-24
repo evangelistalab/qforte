@@ -185,7 +185,7 @@ class QPE(Algorithm):
         """
         Uhad = qforte.QuantumCircuit()
         for j in range(self._abegin, self._aend + 1):
-            Uhad.add_gate(qforte.make_gate('H', j, j))
+            Uhad.add_gate(qforte.gate('H', j, j))
 
         return Uhad
 
@@ -241,7 +241,7 @@ class QPE(Algorithm):
                                                trotter_number=self._trotter_number)
 
             # Rotation for the scaler Hamiltonian term
-            Udyn.add_gate(qforte.make_gate('R', ancilla_idx, ancilla_idx,  -1.0 * np.sum(scaler_terms) * float(tn)))
+            Udyn.add_gate(qforte.gate('R', ancilla_idx, ancilla_idx,  -1.0 * np.sum(scaler_terms) * float(tn)))
 
             # NOTE: Approach uses 2^ancilla_idx blocks of the time evolution circuit
             for i in range(tn):
@@ -279,10 +279,10 @@ class QPE(Algorithm):
         qft_circ = qforte.QuantumCircuit()
         lens = self._aend - self._abegin + 1
         for j in range(lens):
-            qft_circ.add_gate(qforte.make_gate('H', j+self._abegin, j+self._abegin))
+            qft_circ.add_gate(qforte.gate('H', j+self._abegin, j+self._abegin))
             for k in range(2, lens+1-j):
                 phase = 2.0*np.pi/(2**k)
-                qft_circ.add_gate(qforte.make_gate('cR', j+self._abegin, j+k-1+self._abegin, phase))
+                qft_circ.add_gate(qforte.gate('cR', j+self._abegin, j+k-1+self._abegin, phase))
 
         if direct == 'forward':
             return qft_circ
@@ -314,6 +314,6 @@ class QPE(Algorithm):
 
         Z_circ = qforte.QuantumCircuit()
         for j in range(self._abegin, self._aend + 1):
-            Z_circ.add_gate(qforte.make_gate('Z', j, j))
+            Z_circ.add_gate(qforte.gate('Z', j, j))
 
         return Z_circ

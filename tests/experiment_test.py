@@ -46,8 +46,8 @@ class ExperimentTests(unittest.TestCase):
 
         # circuit for making HF state
         circ = qforte.QuantumCircuit()
-        circ.add_gate(qforte.make_gate('X', 0, 0))
-        circ.add_gate(qforte.make_gate('X', 1, 1))
+        circ.add_gate(qforte.gate('X', 0, 0))
+        circ.add_gate(qforte.gate('X', 1, 1))
 
         TestExperiment = qforte.Experiment(4, circ, H2_qubit_hamiltonian, 1000000)
         params2 = []
@@ -105,8 +105,8 @@ class ExperimentTests(unittest.TestCase):
 
         # circuit for making HF state
         circ = qforte.QuantumCircuit()
-        circ.add_gate(qforte.make_gate('X', 0, 0))
-        circ.add_gate(qforte.make_gate('X', 1, 1))
+        circ.add_gate(qforte.gate('X', 0, 0))
+        circ.add_gate(qforte.gate('X', 1, 1))
 
         TestExperiment = qforte.Experiment(4, circ, H2_qubit_hamiltonian, 1000000)
         params2 = []

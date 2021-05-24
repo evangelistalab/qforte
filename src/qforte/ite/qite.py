@@ -163,7 +163,7 @@ class QITE(Algorithm):
                 nygates = 0
                 temp_rho = qf.QuantumCircuit()
                 for gate in rho.gates():
-                    temp_rho.add_gate(qf.make_gate(gate.gate_id(), gate.target(), gate.control()))
+                    temp_rho.add_gate(qf.gate(gate.gate_id(), gate.target(), gate.control()))
                     if (gate.gate_id() == "Y"):
                         nygates += 1
 

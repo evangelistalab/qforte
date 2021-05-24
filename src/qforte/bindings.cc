@@ -2,6 +2,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
 
+#include "fmt/format.h"
+
 #include "quantum_basis.h"
 #include "quantum_circuit.h"
 #include "quantum_gate.h"
@@ -26,7 +28,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("canonicalize_pauli_circuit", &QuantumCircuit::canonicalize_pauli_circuit)
         .def("set_parameters", &QuantumCircuit::set_parameters)
         .def("get_num_cnots", &QuantumCircuit::get_num_cnots)
-        .def("str", &QuantumCircuit::str);
+        .def("str", &QuantumCircuit::str)
+        .def("__str__", &QuantumCircuit::str)
+        .def("__repr__", &QuantumCircuit::str);
 
     py::class_<SQOperator>(m, "SQOperator")
         .def(py::init<>())
@@ -37,7 +41,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
         .def("jw_transform", &SQOperator::jw_transform)
-        .def("str", &SQOperator::str);
+        .def("str", &SQOperator::str)
+        .def("__str__", &SQOperator::str)
+        .def("__repr__", &SQOperator::str);
 
     py::class_<SQOpPool>(m, "SQOpPool")
         .def(py::init<>())
@@ -46,9 +52,12 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
-        .def("get_quantum_operator", &SQOpPool::get_quantum_operator, py::arg("order_type") ,py::arg("combine_like_terms") = true)
+        .def("get_quantum_operator", &SQOpPool::get_quantum_operator, py::arg("order_type"),
+             py::arg("combine_like_terms") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
-        .def("str", &SQOpPool::str);
+        .def("str", &SQOpPool::str)
+        .def("__str__", &SQOpPool::str)
+        .def("__repr__", &SQOpPool::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
         .def(py::init<>())
@@ -62,8 +71,10 @@ PYBIND11_MODULE(qforte, m) {
         .def("simplify", &QuantumOperator::simplify)
         .def("operator_product", &QuantumOperator::operator_product)
         .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
+        .def("num_qubits", &QuantumOperator::num_qubits)
         .def("str", &QuantumOperator::str)
-        .def("num_qubits", &QuantumOperator::num_qubits);
+        .def("__str__", &QuantumOperator::str)
+        .def("__repr__", &QuantumOperator::str);
 
     py::class_<QuantumOpPool>(m, "QuantumOpPool")
         .def(py::init<>())
@@ -78,11 +89,15 @@ PYBIND11_MODULE(qforte, m) {
         .def("join_as_commutator", &QuantumOpPool::join_as_commutator)
         .def("square", &QuantumOpPool::square)
         .def("fill_pool", &QuantumOpPool::fill_pool)
-        .def("str", &QuantumOpPool::str);
+        .def("str", &QuantumOpPool::str)
+        .def("__str__", &QuantumOpPool::str)
+        .def("__repr__", &QuantumOpPool::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
         .def("str", &QuantumBasis::str)
+        .def("__str__", &QuantumBasis::str)
+        .def("__repr__", &QuantumBasis::str)
         .def("flip_bit", &QuantumBasis::flip_bit)
         .def("set_bit", &QuantumBasis::set_bit)
         .def("add", &QuantumBasis::add)
@@ -95,7 +110,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_circuit", &QuantumComputer::apply_circuit)
         .def("apply_gate_safe", &QuantumComputer::apply_gate_safe)
         .def("apply_gate", &QuantumComputer::apply_gate)
-        .def("apply_constant",  &QuantumComputer::apply_constant)
+        .def("apply_constant", &QuantumComputer::apply_constant)
         .def("measure_circuit", &QuantumComputer::measure_circuit)
         .def("measure_z_readouts_fast", &QuantumComputer::measure_z_readouts_fast)
         .def("measure_readouts", &QuantumComputer::measure_readouts)
@@ -116,6 +131,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_timings", &QuantumComputer::get_timings)
         .def("clear_timings", &QuantumComputer::clear_timings)
         .def("str", &QuantumComputer::str)
+        .def("__str__", &QuantumComputer::str)
         .def("__repr__", [](const QuantumComputer& qc) {
             std::string r("QuantumComputer(\n");
             for (const std::string& s : qc.str()) {
@@ -126,11 +142,11 @@ PYBIND11_MODULE(qforte, m) {
         });
 
     py::class_<QuantumGate>(m, "QuantumGate")
-        .def("str", &QuantumGate::str)
         .def("target", &QuantumGate::target)
         .def("control", &QuantumGate::control)
         .def("gate_id", &QuantumGate::gate_id)
         .def("adjoint", &QuantumGate::adjoint)
+        .def("str", &QuantumGate::str)
         .def("__str__", &QuantumGate::str)
         .def("__repr__", &QuantumGate::repr);
 
@@ -139,6 +155,54 @@ PYBIND11_MODULE(qforte, m) {
         .def("reset", &local_timer::reset)
         .def("get", &local_timer::get);
 
-    m.def("make_gate", &make_gate, "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
-    m.def("make_control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);
+    m.def(
+        "gate",
+        [](std::string type, size_t target, std::complex<double> parameter) {
+            // only single qubit gates accept this synthax
+            auto vec = {"X",  "Y", "Z", "H", "R", "Rx",  "Ry",
+                        "Rz", "V", "S", "T", "I", "Rzy", "rU1"};
+            if (std::find(vec.begin(), vec.end(), type) != vec.end()) {
+                return make_gate(type, target, target, parameter);
+            }
+            std::string msg =
+                fmt::format("make_gate()\ttarget = {}, parameter = {} + {} i, is not a valid "
+                            "quantum gate input for type = {}",
+                            target, parameter.real(), parameter.imag(), type);
+            throw std::invalid_argument(msg);
+        },
+        "type"_a, "target"_a, "parameter"_a = 0.0, "Make a gate.");
+
+    m.def(
+        "gate",
+        [](std::string type, size_t target, size_t control) {
+            // test for two-qubit gates that require no parameters
+            auto vec = {"SWAP", "cV", "CNOT", "cX", "cY", "cZ"};
+            if (std::find(vec.begin(), vec.end(), type) != vec.end()) {
+                return make_gate(type, target, control, 0.0);
+            }
+            // test for one-qubit gates that require no parameters but were specified with both
+            // target and control
+            if (target == control) {
+                auto vec2 = {
+                    "X", "Y", "Z", "H", "V", "S", "T", "I", "Rzy",
+                };
+                if (std::find(vec2.begin(), vec2.end(), type) != vec2.end()) {
+                    return make_gate(type, target, control, 0.0);
+                }
+            }
+            std::string msg = fmt::format("make_gate()\ttarget = {}, control = {}, is not a valid "
+                                          "quantum gate input for type = {}",
+                                          target, control, type);
+            throw std::invalid_argument(msg);
+        },
+        "type"_a, "target"_a, "control"_a, "Make a gate.");
+
+    m.def(
+        "gate",
+        [](std::string type, size_t target, size_t control, std::complex<double> parameter) {
+            return make_gate(type, target, control, parameter);
+        },
+        "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0, "Make a gate.");
+
+    m.def("control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);
 }
