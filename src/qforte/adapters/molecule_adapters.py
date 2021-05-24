@@ -86,6 +86,12 @@ def create_openfermion_mol(**kwargs):
         The qforte Molecule object which holds the molecular information.
     """
 
+    if not use_openfermion:
+        raise ImportError("openfermion was not imported correctely.")
+
+    if not use_openfermion_psi4:
+        raise ImportError("openfermion-psi4 was not imported correctely.")
+
     qforte_mol = Molecule(mol_geometry = kwargs['mol_geometry'],
                                basis = kwargs['basis'],
                                multiplicity = kwargs['multiplicity'],
