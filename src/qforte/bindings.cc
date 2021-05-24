@@ -46,7 +46,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
-        .def("get_quantum_operator", &SQOpPool::get_quantum_operator, py::arg("order_type") ,py::arg("combine_like_terms") = true)
+        .def("get_quantum_operator", &SQOpPool::get_quantum_operator, py::arg("order_type"),
+             py::arg("combine_like_terms") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str);
 
@@ -95,7 +96,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_circuit", &QuantumComputer::apply_circuit)
         .def("apply_gate_safe", &QuantumComputer::apply_gate_safe)
         .def("apply_gate", &QuantumComputer::apply_gate)
-        .def("apply_constant",  &QuantumComputer::apply_constant)
+        .def("apply_constant", &QuantumComputer::apply_constant)
         .def("measure_circuit", &QuantumComputer::measure_circuit)
         .def("measure_z_readouts_fast", &QuantumComputer::measure_z_readouts_fast)
         .def("measure_readouts", &QuantumComputer::measure_readouts)
@@ -139,6 +140,17 @@ PYBIND11_MODULE(qforte, m) {
         .def("reset", &local_timer::reset)
         .def("get", &local_timer::get);
 
-    m.def("make_gate", &make_gate, "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
+    m.def(
+        "make_gate",
+        [](std::string type, size_t target, std::complex<double> parameter) {
+            return make_gate(type, target, target, parameter);
+        },
+        "type"_a, "target"_a, "parameter"_a = 0.0);
+    m.def(
+        "make_gate",
+        [](std::string type, size_t target, size_t control, std::complex<double> parameter) {
+            return make_gate(type, target, control, parameter);
+        },
+        "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0);
     m.def("make_control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);
 }
