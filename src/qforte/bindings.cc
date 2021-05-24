@@ -26,7 +26,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("canonicalize_pauli_circuit", &QuantumCircuit::canonicalize_pauli_circuit)
         .def("set_parameters", &QuantumCircuit::set_parameters)
         .def("get_num_cnots", &QuantumCircuit::get_num_cnots)
-        .def("str", &QuantumCircuit::str);
+        .def("str", &QuantumCircuit::str)
+        .def("__str__", &QuantumCircuit::str)
+        .def("__repr__", &QuantumCircuit::str);
 
     py::class_<SQOperator>(m, "SQOperator")
         .def(py::init<>())
@@ -37,7 +39,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
         .def("jw_transform", &SQOperator::jw_transform)
-        .def("str", &SQOperator::str);
+        .def("str", &SQOperator::str)
+        .def("__str__", &SQOperator::str)
+        .def("__repr__", &SQOperator::str);
 
     py::class_<SQOpPool>(m, "SQOpPool")
         .def(py::init<>())
@@ -48,7 +52,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
         .def("get_quantum_operator", &SQOpPool::get_quantum_operator, py::arg("order_type") ,py::arg("combine_like_terms") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
-        .def("str", &SQOpPool::str);
+        .def("str", &SQOpPool::str)
+        .def("__str__", &SQOpPool::str)
+        .def("__repr__", &SQOpPool::str);
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
         .def(py::init<>())
@@ -62,8 +68,10 @@ PYBIND11_MODULE(qforte, m) {
         .def("simplify", &QuantumOperator::simplify)
         .def("operator_product", &QuantumOperator::operator_product)
         .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
+        .def("num_qubits", &QuantumOperator::num_qubits)
         .def("str", &QuantumOperator::str)
-        .def("num_qubits", &QuantumOperator::num_qubits);
+        .def("__str__", &QuantumOperator::str)
+        .def("__repr__", &QuantumOperator::str);
 
     py::class_<QuantumOpPool>(m, "QuantumOpPool")
         .def(py::init<>())
@@ -78,11 +86,15 @@ PYBIND11_MODULE(qforte, m) {
         .def("join_as_commutator", &QuantumOpPool::join_as_commutator)
         .def("square", &QuantumOpPool::square)
         .def("fill_pool", &QuantumOpPool::fill_pool)
-        .def("str", &QuantumOpPool::str);
+        .def("str", &QuantumOpPool::str)
+        .def("__str__", &QuantumOpPool::str)
+        .def("__repr__", &QuantumOpPool::str);
 
     py::class_<QuantumBasis>(m, "QuantumBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
         .def("str", &QuantumBasis::str)
+        .def("__str__", &QuantumBasis::str)
+        .def("__repr__", &QuantumBasis::str)
         .def("flip_bit", &QuantumBasis::flip_bit)
         .def("set_bit", &QuantumBasis::set_bit)
         .def("add", &QuantumBasis::add)
@@ -116,6 +128,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_timings", &QuantumComputer::get_timings)
         .def("clear_timings", &QuantumComputer::clear_timings)
         .def("str", &QuantumComputer::str)
+        .def("__str__", &QuantumComputer::str)
         .def("__repr__", [](const QuantumComputer& qc) {
             std::string r("QuantumComputer(\n");
             for (const std::string& s : qc.str()) {
@@ -126,11 +139,11 @@ PYBIND11_MODULE(qforte, m) {
         });
 
     py::class_<QuantumGate>(m, "QuantumGate")
-        .def("str", &QuantumGate::str)
         .def("target", &QuantumGate::target)
         .def("control", &QuantumGate::control)
         .def("gate_id", &QuantumGate::gate_id)
         .def("adjoint", &QuantumGate::adjoint)
+        .def("str", &QuantumGate::str)
         .def("__str__", &QuantumGate::str)
         .def("__repr__", &QuantumGate::repr);
 
