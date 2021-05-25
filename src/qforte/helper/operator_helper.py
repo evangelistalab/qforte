@@ -25,10 +25,10 @@ def build_from_openfermion(OF_qubitops, time_evo_factor = 1.0):
 
             #Make qforte gates and add to circuit
             gate_this = qforte.gate(action_string, index, index)
-            circ_term.add_gate(gate_this)
+            circ_term.add(gate_this)
 
         #Add this term to operator
-        qforte_ops.add_term(coeff*time_evo_factor, circ_term)
+        qforte_ops.add(coeff*time_evo_factor, circ_term)
 
     return qforte_ops
 

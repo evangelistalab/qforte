@@ -318,7 +318,7 @@ def create_psi_mol(**kwargs):
     # Build second quantized Hamiltonian
     nmo = np.shape(mo_oeis)[0]
     Hsq = qforte.SQOperator()
-    Hsq.add_term(p4_Enuc_ref, [])
+    Hsq.add(p4_Enuc_ref, [])
     for i in range(nmo):
         ia = i*2
         ib = i*2 + 1
@@ -326,8 +326,8 @@ def create_psi_mol(**kwargs):
             ja = j*2
             jb = j*2 + 1
 
-            Hsq.add_term(mo_oeis[i,j], [ia, ja])
-            Hsq.add_term(mo_oeis[i,j], [ib, jb])
+            Hsq.add(mo_oeis[i,j], [ia, ja])
+            Hsq.add(mo_oeis[i,j], [ib, jb])
 
             for k in range(nmo):
                 ka = k*2
@@ -337,14 +337,14 @@ def create_psi_mol(**kwargs):
                     lb = l*2 + 1
 
                     if(ia!=jb and kb != la):
-                        Hsq.add_term( mo_teis[i,l,k,j]/2, [ia, jb, kb, la] ) # abba
+                        Hsq.add( mo_teis[i,l,k,j]/2, [ia, jb, kb, la] ) # abba
                     if(ib!=ja and ka!=lb):
-                        Hsq.add_term( mo_teis[i,l,k,j]/2, [ib, ja, ka, lb] ) # baab
+                        Hsq.add( mo_teis[i,l,k,j]/2, [ib, ja, ka, lb] ) # baab
 
                     if(ia!=ja and ka!=la):
-                        Hsq.add_term( mo_teis[i,l,k,j]/2, [ia, ja, ka, la] ) # aaaa
+                        Hsq.add( mo_teis[i,l,k,j]/2, [ia, ja, ka, la] ) # aaaa
                     if(ib!=jb and kb!=lb):
-                        Hsq.add_term( mo_teis[i,l,k,j]/2, [ib, jb, kb, lb] ) # bbbb
+                        Hsq.add( mo_teis[i,l,k,j]/2, [ib, jb, kb, lb] ) # bbbb
 
     # Set attributes
     qforte_mol.set_nuclear_repulsion_energy(p4_Enuc_ref)
@@ -376,13 +376,13 @@ def create_external_mol(**kwargs):
 
     # build sq hamiltonian
     qforte_sq_hamiltonian = qforte.SQOperator()
-    qforte_sq_hamiltonian.add_term(external_data['scalar_energy']['data'], [])
+    qforte_sq_hamiltonian.add(external_data['scalar_energy']['data'], [])
 
     for p, q, h_pq in external_data['oei']['data']:
-        qforte_sq_hamiltonian.add_term(h_pq, [p,q])
+        qforte_sq_hamiltonian.add(h_pq, [p,q])
 
     for p, q, r, s, h_pqrs in external_data['tei']['data']:
-        qforte_sq_hamiltonian.add_term(h_pqrs/4.0, [p,q,s,r]) # only works in C1 symmetry
+        qforte_sq_hamiltonian.add(h_pqrs/4.0, [p,q,s,r]) # only works in C1 symmetry
 
     hf_reference = [0 for i in range(external_data['nso']['data'])]
     for n in range(external_data['na']['data'] + external_data['nb']['data']):

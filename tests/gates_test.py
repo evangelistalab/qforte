@@ -219,15 +219,15 @@ class GatesTests(unittest.TestCase):
         cZ = qforte.gate('cZ',0,1);
         print(cZ)
        # qcircuit = qforte.QuantumCircuit()
-       # qcircuit.add_gate(qg)
-       # qcircuit.add_gate(qforte.QuantumGate(qforte.QuantumGateType.Hgate,1,1));
+       # qcircuit.add(qg)
+       # qcircuit.add(qforte.QuantumGate(qforte.QuantumGateType.Hgate,1,1));
        # print('\n'.join(qcircuit.str()))
        # self.assertEqual(qforte.subtract(1, 1), 0)
 
         computer = qforte.QuantumComputer(16)
        # print(repr(computer))
        # circuit = qforte.QuantumCircuit()
-       # circuit.add_gate(X)
+       # circuit.add(X)
         for i in range(3000):
             computer.apply_gate(X)
             computer.apply_gate(Y)
@@ -250,7 +250,7 @@ class GatesTests(unittest.TestCase):
 
         #prepare the circuit
         for gate in trial_prep:
-            trial_circ.add_gate(gate)
+            trial_circ.add(gate)
 
         # use circuit to prepare trial state
         trial_state.apply_circuit(trial_circ)
@@ -263,24 +263,24 @@ class GatesTests(unittest.TestCase):
 
         # initialize circuits to make operator
         circ1 = qforte.QuantumCircuit()
-        circ1.add_gate(X2)
-        circ1.add_gate(Y1)
+        circ1.add(X2)
+        circ1.add(Y1)
         circ2 = qforte.QuantumCircuit()
-        circ2.add_gate(Y2)
-        circ2.add_gate(Y1)
+        circ2.add(Y2)
+        circ2.add(Y1)
         circ3 = qforte.QuantumCircuit()
-        circ3.add_gate(X2)
-        circ3.add_gate(X1)
+        circ3.add(X2)
+        circ3.add(X1)
         circ4 = qforte.QuantumCircuit()
-        circ4.add_gate(Y2)
-        circ4.add_gate(X1)
+        circ4.add(Y2)
+        circ4.add(X1)
 
         #build the quantum operator for [a1^ a2]
         a1_dag_a2 = qforte.QuantumOperator()
-        a1_dag_a2.add_term(0.0-0.25j, circ1)
-        a1_dag_a2.add_term(0.25, circ2)
-        a1_dag_a2.add_term(0.25, circ3)
-        a1_dag_a2.add_term(0.0+0.25j, circ4)
+        a1_dag_a2.add(0.0-0.25j, circ1)
+        a1_dag_a2.add(0.25, circ2)
+        a1_dag_a2.add(0.25, circ3)
+        a1_dag_a2.add(0.0+0.25j, circ4)
 
         #get direct expectatoin value
         exp = trial_state.direct_op_exp_val(a1_dag_a2)

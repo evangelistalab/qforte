@@ -43,16 +43,16 @@ class QPE(Algorithm):
         ######### QPE ########
 
         # add hadamard circ to split ancilla register
-        self._Uqpe.add_circuit(self.get_Uhad())
+        self._Uqpe.add(self.get_Uhad())
 
         # add initial state preparation circuit
-        self._Uqpe.add_circuit(self._Uprep)
+        self._Uqpe.add(self._Uprep)
 
         # add controll e^-iHt circuit
-        self._Uqpe.add_circuit(self.get_dynamics_circ())
+        self._Uqpe.add(self.get_dynamics_circ())
 
         # add reverse QFT
-        self._Uqpe.add_circuit(self.get_qft_circuit('reverse'))
+        self._Uqpe.add(self.get_qft_circuit('reverse'))
 
         computer = qforte.QuantumComputer(self._n_tot_qubits)
         computer.apply_circuit(self._Uqpe)
@@ -185,7 +185,7 @@ class QPE(Algorithm):
         """
         Uhad = qforte.QuantumCircuit()
         for j in range(self._abegin, self._aend + 1):
-            Uhad.add_gate(qforte.gate('H', j, j))
+            Uhad.add(qforte.gate('H', j, j))
 
         return Uhad
 
@@ -230,7 +230,7 @@ class QPE(Algorithm):
             for h in self._qb_ham.terms():
                 c, op = h
                 phase = -1.0j * self._t * c #* tn
-                temp_op.add_term(phase, op)
+                temp_op.add(phase, op)
                 gates = op.gates()
                 if op.size() == 0:
                     scaler_terms.append(c * self._t)
@@ -241,12 +241,12 @@ class QPE(Algorithm):
                                                trotter_number=self._trotter_number)
 
             # Rotation for the scaler Hamiltonian term
-            Udyn.add_gate(qforte.gate('R', ancilla_idx, ancilla_idx,  -1.0 * np.sum(scaler_terms) * float(tn)))
+            Udyn.add(qforte.gate('R', ancilla_idx, ancilla_idx,  -1.0 * np.sum(scaler_terms) * float(tn)))
 
             # NOTE: Approach uses 2^ancilla_idx blocks of the time evolution circuit
             for i in range(tn):
                 for gate in expn_op.gates():
-                    Udyn.add_gate(gate)
+                    Udyn.add(gate)
 
             ancilla_idx += 1
 
@@ -279,10 +279,10 @@ class QPE(Algorithm):
         qft_circ = qforte.QuantumCircuit()
         lens = self._aend - self._abegin + 1
         for j in range(lens):
-            qft_circ.add_gate(qforte.gate('H', j+self._abegin, j+self._abegin))
+            qft_circ.add(qforte.gate('H', j+self._abegin, j+self._abegin))
             for k in range(2, lens+1-j):
                 phase = 2.0*np.pi/(2**k)
-                qft_circ.add_gate(qforte.gate('cR', j+self._abegin, j+k-1+self._abegin, phase))
+                qft_circ.add(qforte.gate('cR', j+self._abegin, j+k-1+self._abegin, phase))
 
         if direct == 'forward':
             return qft_circ
@@ -314,6 +314,6 @@ class QPE(Algorithm):
 
         Z_circ = qforte.QuantumCircuit()
         for j in range(self._abegin, self._aend + 1):
-            Z_circ.add_gate(qforte.gate('Z', j, j))
+            Z_circ.add(qforte.gate('Z', j, j))
 
         return Z_circ

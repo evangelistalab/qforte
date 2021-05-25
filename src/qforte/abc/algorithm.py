@@ -188,8 +188,8 @@ class AnsatzAlgorithm(Algorithm):
         U = self.ansatz_circuit(amplitudes)
 
         Uvqc = qforte.QuantumCircuit()
-        Uvqc.add_circuit(self._Uprep)
-        Uvqc.add_circuit(U)
+        Uvqc.add(self._Uprep)
+        Uvqc.add(U)
 
         return Uvqc
 
