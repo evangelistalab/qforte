@@ -379,12 +379,12 @@ class SPQE(UCCPQE):
         print('\nBuilding single particle energies list:')
         print('---------------------------------------')
         qc = qforte.QuantumComputer(self._nqb)
-        qc.apply_circuit(build_Uprep(self._ref, 'reference'))
+        qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
         E0 = qc.direct_op_exp_val(self._qb_ham)
 
         for i in range(self._nqb):
             qc = qforte.QuantumComputer(self._nqb)
-            qc.apply_circuit(build_Uprep(self._ref, 'reference'))
+            qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
             qc.apply_gate(qforte.gate('X', i, i))
             Ei = qc.direct_op_exp_val(self._qb_ham)
 

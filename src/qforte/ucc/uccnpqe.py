@@ -301,7 +301,7 @@ class UCCNPQE(UCCPQE):
 
             I = excited_det.add()
 
-            # 3. Compute the phase of the operator, relative to its determinant. 
+            # 3. Compute the phase of the operator, relative to its determinant.
             qc_temp = qforte.QuantumComputer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
             qc_temp.apply_operator(sq_op.jw_transform())
@@ -355,12 +355,12 @@ class UCCNPQE(UCCPQE):
         print('\nBuilding single particle energies list:')
         print('---------------------------------------')
         qc = qforte.QuantumComputer(self._nqb)
-        qc.apply_circuit(build_Uprep(self._ref, 'reference'))
+        qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
         E0 = qc.direct_op_exp_val(self._qb_ham)
 
         for i in range(self._nqb):
             qc = qforte.QuantumComputer(self._nqb)
-            qc.apply_circuit(build_Uprep(self._ref, 'reference'))
+            qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
             qc.apply_gate(qforte.gate('X', i, i))
             Ei = qc.direct_op_exp_val(self._qb_ham)
 
@@ -376,4 +376,3 @@ class UCCNPQE(UCCPQE):
         for l in range(len(self._pool)):
             self._tops.append(l)
             self._tamps.append(0.0)
-

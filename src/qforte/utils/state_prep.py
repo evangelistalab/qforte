@@ -3,12 +3,12 @@ import numpy as np
 
 def build_Uprep(ref, trial_state_type):
     Uprep = qforte.QuantumCircuit()
-    if trial_state_type == 'reference':
+    if trial_state_type == 'occupation_list':
         for j in range(len(ref)):
             if ref[j] == 1:
                 Uprep.add_gate(qforte.gate('X', j, j))
     else:
-        raise ValueError("Only 'reference' supported as state preparation type")
+        raise ValueError("Only 'occupation_list' supported as state preparation type")
 
     return Uprep
 
