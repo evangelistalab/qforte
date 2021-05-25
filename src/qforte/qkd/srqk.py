@@ -186,13 +186,13 @@ class SRQK(QSD):
         for m in range(self._nstates):
             # Compute U_m = exp(-i m dt H)
             Um = qforte.QuantumCircuit()
-            Um.add_circuit(self._Uprep)
+            Um.add(self._Uprep)
             phase1 = 1.0
 
             if(m>0):
                 fact = (0.0-1.0j) * m * self._dt
                 expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
-                Um.add_circuit(expn_op1)
+                Um.add(expn_op1)
 
             # Compute U_m |φ>
             QC = qforte.QuantumComputer(self._nqb)
@@ -311,14 +311,14 @@ class SRQK(QSD):
         for t in self._qb_ham.terms():
             c, op = t
             phase = -1.0j * n * self._dt * c
-            temp_op1.add_term(phase, op)
+            temp_op1.add(phase, op)
 
         expn_op1, phase1 = trotterize_w_cRz(temp_op1,
                                             ancilla_idx,
                                             trotter_number=self._trotter_number)
 
         for gate in expn_op1.gates():
-            Uk.add_gate(gate)
+            Uk.add(gate)
 
         Ub = qforte.QuantumCircuit()
 
@@ -326,7 +326,7 @@ class SRQK(QSD):
         for t in self._qb_ham.terms():
             c, op = t
             phase = -1.0j * m * self._dt * c
-            temp_op2.add_term(phase, op)
+            temp_op2.add(phase, op)
 
         expn_op2, phase2 = trotterize_w_cRz(temp_op2,
                                             ancilla_idx,
@@ -334,33 +334,33 @@ class SRQK(QSD):
                                             Use_open_cRz=False)
 
         for gate in expn_op2.gates():
-            Ub.add_gate(gate)
+            Ub.add(gate)
 
         if not use_op:
             # TODO (opt): use Uprep
             cir = qforte.QuantumCircuit()
             for j in range(self._nqb):
                 if self._ref[j] == 1:
-                    cir.add_gate(qforte.gate('X', j, j))
+                    cir.add(qforte.gate('X', j, j))
 
-            cir.add_gate(qforte.gate('H', ancilla_idx, ancilla_idx))
+            cir.add(qforte.gate('H', ancilla_idx, ancilla_idx))
 
-            cir.add_circuit(Uk)
+            cir.add(Uk)
 
-            cir.add_gate(qforte.gate('X', ancilla_idx, ancilla_idx))
-            cir.add_circuit(Ub)
-            cir.add_gate(qforte.gate('X', ancilla_idx, ancilla_idx))
+            cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
+            cir.add(Ub)
+            cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
 
             X_op = qforte.QuantumOperator()
             x_circ = qforte.QuantumCircuit()
             Y_op = qforte.QuantumOperator()
             y_circ = qforte.QuantumCircuit()
 
-            x_circ.add_gate(qforte.gate('X', ancilla_idx, ancilla_idx))
-            y_circ.add_gate(qforte.gate('Y', ancilla_idx, ancilla_idx))
+            x_circ.add(qforte.gate('X', ancilla_idx, ancilla_idx))
+            y_circ.add(qforte.gate('Y', ancilla_idx, ancilla_idx))
 
-            X_op.add_term(1.0, x_circ)
-            Y_op.add_term(1.0, y_circ)
+            X_op.add(1.0, x_circ)
+            Y_op.add(1.0, y_circ)
 
             X_exp = qforte.Experiment(self._nqb+1, cir, X_op, 100)
             Y_exp = qforte.Experiment(self._nqb+1, cir, Y_op, 100)
@@ -383,33 +383,33 @@ class SRQK(QSD):
                     gate_str = gate.gate_id()
                     target = gate.target()
                     control_gate_str = 'c' + gate_str
-                    cV_l.add_gate(qforte.gate(control_gate_str, target, ancilla_idx))
+                    cV_l.add(qforte.gate(control_gate_str, target, ancilla_idx))
 
                 cir = qforte.QuantumCircuit()
                 # TODO (opt): use Uprep
                 for j in range(self._nqb):
                     if self._ref[j] == 1:
-                        cir.add_gate(qforte.gate('X', j, j))
+                        cir.add(qforte.gate('X', j, j))
 
-                cir.add_gate(qforte.gate('H', ancilla_idx, ancilla_idx))
+                cir.add(qforte.gate('H', ancilla_idx, ancilla_idx))
 
-                cir.add_circuit(Uk)
-                cir.add_circuit(cV_l)
+                cir.add(Uk)
+                cir.add(cV_l)
 
-                cir.add_gate(qforte.gate('X', ancilla_idx, ancilla_idx))
-                cir.add_circuit(Ub)
-                cir.add_gate(qforte.gate('X', ancilla_idx, ancilla_idx))
+                cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
+                cir.add(Ub)
+                cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
 
                 X_op = qforte.QuantumOperator()
                 x_circ = qforte.QuantumCircuit()
                 Y_op = qforte.QuantumOperator()
                 y_circ = qforte.QuantumCircuit()
 
-                x_circ.add_gate(qforte.gate('X', ancilla_idx, ancilla_idx))
-                y_circ.add_gate(qforte.gate('Y', ancilla_idx, ancilla_idx))
+                x_circ.add(qforte.gate('X', ancilla_idx, ancilla_idx))
+                y_circ.add(qforte.gate('Y', ancilla_idx, ancilla_idx))
 
-                X_op.add_term(1.0, x_circ)
-                Y_op.add_term(1.0, y_circ)
+                X_op.add(1.0, x_circ)
+                Y_op.add(1.0, y_circ)
 
                 X_exp = qforte.Experiment(self._nqb+1, cir, X_op, 100)
                 Y_exp = qforte.Experiment(self._nqb+1, cir, Y_op, 100)

@@ -20,8 +20,8 @@ using namespace pybind11::literals;
 PYBIND11_MODULE(qforte, m) {
     py::class_<QuantumCircuit>(m, "QuantumCircuit")
         .def(py::init<>())
-        .def("add_gate", &QuantumCircuit::add_gate)
-        .def("add_circuit", &QuantumCircuit::add_circuit)
+        .def("add", &QuantumCircuit::add_gate)
+        .def("add", &QuantumCircuit::add_circuit)
         .def("gates", &QuantumCircuit::gates)
         .def("size", &QuantumCircuit::size)
         .def("adjoint", &QuantumCircuit::adjoint)
@@ -34,8 +34,8 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<SQOperator>(m, "SQOperator")
         .def(py::init<>())
-        .def("add_term", &SQOperator::add_term)
-        .def("add_op", &SQOperator::add_op)
+        .def("add", &SQOperator::add_term)
+        .def("add", &SQOperator::add_op)
         .def("set_coeffs", &SQOperator::set_coeffs)
         .def("terms", &SQOperator::terms)
         .def("canonical_order", &SQOperator::canonical_order)
@@ -47,7 +47,7 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<SQOpPool>(m, "SQOpPool")
         .def(py::init<>())
-        .def("add_term", &SQOpPool::add_term)
+        .def("add", &SQOpPool::add_term)
         .def("set_coeffs", &SQOpPool::set_coeffs)
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
@@ -61,8 +61,8 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
         .def(py::init<>())
-        .def("add_term", &QuantumOperator::add_term)
-        .def("add_op", &QuantumOperator::add_op)
+        .def("add", &QuantumOperator::add_term)
+        .def("add", &QuantumOperator::add_op)
         .def("set_coeffs", &QuantumOperator::set_coeffs)
         .def("mult_coeffs", &QuantumOperator::mult_coeffs)
         .def("terms", &QuantumOperator::terms)
@@ -78,7 +78,7 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<QuantumOpPool>(m, "QuantumOpPool")
         .def(py::init<>())
-        .def("add_term", &QuantumOpPool::add_term)
+        .def("add", &QuantumOpPool::add_term)
         .def("set_coeffs", &QuantumOpPool::set_coeffs)
         .def("set_op_coeffs", &QuantumOpPool::set_op_coeffs)
         .def("set_terms", &QuantumOpPool::set_terms)

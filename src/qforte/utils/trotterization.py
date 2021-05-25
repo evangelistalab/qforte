@@ -30,7 +30,7 @@ def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
         for term in operator.terms():
             term_generator, phase = qforte.exponentiate_single_term(factor*term[0],term[1])
             for gate in term_generator.gates():
-                troterized_operator.add_gate(gate)
+                troterized_operator.add(gate)
             total_phase *= phase
 
 
@@ -42,12 +42,12 @@ def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
 
         for k in range(1, trotter_number+1):
             for term in operator.terms():
-                ho_op.add_term( factor * term[0] / float(trotter_number) , term[1])
+                ho_op.add( factor * term[0] / float(trotter_number) , term[1])
 
         for trot_term in ho_op.terms():
             term_generator, phase = qforte.exponentiate_single_term(trot_term[0],trot_term[1])
             for gate in term_generator.gates():
-                troterized_operator.add_gate(gate)
+                troterized_operator.add(gate)
             total_phase *= phase
 
     return (troterized_operator, total_phase)
@@ -84,13 +84,13 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, factor=1.0, Use_open_cRz=False
             for term in operator.terms():
                 term_generator, phase = qforte.exponentiate_single_term(factor*term[0],term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx, Use_open_cRz=True)
                 for gate in term_generator.gates():
-                    troterized_operator.add_gate(gate)
+                    troterized_operator.add(gate)
                 total_phase *= phase
         else:
             for term in operator.terms():
                 term_generator, phase = qforte.exponentiate_single_term(factor*term[0],term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx)
                 for gate in term_generator.gates():
-                    troterized_operator.add_gate(gate)
+                    troterized_operator.add(gate)
                 total_phase *= phase
 
     else:
@@ -100,19 +100,19 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, factor=1.0, Use_open_cRz=False
         for k in range(1, trotter_number+1):
             k = float(k)
             for term in operator.terms():
-                ho_op.add_term( factor*term[0] / float(trotter_number) , term[1])
+                ho_op.add( factor*term[0] / float(trotter_number) , term[1])
 
         if(Use_open_cRz):
             for trot_term in ho_op.terms():
                 term_generator, phase = qforte.exponentiate_single_term(trot_term[0],trot_term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx, Use_open_cRz=True)
                 for gate in term_generator.gates():
-                    troterized_operator.add_gate(gate)
+                    troterized_operator.add(gate)
                 total_phase *= phase
         else:
             for trot_term in ho_op.terms():
                 term_generator, phase = qforte.exponentiate_single_term(trot_term[0],trot_term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx)
                 for gate in term_generator.gates():
-                    troterized_operator.add_gate(gate)
+                    troterized_operator.add(gate)
                 total_phase *= phase
 
     return (troterized_operator, total_phase)

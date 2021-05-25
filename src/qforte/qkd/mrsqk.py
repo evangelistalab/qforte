@@ -302,13 +302,13 @@ class MRSQK(QSD):
                 Um = qforte.QuantumCircuit()
                 for j in range(self._nqb):
                     if ref[j] == 1:
-                        Um.add_gate(qforte.gate('X', j, j))
+                        Um.add(qforte.gate('X', j, j))
                         phase1 = 1.0
 
                 if(m>0):
                     fact = (0.0-1.0j) * m * self._mr_dt
                     expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
-                    Um.add_circuit(expn_op1)
+                    Um.add(expn_op1)
 
                 QC = qforte.QuantumComputer(self._nqb)
                 QC.apply_circuit(Um)
@@ -368,7 +368,7 @@ class MRSQK(QSD):
             Un = qforte.QuantumCircuit()
             for j in range(self._nqb):
                 if ref[j] == 1:
-                    Un.add_gate(qforte.gate('X', j, j))
+                    Un.add(qforte.gate('X', j, j))
 
             QC = qforte.QuantumComputer(self._nqb)
             QC.apply_circuit(Un)
@@ -456,7 +456,7 @@ class MRSQK(QSD):
                 if(m>0):
                     fact = (0.0-1.0j) * m * self._mr_dt
                     expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
-                    Um.add_circuit(expn_op1)
+                    Um.add(expn_op1)
 
                 QC = qforte.QuantumComputer(self._nqb)
                 state_prep_lst = []

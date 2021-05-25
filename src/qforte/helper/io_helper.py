@@ -83,12 +83,12 @@ def build_circuit(Inputstr):
     for i in range(len(sepstr)):
         inputgate = sepstr[i].split('_')
         if len(inputgate) == 2:
-            circ.add_gate(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[1])))
+            circ.add(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[1])))
         else:
             if 'R' in inputgate[0]:
-                circ.add_gate(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[1]), float(inputgate[2])))
+                circ.add(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[1]), float(inputgate[2])))
             else:
-                circ.add_gate(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[2])))
+                circ.add(qforte.gate(inputgate[0], int(inputgate[1]), int(inputgate[2])))
 
     return circ
 
@@ -106,6 +106,6 @@ def build_operator(Inputstr):
     sepstr = Inputstr.split(';')
     for i in range(len(sepstr)):
         inputterm = sepstr[i].split(',')
-        ops.add_term(complex(inputterm[0]), qforte.build_circuit(inputterm[1]))
+        ops.add(complex(inputterm[0]), qforte.build_circuit(inputterm[1]))
 
     return ops

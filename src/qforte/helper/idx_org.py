@@ -111,7 +111,7 @@ def get_op_from_basis_idx(ref, I):
                 sigma_I = [1.0, tuple(excitation)]
                 # need i, j, a, b
                 # SQOperator t_temp;
-                # t_temp.add_term(+1.0, particles);
-                # t_temp.add_term(-1.0, particles_adj);
+                # t_temp.add(+1.0, particles);
+                # t_temp.add(-1.0, particles_adj);
                 # t_temp.simplify();
-                # add_term(1.0, t_temp);
+                # add(1.0, t_temp);

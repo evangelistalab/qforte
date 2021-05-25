@@ -18,7 +18,7 @@ class UCC(AnsatzAlgorithm):
         temp_pool = qf.SQOpPool()
         tamps = self._tamps if amplitudes is None else amplitudes
         for tamp, top in zip(tamps, self._tops):
-            temp_pool.add_term(tamp, self._pool[top][1])
+            temp_pool.add(tamp, self._pool[top][1])
 
         A = temp_pool.get_quantum_operator('commuting_grp_lex')
 
