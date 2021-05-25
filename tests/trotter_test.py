@@ -11,7 +11,7 @@ class ExperimentTests(unittest.TestCase):
         # the operator to be exponentiated
         minus_iH = qforte.QuantumOperator()
         for i in range(len(circ_vec)):
-            minus_iH.add_term(coef_vec[i], circ_vec[i])
+            minus_iH.add(coef_vec[i], circ_vec[i])
 
         # exponentiate the operator
         Utrot, phase = qforte.trotterization.trotterize(minus_iH)
@@ -46,7 +46,7 @@ class ExperimentTests(unittest.TestCase):
         # the operator to be exponentiated
         minus_iH = qforte.QuantumOperator()
         for i in range(len(circ_vec)):
-            minus_iH.add_term(coef_vec[i], circ_vec[i])
+            minus_iH.add(coef_vec[i], circ_vec[i])
 
         ancilla_idx = 2
 

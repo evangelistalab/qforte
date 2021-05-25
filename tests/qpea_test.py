@@ -44,7 +44,7 @@ class QPETests(unittest.TestCase):
 
         H2_qubit_hamiltonian = qforte.QuantumOperator()
         for i in range(len(circ_vec)):
-            H2_qubit_hamiltonian.add_term(coef_vec[i], circ_vec[i])
+            H2_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 
         ref = [1,1,0,0]
 

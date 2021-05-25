@@ -163,14 +163,14 @@ class QITE(Algorithm):
                 nygates = 0
                 temp_rho = qf.QuantumCircuit()
                 for gate in rho.gates():
-                    temp_rho.add_gate(qf.gate(gate.gate_id(), gate.target(), gate.control()))
+                    temp_rho.add(qf.gate(gate.gate_id(), gate.target(), gate.control()))
                     if (gate.gate_id() == "Y"):
                         nygates += 1
 
                 if (nygates % 2 == 1):
                     rho_op = qf.QuantumOperator()
-                    rho_op.add_term(1.0, temp_rho)
-                    self._sig.add_term(1.0, rho_op)
+                    rho_op.add(1.0, temp_rho)
+                    self._sig.add(1.0, rho_op)
 
         elif(self._expansion_type == 'test'):
             self._sig.fill_pool("test", self._ref)
@@ -273,13 +273,13 @@ class QITE(Algorithm):
         if(self._sparseSb):
             for I, spI in enumerate(sp_idxs):
                 if np.abs(x[I]) > self._x_thresh:
-                    A.add_term(-1.0j * self._db * x[I], self._sig.terms()[spI][1].terms()[0][1])
+                    A.add(-1.0j * self._db * x[I], self._sig.terms()[spI][1].terms()[0][1])
                     self._n_classical_params += 1
 
         else:
             for I, SigI in enumerate(self._sig.terms()):
                 if np.abs(x[I]) > self._x_thresh:
-                    A.add_term(-1.0j * self._db * x[I], SigI[1].terms()[0][1])
+                    A.add(-1.0j * self._db * x[I], SigI[1].terms()[0][1])
                     self._n_classical_params += 1
 
         if(self._verbose):
@@ -291,7 +291,7 @@ class QITE(Algorithm):
 
         eiA_kb, phase1 = trotterize(A, trotter_number=self._trotter_number)
         self._total_phase *= phase1
-        self._Uqite.add_circuit(eiA_kb)
+        self._Uqite.add(eiA_kb)
         self._qc.apply_circuit(eiA_kb)
         self._Ekb.append(np.real(self._qc.direct_op_exp_val(self._qb_ham)))
 
@@ -301,7 +301,7 @@ class QITE(Algorithm):
             qf.smart_print(self._qc)
 
     def evolve(self):
-        self._Uqite.add_circuit(self._Uprep)
+        self._Uqite.add(self._Uprep)
         self._qc = qf.QuantumComputer(self._nqb)
         self._qc.apply_circuit(self._Uqite)
 

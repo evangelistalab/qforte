@@ -19,18 +19,18 @@ def qft_circuit(na, nb, direct):
     qft_circ = qforte.QuantumCircuit()
     lens = nb - na + 1
     for j in range(lens):
-        qft_circ.add_gate(qforte.gate('H', j+na, j+na))
+        qft_circ.add(qforte.gate('H', j+na, j+na))
         for k in range(2, lens+1-j):
             phase = 2.0*numpy.pi/(2**k)
-            qft_circ.add_gate(qforte.gate('cR', j+na, j+k-1+na, phase))
+            qft_circ.add(qforte.gate('cR', j+na, j+k-1+na, phase))
 
     # Build reversing circuit
     if lens % 2 == 0:
         for i in range(int(lens/2)):
-            qft_circ.add_gate(qforte.gate('SWAP', i+na, lens-1-i+na))
+            qft_circ.add(qforte.gate('SWAP', i+na, lens-1-i+na))
     else:
         for i in range(int((lens-1)/2)):
-            qft_circ.add_gate(qforte.gate('SWAP', i+na, lens-1-i+na))
+            qft_circ.add(qforte.gate('SWAP', i+na, lens-1-i+na))
 
     if direct == 'forward':
         return qft_circ

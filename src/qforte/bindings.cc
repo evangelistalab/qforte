@@ -20,6 +20,8 @@ using namespace pybind11::literals;
 PYBIND11_MODULE(qforte, m) {
     py::class_<QuantumCircuit>(m, "QuantumCircuit")
         .def(py::init<>())
+        .def("add", &QuantumCircuit::add_gate)
+        .def("add", &QuantumCircuit::add_circuit)
         .def("add_gate", &QuantumCircuit::add_gate)
         .def("add_circuit", &QuantumCircuit::add_circuit)
         .def("gates", &QuantumCircuit::gates)
@@ -34,6 +36,8 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<SQOperator>(m, "SQOperator")
         .def(py::init<>())
+        .def("add", &SQOperator::add_term)
+        .def("add", &SQOperator::add_op)
         .def("add_term", &SQOperator::add_term)
         .def("add_op", &SQOperator::add_op)
         .def("set_coeffs", &SQOperator::set_coeffs)
@@ -47,6 +51,7 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<SQOpPool>(m, "SQOpPool")
         .def(py::init<>())
+        .def("add", &SQOpPool::add_term)
         .def("add_term", &SQOpPool::add_term)
         .def("set_coeffs", &SQOpPool::set_coeffs)
         .def("terms", &SQOpPool::terms)
@@ -61,6 +66,8 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<QuantumOperator>(m, "QuantumOperator")
         .def(py::init<>())
+        .def("add", &QuantumOperator::add_term)
+        .def("add", &QuantumOperator::add_op)
         .def("add_term", &QuantumOperator::add_term)
         .def("add_op", &QuantumOperator::add_op)
         .def("set_coeffs", &QuantumOperator::set_coeffs)
@@ -78,6 +85,7 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<QuantumOpPool>(m, "QuantumOpPool")
         .def(py::init<>())
+        .def("add", &QuantumOpPool::add_term)
         .def("add_term", &QuantumOpPool::add_term)
         .def("set_coeffs", &QuantumOpPool::set_coeffs)
         .def("set_op_coeffs", &QuantumOpPool::set_op_coeffs)

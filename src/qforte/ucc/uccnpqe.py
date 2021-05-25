@@ -240,7 +240,7 @@ class UCCNPQE(UCCPQE):
 
         temp_pool = qforte.SQOpPool()
         for param, top in zip(trial_amps, self._tops):
-            temp_pool.add_term(param, self._pool[top][1])
+            temp_pool.add(param, self._pool[top][1])
 
         A = temp_pool.get_quantum_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)

@@ -19,7 +19,7 @@ class BuilderTests(unittest.TestCase):
 
         #prepare the circuit
         for gate in trial_prep:
-            trial_circ.add_gate(gate)
+            trial_circ.add(gate)
 
         # use circuit to prepare trial state
         trial_state.apply_circuit(trial_circ)

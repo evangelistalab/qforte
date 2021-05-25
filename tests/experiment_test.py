@@ -42,12 +42,12 @@ class ExperimentTests(unittest.TestCase):
 
         H2_qubit_hamiltonian = qforte.QuantumOperator()
         for i in range(len(circ_vec)):
-            H2_qubit_hamiltonian.add_term(coef_vec[i], circ_vec[i])
+            H2_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 
         # circuit for making HF state
         circ = qforte.QuantumCircuit()
-        circ.add_gate(qforte.gate('X', 0, 0))
-        circ.add_gate(qforte.gate('X', 1, 1))
+        circ.add(qforte.gate('X', 0, 0))
+        circ.add(qforte.gate('X', 1, 1))
 
         TestExperiment = qforte.Experiment(4, circ, H2_qubit_hamiltonian, 1000000)
         params2 = []
@@ -101,12 +101,12 @@ class ExperimentTests(unittest.TestCase):
 
         H2_qubit_hamiltonian = qforte.QuantumOperator()
         for i in range(len(circ_vec)):
-            H2_qubit_hamiltonian.add_term(coef_vec[i], circ_vec[i])
+            H2_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 
         # circuit for making HF state
         circ = qforte.QuantumCircuit()
-        circ.add_gate(qforte.gate('X', 0, 0))
-        circ.add_gate(qforte.gate('X', 1, 1))
+        circ.add(qforte.gate('X', 0, 0))
+        circ.add(qforte.gate('X', 1, 1))
 
         TestExperiment = qforte.Experiment(4, circ, H2_qubit_hamiltonian, 1000000)
         params2 = []

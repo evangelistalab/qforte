@@ -79,12 +79,12 @@ class JordanWignerTests(unittest.TestCase):
 
         correct_op = qforte.QuantumOperator()
         for i in range(len(circ_vec)):
-            correct_op.add_term(coeff_vec[i], circ_vec[i])
+            correct_op.add(coeff_vec[i], circ_vec[i])
 
         # Test qforte construction
         a1 = qforte.SQOperator()
-        a1.add_term(1.00, [ 2, 3, 4, 6] )
-        a1.add_term(+1.50, [ 1, 2, 3, 4])
+        a1.add(1.00, [ 2, 3, 4, 6] )
+        a1.add(+1.50, [ 1, 2, 3, 4])
         print(a1.str(), '\n')
         aop = a1.jw_transform()
         print(aop.str(), '\n')

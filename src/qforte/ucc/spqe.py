@@ -268,7 +268,7 @@ class SPQE(UCCPQE):
     def get_residual_vector(self, trial_amps):
         temp_pool = qforte.SQOpPool()
         for param, top in zip(trial_amps, self._tops):
-            temp_pool.add_term(param, self._pool[top][1])
+            temp_pool.add(param, self._pool[top][1])
 
         A = temp_pool.get_quantum_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)
@@ -408,7 +408,7 @@ class SPQE(UCCPQE):
         # do U^dag e^iH U |Phi_o> = |Phi_res>
         temp_pool = qf.SQOpPool()
         for param, top in zip(self._tamps, self._tops):
-            temp_pool.add_term(param, self._pool[top][1])
+            temp_pool.add(param, self._pool[top][1])
 
         A = temp_pool.get_quantum_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)
@@ -493,7 +493,7 @@ class SPQE(UCCPQE):
                     if(Nmu_tup[1] not in self._tops):
                         self._tops.insert(0,Nmu_tup[1])
                         self._tamps.insert(0,0.0)
-                        self.add_op_from_basis_idx(Nmu_tup[1])
+                        self.add_from_basis_idx(Nmu_tup[1])
 
                 self._n_classical_params_lst.append(len(self._tops))
 
@@ -532,7 +532,7 @@ class SPQE(UCCPQE):
                             n_ops_added += 1
                             if(rmu_sq[1] not in self._tops):
                                 temp_ops.append(rmu_sq[1])
-                                self.add_op_from_basis_idx(rmu_sq[1])
+                                self.add_from_basis_idx(rmu_sq[1])
 
                     ### consistant with op ordering inspired by traditional renormalization approaches ###
                     for temp_op in temp_ops[::-1]:
@@ -550,12 +550,12 @@ class SPQE(UCCPQE):
                             print('op added!')
                             self._tops.insert(0,rmu_sq[1])
                             self._tamps.insert(0,0.0)
-                            self.add_op_from_basis_idx(rmu_sq[1])
+                            self.add_from_basis_idx(rmu_sq[1])
                             op_added = True
 
                 self._n_classical_params_lst.append(len(self._tops))
 
-    def add_op_from_basis_idx(self, I):
+    def add_from_basis_idx(self, I):
 
         max_nbody = len(self._nbody_counts)
         nqb = len(self._ref)
@@ -620,8 +620,8 @@ class SPQE(UCCPQE):
                     # need i, j, a, b
 
                     K_temp = qf.SQOperator()
-                    K_temp.add_term(+1.0, excitation);
-                    K_temp.add_term(-1.0, dexcitation);
+                    K_temp.add(+1.0, excitation);
+                    K_temp.add(-1.0, dexcitation);
                     K_temp.simplify();
                     # this is potentially slow
                     self._pool[I] = [1.0, K_temp]
@@ -694,8 +694,8 @@ class SPQE(UCCPQE):
                     # need i, j, a, b
 
                     K_temp = qf.SQOperator()
-                    K_temp.add_term(+1.0, excitation);
-                    K_temp.add_term(-1.0, dexcitation);
+                    K_temp.add(+1.0, excitation);
+                    K_temp.add(-1.0, dexcitation);
                     K_temp.simplify();
 
                     return K_temp

@@ -26,7 +26,7 @@ class SPQETests(unittest.TestCase):
         Hnonzero = qforte.QuantumOperator()
         for term in mol._hamiltonian.terms():
             if abs(term[0]) > 1.0e-14:
-                Hnonzero.add_term(term[0], term[1])
+                Hnonzero.add(term[0], term[1])
         mol._hamiltonian = Hnonzero
         qforte.smart_print(Hnonzero)
 
