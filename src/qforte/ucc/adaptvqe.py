@@ -223,7 +223,7 @@ class ADAPTVQE(UCCVQE):
         self._grad_m_evals = 0
 
         self._curr_grad_norm = 0.0
-        self._prev_energy = self._hf_energy
+        self._prev_energy = self.energy_feval([])
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -387,6 +387,8 @@ class ADAPTVQE(UCCVQE):
         x0 = copy.deepcopy(self._tamps)
         init_gues_energy = self.energy_feval(x0)
 
+        self._prev_energy = init_gues_energy
+
         if self._use_analytic_grad:
             print('  \n--> Begin opt with analytic gradient:')
             print(f" Initial guess energy:              {init_gues_energy:+12.10f}")
@@ -430,7 +432,7 @@ class ADAPTVQE(UCCVQE):
     # Define ADAPT-VQE methods.
     def update_ansatz(self):
         self._n_pauli_measures_k = 0
-            
+
         curr_norm = 0.0
         lgrst_grad = 0.0
         Uvqc = self.build_Uvqc()

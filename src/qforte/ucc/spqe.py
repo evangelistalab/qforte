@@ -28,6 +28,9 @@ class SPQE(UCCPQE):
             diis_maxiter = 30,
             use_cumulative_thresh=True):
 
+        if(self._trial_state_type != 'occupation_list'):
+            raise ValueError("SPQE implementation can only handle occupation_list Hartree-Fock reference.")
+
         self._spqe_thresh = spqe_thresh
         self._spqe_maxiter = spqe_maxiter
         self._dt = dt

@@ -91,6 +91,9 @@ class MRSQK(QSD):
 
         self._diagonalize_each_step=diagonalize_each_step
 
+        if(self._trial_state_type != 'occupation_list'):
+            raise ValueError("MRSQK implementation can only handle occupation_list reference.")
+
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 

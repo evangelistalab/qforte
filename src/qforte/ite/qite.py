@@ -63,7 +63,7 @@ class QITE(Algorithm):
         self._x_thresh = x_thresh
 
         self._n_classical_params = 0
-        self._n_cnot = 0
+        self._n_cnot = self._Uprep.get_num_cnots()
         self._n_pauli_trm_measures = 0
 
         self._do_lanczos = do_lanczos

@@ -41,6 +41,9 @@ class UCCNPQE(UCCPQE):
             diis_maxiter = 40,
             noise_factor = 0.0):
 
+        if(self._trial_state_type != 'occupation_list'):
+            raise ValueError("PQE implementation can only handle occupation_list Hartree-Fock reference.")
+
         self._pool_type = pool_type
         self._res_vec_thresh = res_vec_thresh
         self._diis_maxiter = diis_maxiter

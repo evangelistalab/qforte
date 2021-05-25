@@ -207,7 +207,7 @@ class UCCNVQE(UCCVQE):
         self._grad_m_evals = 0
 
         self._curr_grad_norm = 0.0
-        self._prev_energy = self._hf_energy
+        # self._prev_energy = self._hf_energy
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -326,6 +326,7 @@ class UCCNVQE(UCCVQE):
 
         x0 = copy.deepcopy(self._tamps)
         init_gues_energy = self.energy_feval(x0)
+        self._prev_energy = init_gues_energy
 
         if self._use_analytic_grad:
             print('  \n--> Begin opt with analytic gradient:')
