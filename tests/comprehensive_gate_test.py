@@ -13,7 +13,7 @@ for i in range(num_qubits):
 for i in range(num_qubits):
     prep_circ.add_gate(qforte.gate('cR',i, i+1, 1.116 / (i+1.0)))
 
-def test_circ_vec_builder(qb_list, id):
+def generic_test_circ_vec_builder(qb_list, id):
     circ_vec_tc = [qforte.QuantumCircuit() for i in range(len(qb_list))]
     circ_vec_ct = [qforte.QuantumCircuit() for i in range(len(qb_list))]
     for i, pair in enumerate(ct_lst):
@@ -62,7 +62,7 @@ def circuit_tester(prep, test_circ):
 class ComprehensiveGatesTests(unittest.TestCase):
     def test_comp_cX_gates(self):
         id = 'cX'
-        circ_tc, circ_ct = test_circ_vec_builder(ct_lst, id)
+        circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
         print('\n-------------------')
         print('Testing ' + id + ' circuits')
@@ -78,7 +78,7 @@ class ComprehensiveGatesTests(unittest.TestCase):
 
     def test_comp_cY_gates(self):
         id = 'cY'
-        circ_tc, circ_ct = test_circ_vec_builder(ct_lst, id)
+        circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
         print('\n-------------------')
         print('Testing ' + id + ' circuits')
@@ -94,7 +94,7 @@ class ComprehensiveGatesTests(unittest.TestCase):
 
     def test_comp_cZ_gates(self):
         id = 'cZ'
-        circ_tc, circ_ct = test_circ_vec_builder(ct_lst, id)
+        circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
         print('\n-------------------')
         print('Testing ' + id + ' circuits')
@@ -110,7 +110,7 @@ class ComprehensiveGatesTests(unittest.TestCase):
 
     def test_comp_cR_gates(self):
         id = 'cR'
-        circ_tc, circ_ct = test_circ_vec_builder(ct_lst, id)
+        circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
         print('\n-------------------')
         print('Testing ' + id + ' circuits')
@@ -126,7 +126,7 @@ class ComprehensiveGatesTests(unittest.TestCase):
 
     def test_comp_cV_gates(self):
         id = 'cV'
-        circ_tc, circ_ct = test_circ_vec_builder(ct_lst, id)
+        circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
         print('\n-------------------')
         print('Testing ' + id + ' circuits')
