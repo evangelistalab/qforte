@@ -36,7 +36,7 @@ class QITE(Algorithm):
         The basis of operators allowed in a unitary evolution step.
     _sparseSb : bool
     _total_phase : complex
-    _Uqite: QuantumCircuit
+    _Uqite: Circuit
     _x_thresh : float
     """
     def run(self,
@@ -55,7 +55,7 @@ class QITE(Algorithm):
         self._expansion_type = expansion_type
         self._sparseSb = sparseSb
         self._total_phase = 1.0 + 0.0j
-        self._Uqite = qf.QuantumCircuit()
+        self._Uqite = qf.Circuit()
         self._b_thresh = b_thresh
         self._x_thresh = x_thresh
 
@@ -158,7 +158,7 @@ class QITE(Algorithm):
             # thus vanish. This method will not be correct for non-real Hamiltonians or states.
             for alph, rho in sig_temp.terms():
                 nygates = 0
-                temp_rho = qf.QuantumCircuit()
+                temp_rho = qf.Circuit()
                 for gate in rho.gates():
                     temp_rho.add(qf.gate(gate.gate_id(), gate.target(), gate.control()))
                     if (gate.gate_id() == "Y"):

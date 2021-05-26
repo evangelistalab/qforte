@@ -1,6 +1,6 @@
 #include "helpers.h"
 #include "gate.h"
-#include "quantum_circuit.h"
+#include "circuit.h"
 #include "quantum_operator.h"
 #include "sq_operator.h"
 #include "quantum_op_pool.h"

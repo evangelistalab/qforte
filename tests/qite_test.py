@@ -27,7 +27,7 @@ class QITETests(unittest.TestCase):
                     0.1458551902800438]
 
         circ_vec = [
-        qforte.QuantumCircuit( ),
+        qforte.Circuit( ),
         qforte.build_circuit( 'Z_0' ),
         qforte.build_circuit( 'Z_1' ),
         qforte.build_circuit( 'Z_2' ),

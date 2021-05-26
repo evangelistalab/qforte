@@ -136,7 +136,7 @@ class UCCNVQE(UCCVQE):
         with amplitude 0.
 
     build_Uprep()
-        Returns a QuantumCircuit object corresponding to the state preparation
+        Returns a Circuit object corresponding to the state preparation
         circuit for the UCCN-VQE ansatz on a given iteration.
 
     measure_gradient()

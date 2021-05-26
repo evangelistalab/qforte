@@ -1,6 +1,6 @@
 #include "helpers.h"
 #include "gate.h"
-#include "quantum_circuit.h"
+#include "circuit.h"
 #include "quantum_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
@@ -132,14 +132,14 @@ void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref
         QuantumOperator A7;
         QuantumOperator A8;
 
-        QuantumCircuit a1;
-        QuantumCircuit a2;
-        QuantumCircuit a3;
-        QuantumCircuit a4;
-        QuantumCircuit a5;
-        QuantumCircuit a6;
-        QuantumCircuit a7;
-        QuantumCircuit a8;
+        Circuit a1;
+        Circuit a2;
+        Circuit a3;
+        Circuit a4;
+        Circuit a5;
+        Circuit a6;
+        Circuit a7;
+        Circuit a8;
 
         //[X0 X1 X2 Y3]
         a1.add_gate(make_gate("X", 0, 0));
@@ -206,7 +206,7 @@ void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref
 
         for(int I=0; I<nterms; I++){
             QuantumOperator AI;
-            QuantumCircuit aI;
+            Circuit aI;
             std::string paulistr = pauli_idx_str(to_base4(I), ref.size());
             if(paulistr.length() != ref.size()){
                 throw std::invalid_argument("paulistr.length() != ref.size()");
@@ -226,7 +226,7 @@ void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref
 
         for(int I=0; I<nterms; I++){
             QuantumOperator AI;
-            QuantumCircuit aI;
+            Circuit aI;
             std::string paulistr = pauli_idx_str(to_base4(I), ref.size());
             if(paulistr.length() != ref.size()){
                 throw std::invalid_argument("paulistr.length() != ref.size()");

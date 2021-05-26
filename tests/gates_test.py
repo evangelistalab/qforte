@@ -218,7 +218,7 @@ class GatesTests(unittest.TestCase):
         print(cY)
         cZ = qforte.gate('cZ',0,1);
         print(cZ)
-       # qcircuit = qforte.QuantumCircuit()
+       # qcircuit = qforte.Circuit()
        # qcircuit.add(qg)
        # qcircuit.add(qforte.Gate(qforte.GateType.Hgate,1,1));
        # print('\n'.join(qcircuit.str()))
@@ -226,7 +226,7 @@ class GatesTests(unittest.TestCase):
 
         computer = qforte.Computer(16)
        # print(repr(computer))
-       # circuit = qforte.QuantumCircuit()
+       # circuit = qforte.Circuit()
        # circuit.add(X)
         for i in range(3000):
             computer.apply_gate(X)
@@ -246,7 +246,7 @@ class GatesTests(unittest.TestCase):
         trial_prep[3] = qforte.gate('H',3,3)
         trial_prep[4] = qforte.gate('cX',0,1)
 
-        trial_circ = qforte.QuantumCircuit()
+        trial_circ = qforte.Circuit()
 
         #prepare the circuit
         for gate in trial_prep:
@@ -262,16 +262,16 @@ class GatesTests(unittest.TestCase):
         Y2 = qforte.gate('Y',2,2)
 
         # initialize circuits to make operator
-        circ1 = qforte.QuantumCircuit()
+        circ1 = qforte.Circuit()
         circ1.add(X2)
         circ1.add(Y1)
-        circ2 = qforte.QuantumCircuit()
+        circ2 = qforte.Circuit()
         circ2.add(Y2)
         circ2.add(Y1)
-        circ3 = qforte.QuantumCircuit()
+        circ3 = qforte.Circuit()
         circ3.add(X2)
         circ3.add(X1)
-        circ4 = qforte.QuantumCircuit()
+        circ4 = qforte.Circuit()
         circ4.add(Y2)
         circ4.add(X1)
 

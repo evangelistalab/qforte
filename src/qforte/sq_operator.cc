@@ -4,7 +4,7 @@
 
 #include "helpers.h"
 #include "gate.h"
-#include "quantum_circuit.h"
+#include "circuit.h"
 #include "quantum_operator.h"
 #include "sq_operator.h"
 
@@ -108,8 +108,8 @@ void SQOperator::jw_helper(QuantumOperator& holder, const std::vector<size_t>& o
 
     for (const auto& sq_op : operators) {
         QuantumOperator temp;
-        QuantumCircuit Xcirc;
-        QuantumCircuit Ycirc;
+        Circuit Xcirc;
+        Circuit Ycirc;
 
         for (int k = 0; k < sq_op; k++) {
             Xcirc.add_gate(make_gate("Z", k, k));
@@ -139,7 +139,7 @@ QuantumOperator SQOperator::jw_transform() {
 
         if (cre_length == 0 && ann_length == 0) {
             // Scalars need special logic.
-            QuantumCircuit scalar_circ;
+            Circuit scalar_circ;
             QuantumOperator scalar_op;
             scalar_op.add_term(std::get<0>(fermion_operator), scalar_circ);
             qo.add_op(scalar_op);

@@ -14,7 +14,7 @@ template <class T> std::complex<T> add_c(std::complex<T> a, std::complex<T> b) {
 
 class Gate;
 class Basis;
-class QuantumCircuit;
+class Circuit;
 class QuantumOperator;
 class QuantumOpPool;
 
@@ -28,10 +28,10 @@ class Computer {
     void apply_operator(const QuantumOperator& qo);
 
     /// apply a quantum circuit to the current state with standard algorithm
-    void apply_circuit_safe(const QuantumCircuit& qc);
+    void apply_circuit_safe(const Circuit& qc);
 
     /// apply a quantum circuit to the current state with optimized algorithm
-    void apply_circuit(const QuantumCircuit& qc);
+    void apply_circuit(const Circuit& qc);
 
     /// apply a gate to the quantum computer with standard algorithm
     void apply_gate_safe(const Gate& qg);
@@ -45,17 +45,17 @@ class Computer {
     void apply_constant(const std::complex<double> a);
 
     /// measure the state of the quantum computer with respect to qc
-    std::vector<double> measure_circuit(const QuantumCircuit& qc, size_t n_measurements);
+    std::vector<double> measure_circuit(const Circuit& qc, size_t n_measurements);
 
     /// measure the readout, i.e. the value of all qubits with indices from na to nb
     std::vector<std::vector<int>> measure_z_readouts_fast(size_t na, size_t nb, size_t n_measurements);
 
     /// measure the readout, i.e. the value of all target qubits, for the state of the
     /// quanum computer with respect to qc
-    std::vector<std::vector<int>> measure_readouts(const QuantumCircuit& qc, size_t n_measurements);
+    std::vector<std::vector<int>> measure_readouts(const Circuit& qc, size_t n_measurements);
 
     /// perfectly measure the state of the quanum computer in basis of circuit
-    double perfect_measure_circuit(const QuantumCircuit& qc);
+    double perfect_measure_circuit(const Circuit& qc);
 
     /// Measure expectation value of all operators in an operator pool
     std::vector<std::complex<double>> direct_oppl_exp_val(const QuantumOpPool& qopl);
@@ -75,11 +75,11 @@ class Computer {
 
     /// get the expectation value of many 1qubit gates directly
     /// (ie without simulated measurement)
-    std::complex<double> direct_circ_exp_val(const QuantumCircuit& qc);
+    std::complex<double> direct_circ_exp_val(const Circuit& qc);
 
     /// get the expectation value of many pauli gates directly
     /// (ie without simulated measurement)
-    std::complex<double> direct_pauli_circ_exp_val(const QuantumCircuit& qc);
+    std::complex<double> direct_pauli_circ_exp_val(const Circuit& qc);
 
     /// get the idx I with respect to pauli circuit permutations from qc
     std::pair< int, std::complex<double> > get_pauli_permuted_idx(

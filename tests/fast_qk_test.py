@@ -12,7 +12,7 @@ class QKDTests(unittest.TestCase):
 
         # The He hamilitonian
         circ_vec = [
-        qforte.QuantumCircuit(),
+        qforte.Circuit(),
          qforte.build_circuit('Z_0'),
          qforte.build_circuit('Y_0 Z_1 Z_2 Z_3 Y_4'),
          qforte.build_circuit('X_0 Z_1 Z_2 Z_3 X_4'),

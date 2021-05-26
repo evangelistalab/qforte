@@ -1,5 +1,5 @@
-#ifndef _quantum_circuit_h_
-#define _quantum_circuit_h_
+#ifndef _circuit_h_
+#define _circuit_h_
 
 #include <vector>
 #include <map>
@@ -9,20 +9,20 @@
 
 class Gate;
 
-class QuantumCircuit {
-    /* A QuantumCircuit is a product of quantum gates. An individual gate acts on 
+class Circuit {
+    /* A Circuit is a product of quantum gates. An individual gate acts on 
      * at most one or two qubits and must be of the forms we can efficiently prepare,
      * e.g., CNOT, Hadamard, Rotation.
      * */
   public:
     /// default constructor: creates an empty circuit
-    QuantumCircuit() {}
+    Circuit() {}
 
     /// add a gate
     void add_gate(const Gate& gate) { gates_.push_back(gate); }
 
     /// add a circuit
-    void add_circuit(const QuantumCircuit& circ);
+    void add_circuit(const Circuit& circ);
 
     /// return a vector of gates
     const std::vector<Gate>& gates() const { return gates_; }
@@ -30,8 +30,8 @@ class QuantumCircuit {
     /// return the number of gates
     size_t size() const { return gates_.size(); }
 
-    /// return the adjoint (conjugate transpose) of this QuantumCircuit
-    QuantumCircuit adjoint();
+    /// return the adjoint (conjugate transpose) of this Circuit
+    Circuit adjoint();
 
     /// reset the circuit with a new set of parameters
     void set_parameters(const std::vector<double>& params);
@@ -54,9 +54,9 @@ class QuantumCircuit {
     std::vector<Gate> gates_;
 };
 
-// A eqivalence comparitor for QuantumCircuit class
-bool operator==(const QuantumCircuit& qc1, const QuantumCircuit& qc2);
+// A eqivalence comparitor for Circuit class
+bool operator==(const Circuit& qc1, const Circuit& qc2);
 
 
 
-#endif // _quantum_circuit_h_
+#endif // _circuit_h_

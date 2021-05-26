@@ -20,7 +20,7 @@ class Experiment(object):
 
         :param n_qubits: (int) the number of qubits for the quantum experiment.
 
-        :param generator: (QuantumCircuit) the parameterized state preparation circuit.
+        :param generator: (Circuit) the parameterized state preparation circuit.
 
         :param operator: (QuantumOperator) the qubit operator to be measured.
 

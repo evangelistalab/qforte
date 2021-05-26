@@ -16,7 +16,7 @@ def qft_circuit(na, nb, direct):
     """
 
     # Build qft circuit
-    qft_circ = qforte.QuantumCircuit()
+    qft_circ = qforte.Circuit()
     lens = nb - na + 1
     for j in range(lens):
         qft_circ.add(qforte.gate('H', j+na, j+na))

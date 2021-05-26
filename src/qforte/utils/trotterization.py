@@ -23,7 +23,7 @@ def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
     """
 
     total_phase = 1.0
-    troterized_operator = qforte.QuantumCircuit()
+    troterized_operator = qforte.Circuit()
 
     if (trotter_number == 1) and (trotter_order == 1):
         #loop over terms in operator
@@ -76,7 +76,7 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, factor=1.0, Use_open_cRz=False
     """
 
     total_phase = 1.0
-    troterized_operator = qforte.QuantumCircuit()
+    troterized_operator = qforte.Circuit()
 
     if (trotter_number == 1) and (trotter_order == 1):
         #loop over terms in operator

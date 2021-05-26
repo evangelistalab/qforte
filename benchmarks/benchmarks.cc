@@ -3,7 +3,7 @@
 #include <catch.hpp>
 
 #include "basis.h"
-#include "quantum_circuit.h"
+#include "circuit.h"
 #include "computer.h"
 #include "quantum_op_pool.h"
 #include "quantum_operator.h"
@@ -12,24 +12,24 @@
 Basis qb;
 
 
-QuantumCircuit qcirc_18;
+Circuit qcirc_18;
 
-QuantumCircuit qcirc2_18;
+Circuit qcirc2_18;
 
-QuantumCircuit qcirc_2qb_18;
+Circuit qcirc_2qb_18;
 
-QuantumCircuit qcirc2_2qb_18;
+Circuit qcirc2_2qb_18;
 
 
 std::vector<Computer> computers;
 
-void prepare_circ(QuantumCircuit& qcirc, size_t start, size_t end) {
+void prepare_circ(Circuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end; i++) {
         qcirc.add_gate(make_gate("H", i, i));
     }
 }
 
-void prepare_circ2(QuantumCircuit& qcirc, size_t start, size_t end) {
+void prepare_circ2(Circuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end; i++) {
         qcirc.add_gate(make_gate("X", i, i));
         qcirc.add_gate(make_gate("Y", i, i));
@@ -37,14 +37,14 @@ void prepare_circ2(QuantumCircuit& qcirc, size_t start, size_t end) {
     }
 }
 
-void prepare_2q_circ(QuantumCircuit& qcirc, size_t start, size_t end) {
+void prepare_2q_circ(Circuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end - 1; i++) {
         qcirc.add_gate(make_gate("cX", i, i+1));
         qcirc.add_gate(make_gate("cX", i+1, i));
     }
 }
 
-void prepare_2q_circ2(QuantumCircuit& qcirc, size_t start, size_t end) {
+void prepare_2q_circ2(Circuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end - 1; i++) {
         qcirc.add_gate(make_gate("cX", i, i+1));
         qcirc.add_gate(make_gate("cX", i+1, i));

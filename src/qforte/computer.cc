@@ -7,7 +7,7 @@
 #include "fmt/format.h"
 
 #include "basis.h"
-#include "quantum_circuit.h"
+#include "circuit.h"
 #include "gate.h"
 #include "quantum_operator.h"
 #include "quantum_op_pool.h"
@@ -61,13 +61,13 @@ void Computer::apply_operator(const QuantumOperator& qo) {
     coeff_ = result;
 }
 
-void Computer::apply_circuit(const QuantumCircuit& qc) {
+void Computer::apply_circuit(const Circuit& qc) {
     for (const auto& gate : qc.gates()) {
         apply_gate(gate);
     }
 }
 
-void Computer::apply_circuit_safe(const QuantumCircuit& qc) {
+void Computer::apply_circuit_safe(const Circuit& qc) {
     for (const auto& gate : qc.gates()) {
         apply_gate_safe(gate);
     }
@@ -104,11 +104,11 @@ void Computer::apply_constant(const std::complex<double> a) {
                    std::placeholders::_1, a));
 }
 
-std::vector<double> Computer::measure_circuit(const QuantumCircuit& qc,
+std::vector<double> Computer::measure_circuit(const Circuit& qc,
                                                      size_t n_measurements) {
     // initialize a "Basis_rotator" QC to represent the corresponding change
     // of basis
-    QuantumCircuit Basis_rotator;
+    Circuit Basis_rotator;
 
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
@@ -188,11 +188,11 @@ std::vector<std::vector<int>> Computer::measure_z_readouts_fast(size_t na, size_
     return readouts;
 }
 
-std::vector<std::vector<int>> Computer::measure_readouts(const QuantumCircuit& qc,
+std::vector<std::vector<int>> Computer::measure_readouts(const Circuit& qc,
                                                      size_t n_measurements) {
     // initialize a "Basis_rotator" QC to represent the corresponding change
     // of basis
-    QuantumCircuit Basis_rotator;
+    Circuit Basis_rotator;
 
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
@@ -245,10 +245,10 @@ std::vector<std::vector<int>> Computer::measure_readouts(const QuantumCircuit& q
     return readouts;
 }
 
-double Computer::perfect_measure_circuit(const QuantumCircuit& qc) {
+double Computer::perfect_measure_circuit(const Circuit& qc) {
     // initialize a "Basis_rotator" QC to represent the corresponding change
     // of basis
-    QuantumCircuit Basis_rotator;
+    Circuit Basis_rotator;
 
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
@@ -807,7 +807,7 @@ std::vector<std::complex<double>> Computer::direct_oppl_exp_val_w_mults(
     return results;
 }
 
-std::complex<double> Computer::direct_circ_exp_val(const QuantumCircuit& qc) {
+std::complex<double> Computer::direct_circ_exp_val(const Circuit& qc) {
     std::vector<std::complex<double>> old_coeff = coeff_;
     std::complex<double> result = 0.0;
 
@@ -820,7 +820,7 @@ std::complex<double> Computer::direct_circ_exp_val(const QuantumCircuit& qc) {
     return result;
 }
 
-std::complex<double> Computer::direct_pauli_circ_exp_val(const QuantumCircuit& qc) {
+std::complex<double> Computer::direct_pauli_circ_exp_val(const Circuit& qc) {
     /* Efficiency optimization that explains the structure of this function:
      * Because our gates are all Pauli, the operator that represents our circuit is a direct
      * product of products of Pauli gates acting on individual qubits. These Pauli-products

@@ -15,7 +15,7 @@ class BuilderTests(unittest.TestCase):
         trial_prep[3] = qforte.gate('H',3,3)
         trial_prep[4] = qforte.gate('cX',0,1)
 
-        trial_circ = qforte.QuantumCircuit()
+        trial_circ = qforte.Circuit()
 
         #prepare the circuit
         for gate in trial_prep:

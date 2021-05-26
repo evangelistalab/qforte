@@ -1,6 +1,6 @@
 #include "helpers.h"
 #include "gate.h"
-#include "quantum_circuit.h"
+#include "circuit.h"
 #include "quantum_operator.h"
 
 #include <stdexcept>
@@ -9,8 +9,8 @@
 namespace std {
 
     template <>
-    struct hash<QuantumCircuit>{
-        std::size_t operator()(const QuantumCircuit& qc) const {
+    struct hash<Circuit>{
+        std::size_t operator()(const Circuit& qc) const {
             std::string hash_value = "";
 
             for (const auto& gate : qc.gates()){
@@ -23,7 +23,7 @@ namespace std {
     };
 }
 
-void QuantumOperator::add_term(std::complex<double> circ_coeff, const QuantumCircuit& circuit) {
+void QuantumOperator::add_term(std::complex<double> circ_coeff, const Circuit& circuit) {
     terms_.push_back(std::make_pair(circ_coeff, circuit));
 }
 
@@ -51,8 +51,8 @@ void QuantumOperator::mult_coeffs(const std::complex<double>& multiplier) {
 void QuantumOperator::order_terms() {
     simplify();
     std::sort(terms_.begin(), terms_.end(),
-        [&](const std::pair<std::complex<double>, QuantumCircuit>& a,
-            const std::pair<std::complex<double>, QuantumCircuit>& b) {
+        [&](const std::pair<std::complex<double>, Circuit>& a,
+            const std::pair<std::complex<double>, Circuit>& b) {
                 int a_sz = a.second.gates().size();
                 int b_sz = b.second.gates().size();
                 // 1. sort by qb
@@ -80,7 +80,7 @@ void QuantumOperator::canonical_order() {
 
 void QuantumOperator::simplify(bool combine_like_terms) {
     canonical_order();
-    std::unordered_map<QuantumCircuit, std::complex<double>> uniqe_trms;
+    std::unordered_map<Circuit, std::complex<double>> uniqe_trms;
     for (const auto& term : terms_) {
         if ( uniqe_trms.find(term.second) == uniqe_trms.end() ) {
             uniqe_trms.insert(std::make_pair(term.second, term.first));
@@ -110,7 +110,7 @@ void QuantumOperator::operator_product(const QuantumOperator& rqo, bool pre_simp
     QuantumOperator LR;
     for (auto& term_l : terms_) {
         for (auto& term_r : rqo.terms()){
-            QuantumCircuit temp_circ;
+            Circuit temp_circ;
             temp_circ.add_circuit(term_l.second);
             temp_circ.add_circuit(term_r.second);
             LR.add_term(term_l.first * term_r.first, temp_circ);
@@ -125,7 +125,7 @@ void QuantumOperator::operator_product(const QuantumOperator& rqo, bool pre_simp
     }
 }
 
-const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& QuantumOperator::terms() const {
+const std::vector<std::pair<std::complex<double>, Circuit>>& QuantumOperator::terms() const {
     return terms_;
 }
 

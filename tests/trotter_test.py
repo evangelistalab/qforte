@@ -5,7 +5,7 @@ from qforte import qforte
 class ExperimentTests(unittest.TestCase):
     def test_trotterization(self):
 
-        circ_vec = [qforte.QuantumCircuit(), qforte.build_circuit('Z_0')]
+        circ_vec = [qforte.Circuit(), qforte.build_circuit('Z_0')]
         coef_vec = [-1.0j * 0.5, -1.0j * -0.04544288414432624]
 
         # the operator to be exponentiated

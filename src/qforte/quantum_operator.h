@@ -23,7 +23,7 @@ class QuantumOperator {
     void build_from_openferm(std::string op) {}
 
     /// add a circuit as a term in the quantum operator
-    void add_term(std::complex<double> circ_coeff, const QuantumCircuit& circuit);
+    void add_term(std::complex<double> circ_coeff, const Circuit& circuit);
 
     /// add the circuits of another quantum operator as a term in the quantum operator
     void add_op(const QuantumOperator& qo);
@@ -35,12 +35,12 @@ class QuantumOperator {
     void mult_coeffs(const std::complex<double>& multiplier);
 
     /// return a vector of terms and their coefficients
-    const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& terms() const;
+    const std::vector<std::pair<std::complex<double>, Circuit>>& terms() const;
 
     /// order the terms by increasing coefficient value
     void order_terms();
 
-    /// order the gates by increasing qubits in each QuantumCircuit in terms_
+    /// order the gates by increasing qubits in each Circuit in terms_
     /// and contract all pauli operators
     void canonical_order();
 
@@ -64,7 +64,7 @@ class QuantumOperator {
 
   private:
     /// the linear combination of circuits
-    std::vector<std::pair<std::complex<double>, QuantumCircuit>> terms_;
+    std::vector<std::pair<std::complex<double>, Circuit>> terms_;
 };
 
 #endif // _quantum_operator_h_

@@ -5,7 +5,7 @@
 #include "fmt/format.h"
 
 #include "basis.h"
-#include "quantum_circuit.h"
+#include "circuit.h"
 #include "gate.h"
 #include "computer.h"
 #include "quantum_operator.h"
@@ -18,21 +18,21 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(qforte, m) {
-    py::class_<QuantumCircuit>(m, "QuantumCircuit")
+    py::class_<Circuit>(m, "Circuit")
         .def(py::init<>())
-        .def("add", &QuantumCircuit::add_gate)
-        .def("add", &QuantumCircuit::add_circuit)
-        .def("add_gate", &QuantumCircuit::add_gate)
-        .def("add_circuit", &QuantumCircuit::add_circuit)
-        .def("gates", &QuantumCircuit::gates)
-        .def("size", &QuantumCircuit::size)
-        .def("adjoint", &QuantumCircuit::adjoint)
-        .def("canonicalize_pauli_circuit", &QuantumCircuit::canonicalize_pauli_circuit)
-        .def("set_parameters", &QuantumCircuit::set_parameters)
-        .def("get_num_cnots", &QuantumCircuit::get_num_cnots)
-        .def("str", &QuantumCircuit::str)
-        .def("__str__", &QuantumCircuit::str)
-        .def("__repr__", &QuantumCircuit::str);
+        .def("add", &Circuit::add_gate)
+        .def("add", &Circuit::add_circuit)
+        .def("add_gate", &Circuit::add_gate)
+        .def("add_circuit", &Circuit::add_circuit)
+        .def("gates", &Circuit::gates)
+        .def("size", &Circuit::size)
+        .def("adjoint", &Circuit::adjoint)
+        .def("canonicalize_pauli_circuit", &Circuit::canonicalize_pauli_circuit)
+        .def("set_parameters", &Circuit::set_parameters)
+        .def("get_num_cnots", &Circuit::get_num_cnots)
+        .def("str", &Circuit::str)
+        .def("__str__", &Circuit::str)
+        .def("__repr__", &Circuit::str);
 
     py::class_<SQOperator>(m, "SQOperator")
         .def(py::init<>())

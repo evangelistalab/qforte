@@ -6,7 +6,7 @@ from qforte.utils.trotterization import trotterize
 class UCC(AnsatzAlgorithm):
 
     def ansatz_circuit(self, amplitudes=None):
-        """ This function returns the QuantumCircuit object built
+        """ This function returns the Circuit object built
         from the appropriate amplitudes (tops)
 
         Parameters

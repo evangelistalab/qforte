@@ -136,7 +136,7 @@ class ADAPTVQE(UCCVQE):
         convergence.
 
     build_Uprep()
-        Returns a QuantumCircuit object corresponding to the state preparation
+        Returns a Circuit object corresponding to the state preparation
         circuit for the ADAPT-VQE ansatz on a given iteration.
 
     measure_gradient()

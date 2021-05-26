@@ -50,7 +50,7 @@ def fermop_to_sq_excitation(fermop):
 
 #TODO: Rename organizer to operator (Nick)
 def organizer_to_circuit(op_organizer):
-    """Builds a QuantumCircuit from a operator orgainizer.
+    """Builds a Circuit from a operator orgainizer.
 
     Parameters
     ----------
@@ -66,7 +66,7 @@ def organizer_to_circuit(op_organizer):
     """
     operator = qforte.QuantumOperator()
     for coeff, word in op_organizer:
-        circ = qforte.QuantumCircuit()
+        circ = qforte.Circuit()
         for letter in word:
             circ.add(qforte.gate(letter[0], letter[1], letter[1]))
 
@@ -76,7 +76,7 @@ def organizer_to_circuit(op_organizer):
 
 #TODO: Rename operator to organizer (Nick)
 def circuit_to_organizer(operator):
-    """Builds a operator orgainizer from a QuantumCircuit.
+    """Builds a operator orgainizer from a Circuit.
 
     Parameters
     ----------

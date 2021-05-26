@@ -2,7 +2,7 @@ import qforte
 import numpy as np
 
 def build_Uprep(ref, state_prep_type):
-    Uprep = qforte.QuantumCircuit()
+    Uprep = qforte.Circuit()
     if state_prep_type == 'occupation_list':
         for j in range(len(ref)):
             if ref[j] == 1:

@@ -11,8 +11,8 @@ class CircuitTests(unittest.TestCase):
         qc1 = qforte.Computer(num_qubits)
         qc2 = qforte.Computer(num_qubits)
 
-        prep_circ = qforte.QuantumCircuit()
-        circ = qforte.QuantumCircuit()
+        prep_circ = qforte.Circuit()
+        circ = qforte.Circuit()
 
         for i in range(num_qubits):
             prep_circ.add(qforte.gate('H',i, i))

@@ -4,13 +4,13 @@ def smart_print(Inputobj, print_type='compact'):
 
     """
     formatts and prints instances of
-    several classes, including QuantumOperator, QuantumCircuit, and
+    several classes, including QuantumOperator, Circuit, and
     QuantumnComputer
 
-    :param Inputobj: (QuantumOperator, QuantumCircuit, or
+    :param Inputobj: (QuantumOperator, Circuit, or
     QuantumnComputer) the input instance one want to print.
 
-    :param print_type: (QuantumOperator, QuantumCircuit, or
+    :param print_type: (QuantumOperator, Circuit, or
     QuantumnComputer) print format, full or compact
     """
 
@@ -35,7 +35,7 @@ def smart_print(Inputobj, print_type='compact'):
                 print(term[0], end="")
                 print("[{}]".format(" ".join(term[1].str())))
 
-    if isinstance(Inputobj, qforte.QuantumCircuit):
+    if isinstance(Inputobj, qforte.Circuit):
         print('\n Quantum circuit:')
 
         if print_type == 'full':
@@ -69,7 +69,7 @@ def smart_print(Inputobj, print_type='compact'):
         print('\n'.join(Inputobj.str()))
 
 """
-builds a QuantumCircuit conveniently from string based input
+builds a Circuit conveniently from string based input
 
 :param Inputstr: (string) the circuit to build, format:
 ['Action string']_['Target']_['Control(if needed)']_['Parameter(if needed)']
@@ -77,7 +77,7 @@ builds a QuantumCircuit conveniently from string based input
 
 def build_circuit(Inputstr):
 
-    circ = qforte.QuantumCircuit()
+    circ = qforte.Circuit()
     sepstr = Inputstr.split() #Separate string to a list by space
 
     for i in range(len(sepstr)):
@@ -93,7 +93,7 @@ def build_circuit(Inputstr):
     return circ
 
 """
-builds a QuantumCircuit
+builds a Circuit
 conveniently from input
 
 :param Inputstr: (string) the operator to build, format:

@@ -302,7 +302,7 @@ class MRSQK(QSD):
         for i, ref in enumerate(self._single_det_refs):
             for m in range(self._nstates_per_ref):
                 # NOTE: do NOT use Uprep here (is determinant specific).
-                Um = qforte.QuantumCircuit()
+                Um = qforte.Circuit()
                 for j in range(self._nqb):
                     if ref[j] == 1:
                         Um.add(qforte.gate('X', j, j))
@@ -368,7 +368,7 @@ class MRSQK(QSD):
 
         for i, ref in enumerate(self._pre_sa_ref_lst):
             # NOTE: do NOT use Uprep here (is determinant specific).
-            Un = qforte.QuantumCircuit()
+            Un = qforte.Circuit()
             for j in range(self._nqb):
                 if ref[j] == 1:
                     Un.add(qforte.gate('X', j, j))
@@ -454,7 +454,7 @@ class MRSQK(QSD):
             for m in range(self._nstates_per_ref):
 
                 # TODO (cleanup): will need to consider gate count for this part.
-                Um = qforte.QuantumCircuit()
+                Um = qforte.Circuit()
                 phase1 = 1.0
                 if(m>0):
                     fact = (0.0-1.0j) * m * self._mr_dt

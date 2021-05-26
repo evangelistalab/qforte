@@ -34,7 +34,7 @@ class UCCVQE(VQE, UCC):
         operators : QuantumOpPool
             All operators to be measured
 
-        Ucirc : QuantumCircuit
+        Ucirc : Circuit
             The state preparation circuit.
 
         idxs : list of int
@@ -64,7 +64,7 @@ class UCCVQE(VQE, UCC):
         HAm : QuantumOpPool
             The commutator to measure.
 
-        Ucirc : QuantumCircuit
+        Ucirc : Circuit
             The state preparation circuit.
         """
 
