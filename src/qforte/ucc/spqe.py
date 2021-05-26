@@ -28,7 +28,7 @@ class SPQE(UCCPQE):
             diis_maxiter = 30,
             use_cumulative_thresh=True):
 
-        if(self._trial_state_type != 'occupation_list'):
+        if(self._state_prep_type != 'occupation_list'):
             raise ValueError("SPQE implementation can only handle occupation_list Hartree-Fock reference.")
 
         self._spqe_thresh = spqe_thresh
@@ -160,7 +160,7 @@ class SPQE(UCCPQE):
         print('---------------------------------------------------------')
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
-        print('Trial state preparation method:          ',  self._trial_state_type)
+        print('Trial state preparation method:          ',  self._state_prep_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
         print('Use fast version of algorithm:           ',  str(self._fast))
