@@ -19,12 +19,8 @@ class SQOperator {
     /// default constructor: creates an empty second quantized operator
     SQOperator() {}
 
-    /// TODO: implement
-    /// build from a string of open fermion qubit operators
-    // void build_from_openferm_str(std::string op) {}
-
-    /// add one product of anihilators and/or creators to the second quantized operator
-    void add_term(std::complex<double> coeff, const std::vector<size_t>& ac_ops);
+    /// add one product of annihilators and/or creators to the second quantized operator
+    void add_term(std::complex<double> coeff, const std::vector<size_t>& cre_ops, const std::vector<size_t>& ann_ops);
 
     /// add an second quantized operator to the second quantized operator
     void add_op(const SQOperator& sqo);
@@ -36,11 +32,11 @@ class SQOperator {
     void mult_coeffs(const std::complex<double>& multiplier);
 
     /// return a vector of terms and their coefficients
-    const std::vector<std::pair< std::complex<double>, std::vector<size_t>>>& terms() const;
+    const std::vector<std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>>& terms() const;
 
     /// Put a single term into "canonical" form. Canonical form orders orbital indices
     /// descending.
-    void canonical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term );
+    void canonical_order_single_term(std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& term );
 
     /// Canonicalize each term. The order of the terms is unaffected.
     void canonical_order();
@@ -59,10 +55,16 @@ class SQOperator {
     /// The linear combination of second quantized operators. Stored in pairs of
     /// coefficients, and then a vector of N created indices, followed by N annihilated indices.
     /// Orbital indices start at zero.
-    std::vector<std::pair< std::complex<double>, std::vector<size_t>>> terms_;
+    std::vector<std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>> terms_;
 
     /// Calculate the parity of permutation p
-    bool permutive_sign_change(std::vector<int> p);
+    bool permutive_sign_change(std::vector<int> p) const;
+
+    int canonicalize_helper(std::vector<size_t>& op_list) const;
+
+    /// If operators is a vector of orbital indices, add the corresponding creator
+    /// or annihilation qubit operators to holder.
+    void jw_helper(QuantumOperator& holder, const std::vector<size_t>& operators, bool creator) const;
 };
 
 #endif // _sq_operator_h_
