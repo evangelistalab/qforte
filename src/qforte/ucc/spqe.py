@@ -290,13 +290,14 @@ class SPQE(UCCPQE):
             # occ => i,j,k,...
             # vir => a,b,c,...
             # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
-            temp_idx = sq_op.terms()[0][1][-1]
+            temp_idx = sq_op.terms()[0][2][-1]
             if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
-                sq_sub_tamp ,sq_sub_top = sq_op.terms()[0]
+                sq_creators = sq_op.terms()[0][1]
+                sq_annihilators = sq_op.terms()[0][2]
             else:
-                sq_sub_tamp ,sq_sub_top = sq_op.terms()[1]
+                sq_creators = sq_op.terms()[0][2]
+                sq_annihilators = sq_op.terms()[0][1]
 
-            nbody = int(len(sq_sub_top) / 2)
             destroyed = False
             denom = 1.0
 
@@ -305,20 +306,20 @@ class SPQE(UCCPQE):
                 basis_I.set_bit(k, occ)
 
             # loop over anihilators
-            for p in reversed(range(nbody, 2*nbody)):
-                if( basis_I.get_bit(sq_sub_top[p]) == 0):
+            for p in reversed(sq_annihilators):
+                if( basis_I.get_bit(p) == 0):
                     destroyed=True
                     break
 
-                basis_I.set_bit(sq_sub_top[p], 0)
+                basis_I.set_bit(p, 0)
 
             # then over creators
-            for p in reversed(range(0, nbody)):
-                if (basis_I.get_bit(sq_sub_top[p]) == 1):
+            for p in reversed(sq_creators):
+                if (basis_I.get_bit(p) == 1):
                     destroyed=True
                     break
 
-                basis_I.set_bit(sq_sub_top[p], 1)
+                basis_I.set_bit(p, 1)
 
             if not destroyed:
 
@@ -334,7 +335,7 @@ class SPQE(UCCPQE):
                 qc_temp.apply_operator(sq_op.jw_transform())
                 sign_adjust = qc_temp.get_coeff_vec()[I]
 
-                res_m = coeffs[I] * sign_adjust # * sq_sub_tamp
+                res_m = coeffs[I] * sign_adjust
                 if(np.imag(res_m) > 0.0):
                     raise ValueError("residual has imaginary component, someting went wrong!!")
 
@@ -353,21 +354,18 @@ class SPQE(UCCPQE):
         for mu, m in enumerate(self._tops):
             sq_op = self._pool[m][1]
 
-            temp_idx = sq_op.terms()[0][1][-1]
+            temp_idx = sq_op.terms()[0][2][-1]
             if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
-                sq_sub_tamp ,sq_sub_top = sq_op.terms()[0]
+                sq_creators = sq_op.terms()[0][1]
+                sq_annihilators = sq_op.terms()[0][2]
             else:
-                sq_sub_tamp ,sq_sub_top = sq_op.terms()[1]
+                sq_creators = sq_op.terms()[0][2]
+                sq_annihilators = sq_op.terms()[0][1]
 
-            nbody = int(len(sq_sub_top) / 2)
             destroyed = False
             denom = 0.0
 
-            for p, op_idx in enumerate(sq_sub_top):
-                if(p<nbody):
-                    denom -= self._orb_e[op_idx]
-                else:
-                    denom += self._orb_e[op_idx]
+            denom = sum(self._orb_e[x] for x in sq_annihilators) - sum(self._orb_e[x] for x in sq_creators)
 
             res_mu = copy.deepcopy(residuals[mu])
             res_mu /= denom # divide by energy denominator
@@ -614,14 +612,9 @@ class SPQE(UCCPQE):
                     total_parity *= z
 
                 if(total_parity==1):
-                    excitation = particles + holes
-                    dexcitation = list(reversed(excitation))
-                    sigma_I = [1.0, tuple(excitation)]
-                    # need i, j, a, b
-
                     K_temp = qf.SQOperator()
-                    K_temp.add(+1.0, excitation);
-                    K_temp.add(-1.0, dexcitation);
+                    K_temp.add(+1.0, particles, holes);
+                    K_temp.add(-1.0, holes[::-1], particles[::-1]);
                     K_temp.simplify();
                     # this is potentially slow
                     self._pool[I] = [1.0, K_temp]
@@ -688,14 +681,9 @@ class SPQE(UCCPQE):
                     total_parity *= z
 
                 if(total_parity==1):
-                    excitation = particles + holes
-                    dexcitation = list(reversed(excitation))
-                    sigma_I = [1.0, tuple(excitation)]
-                    # need i, j, a, b
-
                     K_temp = qf.SQOperator()
-                    K_temp.add(+1.0, excitation);
-                    K_temp.add(-1.0, dexcitation);
+                    K_temp.add(+1.0, particles + holes);
+                    K_temp.add(-1.0, holes[::-1] + particles[::-1]);
                     K_temp.simplify();
 
                     return K_temp

@@ -35,8 +35,6 @@ class QITE(Algorithm):
     _sig : QuantumOpPool
         The basis of operators allowed in a unitary evolution step.
     _sparseSb : bool
-    _sq_ham : SqOperator
-        The second-quantized, fermionic Hamiltonian
     _total_phase : complex
     _Uqite: QuantumCircuit
     _x_thresh : float
@@ -54,7 +52,6 @@ class QITE(Algorithm):
         self._beta = beta
         self._db = db
         self._nbeta = int(beta/db)+1
-        self._sq_ham = self._sys.get_sq_hamiltonian()
         self._expansion_type = expansion_type
         self._sparseSb = sparseSb
         self._total_phase = 1.0 + 0.0j
