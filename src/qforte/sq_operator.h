@@ -7,7 +7,7 @@
 #include <numeric>
 #include <map>
 
-class QuantumGate;
+class Gate;
 
 class QuantumOperator;
 

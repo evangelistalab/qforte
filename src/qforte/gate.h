@@ -1,5 +1,5 @@
-#ifndef _quantum_gate_h_
-#define _quantum_gate_h_
+#ifndef _gate_h_
+#define _gate_h_
 
 #include <array>
 #include <vector>
@@ -9,16 +9,16 @@
 /// alias for a 4 x 4 complex matrix stored as an array of arrays
 using complex_4_4_mat = std::array<std::array<std::complex<double>, 4>, 4>;
 
-class QuantumGate {
+class Gate {
   public:
     /**
-     * @brief QuantumGate
+     * @brief Gate
      * @param label the label for this operator (e.g, "X", "cZ")
      * @param target the target qubit
      * @param control the control qubit
      * @param gate the 4 x 4 matrix representation of the gate
      */
-    QuantumGate(const std::string& label, size_t target, size_t control,
+    Gate(const std::string& label, size_t target, size_t control,
                 std::complex<double> gate[4][4]);
 
     /// Return the target qubit
@@ -43,7 +43,7 @@ class QuantumGate {
     static const std::vector<std::pair<size_t, size_t>>& two_qubits_basis();
 
     // Return the adjoint of this gate
-    QuantumGate adjoint() const;
+    Gate adjoint() const;
 
   private:
     /// the label of this gate
@@ -74,10 +74,10 @@ class QuantumGate {
 };
 
 /// Create a quantum gate
-// QuantumGate make_gate(std::string type, size_t target, size_t control,
+// Gate make_gate(std::string type, size_t target, size_t control,
 //                               double parameter = 0.0, bool mirror = false);
-QuantumGate make_gate(std::string type, size_t target, size_t control, std::complex<double> parameter = 0.0);
+Gate make_gate(std::string type, size_t target, size_t control, std::complex<double> parameter = 0.0);
 
-QuantumGate make_control_gate(size_t control, QuantumGate& U);
+Gate make_control_gate(size_t control, Gate& U);
 
-#endif // _quantum_gate_h_
+#endif // _gate_h_

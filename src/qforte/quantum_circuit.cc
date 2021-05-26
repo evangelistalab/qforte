@@ -1,7 +1,7 @@
 #include <algorithm>
 
 #include "helpers.h"
-#include "quantum_gate.h"
+#include "gate.h"
 #include "quantum_circuit.h"
 
 void QuantumCircuit::set_parameters(const std::vector<double>& params) {
@@ -67,7 +67,7 @@ std::complex<double> QuantumCircuit::canonicalize_pauli_circuit() {
 
     // Apply gate commutation to sort gates from those acting on smallest-index qubit to largest.
     std::stable_sort(gates_.begin(), gates_.end(),
-        [&](const QuantumGate& a, const QuantumGate& b) {
+        [&](const Gate& a, const Gate& b) {
             return (a.target() < b.target());
         }
     );

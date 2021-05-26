@@ -1,13 +1,13 @@
 #include "fmt/format.h"
 
-#include "quantum_gate.h"
+#include "gate.h"
 
-const std::vector<std::pair<size_t, size_t>> QuantumGate::two_qubits_basis_{
+const std::vector<std::pair<size_t, size_t>> Gate::two_qubits_basis_{
     {0, 0}, {0, 1}, {1, 0}, {1, 1}};
-const std::vector<size_t> QuantumGate::index1{0, 1};
-const std::vector<size_t> QuantumGate::index2{0, 1, 2, 3};
+const std::vector<size_t> Gate::index1{0, 1};
+const std::vector<size_t> Gate::index2{0, 1, 2, 3};
 
-QuantumGate::QuantumGate(const std::string& label, size_t target, size_t control,
+Gate::Gate(const std::string& label, size_t target, size_t control,
                          std::complex<double> gate[4][4])
     : label_(label), target_(target), control_(control) {
     for (const auto& i : index2) {
@@ -17,22 +17,22 @@ QuantumGate::QuantumGate(const std::string& label, size_t target, size_t control
     }
 }
 
-size_t QuantumGate::target() const { return target_; }
+size_t Gate::target() const { return target_; }
 
-size_t QuantumGate::control() const { return control_; }
+size_t Gate::control() const { return control_; }
 
-const complex_4_4_mat& QuantumGate::gate() const { return gate_; }
+const complex_4_4_mat& Gate::gate() const { return gate_; }
 
-std::string QuantumGate::gate_id() const { return label_; }
+std::string Gate::gate_id() const { return label_; }
 
-std::string QuantumGate::str() const {
+std::string Gate::str() const {
     if (target_ == control_) {
         return fmt::format("{}{}", label_, target_);
     }
     return fmt::format("{}{}_{}", label_, target_, control_);
 }
 
-std::string QuantumGate::repr() const {
+std::string Gate::repr() const {
     std::string s =
         fmt::format("{} gate, target qubit:{}, contol qubit:{}\n", label_, target_, control_);
     const std::vector<size_t>& index = (nqubits() == 1 ? index1 : index2);
@@ -45,9 +45,9 @@ std::string QuantumGate::repr() const {
     return s;
 }
 
-size_t QuantumGate::nqubits() const { return (target_ == control_ ? 1 : 2); }
+size_t Gate::nqubits() const { return (target_ == control_ ? 1 : 2); }
 
-QuantumGate QuantumGate::adjoint() const {
+Gate Gate::adjoint() const {
     std::complex<double> adj_gate[4][4];
     bool self_adjoint = true;
     for (const auto& i : index2) {
@@ -59,11 +59,11 @@ QuantumGate QuantumGate::adjoint() const {
         }
     }
     if (not self_adjoint) {
-        return QuantumGate("adj(" + label_ + ")", target_, control_, adj_gate);
+        return Gate("adj(" + label_ + ")", target_, control_, adj_gate);
     }
-    return QuantumGate(label_, target_, control_, adj_gate);
+    return Gate(label_, target_, control_, adj_gate);
 }
 
-const std::vector<std::pair<size_t, size_t>>& QuantumGate::two_qubits_basis() {
+const std::vector<std::pair<size_t, size_t>>& Gate::two_qubits_basis() {
     return two_qubits_basis_;
 }

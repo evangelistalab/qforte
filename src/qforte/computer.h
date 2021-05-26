@@ -12,7 +12,7 @@ template <class T> std::complex<T> complex_prod(std::complex<T> a, std::complex<
 
 template <class T> std::complex<T> add_c(std::complex<T> a, std::complex<T> b) { return a + b; }
 
-class QuantumGate;
+class Gate;
 class Basis;
 class QuantumCircuit;
 class QuantumOperator;
@@ -34,10 +34,10 @@ class Computer {
     void apply_circuit(const QuantumCircuit& qc);
 
     /// apply a gate to the quantum computer with standard algorithm
-    void apply_gate_safe(const QuantumGate& qg);
+    void apply_gate_safe(const Gate& qg);
 
     /// apply a gate to the quantum computer with optimized algorithm
-    void apply_gate(const QuantumGate& qg);
+    void apply_gate(const Gate& qg);
 
     /// apply a constant to the quantum computer (WARNING, this operation
     /// is not physical as it does not represent a unitary opperation). Only
@@ -91,7 +91,7 @@ class Computer {
 
     /// get the expectation value of a single 1qubit gate directly
     /// (without simulated measurement)
-    std::complex<double> direct_gate_exp_val(const QuantumGate& qg);
+    std::complex<double> direct_gate_exp_val(const Gate& qg);
 
     /// return a vector of strings representing the state of the computer
     std::vector<std::string> str() const;
@@ -153,16 +153,16 @@ class Computer {
     double compute_threshold_ = 1.0e-16;
 
     /// apply a 1qubit gate to the quantum computer with standard algorithm
-    void apply_1qubit_gate_safe(const QuantumGate& qg);
+    void apply_1qubit_gate_safe(const Gate& qg);
 
     /// apply a 1qubit gate to the quantum computer with optimized algorithm
-    void apply_1qubit_gate(const QuantumGate& qg);
+    void apply_1qubit_gate(const Gate& qg);
 
     /// apply a 2qubit gate to the quantum computer with standard algorithm
-    void apply_2qubit_gate_safe(const QuantumGate& qg);
+    void apply_2qubit_gate_safe(const Gate& qg);
 
     /// apply a 2qubit gate to the quantum computer with optimized algorithm
-    void apply_2qubit_gate(const QuantumGate& qg);
+    void apply_2qubit_gate(const Gate& qg);
 };
 
 #endif // _computer_h_

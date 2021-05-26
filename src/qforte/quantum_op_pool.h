@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-class QuantumGate;
+class Gate;
 class SQOperator;
 class QuantumOperator;
 

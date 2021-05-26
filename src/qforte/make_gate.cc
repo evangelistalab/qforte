@@ -2,9 +2,9 @@
 
 #include "fmt/format.h"
 
-#include "quantum_gate.h"
+#include "gate.h"
 
-QuantumGate make_gate(std::string type, size_t target, size_t control, std::complex<double> parameter) {
+Gate make_gate(std::string type, size_t target, size_t control, std::complex<double> parameter) {
     //using namespace std::complex_literals;
     std::complex<double> onei(0.0, 1.0);
     if (target == control) {
@@ -13,21 +13,21 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 1.0},
                 {1.0, 0.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "Y") {
             std::complex<double> gate[4][4]{
                 {0.0, -onei},
                 {+onei, 0.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "Z") {
             std::complex<double> gate[4][4]{
                 {+1.0, 0.0},
                 {0.0, -1.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "H") {
             std::complex<double> c = 1.0 / std::sqrt(2.0);
@@ -35,7 +35,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {+c, +c},
                 {+c, -c},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "R") {
 	    std::complex<double> tmp = onei * parameter;
@@ -44,7 +44,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {1.0, 0.0},
                 {0.0, c},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "Rx") {
             std::complex<double> a = std::cos(0.5 * parameter);
@@ -53,7 +53,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {+a, -b},
                 {-b, +a},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "Ry") {
             std::complex<double> a = std::cos(0.5 * parameter);
@@ -62,7 +62,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {+a, -b},
                 {+b, +a},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "Rz") {
             std::complex<double> tmp_a = -onei * 0.5 * parameter;
@@ -73,7 +73,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {a, 0.0},
                 {0.0, b},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "V") {
             std::complex<double> a = onei * 0.5 + 0.5;
@@ -82,14 +82,14 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {+a, +b},
                 {+b, +a},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "S") {
             std::complex<double> gate[4][4]{
                 {1.0, 0.0},
                 {0.0, onei},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "T") {
             std::complex<double> c = (1.0 + onei) / std::sqrt(2.0);
@@ -97,14 +97,14 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {1.0, 0.0},
                 {0.0, c},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "I") {
             std::complex<double> gate[4][4]{
                 {1.0, 0.0},
                 {0.0, 1.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "Rzy") {
             std::complex<double> c = 1.0 / std::sqrt(2.0);
@@ -113,7 +113,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {+c_i, +c},
                 {+c, +c_i},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         } if (type == "rU1") {
             std::complex<double> a = std::cos(parameter);
             std::complex<double> b = std::sin(parameter);
@@ -121,7 +121,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {+a, -b},
                 {+b, +a},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
 
     } else {
@@ -134,7 +134,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, s  , -c,  1.0},
                 {0.0, 0.0, 1.0, 0.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if ((type == "cX") or (type == "CNOT")) {
             std::complex<double> gate[4][4]{
@@ -143,7 +143,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 0.0, 0.0, 1.0},
                 {0.0, 0.0, 1.0, 0.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "cY") {
             std::complex<double> gate[4][4]{
@@ -152,7 +152,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 0.0, 0.0, -onei},
                 {0.0, 0.0, +onei, 0.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "cZ") {
             std::complex<double> gate[4][4]{
@@ -161,7 +161,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 0.0, 1.0, 0.0},
                 {0.0, 0.0, 0.0, -1.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "cR") {
             std::complex<double> tmp = onei * parameter;
@@ -172,7 +172,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 0.0, 1.0, 0.0},
                 {0.0, 0.0, 0.0, c},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "cV") {
             std::complex<double> a = onei * 0.5 + 0.5;
@@ -183,7 +183,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 0.0, +a, +b},
                 {0.0, 0.0, +b, +a},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "cRz") {
             std::complex<double> tmp_a = -onei * 0.5 * parameter;
@@ -196,7 +196,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 0.0, a,   0.0},
                 {0.0, 0.0, 0.0, b},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
         if (type == "SWAP") {
             std::complex<double> gate[4][4]{
@@ -205,7 +205,7 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 1.0, 0.0, 0.0},
                 {0.0, 0.0, 0.0, 1.0},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         } if (type == "rU2") {
             std::complex<double> a = std::cos(parameter);
             std::complex<double> b = std::sin(parameter);
@@ -215,13 +215,13 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
                 {0.0, 0.0,  +a,  -b},
                 {0.0, 0.0,  +b,  +a},
             };
-            return QuantumGate(type, target, control, gate);
+            return Gate(type, target, control, gate);
         }
     }
     // If you reach this section then the gate type is not implemented or it is invalid.
     // So we throw an exception that propagates to Python and return the identity
     std::string msg =
-        fmt::format("make_quantum_gate()\ntype = {} is not a valid quantum gate type", type);
+        fmt::format("make_gate()\ntype = {} is not a valid quantum gate type", type);
     throw std::invalid_argument(msg);
     std::complex<double> gate[4][4]{
         {1.0, 0.0, 0.0, 0.0},
@@ -229,10 +229,10 @@ QuantumGate make_gate(std::string type, size_t target, size_t control, std::comp
         {0.0, 0.0, 1.0, 0.0},
         {0.0, 0.0, 0.0, 1.0},
     };
-    return QuantumGate(type, target, control, gate);
+    return Gate(type, target, control, gate);
 }
 
-QuantumGate make_control_gate(size_t control, QuantumGate& U) {
+Gate make_control_gate(size_t control, Gate& U) {
     //using namespace std::complex_literals;
     std::string type = "cU";
     size_t target = U.target();
@@ -251,5 +251,5 @@ QuantumGate make_control_gate(size_t control, QuantumGate& U) {
             {0.0, 0.0, a, b},
             {0.0, 0.0, c, d},
         };
-    return QuantumGate(type, target, control, gate);
+    return Gate(type, target, control, gate);
 }

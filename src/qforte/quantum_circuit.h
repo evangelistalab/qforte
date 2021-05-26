@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-class QuantumGate;
+class Gate;
 
 class QuantumCircuit {
     /* A QuantumCircuit is a product of quantum gates. An individual gate acts on 
@@ -19,13 +19,13 @@ class QuantumCircuit {
     QuantumCircuit() {}
 
     /// add a gate
-    void add_gate(const QuantumGate& gate) { gates_.push_back(gate); }
+    void add_gate(const Gate& gate) { gates_.push_back(gate); }
 
     /// add a circuit
     void add_circuit(const QuantumCircuit& circ);
 
     /// return a vector of gates
-    const std::vector<QuantumGate>& gates() const { return gates_; }
+    const std::vector<Gate>& gates() const { return gates_; }
 
     /// return the number of gates
     size_t size() const { return gates_.size(); }
@@ -51,7 +51,7 @@ class QuantumCircuit {
 
   private:
     /// the list of gates
-    std::vector<QuantumGate> gates_;
+    std::vector<Gate> gates_;
 };
 
 // A eqivalence comparitor for QuantumCircuit class

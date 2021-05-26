@@ -6,7 +6,7 @@
 
 #include "basis.h"
 #include "quantum_circuit.h"
-#include "quantum_gate.h"
+#include "gate.h"
 #include "computer.h"
 #include "quantum_operator.h"
 #include "sq_operator.h"
@@ -149,14 +149,14 @@ PYBIND11_MODULE(qforte, m) {
             return r;
         });
 
-    py::class_<QuantumGate>(m, "QuantumGate")
-        .def("target", &QuantumGate::target)
-        .def("control", &QuantumGate::control)
-        .def("gate_id", &QuantumGate::gate_id)
-        .def("adjoint", &QuantumGate::adjoint)
-        .def("str", &QuantumGate::str)
-        .def("__str__", &QuantumGate::str)
-        .def("__repr__", &QuantumGate::repr);
+    py::class_<Gate>(m, "Gate")
+        .def("target", &Gate::target)
+        .def("control", &Gate::control)
+        .def("gate_id", &Gate::gate_id)
+        .def("adjoint", &Gate::adjoint)
+        .def("str", &Gate::str)
+        .def("__str__", &Gate::str)
+        .def("__repr__", &Gate::repr);
 
     py::class_<local_timer>(m, "local_timer")
         .def(py::init<>())
@@ -212,5 +212,5 @@ PYBIND11_MODULE(qforte, m) {
         },
         "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0, "Make a gate.");
 
-    m.def("control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);
+    m.def("control_gate", &make_control_gate, "control"_a, "Gate"_a);
 }

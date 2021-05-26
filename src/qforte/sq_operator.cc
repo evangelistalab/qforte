@@ -3,7 +3,7 @@
 #include <tuple>
 
 #include "helpers.h"
-#include "quantum_gate.h"
+#include "gate.h"
 #include "quantum_circuit.h"
 #include "quantum_operator.h"
 #include "sq_operator.h"

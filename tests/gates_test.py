@@ -220,7 +220,7 @@ class GatesTests(unittest.TestCase):
         print(cZ)
        # qcircuit = qforte.QuantumCircuit()
        # qcircuit.add(qg)
-       # qcircuit.add(qforte.QuantumGate(qforte.QuantumGateType.Hgate,1,1));
+       # qcircuit.add(qforte.Gate(qforte.GateType.Hgate,1,1));
        # print('\n'.join(qcircuit.str()))
        # self.assertEqual(qforte.subtract(1, 1), 0)
 

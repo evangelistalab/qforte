@@ -8,7 +8,7 @@
 
 #include "basis.h"
 #include "quantum_circuit.h"
-#include "quantum_gate.h"
+#include "gate.h"
 #include "quantum_operator.h"
 #include "quantum_op_pool.h"
 #include "timer.h"
@@ -73,7 +73,7 @@ void Computer::apply_circuit_safe(const QuantumCircuit& qc) {
     }
 }
 
-void Computer::apply_gate(const QuantumGate& qg) {
+void Computer::apply_gate(const Gate& qg) {
     int nqubits = qg.nqubits();
 
     if (nqubits == 1) {
@@ -84,7 +84,7 @@ void Computer::apply_gate(const QuantumGate& qg) {
     }
 }
 
-void Computer::apply_gate_safe(const QuantumGate& qg) {
+void Computer::apply_gate_safe(const Gate& qg) {
     int nqubits = qg.nqubits();
 
     if (nqubits == 1) {
@@ -117,17 +117,17 @@ std::vector<double> Computer::measure_circuit(const QuantumCircuit& qc,
     // TODO: add gate lable not via enum? (Nick)
     // TODO: Acount for case where gate is only the identity
 
-    for (const QuantumGate& gate : qc.gates()) {
+    for (const Gate& gate : qc.gates()) {
         size_t target_qubit = gate.target();
         std::string gate_id = gate.gate_id();
         if (gate_id == "Z") {
-            QuantumGate temp = make_gate("I", target_qubit, target_qubit);
+            Gate temp = make_gate("I", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id == "X") {
-            QuantumGate temp = make_gate("H", target_qubit, target_qubit);
+            Gate temp = make_gate("H", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
-            QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Gate temp = make_gate("Rzy", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // // // std::cout<<'unrecognized gate in operator!'<<std::endl;
@@ -153,7 +153,7 @@ std::vector<double> Computer::measure_circuit(const QuantumCircuit& qc,
     for (size_t k = 0; k < n_measurements; k++) {
         size_t measurement = dd(gen);
         double value = 1.;
-        for (const QuantumGate& gate : qc.gates()) {
+        for (const Gate& gate : qc.gates()) {
             size_t target_qubit = gate.target();
             value *= 1. - 2. * static_cast<double>(basis_[measurement].get_bit(target_qubit));
         }
@@ -197,17 +197,17 @@ std::vector<std::vector<int>> Computer::measure_readouts(const QuantumCircuit& q
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
 
-    for (const QuantumGate& gate : qc.gates()) {
+    for (const Gate& gate : qc.gates()) {
         size_t target_qubit = gate.target();
         std::string gate_id = gate.gate_id();
         if (gate_id == "Z") {
-            QuantumGate temp = make_gate("I", target_qubit, target_qubit);
+            Gate temp = make_gate("I", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id == "X") {
-            QuantumGate temp = make_gate("H", target_qubit, target_qubit);
+            Gate temp = make_gate("H", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
-            QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Gate temp = make_gate("Rzy", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // // // std::cout<<'unrecognized gate in operator!'<<std::endl;
@@ -234,7 +234,7 @@ std::vector<std::vector<int>> Computer::measure_readouts(const QuantumCircuit& q
         size_t measurement = dd(gen);
         // double value = 1.;
         std::vector<int> temp_readout;
-        for (const QuantumGate& gate : qc.gates()) {
+        for (const Gate& gate : qc.gates()) {
             size_t target_qubit = gate.target();
             temp_readout.push_back( static_cast<int>(basis_[measurement].get_bit(target_qubit)) );
         }
@@ -253,17 +253,17 @@ double Computer::perfect_measure_circuit(const QuantumCircuit& qc) {
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
 
-    for (const QuantumGate& gate : qc.gates()) {
+    for (const Gate& gate : qc.gates()) {
         size_t target_qubit = gate.target();
         std::string gate_id = gate.gate_id();
         if (gate_id == "Z") {
-            QuantumGate temp = make_gate("I", target_qubit, target_qubit);
+            Gate temp = make_gate("I", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id == "X") {
-            QuantumGate temp = make_gate("H", target_qubit, target_qubit);
+            Gate temp = make_gate("H", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
-            QuantumGate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Gate temp = make_gate("Rzy", target_qubit, target_qubit);
             Basis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // std::cout<<'unrecognized gate in operator!'<<std::endl;
@@ -276,7 +276,7 @@ double Computer::perfect_measure_circuit(const QuantumCircuit& qc) {
     double sum = 0.0;
     for (size_t k = 0; k < nbasis_; k++){
         double value = 1.0;
-        for (const QuantumGate& gate : qc.gates()) {
+        for (const Gate& gate : qc.gates()) {
             size_t target_qubit = gate.target();
             value *= 1. - 2. * static_cast<double>(basis_[k].get_bit(target_qubit));
         }
@@ -289,7 +289,7 @@ double Computer::perfect_measure_circuit(const QuantumCircuit& qc) {
 
 #include <iostream>
 
-void Computer::apply_1qubit_gate_safe(const QuantumGate& qg) {
+void Computer::apply_1qubit_gate_safe(const Gate& qg) {
     size_t target = qg.target();
     const auto& gate = qg.gate();
 
@@ -310,7 +310,7 @@ void Computer::apply_1qubit_gate_safe(const QuantumGate& qg) {
     none_ops_++;
 }
 
-void Computer::apply_1qubit_gate(const QuantumGate& qg) {
+void Computer::apply_1qubit_gate(const Gate& qg) {
     size_t target = qg.target();
     const auto& gate = qg.gate();
 
@@ -397,8 +397,8 @@ void Computer::apply_1qubit_gate(const QuantumGate& qg) {
     none_ops_++;
 }
 
-void Computer::apply_2qubit_gate_safe(const QuantumGate& qg) {
-    const auto& two_qubits_basis = QuantumGate::two_qubits_basis();
+void Computer::apply_2qubit_gate_safe(const Gate& qg) {
+    const auto& two_qubits_basis = Gate::two_qubits_basis();
 
     size_t target = qg.target();
     size_t control = qg.control();
@@ -428,7 +428,7 @@ void Computer::apply_2qubit_gate_safe(const QuantumGate& qg) {
     ntwo_ops_++;
 }
 
-void Computer::apply_2qubit_gate(const QuantumGate& qg) {
+void Computer::apply_2qubit_gate(const Gate& qg) {
     const size_t target = qg.target();
     const size_t control = qg.control();
     const auto& gate = qg.gate();
@@ -690,7 +690,7 @@ void Computer::apply_2qubit_gate(const QuantumGate& qg) {
     } // end if controlled unitary
     else{
     // Case 2: 2qubit gate is a not a control gate, use standard algorithm
-        const auto& two_qubits_basis = QuantumGate::two_qubits_basis();
+        const auto& two_qubits_basis = Gate::two_qubits_basis();
 
         for (size_t i = 0; i < 4; i++) {
             const auto i_c = two_qubits_basis[i].first;
@@ -847,7 +847,7 @@ std::complex<double> Computer::direct_pauli_circ_exp_val(const QuantumCircuit& q
     std::vector<int> y_idxs;
     std::vector<int> z_idxs;
 
-    for (const QuantumGate& gate : qc.gates()) {
+    for (const Gate& gate : qc.gates()) {
         if( gate.target() < min_qb_idx ) { min_qb_idx = gate.target(); }
         if( gate.gate_id() == "Z" ) {
             z_idxs.push_back(gate.target());
@@ -913,7 +913,7 @@ std::pair< int, std::complex<double> > Computer::get_pauli_permuted_idx(
     return std::make_pair(basis_I.add(), val);
 }
 
-std::complex<double> Computer::direct_gate_exp_val(const QuantumGate& qg) {
+std::complex<double> Computer::direct_gate_exp_val(const Gate& qg) {
     std::vector<std::complex<double>> coeff_temp = coeff_;
     std::complex<double> result = 0.0;
     int nqubits = qg.nqubits();
