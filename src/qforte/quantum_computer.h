@@ -18,10 +18,10 @@ class QuantumCircuit;
 class QuantumOperator;
 class QuantumOpPool;
 
-class QuantumComputer {
+class Computer {
   public:
     /// default constructor: create a quantum computer with nqubit qubits
-    QuantumComputer(int nqubit);
+    Computer(int nqubit);
 
     /// apply a quantum operator to the current state with optimized algorithm
     /// (this operation is generally not a physical quantum computing operation).

@@ -12,7 +12,7 @@ class GatesTests(unittest.TestCase):
         nqubits = 1
         basis0 = make_basis('0')
         basis1 = make_basis('1')
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         X = qforte.gate('X',0);
         # test X|0> = |1>
         computer.apply_gate(X)
@@ -34,7 +34,7 @@ class GatesTests(unittest.TestCase):
         nqubits = 1
         basis0 = make_basis('0')
         basis1 = make_basis('1')
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         Y = qforte.gate('Y',0,0);
         # test Y|0> = i|1>
         computer.apply_gate(Y)
@@ -56,7 +56,7 @@ class GatesTests(unittest.TestCase):
         nqubits = 1
         basis0 = make_basis('0')
         basis1 = make_basis('1')
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         Z = qforte.gate('Z',0,0);
         # test Z|0> = |0>
         computer.apply_gate(Z)
@@ -79,7 +79,7 @@ class GatesTests(unittest.TestCase):
         basis1 = make_basis('01') # basis1:|10>
         basis2 = make_basis('10') # basis2:|01>
         basis3 = make_basis('11') # basis3:|11>
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         CNOT = qforte.gate('CNOT',0,1);
 
         # test CNOT|00> = |00>
@@ -141,7 +141,7 @@ class GatesTests(unittest.TestCase):
         basis1 = make_basis('01') # basis1:|10>
         basis2 = make_basis('10') # basis2:|01>
         basis3 = make_basis('11') # basis3:|11>
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         cY = qforte.gate('cY',0,1);
 
         # test cY|00> = |00>
@@ -224,7 +224,7 @@ class GatesTests(unittest.TestCase):
        # print('\n'.join(qcircuit.str()))
        # self.assertEqual(qforte.subtract(1, 1), 0)
 
-        computer = qforte.QuantumComputer(16)
+        computer = qforte.Computer(16)
        # print(repr(computer))
        # circuit = qforte.QuantumCircuit()
        # circuit.add(X)
@@ -237,7 +237,7 @@ class GatesTests(unittest.TestCase):
 
     def test_op_exp_val_1(self):
         # test direct expectation value measurement
-        trial_state = qforte.QuantumComputer(4)
+        trial_state = qforte.Computer(4)
 
         trial_prep = [None]*5
         trial_prep[0] = qforte.gate('H',0,0)

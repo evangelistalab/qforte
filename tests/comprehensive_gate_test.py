@@ -37,8 +37,8 @@ def circuit_tester(prep, test_circ):
 
         num_qubits = 5
 
-        qc1 = qforte.QuantumComputer(num_qubits)
-        qc2 = qforte.QuantumComputer(num_qubits)
+        qc1 = qforte.Computer(num_qubits)
+        qc2 = qforte.Computer(num_qubits)
 
         qc1.apply_circuit_safe(prep)
         qc2.apply_circuit_safe(prep)

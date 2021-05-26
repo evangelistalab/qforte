@@ -22,7 +22,7 @@ class ExperimentTests(unittest.TestCase):
 
         # initalize a quantum computer with above coeficients
         # i.e. ca|1100> + cb|0011>
-        qc = qforte.QuantumComputer(4)
+        qc = qforte.Computer(4)
         qc.set_coeff_vec(inital_state)
 
         # apply the troterized minus_iH
@@ -56,7 +56,7 @@ class ExperimentTests(unittest.TestCase):
         # Case 1: positive control
 
         # initalize a quantum computer
-        qc = qforte.QuantumComputer(3)
+        qc = qforte.Computer(3)
 
         # build HF state
         qc.apply_gate(qforte.gate('X', 0, 0))
@@ -77,7 +77,7 @@ class ExperimentTests(unittest.TestCase):
         # Case 2: negitive control
 
         # initalize a quantum computer
-        qc = qforte.QuantumComputer(3)
+        qc = qforte.Computer(3)
 
         # build HF state
         qc.apply_gate(qforte.gate('X', 0, 0))

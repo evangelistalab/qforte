@@ -43,7 +43,7 @@ Getting Started
 import qforte
 
 # Construct a Bell state.
-computer = qforte.QuantumComputer(2)
+computer = qforte.Computer(2)
 computer.apply_gate(qforte.gate('H',0))
 computer.apply_gate(qforte.gate('cX',1,0))
 

@@ -6,7 +6,7 @@ from openfermion.ops import QubitOperator
 class BuilderTests(unittest.TestCase):
     def test_build_from_openfermion(self):
         print('\n')
-        trial_state = qforte.QuantumComputer(4)
+        trial_state = qforte.Computer(4)
 
         trial_prep = [None]*5
         trial_prep[0] = qforte.gate('H',0,0)

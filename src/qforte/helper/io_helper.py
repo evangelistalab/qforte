@@ -64,7 +64,7 @@ def smart_print(Inputobj, print_type='compact'):
                     print(control, end="")
             print(']')
 
-    if isinstance(Inputobj, qforte.QuantumComputer):
+    if isinstance(Inputobj, qforte.Computer):
         print('\n Quantum Computer:')
         print('\n'.join(Inputobj.str()))
 

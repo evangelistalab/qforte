@@ -66,7 +66,7 @@ class QITE(Algorithm):
         self._do_lanczos = do_lanczos
         self._lanczos_gap = lanczos_gap
 
-        qc_ref = qf.QuantumComputer(self._nqb)
+        qc_ref = qf.Computer(self._nqb)
         qc_ref.apply_circuit(self._Uprep)
         self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
 
@@ -186,7 +186,7 @@ class QITE(Algorithm):
 
         S = np.zeros((Idim, Idim), dtype=complex)
 
-        Ipsi_qc = qf.QuantumComputer(self._nqb)
+        Ipsi_qc = qf.Computer(self._nqb)
         Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
         # CI[I][J] = (σ_I Ψ)_J
         CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
@@ -214,7 +214,7 @@ class QITE(Algorithm):
 
         S = np.zeros((len(b_sparse),len(b_sparse)), dtype=complex)
 
-        Ipsi_qc = qf.QuantumComputer(self._nqb)
+        Ipsi_qc = qf.Computer(self._nqb)
         Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
         CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
 
@@ -241,7 +241,7 @@ class QITE(Algorithm):
 
         self._n_pauli_trm_measures += self._Nl * self._NI
 
-        Hpsi_qc = qf.QuantumComputer(self._nqb)
+        Hpsi_qc = qf.Computer(self._nqb)
         Hpsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
         Hpsi_qc.apply_operator(self._qb_ham)
         C_Hpsi_qc = copy.deepcopy(Hpsi_qc.get_coeff_vec())
@@ -299,7 +299,7 @@ class QITE(Algorithm):
 
     def evolve(self):
         self._Uqite.add(self._Uprep)
-        self._qc = qf.QuantumComputer(self._nqb)
+        self._qc = qf.Computer(self._nqb)
         self._qc.apply_circuit(self._Uqite)
 
         if(self._do_lanczos):
@@ -308,7 +308,7 @@ class QITE(Algorithm):
 
             self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
 
-            qcSig_temp = qf.QuantumComputer(self._nqb)
+            qcSig_temp = qf.Computer(self._nqb)
             qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
             qcSig_temp.apply_operator(self._qb_ham)
             self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
@@ -330,7 +330,7 @@ class QITE(Algorithm):
                 if(kb % self._lanczos_gap == 0):
                     self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
 
-                    qcSig_temp = qf.QuantumComputer(self._nqb)
+                    qcSig_temp = qf.Computer(self._nqb)
                     qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
                     qcSig_temp.apply_operator(self._qb_ham)
                     self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))

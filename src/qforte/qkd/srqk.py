@@ -195,7 +195,7 @@ class SRQK(QSD):
                 Um.add(expn_op1)
 
             # Compute U_m |φ>
-            QC = qforte.QuantumComputer(self._nqb)
+            QC = qforte.Computer(self._nqb)
             QC.apply_circuit(Um)
             QC.apply_constant(phase1)
             self._omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))

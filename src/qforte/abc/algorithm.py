@@ -230,7 +230,7 @@ class AnsatzAlgorithm(Algorithm):
             The state preparation circuit.
         """
         if self._fast:
-            myQC = qforte.QuantumComputer(self._nqb)
+            myQC = qforte.Computer(self._nqb)
             myQC.apply_circuit(Ucirc)
             val = np.real(myQC.direct_op_exp_val(self._qb_ham))
         else:

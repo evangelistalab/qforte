@@ -48,7 +48,7 @@ class Experiment(object):
 
         if(self.prepare_each_time_==False):
             #1 initialize a quantum computer
-            qc = qforte.QuantumComputer(self.n_qubits_)
+            qc = qforte.Computer(self.n_qubits_)
 
             #2 build/update generator with params
             # self.generator_.set_parameters(params)
@@ -82,7 +82,7 @@ class Experiment(object):
 
         if(self.prepare_each_time_==False):
             #1 initialize a quantum computer
-            qc = qforte.QuantumComputer(self.n_qubits_)
+            qc = qforte.Computer(self.n_qubits_)
 
             #2 build/update generator with params
             # self.generator_.set_parameters(params)

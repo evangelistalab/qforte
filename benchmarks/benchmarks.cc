@@ -21,7 +21,7 @@ QuantumCircuit qcirc_2qb_18;
 QuantumCircuit qcirc2_2qb_18;
 
 
-std::vector<QuantumComputer> computers;
+std::vector<Computer> computers;
 
 void prepare_circ(QuantumCircuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end; i++) {
@@ -57,46 +57,46 @@ void prepare_2q_circ2(QuantumCircuit& qcirc, size_t start, size_t end) {
     }
 }
 
-TEST_CASE("QuantumComputer_1qubit_gate_18qubits", "[benchmark]") {
+TEST_CASE("Computer_1qubit_gate_18qubits", "[benchmark]") {
 
     prepare_circ(qcirc_18, 0, 18);
     prepare_circ2(qcirc2_18, 0, 18);
 
-    QuantumComputer qc1_18(18);
+    Computer qc1_18(18);
     BENCHMARK("qc_18_apply_circuit_safe") { qc1_18.apply_circuit_safe(qcirc_18); };
 
-    // QuantumComputer qc2_18(18);
+    // Computer qc2_18(18);
     // BENCHMARK("qc_18_apply_circuit_fast") { qc2_18.apply_circuit_fast(qcirc_18); };
 
-    QuantumComputer qc3_18(18);
+    Computer qc3_18(18);
     BENCHMARK("qc_18_apply_circuit") { qc3_18.apply_circuit(qcirc_18); };
 
-    QuantumComputer qc4_18(18);
+    Computer qc4_18(18);
     BENCHMARK("qc_18_apply_circuit2_safe") { qc4_18.apply_circuit_safe(qcirc2_18); };
 
-    // QuantumComputer qc5_18(18);
+    // Computer qc5_18(18);
     // BENCHMARK("qc_18_apply_circuit2_fast") { qc5_18.apply_circuit_fast(qcirc2_18); };
 
-    QuantumComputer qc6_18(18);
+    Computer qc6_18(18);
     BENCHMARK("qc_18_apply_circuit2") { qc6_18.apply_circuit(qcirc2_18); };
 }
 
-TEST_CASE("QuantumComputer_2qubit_gate_18qubits", "[benchmark]") {
+TEST_CASE("Computer_2qubit_gate_18qubits", "[benchmark]") {
 
     prepare_2q_circ(qcirc_2qb_18, 0, 18);
     prepare_2q_circ2(qcirc2_2qb_18, 0, 18);
 
     // For qcirc_2qb_18 (many cX gates)
-    QuantumComputer qc1_18(18);
+    Computer qc1_18(18);
     BENCHMARK("qc_18_apply_2qb_circuit_safe") { qc1_18.apply_circuit_safe(qcirc_2qb_18); };
 
-    QuantumComputer qc3_18(18);
+    Computer qc3_18(18);
     BENCHMARK("qc_18_apply_2qb_circuit") { qc3_18.apply_circuit(qcirc_2qb_18); };
 
     // For qcirc2_2qb_18 (variety of gates)
-    QuantumComputer qc4_18(18);
+    Computer qc4_18(18);
     BENCHMARK("qc_18_apply_2qb_circuit2_safe") { qc4_18.apply_circuit_safe(qcirc2_2qb_18); };
 
-    QuantumComputer qc6_18(18);
+    Computer qc6_18(18);
     BENCHMARK("qc_18_apply_2qb_circuit2") { qc6_18.apply_circuit(qcirc2_2qb_18); };
 }

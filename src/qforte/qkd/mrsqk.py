@@ -313,7 +313,7 @@ class MRSQK(QSD):
                     expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
                     Um.add(expn_op1)
 
-                QC = qforte.QuantumComputer(self._nqb)
+                QC = qforte.Computer(self._nqb)
                 QC.apply_circuit(Um)
                 QC.apply_constant(phase1)
                 omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
@@ -373,7 +373,7 @@ class MRSQK(QSD):
                 if ref[j] == 1:
                     Un.add(qforte.gate('X', j, j))
 
-            QC = qforte.QuantumComputer(self._nqb)
+            QC = qforte.Computer(self._nqb)
             QC.apply_circuit(Un)
             omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
@@ -461,7 +461,7 @@ class MRSQK(QSD):
                     expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
                     Um.add(expn_op1)
 
-                QC = qforte.QuantumComputer(self._nqb)
+                QC = qforte.Computer(self._nqb)
                 state_prep_lst = []
                 for term in ref:
                     coeff = term[0]

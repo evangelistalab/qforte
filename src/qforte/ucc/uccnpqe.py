@@ -247,7 +247,7 @@ class UCCNPQE(UCCPQE):
         if U_phase != 1.0 + 0.0j:
             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
 
-        qc_res = qforte.QuantumComputer(self._nqb)
+        qc_res = qforte.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
         qc_res.apply_circuit(U)
         qc_res.apply_operator(self._qb_ham)
@@ -306,7 +306,7 @@ class UCCNPQE(UCCPQE):
             I = excited_det.add()
 
             # 3. Compute the phase of the operator, relative to its determinant.
-            qc_temp = qforte.QuantumComputer(self._nqb)
+            qc_temp = qforte.Computer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
             qc_temp.apply_operator(sq_op.jw_transform())
             phase_factor = qc_temp.get_coeff_vec()[I]
@@ -352,12 +352,12 @@ class UCCNPQE(UCCPQE):
 
         print('\nBuilding single particle energies list:')
         print('---------------------------------------')
-        qc = qforte.QuantumComputer(self._nqb)
+        qc = qforte.Computer(self._nqb)
         qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
         E0 = qc.direct_op_exp_val(self._qb_ham)
 
         for i in range(self._nqb):
-            qc = qforte.QuantumComputer(self._nqb)
+            qc = qforte.Computer(self._nqb)
             qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
             qc.apply_gate(qforte.gate('X', i, i))
             Ei = qc.direct_op_exp_val(self._qb_ham)

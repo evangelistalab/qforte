@@ -54,7 +54,7 @@ class QPE(Algorithm):
         # add reverse QFT
         self._Uqpe.add(self.get_qft_circuit('reverse'))
 
-        computer = qforte.QuantumComputer(self._n_tot_qubits)
+        computer = qforte.Computer(self._n_tot_qubits)
         computer.apply_circuit(self._Uqpe)
 
         self._n_cnot = self._Uqpe.get_num_cnots()
