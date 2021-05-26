@@ -60,7 +60,7 @@ class QITE(Algorithm):
         self._x_thresh = x_thresh
 
         self._n_classical_params = 0
-        self._n_cnot = 0
+        self._n_cnot = self._Uprep.get_num_cnots()
         self._n_pauli_trm_measures = 0
 
         self._do_lanczos = do_lanczos
@@ -105,7 +105,7 @@ class QITE(Algorithm):
         # General algorithm options.
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
-        print('Trial state preparation method:          ',  self._trial_state_type)
+        print('Trial state preparation method:          ',  self._state_prep_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
         print('Use fast version of algorithm:           ',  str(self._fast))

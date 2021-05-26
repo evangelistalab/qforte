@@ -41,6 +41,9 @@ class UCCNPQE(UCCPQE):
             diis_maxiter = 40,
             noise_factor = 0.0):
 
+        if(self._state_prep_type != 'occupation_list'):
+            raise ValueError("PQE implementation can only handle occupation_list Hartree-Fock reference.")
+
         self._pool_type = pool_type
         self._res_vec_thresh = res_vec_thresh
         self._diis_maxiter = diis_maxiter
@@ -109,7 +112,7 @@ class UCCNPQE(UCCPQE):
         print('---------------------------------------------------------')
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
-        print('Trial state preparation method:          ',  self._trial_state_type)
+        print('Trial state preparation method:          ',  self._state_prep_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
         print('Use fast version of algorithm:           ',  str(self._fast))
@@ -302,7 +305,7 @@ class UCCNPQE(UCCPQE):
 
             I = excited_det.add()
 
-            # 3. Compute the phase of the operator, relative to its determinant. 
+            # 3. Compute the phase of the operator, relative to its determinant.
             qc_temp = qforte.QuantumComputer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
             qc_temp.apply_operator(sq_op.jw_transform())
@@ -350,12 +353,12 @@ class UCCNPQE(UCCPQE):
         print('\nBuilding single particle energies list:')
         print('---------------------------------------')
         qc = qforte.QuantumComputer(self._nqb)
-        qc.apply_circuit(build_Uprep(self._ref, 'reference'))
+        qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
         E0 = qc.direct_op_exp_val(self._qb_ham)
 
         for i in range(self._nqb):
             qc = qforte.QuantumComputer(self._nqb)
-            qc.apply_circuit(build_Uprep(self._ref, 'reference'))
+            qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
             qc.apply_gate(qforte.gate('X', i, i))
             Ei = qc.direct_op_exp_val(self._qb_ham)
 
@@ -371,4 +374,3 @@ class UCCNPQE(UCCPQE):
         for l in range(len(self._pool)):
             self._tops.append(l)
             self._tamps.append(0.0)
-

@@ -28,6 +28,9 @@ class SPQE(UCCPQE):
             diis_maxiter = 30,
             use_cumulative_thresh=True):
 
+        if(self._state_prep_type != 'occupation_list'):
+            raise ValueError("SPQE implementation can only handle occupation_list Hartree-Fock reference.")
+
         self._spqe_thresh = spqe_thresh
         self._spqe_maxiter = spqe_maxiter
         self._dt = dt
@@ -157,7 +160,7 @@ class SPQE(UCCPQE):
         print('---------------------------------------------------------')
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
-        print('Trial state preparation method:          ',  self._trial_state_type)
+        print('Trial state preparation method:          ',  self._state_prep_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
         print('Use fast version of algorithm:           ',  str(self._fast))
@@ -377,12 +380,12 @@ class SPQE(UCCPQE):
         print('\nBuilding single particle energies list:')
         print('---------------------------------------')
         qc = qforte.QuantumComputer(self._nqb)
-        qc.apply_circuit(build_Uprep(self._ref, 'reference'))
+        qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
         E0 = qc.direct_op_exp_val(self._qb_ham)
 
         for i in range(self._nqb):
             qc = qforte.QuantumComputer(self._nqb)
-            qc.apply_circuit(build_Uprep(self._ref, 'reference'))
+            qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
             qc.apply_gate(qforte.gate('X', i, i))
             Ei = qc.direct_op_exp_val(self._qb_ham)
 

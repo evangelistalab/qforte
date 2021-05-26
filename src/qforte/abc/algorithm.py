@@ -53,7 +53,7 @@ class Algorithm(ABC):
     def __init__(self,
                  system,
                  reference=None,
-                 trial_state_type='reference',
+                 state_prep_type='occupation_list',
                  trotter_order=1,
                  trotter_number=1,
                  fast=True,
@@ -61,15 +61,30 @@ class Algorithm(ABC):
                  print_summary_file=False):
 
         self._sys = system
-        if(reference==None):
+        self._state_prep_type = state_prep_type
+
+        if self._state_prep_type == 'occupation_list':
+            if(reference==None):
+                self._ref = system.get_hf_reference()
+            else:
+                if not (isinstance(reference, list)):
+                    raise ValueError("occupation_list reference must be list of 1s and 0s.")
+                self._ref = reference
+
+            self._Uprep = build_Uprep(self._ref, state_prep_type)
+
+        elif self._state_prep_type == 'unitary_circ':
+            if not isinstance(reference, qf.QuantumCircuit):
+                raise ValueError("unitary_circ reference must be a QuantumCircuit.")
+
             self._ref = system.get_hf_reference()
+            self._Uprep = reference
+
         else:
-            self._ref = reference
+            raise ValueError("QForte only suppors references as occupation lists and QuantumCircuits.")
+
 
         self._nqb = len(self._ref)
-        self._trial_state_type = trial_state_type
-        self._Uprep = build_Uprep(self._ref, trial_state_type)
-        # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonian()
         self._qb_ham = system.get_hamiltonian()
         if self._qb_ham.num_qubits() != self._nqb:
             raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
