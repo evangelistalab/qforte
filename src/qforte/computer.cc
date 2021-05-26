@@ -13,7 +13,7 @@
 #include "quantum_op_pool.h"
 #include "timer.h"
 
-#include "quantum_computer.h"
+#include "computer.h"
 
 #if defined(_OPENMP)
 #include <omp.h>

@@ -1,5 +1,5 @@
-#ifndef _quantum_computer_h_
-#define _quantum_computer_h_
+#ifndef _computer_h_
+#define _computer_h_
 
 #include <string>
 #include <vector>
@@ -165,4 +165,4 @@ class Computer {
     void apply_2qubit_gate(const QuantumGate& qg);
 };
 
-#endif // _quantum_computer_h_
+#endif // _computer_h_

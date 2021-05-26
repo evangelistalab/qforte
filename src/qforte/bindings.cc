@@ -7,7 +7,7 @@
 #include "quantum_basis.h"
 #include "quantum_circuit.h"
 #include "quantum_gate.h"
-#include "quantum_computer.h"
+#include "computer.h"
 #include "quantum_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
