@@ -12,14 +12,25 @@ class QuantumGate;
 class QuantumOperator;
 
 class SQOperator {
-    /* A SQOperator is a linear combination (over C) of vaccuum-normal, particle-conserving
-     * products of fermionic second quantized operators.
+    /* A SQOperator is a linear combination (over C) of vaccuum-normal products of fermionic
+     * second quantized operators.
+     * The significance of the linear combination is context-dependent, but it should refer
+     * to a "basis combination" in some sense, i.e., antihermitian combination for UCC,
+     * spin-adapted combination for closed-shell systems, a single operator for traditional CC.
+     *
+     * All storage, printing, and input of summands in the combination takes tuples of the following form:
+     * (1) coefficient
+     * (2) vector of orbital-indices of creation operators
+     * (3) vector of orbital-indices of annihilation operators,
+     * All orbital indices start at zero.
+     * Index vectors are lexicographic, i.e., std::tuple<1, {p, q}, {s, r}> means 1 * p^ q^ s r.
      */
   public:
     /// default constructor: creates an empty second quantized operator
     SQOperator() {}
 
-    /// add one product of annihilators and/or creators to the second quantized operator
+    /// add one product of annihilators and/or creators to this second quantized operator
+    /// Input is required in the same format as storage. See terms_ for details.
     void add_term(std::complex<double> coeff, const std::vector<size_t>& cre_ops, const std::vector<size_t>& ann_ops);
 
     /// add an second quantized operator to the second quantized operator
@@ -52,13 +63,11 @@ class SQOperator {
     std::string str() const;
 
   private:
-    /// The linear combination of second quantized operators. Stored in pairs of
-    /// coefficients, and then a vector of N created indices, followed by N annihilated indices.
-    /// Orbital indices start at zero.
+    /// The linear combination of second quantized operators. Stored as a tuple of
     std::vector<std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>> terms_;
 
     /// Calculate the parity of permutation p
-    bool permutive_sign_change(std::vector<int> p) const;
+    bool permutation_phase(std::vector<int> p) const;
 
     int canonicalize_helper(std::vector<size_t>& op_list) const;
 

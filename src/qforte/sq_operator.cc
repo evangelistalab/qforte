@@ -49,7 +49,7 @@ int SQOperator::canonicalize_helper(std::vector<size_t>& op_list) const {
         for (int i = 0; i < length; i++) {
             op_list[i] = temp_op[temp[i]];
         }
-        return (permutive_sign_change(temp)) ? -1 : 1;
+        return (permutation_phase(temp)) ? -1 : 1;
     }
 
 }
@@ -84,7 +84,7 @@ void SQOperator::simplify() {
     }
 }
 
-bool SQOperator::permutive_sign_change(std::vector<int> p) const {
+bool SQOperator::permutation_phase(std::vector<int> p) const {
     std::vector<int> a(p.size());
     std::iota (std::begin(a), std::end(a), 0);
     size_t cnt = 0;
