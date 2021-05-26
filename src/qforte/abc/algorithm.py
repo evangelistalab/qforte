@@ -85,8 +85,6 @@ class Algorithm(ABC):
 
 
         self._nqb = len(self._ref)
-
-        # TODO (Nick): change Molecule.get_hamiltonian() to Molecule.get_qb_hamiltonian()
         self._qb_ham = system.get_hamiltonian()
         if self._qb_ham.num_qubits() != self._nqb:
             raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
