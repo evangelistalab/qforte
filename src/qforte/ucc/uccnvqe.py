@@ -207,7 +207,6 @@ class UCCNVQE(UCCVQE):
         self._grad_m_evals = 0
 
         self._curr_grad_norm = 0.0
-        # self._prev_energy = self._hf_energy
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
