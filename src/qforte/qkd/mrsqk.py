@@ -467,7 +467,7 @@ class MRSQK(QSD):
                     coeff = term[0]
                     det = term[1]
                     idx = ref_to_basis_idx(det)
-                    state = qforte.QuantumBasis(idx)
+                    state = qforte.Basis(idx)
                     state_prep_lst.append( (state, coeff) )
 
                 QC.set_state(state_prep_lst)
@@ -640,7 +640,7 @@ class MRSQK(QSD):
             print('index                     determinant  ')
             print('----------------------------------------')
             for i, idx in enumerate(true_idx_lst):
-                basis = qforte.QuantumBasis(idx)
+                basis = qforte.Basis(idx)
                 print('  ', i+1, '                ', basis.str(self._nqb))
 
         else:
@@ -648,7 +648,7 @@ class MRSQK(QSD):
             print('index                     determinant  ')
             print('----------------------------------------')
             for i, idx in enumerate(idx_lst):
-                basis = qforte.QuantumBasis(idx)
+                basis = qforte.Basis(idx)
                 print('  ', i+1, '                ', basis.str(self._nqb))
 
         for idx in true_idx_lst:
@@ -796,7 +796,7 @@ class MRSQK(QSD):
         print('----------------------------------------')
         for i, det in enumerate(self._pre_sa_ref_lst):
             qf_det_idx = ref_to_basis_idx(det)
-            basis = qforte.QuantumBasis(qf_det_idx)
+            basis = qforte.Basis(qf_det_idx)
             if(target_state[i] > 0.0):
                 print('   ', round(target_state[i], 4), '                ', basis.str(self._nqb))
             else:
@@ -827,7 +827,7 @@ class MRSQK(QSD):
                 basis_vec.append( temp )
 
                 qf_det_idx = ref_to_basis_idx(temp[1])
-                basis = qforte.QuantumBasis(qf_det_idx)
+                basis = qforte.Basis(qf_det_idx)
                 if(temp[0] > 0.0):
                     print('   ', round(temp[0], 4), '     ', basis.str(self._nqb))
                 else:

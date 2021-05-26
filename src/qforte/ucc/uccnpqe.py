@@ -280,7 +280,7 @@ class UCCNPQE(UCCPQE):
             # `destroyed` exists solely for error catching.
             destroyed = False
 
-            excited_det = qforte.QuantumBasis(self._nqb)
+            excited_det = qforte.Basis(self._nqb)
             for k, occ in enumerate(self._ref):
                 excited_det.set_bit(k, occ)
 

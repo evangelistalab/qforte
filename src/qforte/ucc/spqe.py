@@ -301,7 +301,7 @@ class SPQE(UCCPQE):
             destroyed = False
             denom = 1.0
 
-            basis_I = qforte.QuantumBasis(self._nqb)
+            basis_I = qforte.Basis(self._nqb)
             for k, occ in enumerate(self._ref):
                 basis_I.set_bit(k, occ)
 
@@ -562,7 +562,7 @@ class SPQE(UCCPQE):
         # TODO(Nick): incorparate more flexability into this
         na_el = int(nel/2);
         nb_el = int(nel/2);
-        basis_I = qf.QuantumBasis(I)
+        basis_I = qf.Basis(I)
 
         nbody = 0
         pn = 0
@@ -630,7 +630,7 @@ class SPQE(UCCPQE):
         # TODO(Nick): incorparate more flexability into this
         na_el = int(nel/2);
         nb_el = int(nel/2);
-        basis_I = qf.QuantumBasis(I)
+        basis_I = qf.Basis(I)
 
         nbody = 0
         pn = 0

@@ -4,7 +4,7 @@ from qforte import qforte
 
 # this function creates a Basis object from a string representation
 def make_basis(str):
-    return qforte.QuantumBasis(int(str[::-1], 2))
+    return qforte.Basis(int(str[::-1], 2))
 
 class GatesTests(unittest.TestCase):
     def test_X_gate(self):

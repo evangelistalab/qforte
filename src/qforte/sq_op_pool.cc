@@ -6,7 +6,7 @@
 #include "quantum_op_pool.h"
 #include "sq_op_pool.h"
 
-#include "quantum_basis.h"
+#include "basis.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -277,7 +277,7 @@ void SQOpPool::fill_pool(std::string pool_type){
         for (int I=0; I<std::pow(2, nqb); I++) {
 
             // get the basis state (I) | 11001100 > or whatever..
-            QuantumBasis basis_I(I);
+            Basis basis_I(I);
 
             int nbody = 0;
             int pn = 0;

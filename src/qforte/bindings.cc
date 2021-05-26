@@ -4,7 +4,7 @@
 
 #include "fmt/format.h"
 
-#include "quantum_basis.h"
+#include "basis.h"
 #include "quantum_circuit.h"
 #include "quantum_gate.h"
 #include "computer.h"
@@ -101,15 +101,15 @@ PYBIND11_MODULE(qforte, m) {
         .def("__str__", &QuantumOpPool::str)
         .def("__repr__", &QuantumOpPool::str);
 
-    py::class_<QuantumBasis>(m, "QuantumBasis")
+    py::class_<Basis>(m, "Basis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
-        .def("str", &QuantumBasis::str)
-        .def("__str__", &QuantumBasis::str)
-        .def("__repr__", &QuantumBasis::str)
-        .def("flip_bit", &QuantumBasis::flip_bit)
-        .def("set_bit", &QuantumBasis::set_bit)
-        .def("add", &QuantumBasis::add)
-        .def("get_bit", &QuantumBasis::get_bit);
+        .def("str", &Basis::str)
+        .def("__str__", &Basis::str)
+        .def("__repr__", &Basis::str)
+        .def("flip_bit", &Basis::flip_bit)
+        .def("set_bit", &Basis::set_bit)
+        .def("add", &Basis::add)
+        .def("get_bit", &Basis::get_bit);
 
     py::class_<Computer>(m, "Computer")
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")

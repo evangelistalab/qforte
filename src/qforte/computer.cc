@@ -6,7 +6,7 @@
 
 #include "fmt/format.h"
 
-#include "quantum_basis.h"
+#include "basis.h"
 #include "quantum_circuit.h"
 #include "quantum_gate.h"
 #include "quantum_operator.h"
@@ -25,20 +25,20 @@ extern const bool parallelism_enabled = false;
 
 Computer::Computer(int nqubit) : nqubit_(nqubit) {
     nbasis_ = std::pow(2, nqubit_);
-    basis_.assign(nbasis_, QuantumBasis());
+    basis_.assign(nbasis_, Basis());
     coeff_.assign(nbasis_, 0.0);
     new_coeff_.assign(nbasis_, 0.0);
     for (size_t i = 0; i < nbasis_; i++) {
-        basis_[i] = QuantumBasis(i);
+        basis_[i] = Basis(i);
     }
     coeff_[0] = 1.;
 }
 
-std::complex<double> Computer::coeff(const QuantumBasis& basis) {
+std::complex<double> Computer::coeff(const Basis& basis) {
     return coeff_[basis.add()];
 }
 
-void Computer::set_state(std::vector<std::pair<QuantumBasis, double_c>> state) {
+void Computer::set_state(std::vector<std::pair<Basis, double_c>> state) {
     std::fill(coeff_.begin(), coeff_.end(), 0.0);
     for (const auto& basis_c : state) {
         coeff_[basis_c.first.add()] = basis_c.second;
@@ -297,9 +297,9 @@ void Computer::apply_1qubit_gate_safe(const QuantumGate& qg) {
         for (size_t j = 0; j < 2; j++) {
             auto op_i_j = gate[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
-                for (const QuantumBasis& basis_J : basis_) {
+                for (const Basis& basis_J : basis_) {
                     if (basis_J.get_bit(target) == j) {
-                        QuantumBasis basis_I = basis_J;
+                        Basis basis_I = basis_J;
                         basis_I.set_bit(target, i);
                         new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
                     }
@@ -413,9 +413,9 @@ void Computer::apply_2qubit_gate_safe(const QuantumGate& qg) {
             auto op_i_j = gate[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
                 // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
-                for (const QuantumBasis& basis_J : basis_) {
+                for (const Basis& basis_J : basis_) {
                     if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
-                        QuantumBasis basis_I = basis_J;
+                        Basis basis_I = basis_J;
                         basis_I.set_bit(control, i_c);
                         basis_I.set_bit(target, i_t);
                         new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
@@ -701,9 +701,9 @@ void Computer::apply_2qubit_gate(const QuantumGate& qg) {
                 auto op_i_j = gate[i][j];
                 if (std::abs(op_i_j) > compute_threshold_) {
                     // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
-                    for (const QuantumBasis& basis_J : basis_) {
+                    for (const Basis& basis_J : basis_) {
                         if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
-                            QuantumBasis basis_I = basis_J;
+                            Basis basis_I = basis_J;
                             basis_I.set_bit(control, i_c);
                             basis_I.set_bit(target, i_t);
                             new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
@@ -893,7 +893,7 @@ std::pair< int, std::complex<double> > Computer::get_pauli_permuted_idx(
     const std::vector<int>& z_idxs
     ) {
 
-    QuantumBasis basis_I(I);
+    Basis basis_I(I);
     std::complex<double> val = 1.0;
     std::complex<double> onei(0.0, 1.0);
 
