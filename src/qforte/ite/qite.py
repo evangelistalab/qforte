@@ -32,7 +32,7 @@ class QITE(Algorithm):
         How many QITE steps should be taken?
     _NI : int
         The number of operators in _sig.
-    _sig : QuantumOpPool
+    _sig : QubitOpPool
         The basis of operators allowed in a unitary evolution step.
     _sparseSb : bool
     _total_phase : complex
@@ -136,7 +136,7 @@ class QITE(Algorithm):
 
     def build_expansion_pool(self):
         print('\n==> Building expansion pool <==')
-        self._sig = qf.QuantumOpPool()
+        self._sig = qf.QubitOpPool()
 
         if(self._expansion_type == 'complete_qubit'):
             if (self._nqb > 6):

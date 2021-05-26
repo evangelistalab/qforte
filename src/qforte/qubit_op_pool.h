@@ -1,5 +1,5 @@
-#ifndef _quantum_op_pool_h_
-#define _quantum_op_pool_h_
+#ifndef _qubit_op_pool_h_
+#define _qubit_op_pool_h_
 
 #include <complex>
 #include <string>
@@ -9,13 +9,13 @@ class Gate;
 class SQOperator;
 class QubitOperator;
 
-class QuantumOpPool {
-    /* A QuantumOpPool is a set of QubitOperators, equipped with utility functions for
+class QubitOpPool {
+    /* A QubitOpPool is a set of QubitOperators, equipped with utility functions for
      * common operations on these objects.
      */
   public:
     /// default constructor: creates an empty second quantized operator pool
-    QuantumOpPool() {}
+    QubitOpPool() {}
 
     /// set all the terms of the QubitOperator from a vector of QubitOperators
     void set_terms(std::vector<std::pair<std::complex<double>, QubitOperator>>& new_terms);
@@ -69,4 +69,4 @@ class QuantumOpPool {
 
 };
 
-#endif // _quantum_op_pool_h_
+#endif // _qubit_op_pool_h_

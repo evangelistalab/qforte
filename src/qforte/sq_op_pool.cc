@@ -3,7 +3,7 @@
 #include "circuit.h"
 #include "qubit_operator.h"
 #include "sq_operator.h"
-#include "quantum_op_pool.h"
+#include "qubit_op_pool.h"
 #include "sq_op_pool.h"
 
 #include "basis.h"
@@ -50,8 +50,8 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref){
     nvir_ = static_cast<int>(norb - nocc_);
 }
 
-QuantumOpPool SQOpPool::get_quantum_op_pool(){
-    QuantumOpPool A;
+QubitOpPool SQOpPool::get_qubit_op_pool(){
+    QubitOpPool A;
     for (auto& term : terms_) {
         // QubitOperator a = term.second.jw_transform();
         // a.mult_coeffs(term.first);

@@ -23,7 +23,7 @@ class UCCVQE(VQE, UCC):
 
     def fill_commutator_pool(self):
         print('\n\n==> Building commutator pool for gradient measurement.')
-        self._commutator_pool = self._pool_obj.get_quantum_op_pool()
+        self._commutator_pool = self._pool_obj.get_qubit_op_pool()
         self._commutator_pool.join_as_commutator(self._qb_ham)
         print('==> Commutator pool construction complete.')
 
@@ -31,7 +31,7 @@ class UCCVQE(VQE, UCC):
         """
         Parameters
         ----------
-        operators : QuantumOpPool
+        operators : QubitOpPool
             All operators to be measured
 
         Ucirc : Circuit
@@ -61,7 +61,7 @@ class UCCVQE(VQE, UCC):
         """
         Parameters
         ----------
-        HAm : QuantumOpPool
+        HAm : QubitOpPool
             The commutator to measure.
 
         Ucirc : Circuit

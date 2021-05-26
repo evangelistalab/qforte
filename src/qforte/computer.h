@@ -16,7 +16,7 @@ class Gate;
 class Basis;
 class Circuit;
 class QubitOperator;
-class QuantumOpPool;
+class QubitOpPool;
 
 class Computer {
   public:
@@ -58,15 +58,15 @@ class Computer {
     double perfect_measure_circuit(const Circuit& qc);
 
     /// Measure expectation value of all operators in an operator pool
-    std::vector<std::complex<double>> direct_oppl_exp_val(const QuantumOpPool& qopl);
+    std::vector<std::complex<double>> direct_oppl_exp_val(const QubitOpPool& qopl);
 
     /// measure expectation value for specific operators in an operator pool
-    std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QuantumOpPool& qopl, const std::vector<int>& idxs);
+    std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QubitOpPool& qopl, const std::vector<int>& idxs);
 
     /// measure expectaion value of all operators in an operator pool, where the
     /// operator coefficents have been multipild by mults
     std::vector<std::complex<double>> direct_oppl_exp_val_w_mults(
-        const QuantumOpPool& qopl,
+        const QubitOpPool& qopl,
         const std::vector<std::complex<double>>& mults);
 
     /// get the expectation value of the sum of many circuits directly

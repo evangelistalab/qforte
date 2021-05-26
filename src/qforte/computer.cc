@@ -10,7 +10,7 @@
 #include "circuit.h"
 #include "gate.h"
 #include "qubit_operator.h"
-#include "quantum_op_pool.h"
+#include "qubit_op_pool.h"
 #include "timer.h"
 
 #include "computer.h"
@@ -743,7 +743,7 @@ std::complex<double> Computer::direct_op_exp_val(const QubitOperator& qo) {
 }
 
 std::vector<std::complex<double>> Computer::direct_oppl_exp_val(
-    const QuantumOpPool& qopl) {
+    const QubitOpPool& qopl) {
 
     std::vector<std::complex<double>> results;
 
@@ -755,7 +755,7 @@ std::vector<std::complex<double>> Computer::direct_oppl_exp_val(
 }
 
 std::vector<std::complex<double>> Computer::direct_idxd_oppl_exp_val(
-    const QuantumOpPool& qopl, const std::vector<int>& idxs) {
+    const QubitOpPool& qopl, const std::vector<int>& idxs) {
 
     std::vector<std::complex<double>> results;
     if(parallelism_enabled){
@@ -781,7 +781,7 @@ std::vector<std::complex<double>> Computer::direct_idxd_oppl_exp_val(
 }
 
 std::vector<std::complex<double>> Computer::direct_oppl_exp_val_w_mults(
-    const QuantumOpPool& qopl,
+    const QubitOpPool& qopl,
     const std::vector<std::complex<double>>& mults) {
 
     std::vector<std::complex<double>> results;

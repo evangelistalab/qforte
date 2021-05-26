@@ -11,7 +11,7 @@
 #include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
-#include "quantum_op_pool.h"
+#include "qubit_op_pool.h"
 #include "timer.h"
 
 namespace py = pybind11;
@@ -56,7 +56,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_coeffs", &SQOpPool::set_coeffs)
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
-        .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
+        .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool)
         .def("get_qubit_operator", &SQOpPool::get_qubit_operator, py::arg("order_type"),
              py::arg("combine_like_terms") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
@@ -83,23 +83,23 @@ PYBIND11_MODULE(qforte, m) {
         .def("__str__", &QubitOperator::str)
         .def("__repr__", &QubitOperator::str);
 
-    py::class_<QuantumOpPool>(m, "QuantumOpPool")
+    py::class_<QubitOpPool>(m, "QubitOpPool")
         .def(py::init<>())
-        .def("add", &QuantumOpPool::add_term)
-        .def("add_term", &QuantumOpPool::add_term)
-        .def("set_coeffs", &QuantumOpPool::set_coeffs)
-        .def("set_op_coeffs", &QuantumOpPool::set_op_coeffs)
-        .def("set_terms", &QuantumOpPool::set_terms)
-        .def("terms", &QuantumOpPool::terms)
-        .def("join_op_from_right_lazy", &QuantumOpPool::join_op_from_right_lazy)
-        .def("join_op_from_right", &QuantumOpPool::join_op_from_right)
-        .def("join_op_from_left", &QuantumOpPool::join_op_from_left)
-        .def("join_as_commutator", &QuantumOpPool::join_as_commutator)
-        .def("square", &QuantumOpPool::square)
-        .def("fill_pool", &QuantumOpPool::fill_pool)
-        .def("str", &QuantumOpPool::str)
-        .def("__str__", &QuantumOpPool::str)
-        .def("__repr__", &QuantumOpPool::str);
+        .def("add", &QubitOpPool::add_term)
+        .def("add_term", &QubitOpPool::add_term)
+        .def("set_coeffs", &QubitOpPool::set_coeffs)
+        .def("set_op_coeffs", &QubitOpPool::set_op_coeffs)
+        .def("set_terms", &QubitOpPool::set_terms)
+        .def("terms", &QubitOpPool::terms)
+        .def("join_op_from_right_lazy", &QubitOpPool::join_op_from_right_lazy)
+        .def("join_op_from_right", &QubitOpPool::join_op_from_right)
+        .def("join_op_from_left", &QubitOpPool::join_op_from_left)
+        .def("join_as_commutator", &QubitOpPool::join_as_commutator)
+        .def("square", &QubitOpPool::square)
+        .def("fill_pool", &QubitOpPool::fill_pool)
+        .def("str", &QubitOpPool::str)
+        .def("__str__", &QubitOpPool::str)
+        .def("__repr__", &QubitOpPool::str);
 
     py::class_<Basis>(m, "Basis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")

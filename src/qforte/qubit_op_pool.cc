@@ -4,17 +4,17 @@
 #include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
-#include "quantum_op_pool.h"
+#include "qubit_op_pool.h"
 
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
 
-void QuantumOpPool::add_term(std::complex<double> coeff, const QubitOperator& sq_op ){
+void QubitOpPool::add_term(std::complex<double> coeff, const QubitOperator& sq_op ){
     terms_.push_back(std::make_pair(coeff, sq_op));
 }
 
-void QuantumOpPool::set_coeffs(const std::vector<std::complex<double>>& new_coeffs){
+void QubitOpPool::set_coeffs(const std::vector<std::complex<double>>& new_coeffs){
     if(new_coeffs.size() != terms_.size()){
         throw std::invalid_argument( "Number of new coefficients for quantum op pool must equal number of terms in pool." );
     }
@@ -23,7 +23,7 @@ void QuantumOpPool::set_coeffs(const std::vector<std::complex<double>>& new_coef
     }
 }
 
-void QuantumOpPool::set_op_coeffs(const std::vector<std::complex<double>>& new_coeffs){
+void QubitOpPool::set_op_coeffs(const std::vector<std::complex<double>>& new_coeffs){
     for (size_t I = 0; I < terms_.size(); I++){
         if(new_coeffs.size() != terms_[I].second.terms().size()){
             throw std::invalid_argument( "Number of new coeficients for quantum operator must equal number of terim in operator." );
@@ -32,18 +32,18 @@ void QuantumOpPool::set_op_coeffs(const std::vector<std::complex<double>>& new_c
     }
 }
 
-void QuantumOpPool::set_terms(std::vector<std::pair<std::complex<double>, QubitOperator>>& new_terms) {
+void QubitOpPool::set_terms(std::vector<std::pair<std::complex<double>, QubitOperator>>& new_terms) {
     // TODO: consider clearing terms_ when this fuction is called
     for(const auto& term : new_terms){
         terms_.push_back(term);
     }
 }
 
-const std::vector<std::pair<std::complex<double>, QubitOperator>>& QuantumOpPool::terms() const{
+const std::vector<std::pair<std::complex<double>, QubitOperator>>& QubitOpPool::terms() const{
     return terms_;
 }
 
-void QuantumOpPool::square(bool upper_triangle_only){
+void QubitOpPool::square(bool upper_triangle_only){
     std::vector<std::pair<std::complex<double>, QubitOperator>> temp_terms;
     if(upper_triangle_only){
         //consider only I -> IJ, where J > I
@@ -75,20 +75,20 @@ void QuantumOpPool::square(bool upper_triangle_only){
     terms_ = std::move(temp_terms);
 }
 
-void QuantumOpPool::join_op_from_right(const QubitOperator& q_op){
+void QubitOpPool::join_op_from_right(const QubitOperator& q_op){
     for (auto& term : terms_) {
         term.second.operator_product(q_op, false);
         term.second.simplify();
     }
 }
 
-void QuantumOpPool::join_op_from_right_lazy(const QubitOperator& q_op){
+void QubitOpPool::join_op_from_right_lazy(const QubitOperator& q_op){
     for (auto& term : terms_) {
         term.second.operator_product(q_op, false, false);
     }
 }
 
-void QuantumOpPool::join_op_from_left(const QubitOperator& q_op){
+void QubitOpPool::join_op_from_left(const QubitOperator& q_op){
     std::vector<std::pair<std::complex<double>, QubitOperator>> temp_terms;
     for (const auto& term : terms_) {
         QubitOperator temp_op;
@@ -100,7 +100,7 @@ void QuantumOpPool::join_op_from_left(const QubitOperator& q_op){
     terms_ = std::move(temp_terms);
 }
 
-void QuantumOpPool::join_as_commutator(const QubitOperator& q_op){
+void QubitOpPool::join_as_commutator(const QubitOperator& q_op){
     std::vector<std::pair<std::complex<double>, QubitOperator>> temp_terms;
     for (const auto& term : terms_) {
         // build HAm
@@ -121,7 +121,7 @@ void QuantumOpPool::join_as_commutator(const QubitOperator& q_op){
     terms_ = std::move(temp_terms);
 }
 
-void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref){
+void QubitOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref){
     if(pool_type == "test"){
         QubitOperator A1;
         QubitOperator A2;
@@ -250,7 +250,7 @@ void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref
     }
 }
 
-std::string QuantumOpPool::str() const{
+std::string QubitOpPool::str() const{
     std::vector<std::string> s;
     s.push_back("");
     int counter = 0;
@@ -268,7 +268,7 @@ std::string QuantumOpPool::str() const{
     return join(s, " ");
 }
 
-std::string QuantumOpPool::to_base4(int I){
+std::string QubitOpPool::to_base4(int I){
     std::string convert_str = "0123456789";
     if (I < 4){
         return convert_str.substr(I, 1);
@@ -277,7 +277,7 @@ std::string QuantumOpPool::to_base4(int I){
     }
 }
 
-std::string QuantumOpPool::pauli_idx_str(std::string I_str, int nqb){
+std::string QubitOpPool::pauli_idx_str(std::string I_str, int nqb){
     std::string res;
     for(int i=0; i<nqb-I_str.length(); i++){
         res.append("0");
