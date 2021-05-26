@@ -36,7 +36,7 @@ class CircuitReferenceTest(unittest.TestCase):
 
         ref_circ = alg.build_Uvqc()
 
-        alg2 = SRQK(mol, reference=ref_circ, state_prep_type='unitary_circ', trotter_number=100)
+        alg2 = SRQK(mol, reference=ref_circ, state_prep_type='unitary_circ', trotter_number=150)
         alg2.run(dt=1.0, s=12)
 
         Egs = alg2.get_gs_energy()
