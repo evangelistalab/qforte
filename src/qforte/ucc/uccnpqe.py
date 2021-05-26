@@ -254,25 +254,26 @@ class UCCNPQE(UCCPQE):
         residuals = []
 
         for m in self._tops:
-
             # 1. Identify the excitation operator
             sq_op = self._pool[m][1]
             # occ => i,j,k,...
             # vir => a,b,c,...
             # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
 
-            temp_idx = sq_op.terms()[0][1][-1]
+            temp_idx = sq_op.terms()[0][2][-1]
             # TODO: This code assumes that the first N orbitals are occupied, and the others are virtual.
             # Use some other mechanism to identify the occupied orbitals, so we can use use PQE on excited
             # determinants.
             if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
-                sq_ex_op = sq_op.terms()[0][1]
+                sq_creators = sq_op.terms()[0][1]
+                sq_annihilators = sq_op.terms()[0][2]
             else:
-                sq_ex_op = sq_op.terms()[1][1]
+                sq_creators = sq_op.terms()[0][2]
+                sq_annihilators = sq_op.terms()[0][1]
 
             # 2. Get the bit representation of the sq_ex_op acting on the reference.
             # We determine the projective condition for this amplitude by zero'ing this residual.
-            nbody = int(len(sq_ex_op) / 2)
+
             # `destroyed` exists solely for error catching.
             destroyed = False
 
@@ -281,20 +282,20 @@ class UCCNPQE(UCCPQE):
                 excited_det.set_bit(k, occ)
 
             # loop over annihilators
-            for p in reversed(range(nbody, 2*nbody)):
-                if( excited_det.get_bit(sq_ex_op[p]) == 0):
+            for p in reversed(sq_annihilators):
+                if( excited_det.get_bit(p) == 0):
                     destroyed=True
                     break
 
-                excited_det.set_bit(sq_ex_op[p], 0)
+                excited_det.set_bit(p, 0)
 
             # then over creators
-            for p in reversed(range(0, nbody)):
-                if (excited_det.get_bit(sq_ex_op[p]) == 1):
+            for p in reversed(sq_creators):
+                if (excited_det.get_bit(p) == 1):
                     destroyed=True
                     break
 
-                excited_det.set_bit(sq_ex_op[p], 1)
+                excited_det.set_bit(p, 1)
 
             if destroyed:
                 raise ValueError("no ops should destroy reference, something went wrong!!")
@@ -322,25 +323,19 @@ class UCCNPQE(UCCPQE):
     def get_res_over_mpdenom(self, residuals):
 
         resids_over_denoms = []
-
         # each operator needs a score, so loop over toperators
         for m in self._tops:
             sq_op = self._pool[m][1]
 
-            temp_idx = sq_op.terms()[0][1][-1]
+            temp_idx = sq_op.terms()[0][2][-1]
             if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
-                sq_sub_top = sq_op.terms()[0][1]
+                sq_creators = sq_op.terms()[0][1]
+                sq_annihilators = sq_op.terms()[0][2]
             else:
-                sq_sub_top = sq_op.terms()[1][1]
+                sq_creators = sq_op.terms()[0][2]
+                sq_annihilators = sq_op.terms()[0][1]
 
-            nbody = int(len(sq_sub_top) / 2)
-            denom = 0.0
-
-            for p, op_idx in enumerate(sq_sub_top):
-                if(p<nbody):
-                    denom -= self._orb_e[op_idx]
-                else:
-                    denom += self._orb_e[op_idx]
+            denom = sum(self._orb_e[x] for x in sq_annihilators) - sum(self._orb_e[x] for x in sq_creators)
 
             res_m = copy.deepcopy(residuals[m])
             res_m /= denom # divide by energy denominator

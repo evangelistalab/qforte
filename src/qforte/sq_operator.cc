@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <stdexcept>
+#include <tuple>
 
 #include "helpers.h"
 #include "quantum_gate.h"
@@ -6,71 +8,55 @@
 #include "quantum_operator.h"
 #include "sq_operator.h"
 
-#include <stdexcept>
-#include <algorithm>
-
-void SQOperator::add_term(std::complex<double> circ_coeff, const std::vector<size_t>& ac_ops) {
-    if ((ac_ops.size() % 2) != 0) throw std::invalid_argument("Term must have N creators and N annihilators, but received odd number of orbital indices");
-    terms_.push_back(std::make_pair(circ_coeff, ac_ops));
+void SQOperator::add_term(std::complex<double> circ_coeff, const std::vector<size_t>& cre_ops, const std::vector<size_t>& ann_ops) {
+    terms_.push_back(std::make_tuple(circ_coeff, cre_ops, ann_ops));
 }
 
 void SQOperator::add_op(const SQOperator& qo) {
-    for (const auto& term : qo.terms()) {
-        terms_.push_back(std::make_pair(term.first, term.second));
-    }
+    terms_.insert(terms_.end(), qo.terms().begin(), qo.terms().end());
 }
 
 void SQOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs) {
     if(new_coeffs.size() != terms_.size()){
         throw std::invalid_argument( "number of new coefficients for quantum operator must equal " );
     }
-    for (size_t l = 0; l < new_coeffs.size(); l++){
-        terms_[l].first = new_coeffs[l];
+    for (auto l = 0; l < new_coeffs.size(); l++) {
+        std::get<0>(terms_[l]) = new_coeffs[l];
     }
 }
 
 void SQOperator::mult_coeffs(const std::complex<double>& multiplier) {
-    for (size_t l = 0; l < terms_.size(); l++){
-        terms_[l].first *= multiplier;
+    for (auto term : terms_){
+        std::get<0>(term) *= multiplier;
     }
 }
 
-const std::vector<std::pair<std::complex<double>, std::vector<size_t>>>& SQOperator::terms() const {
+const std::vector<std::tuple<std::complex<double>, std::vector<size_t>, std::vector<size_t>>>& SQOperator::terms() const {
     return terms_;
 }
 
-void SQOperator::canonical_order_single_term(std::pair< std::complex<double>, std::vector<size_t>>& term ){
-    if((term.second.size() % 2) != 0){
-        throw std::invalid_argument( "sq operator term must have equal number of anihilators and creators.");
-    }
-    int nbody = term.second.size() / 2.0;
-    if (nbody >= 2) {
-        auto term_temp = term;
-        std::vector<int> a(nbody);
-        std::iota(std::begin(a), std::end(a), 0);
-        std::vector<int> b(nbody);
-        std::iota(std::begin(b), std::end(b), 0);
-        // get permutations for creators then reorder
-        std::sort(a.begin(), a.end(),
+int SQOperator::canonicalize_helper(std::vector<size_t>& op_list) const {
+    auto temp_op = op_list;
+    auto length = temp_op.size();
+    {
+        std::vector<int> temp(length);
+        std::iota(std::begin(temp), std::end(temp), 0);
+        std::sort(temp.begin(), temp.end(),
             [&](const int& i, const int& j) {
-                return (term_temp.second[i] > term_temp.second[j]);
+                return (temp_op[i] > temp_op[j]);
             }
         );
-        for (int ai=0; ai < nbody; ai++){
-            term.second[ai] = term_temp.second[a[ai]];
+        for (int i = 0; i < length; i++) {
+            op_list[i] = temp_op[temp[i]];
         }
-        if (permutive_sign_change(a)) { term.first *= -1.0; }
-        // same as above but for annihilators
-        std::sort(b.begin(), b.end(),
-            [&](const int& i, const int& j) {
-                return (term_temp.second[i+nbody] > term_temp.second[j+nbody]);
-            }
-        );
-        for (int bi=0; bi < nbody; bi++){
-            term.second[bi+nbody] = term_temp.second[b[bi]+nbody];
-        }
-        if (permutive_sign_change(b)) { term.first *= -1.0; }
+        return (permutation_phase(temp)) ? -1 : 1;
     }
+
+}
+
+void SQOperator::canonical_order_single_term(std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& term ){
+    std::get<0>(term) *= canonicalize_helper(std::get<1>(term));
+    std::get<0>(term) *= canonicalize_helper(std::get<2>(term));
 }
 
 void SQOperator::canonical_order() {
@@ -81,23 +67,24 @@ void SQOperator::canonical_order() {
 
 void SQOperator::simplify() {
     canonical_order();
-    std::map<std::vector<size_t>, std::complex<double>> uniqe_trms;
+    std::map<std::pair<std::vector<size_t>, std::vector<size_t>>, std::complex<double>> unique_terms;
     for (const auto& term : terms_) {
-        if ( uniqe_trms.find(term.second) == uniqe_trms.end() ) {
-            uniqe_trms.insert(std::make_pair(term.second, term.first));
+        auto pair = std::make_pair(std::get<1>(term), std::get<2>(term));
+        if (unique_terms.find(pair) == unique_terms.end() ) {
+            unique_terms.insert(std::make_pair(pair, std::get<0>(term)));
         } else {
-            uniqe_trms[term.second] += term.first;
+            unique_terms[pair] += std::get<0>(term);
         }
     }
     terms_.clear();
-    for (const auto &uniqe_trm : uniqe_trms){
-        if (std::abs(uniqe_trm.second) > 1.0e-16){
-            terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
+    for (const auto &unique_term : unique_terms){
+        if (std::abs(unique_term.second) > 1.0e-16){
+            terms_.push_back(std::make_tuple(unique_term.second, unique_term.first.first, unique_term.first.second));
         }
     }
 }
 
-bool SQOperator::permutive_sign_change(std::vector<int> p) {
+bool SQOperator::permutation_phase(std::vector<int> p) const {
     std::vector<int> a(p.size());
     std::iota (std::begin(a), std::end(a), 0);
     size_t cnt = 0;
@@ -115,64 +102,60 @@ bool SQOperator::permutive_sign_change(std::vector<int> p) {
     }
 }
 
-QuantumOperator SQOperator::jw_transform() {
+void SQOperator::jw_helper(QuantumOperator& holder, const std::vector<size_t>& operators, bool creator) const {
     std::complex<double> halfi(0.0, 0.5);
-    simplify(); // This isn't needed for the logic - just an efficiency optimization.
+    if (creator) { halfi *= -1; };
+
+    for (const auto& sq_op : operators) {
+        QuantumOperator temp;
+        QuantumCircuit Xcirc;
+        QuantumCircuit Ycirc;
+
+        for (int k = 0; k < sq_op; k++) {
+            Xcirc.add_gate(make_gate("Z", k, k));
+            Ycirc.add_gate(make_gate("Z", k, k));
+        }
+
+        Xcirc.add_gate(make_gate("X", sq_op, sq_op));
+        Ycirc.add_gate(make_gate("Y", sq_op, sq_op));
+        temp.add_term(0.5, Xcirc);
+        temp.add_term(halfi, Ycirc);
+
+        if (holder.terms().size() == 0) {
+            holder.add_op(temp);
+        } else {
+            holder.operator_product(temp);
+        }
+    }
+}
+
+QuantumOperator SQOperator::jw_transform() {
+    simplify();
     QuantumOperator qo;
 
     for (const auto& fermion_operator : terms_) {
-        if((fermion_operator.second.size() % 2) != 0){
-            throw std::invalid_argument( "sq operator term must have equal number of annihilators and creators. This error should be unreachable - debugging QForte needed.");
-        }
-        int nbody = fermion_operator.second.size() / 2.0;
+        auto cre_length = std::get<1>(fermion_operator).size();
+        auto ann_length = std::get<2>(fermion_operator).size();
 
-        if (nbody == 0) {
+        if (cre_length == 0 && ann_length == 0) {
             // Scalars need special logic.
             QuantumCircuit scalar_circ;
             QuantumOperator scalar_op;
-            scalar_op.add_term(fermion_operator.first, scalar_circ);
+            scalar_op.add_term(std::get<0>(fermion_operator), scalar_circ);
             qo.add_op(scalar_op);
             continue;
         }
+
         QuantumOperator temp1;
-        for (int ai=0; ai<2*nbody; ai++) {
-            QuantumOperator temp2;
-            // Our qubit operator is (X +/- i Y) phase-factor-Z gates.
-            // We need two circuits in our linear combination.
-            QuantumCircuit Xcirc;
-            QuantumCircuit Ycirc;
+        jw_helper(temp1, std::get<1>(fermion_operator), true);
+        jw_helper(temp1, std::get<2>(fermion_operator), false);
 
-            // Z gates for the phase factor
-            for(int k=0; k<fermion_operator.second[ai]; k++){
-                Xcirc.add_gate(make_gate("Z", k, k));
-                Ycirc.add_gate(make_gate("Z", k, k));
-            }
-
-            Xcirc.add_gate(make_gate("X", fermion_operator.second[ai], fermion_operator.second[ai]));
-            Ycirc.add_gate(make_gate("Y", fermion_operator.second[ai], fermion_operator.second[ai]));
-            temp2.add_term(0.5, Xcirc);
-
-            // TODO: Remove below code's assumptions of vacuum-normal and particle-conserving.
-            // Will certainly require changing the innards of SQOperator.
-            if(ai < nbody){
-                // We have an annihilation operator.
-                temp2.add_term(-halfi, Ycirc);
-            } else {
-                // We have a creation operator.
-                temp2.add_term(halfi, Ycirc);
-            }
-
-            if (ai == 0) {
-                temp1.add_op(temp2);
-            } else {
-                temp1.operator_product(temp2);
-            }
-        }
-        temp1.mult_coeffs(fermion_operator.first);
+        temp1.mult_coeffs(std::get<0>(fermion_operator));
         qo.add_op(temp1);
     }
+
     qo.simplify();
-    // Consider also standard ordering these?
+
     return qo;
 }
 
@@ -180,14 +163,13 @@ std::string SQOperator::str() const {
     std::vector<std::string> s;
     s.push_back("");
     for (const auto& term : terms_) {
-        int nbody = term.second.size() / 2.0;
-        s.push_back(to_string(term.first));
+        s.push_back(to_string(std::get<0>(term)));
         s.push_back("(");
-        for (int k=0; k<nbody; k++ ) {
-            s.push_back(std::to_string(term.second[k]) + "^");
+        for (auto k: std::get<1>(term)) {
+            s.push_back(std::to_string(k) + "^");
         }
-        for (int k=nbody; k<2*nbody; k++ ) {
-            s.push_back(std::to_string(term.second[k]));
+        for (auto k: std::get<2>(term)) {
+            s.push_back(std::to_string(k));
         }
         s.push_back(")\n");
     }
