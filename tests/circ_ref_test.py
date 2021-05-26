@@ -13,7 +13,7 @@ import os
 class CircuitReferenceTest(unittest.TestCase):
     def test_srqk_with_uccsdpqe_ref(self):
         print('\n')
-        # The FCI energy for He atom in a cc-pvdz basis
+        # The FCI energy of the equidistant H4/STO-3G chain with r = 1.5 angs,.
         Efci = -1.9961503253000235
 
         geom = [

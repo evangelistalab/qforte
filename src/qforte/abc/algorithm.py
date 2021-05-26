@@ -74,13 +74,11 @@ class Algorithm(ABC):
             self._Uprep = build_Uprep(self._ref, trial_state_type)
 
         elif self._trial_state_type == 'unitary_circ':
-            if(reference==None):
-                if not (isinstance(reference, qf.QuantumCircuit)):
-                    raise ValueError("unitary_circ reference must be a QuantumCircuit.")
+            if not isinstance(reference, qf.QuantumCircuit):
+                raise ValueError("unitary_circ reference must be a QuantumCircuit.")
 
-            else:
-                self._ref = system.get_hf_reference()
-                self._Uprep = reference
+            self._ref = system.get_hf_reference()
+            self._Uprep = reference
 
         else:
             raise ValueError("QForte only suppors references as occupation lists and QuantumCircuits.")
