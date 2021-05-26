@@ -242,7 +242,7 @@ class UCCNPQE(UCCPQE):
         for param, top in zip(trial_amps, self._tops):
             temp_pool.add(param, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('commuting_grp_lex')
+        A = temp_pool.get_qubit_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)
         if U_phase != 1.0 + 0.0j:
             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")

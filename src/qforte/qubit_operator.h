@@ -1,5 +1,5 @@
-#ifndef _quantum_operator_h_
-#define _quantum_operator_h_
+#ifndef _qubit_operator_h_
+#define _qubit_operator_h_
 
 #include <complex>
 #include <string>
@@ -7,13 +7,13 @@
 #include <map>
 #include <unordered_map>
 
-class QuantumOperator {
-    /* A QuantumOperator is a linear combination (over C) of quantum circuits,
+class QubitOperator {
+    /* A QubitOperator is a linear combination (over C) of quantum circuits,
      * and therefore a linear combination of products of quantum gates.
      */
   public:
     /// default constructor: creates an empty quantum operator
-    QuantumOperator() {}
+    QubitOperator() {}
 
     /// build from a string of open fermion qubit operators
     void build_from_openferm_str(std::string op) {}
@@ -26,7 +26,7 @@ class QuantumOperator {
     void add_term(std::complex<double> circ_coeff, const Circuit& circuit);
 
     /// add the circuits of another quantum operator as a term in the quantum operator
-    void add_op(const QuantumOperator& qo);
+    void add_op(const QubitOperator& qo);
 
     /// sets the operator coefficients
     void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
@@ -51,11 +51,11 @@ class QuantumOperator {
     /// Multiply this operator (on the right) by rqo.
     /// pre_simplify simplifies this operator before the multiplication.
     /// post_simplify simplifies this operator after the multiplication, as opposed to just canoncalizing.
-    void operator_product(const QuantumOperator& rqo, bool pre_simplify = true, bool post_simplify = true);
+    void operator_product(const QubitOperator& rqo, bool pre_simplify = true, bool post_simplify = true);
 
     /// check if this operator is equivalent to another operator qo
     /// mostly used for testing
-    bool check_op_equivalence(QuantumOperator qo, bool reorder);
+    bool check_op_equivalence(QubitOperator qo, bool reorder);
 
     /// return a string representing this quantum operator
     std::string str() const;
@@ -67,4 +67,4 @@ class QuantumOperator {
     std::vector<std::pair<std::complex<double>, Circuit>> terms_;
 };
 
-#endif // _quantum_operator_h_
+#endif // _qubit_operator_h_

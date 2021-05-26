@@ -4,13 +4,13 @@ import numpy as np
 def build_from_openfermion(OF_qubitops, time_evo_factor = 1.0):
 
     """
-    builds a QuantumOperator instance in
+    builds a QubitOperator instance in
     qforte from a openfermion QubitOperator instance
 
     :param OF_qubitops: (QubitOperator) the QubitOperator instance from openfermion.
     """
 
-    qforte_ops = qforte.QuantumOperator()
+    qforte_ops = qforte.QubitOperator()
 
     #for term, coeff in sorted(OF_qubitops.terms.items()):
     for term, coeff in OF_qubitops.terms.items():

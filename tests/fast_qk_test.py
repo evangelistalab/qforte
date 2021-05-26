@@ -385,7 +385,7 @@ class QKDTests(unittest.TestCase):
         0.05395287215237218,
         0.11278693858600855]
 
-        H4_qubit_hamiltonian = qforte.QuantumOperator()
+        H4_qubit_hamiltonian = qforte.QubitOperator()
         for i in range(len(circ_vec)):
             H4_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 

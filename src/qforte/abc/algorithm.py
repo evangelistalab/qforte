@@ -12,7 +12,7 @@ class Algorithm(ABC):
     _nqb : int
         The number of qubits the calculation empolys.
 
-    _qb_ham : QuantumOperator
+    _qb_ham : QubitOperator
         The operator to be measured (usually the Hamiltonian), mapped to a
         qubit representation.
 

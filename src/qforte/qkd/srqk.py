@@ -281,13 +281,13 @@ class SRQK(QSD):
             n : int
                 The number of time steps for the Un evolution.
 
-            H : QuantumOperator
+            H : QubitOperator
                 The operator to time evolove with respect to (usually the Hamiltonain).
 
             nqubits : int
                 The number of qubits
 
-            A : QuantumOperator
+            A : QubitOperator
                 The overal operator to measure with respect to (optional).
 
             trot_number : int
@@ -306,7 +306,7 @@ class SRQK(QSD):
         value = 0.0
         ancilla_idx = self._nqb
         Uk = qforte.Circuit()
-        temp_op1 = qforte.QuantumOperator()
+        temp_op1 = qforte.QubitOperator()
         # TODO (opt): move to C side.
         for t in self._qb_ham.terms():
             c, op = t
@@ -322,7 +322,7 @@ class SRQK(QSD):
 
         Ub = qforte.Circuit()
 
-        temp_op2 = qforte.QuantumOperator()
+        temp_op2 = qforte.QubitOperator()
         for t in self._qb_ham.terms():
             c, op = t
             phase = -1.0j * m * self._dt * c
@@ -351,9 +351,9 @@ class SRQK(QSD):
             cir.add(Ub)
             cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
 
-            X_op = qforte.QuantumOperator()
+            X_op = qforte.QubitOperator()
             x_circ = qforte.Circuit()
-            Y_op = qforte.QuantumOperator()
+            Y_op = qforte.QubitOperator()
             y_circ = qforte.Circuit()
 
             x_circ.add(qforte.gate('X', ancilla_idx, ancilla_idx))
@@ -400,9 +400,9 @@ class SRQK(QSD):
                 cir.add(Ub)
                 cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
 
-                X_op = qforte.QuantumOperator()
+                X_op = qforte.QubitOperator()
                 x_circ = qforte.Circuit()
-                Y_op = qforte.QuantumOperator()
+                Y_op = qforte.QubitOperator()
                 y_circ = qforte.Circuit()
 
                 x_circ.add(qforte.gate('X', ancilla_idx, ancilla_idx))

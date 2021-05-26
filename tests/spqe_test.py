@@ -23,7 +23,7 @@ class SPQETests(unittest.TestCase):
                                      basis='sto-6g',
                                      filename=data_path)
 
-        Hnonzero = qforte.QuantumOperator()
+        Hnonzero = qforte.QubitOperator()
         for term in mol._hamiltonian.terms():
             if abs(term[0]) > 1.0e-14:
                 Hnonzero.add(term[0], term[1])

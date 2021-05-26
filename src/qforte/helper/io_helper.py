@@ -4,17 +4,17 @@ def smart_print(Inputobj, print_type='compact'):
 
     """
     formatts and prints instances of
-    several classes, including QuantumOperator, Circuit, and
+    several classes, including QubitOperator, Circuit, and
     QuantumnComputer
 
-    :param Inputobj: (QuantumOperator, Circuit, or
+    :param Inputobj: (QubitOperator, Circuit, or
     QuantumnComputer) the input instance one want to print.
 
-    :param print_type: (QuantumOperator, Circuit, or
+    :param print_type: (QubitOperator, Circuit, or
     QuantumnComputer) print format, full or compact
     """
 
-    if isinstance(Inputobj, qforte.QuantumOperator):
+    if isinstance(Inputobj, qforte.QubitOperator):
         print('\n Quantum operator:')
 
         if print_type == 'full':
@@ -102,7 +102,7 @@ conveniently from input
 
 def build_operator(Inputstr):
 
-    ops = qforte.QuantumOperator()
+    ops = qforte.QubitOperator()
     sepstr = Inputstr.split(';')
     for i in range(len(sepstr)):
         inputterm = sepstr[i].split(',')

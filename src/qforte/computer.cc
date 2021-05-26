@@ -9,7 +9,7 @@
 #include "basis.h"
 #include "circuit.h"
 #include "gate.h"
-#include "quantum_operator.h"
+#include "qubit_operator.h"
 #include "quantum_op_pool.h"
 #include "timer.h"
 
@@ -47,7 +47,7 @@ void Computer::set_state(std::vector<std::pair<Basis, double_c>> state) {
 
 void Computer::zero_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
 
-void Computer::apply_operator(const QuantumOperator& qo) {
+void Computer::apply_operator(const QubitOperator& qo) {
     std::vector<std::complex<double>> old_coeff = coeff_;
     std::vector<std::complex<double>> result(nbasis_, 0.0);
         for (const auto& term : qo.terms()) {
@@ -719,7 +719,7 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
 
 }
 
-std::complex<double> Computer::direct_op_exp_val(const QuantumOperator& qo) {
+std::complex<double> Computer::direct_op_exp_val(const QubitOperator& qo) {
     // local_timer t;
     std::complex<double> result = 0.0;
     if(parallelism_enabled){

@@ -276,7 +276,7 @@ class GatesTests(unittest.TestCase):
         circ4.add(X1)
 
         #build the quantum operator for [a1^ a2]
-        a1_dag_a2 = qforte.QuantumOperator()
+        a1_dag_a2 = qforte.QubitOperator()
         a1_dag_a2.add(0.0-0.25j, circ1)
         a1_dag_a2.add(0.25, circ2)
         a1_dag_a2.add(0.25, circ3)

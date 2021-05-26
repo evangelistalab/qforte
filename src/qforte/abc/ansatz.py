@@ -20,7 +20,7 @@ class UCC(AnsatzAlgorithm):
         for tamp, top in zip(tamps, self._tops):
             temp_pool.add(tamp, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('commuting_grp_lex')
+        A = temp_pool.get_qubit_operator('commuting_grp_lex')
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
         if phase1 != 1.0 + 0.0j:

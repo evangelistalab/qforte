@@ -150,7 +150,7 @@ class QITE(Algorithm):
             P = qf.SQOpPool()
             P.set_orb_spaces(self._ref)
             P.fill_pool(self._expansion_type)
-            sig_temp = P.get_quantum_operator("commuting_grp_lex", False)
+            sig_temp = P.get_qubit_operator("commuting_grp_lex", False)
 
             # Filter the generated operators, so that only those with an odd number of Y gates are allowed.
             # See section "Real Hamiltonians and states" in the SI of Motta for theoretical justification.
@@ -165,7 +165,7 @@ class QITE(Algorithm):
                         nygates += 1
 
                 if (nygates % 2 == 1):
-                    rho_op = qf.QuantumOperator()
+                    rho_op = qf.QubitOperator()
                     rho_op.add(1.0, temp_rho)
                     self._sig.add(1.0, rho_op)
 
@@ -257,7 +257,7 @@ class QITE(Algorithm):
     def do_qite_step(self):
 
         btot = self.build_b()
-        A = qf.QuantumOperator()
+        A = qf.QubitOperator()
 
         if(self._sparseSb):
             sp_idxs, S, btot = self.build_sparse_S_b(btot)

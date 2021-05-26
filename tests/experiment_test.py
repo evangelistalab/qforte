@@ -40,7 +40,7 @@ class ExperimentTests(unittest.TestCase):
         0.1205448220329002,
         0.1743484418396386]
 
-        H2_qubit_hamiltonian = qforte.QuantumOperator()
+        H2_qubit_hamiltonian = qforte.QubitOperator()
         for i in range(len(circ_vec)):
             H2_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 
@@ -99,7 +99,7 @@ class ExperimentTests(unittest.TestCase):
         0.1205448220329002,
         0.1743484418396386]
 
-        H2_qubit_hamiltonian = qforte.QuantumOperator()
+        H2_qubit_hamiltonian = qforte.QubitOperator()
         for i in range(len(circ_vec)):
             H2_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 

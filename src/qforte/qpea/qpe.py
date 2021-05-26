@@ -196,7 +196,7 @@ class QPE(Algorithm):
             Arguments
             ---------
 
-            H : QuantumOperator
+            H : QubitOperator
                 The hermetian operaotr whos dynamics and eigenstates are of interest,
                 ususally the Hamiltonian.
 
@@ -225,7 +225,7 @@ class QPE(Algorithm):
         total_phase = 1.0
         for n in range(self._n_ancilla):
             tn = 2 ** n
-            temp_op = qforte.QuantumOperator()
+            temp_op = qforte.QubitOperator()
             scaler_terms = []
             for h in self._qb_ham.terms():
                 c, op = h

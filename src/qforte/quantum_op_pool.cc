@@ -1,7 +1,7 @@
 #include "helpers.h"
 #include "gate.h"
 #include "circuit.h"
-#include "quantum_operator.h"
+#include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
 #include "quantum_op_pool.h"
@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <iostream>
 
-void QuantumOpPool::add_term(std::complex<double> coeff, const QuantumOperator& sq_op ){
+void QuantumOpPool::add_term(std::complex<double> coeff, const QubitOperator& sq_op ){
     terms_.push_back(std::make_pair(coeff, sq_op));
 }
 
@@ -32,24 +32,24 @@ void QuantumOpPool::set_op_coeffs(const std::vector<std::complex<double>>& new_c
     }
 }
 
-void QuantumOpPool::set_terms(std::vector<std::pair<std::complex<double>, QuantumOperator>>& new_terms) {
+void QuantumOpPool::set_terms(std::vector<std::pair<std::complex<double>, QubitOperator>>& new_terms) {
     // TODO: consider clearing terms_ when this fuction is called
     for(const auto& term : new_terms){
         terms_.push_back(term);
     }
 }
 
-const std::vector<std::pair<std::complex<double>, QuantumOperator>>& QuantumOpPool::terms() const{
+const std::vector<std::pair<std::complex<double>, QubitOperator>>& QuantumOpPool::terms() const{
     return terms_;
 }
 
 void QuantumOpPool::square(bool upper_triangle_only){
-    std::vector<std::pair<std::complex<double>, QuantumOperator>> temp_terms;
+    std::vector<std::pair<std::complex<double>, QubitOperator>> temp_terms;
     if(upper_triangle_only){
         //consider only I -> IJ, where J > I
         for (int I=0; I<terms_.size(); I++) {
             for (int J=I; J<terms_.size(); J++) {
-                QuantumOperator IJ;
+                QubitOperator IJ;
                 IJ.add_op(terms_[I].second);
                 IJ.operator_product(terms_[J].second, false);
                 IJ.simplify();
@@ -62,7 +62,7 @@ void QuantumOpPool::square(bool upper_triangle_only){
         //consider all I -> IJ
         for (auto& I : terms_) {
             for (auto& J : terms_) {
-                QuantumOperator IJ;
+                QubitOperator IJ;
                 IJ.add_op(I.second);
                 IJ.operator_product(J.second, false);
                 IJ.simplify();
@@ -75,23 +75,23 @@ void QuantumOpPool::square(bool upper_triangle_only){
     terms_ = std::move(temp_terms);
 }
 
-void QuantumOpPool::join_op_from_right(const QuantumOperator& q_op){
+void QuantumOpPool::join_op_from_right(const QubitOperator& q_op){
     for (auto& term : terms_) {
         term.second.operator_product(q_op, false);
         term.second.simplify();
     }
 }
 
-void QuantumOpPool::join_op_from_right_lazy(const QuantumOperator& q_op){
+void QuantumOpPool::join_op_from_right_lazy(const QubitOperator& q_op){
     for (auto& term : terms_) {
         term.second.operator_product(q_op, false, false);
     }
 }
 
-void QuantumOpPool::join_op_from_left(const QuantumOperator& q_op){
-    std::vector<std::pair<std::complex<double>, QuantumOperator>> temp_terms;
+void QuantumOpPool::join_op_from_left(const QubitOperator& q_op){
+    std::vector<std::pair<std::complex<double>, QubitOperator>> temp_terms;
     for (const auto& term : terms_) {
-        QuantumOperator temp_op;
+        QubitOperator temp_op;
         temp_op.add_op(q_op);
         temp_op.operator_product(term.second, false);
         temp_op.simplify();
@@ -100,16 +100,16 @@ void QuantumOpPool::join_op_from_left(const QuantumOperator& q_op){
     terms_ = std::move(temp_terms);
 }
 
-void QuantumOpPool::join_as_commutator(const QuantumOperator& q_op){
-    std::vector<std::pair<std::complex<double>, QuantumOperator>> temp_terms;
+void QuantumOpPool::join_as_commutator(const QubitOperator& q_op){
+    std::vector<std::pair<std::complex<double>, QubitOperator>> temp_terms;
     for (const auto& term : terms_) {
         // build HAm
-        QuantumOperator HAm;
+        QubitOperator HAm;
         HAm.add_op(q_op);
         HAm.operator_product(term.second, false);
 
         // build -AmH
-        QuantumOperator AmH;
+        QubitOperator AmH;
         AmH.add_op(term.second);
         AmH.operator_product(q_op, false);
         AmH.mult_coeffs(-1.0);
@@ -123,14 +123,14 @@ void QuantumOpPool::join_as_commutator(const QuantumOperator& q_op){
 
 void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref){
     if(pool_type == "test"){
-        QuantumOperator A1;
-        QuantumOperator A2;
-        QuantumOperator A3;
-        QuantumOperator A4;
-        QuantumOperator A5;
-        QuantumOperator A6;
-        QuantumOperator A7;
-        QuantumOperator A8;
+        QubitOperator A1;
+        QubitOperator A2;
+        QubitOperator A3;
+        QubitOperator A4;
+        QubitOperator A5;
+        QubitOperator A6;
+        QubitOperator A7;
+        QubitOperator A8;
 
         Circuit a1;
         Circuit a2;
@@ -205,7 +205,7 @@ void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref
         int nterms = static_cast<int>(std::pow(4, ref.size()));
 
         for(int I=0; I<nterms; I++){
-            QuantumOperator AI;
+            QubitOperator AI;
             Circuit aI;
             std::string paulistr = pauli_idx_str(to_base4(I), ref.size());
             if(paulistr.length() != ref.size()){
@@ -225,7 +225,7 @@ void QuantumOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref
         int nterms = static_cast<int>(std::pow(4, ref.size()));
 
         for(int I=0; I<nterms; I++){
-            QuantumOperator AI;
+            QubitOperator AI;
             Circuit aI;
             std::string paulistr = pauli_idx_str(to_base4(I), ref.size());
             if(paulistr.length() != ref.size()){

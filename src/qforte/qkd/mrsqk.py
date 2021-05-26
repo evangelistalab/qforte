@@ -267,7 +267,7 @@ class MRSQK(QSD):
                 List of time steps to use for each reference (ususally the same for
                 all references).
 
-            H : QuantumOperator
+            H : QubitOperator
                 The operator to time evolove and measure with respect to
                 (usually the Hamiltonain).
 
@@ -419,7 +419,7 @@ class MRSQK(QSD):
                 List of time steps to use for each reference (ususally the same for
                 all references).
 
-            H : QuantumOperator
+            H : QubitOperator
                 The operator to time evolove and measure with respect to
                 (usually the Hamiltonain).
 
@@ -552,8 +552,8 @@ class MRSQK(QSD):
                 The time step (delta t) to use in the inital quantum Krylov
                 calculation.
 
-            H : QuantumOperator
-                The QuantumOperator object to use in MRSQK.
+            H : QubitOperator
+                The QubitOperator object to use in MRSQK.
 
             target_root : int
                 Determines which state to return the energy for.
@@ -702,8 +702,8 @@ class MRSQK(QSD):
             The time step (delta t) to use in the inital quantum Krylov
             calculation.
 
-        H : QuantumOperator
-            The QuantumOperator object to use in MRSQK.
+        H : QubitOperator
+            The QubitOperator object to use in MRSQK.
 
         target_root : int
             Determines which state to return the energy for.

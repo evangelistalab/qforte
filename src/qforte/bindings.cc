@@ -8,7 +8,7 @@
 #include "circuit.h"
 #include "gate.h"
 #include "computer.h"
-#include "quantum_operator.h"
+#include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
 #include "quantum_op_pool.h"
@@ -57,31 +57,31 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
-        .def("get_quantum_operator", &SQOpPool::get_quantum_operator, py::arg("order_type"),
+        .def("get_qubit_operator", &SQOpPool::get_qubit_operator, py::arg("order_type"),
              py::arg("combine_like_terms") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str)
         .def("__str__", &SQOpPool::str)
         .def("__repr__", &SQOpPool::str);
 
-    py::class_<QuantumOperator>(m, "QuantumOperator")
+    py::class_<QubitOperator>(m, "QubitOperator")
         .def(py::init<>())
-        .def("add", &QuantumOperator::add_term)
-        .def("add", &QuantumOperator::add_op)
-        .def("add_term", &QuantumOperator::add_term)
-        .def("add_op", &QuantumOperator::add_op)
-        .def("set_coeffs", &QuantumOperator::set_coeffs)
-        .def("mult_coeffs", &QuantumOperator::mult_coeffs)
-        .def("terms", &QuantumOperator::terms)
-        .def("order_terms", &QuantumOperator::order_terms)
-        .def("canonical_order", &QuantumOperator::canonical_order)
-        .def("simplify", &QuantumOperator::simplify)
-        .def("operator_product", &QuantumOperator::operator_product)
-        .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
-        .def("num_qubits", &QuantumOperator::num_qubits)
-        .def("str", &QuantumOperator::str)
-        .def("__str__", &QuantumOperator::str)
-        .def("__repr__", &QuantumOperator::str);
+        .def("add", &QubitOperator::add_term)
+        .def("add", &QubitOperator::add_op)
+        .def("add_term", &QubitOperator::add_term)
+        .def("add_op", &QubitOperator::add_op)
+        .def("set_coeffs", &QubitOperator::set_coeffs)
+        .def("mult_coeffs", &QubitOperator::mult_coeffs)
+        .def("terms", &QubitOperator::terms)
+        .def("order_terms", &QubitOperator::order_terms)
+        .def("canonical_order", &QubitOperator::canonical_order)
+        .def("simplify", &QubitOperator::simplify)
+        .def("operator_product", &QubitOperator::operator_product)
+        .def("check_op_equivalence", &QubitOperator::check_op_equivalence)
+        .def("num_qubits", &QubitOperator::num_qubits)
+        .def("str", &QubitOperator::str)
+        .def("__str__", &QubitOperator::str)
+        .def("__repr__", &QubitOperator::str);
 
     py::class_<QuantumOpPool>(m, "QuantumOpPool")
         .def(py::init<>())

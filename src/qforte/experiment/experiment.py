@@ -22,7 +22,7 @@ class Experiment(object):
 
         :param generator: (Circuit) the parameterized state preparation circuit.
 
-        :param operator: (QuantumOperator) the qubit operator to be measured.
+        :param operator: (QubitOperator) the qubit operator to be measured.
 
         :param N_samples: (int) the number of measurements made for each term in the operator
 

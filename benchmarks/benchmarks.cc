@@ -6,7 +6,7 @@
 #include "circuit.h"
 #include "computer.h"
 #include "quantum_op_pool.h"
-#include "quantum_operator.h"
+#include "qubit_operator.h"
 #include "gate.h"
 
 Basis qb;

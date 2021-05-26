@@ -9,7 +9,7 @@ class ExperimentTests(unittest.TestCase):
         coef_vec = [-1.0j * 0.5, -1.0j * -0.04544288414432624]
 
         # the operator to be exponentiated
-        minus_iH = qforte.QuantumOperator()
+        minus_iH = qforte.QubitOperator()
         for i in range(len(circ_vec)):
             minus_iH.add(coef_vec[i], circ_vec[i])
 
@@ -44,7 +44,7 @@ class ExperimentTests(unittest.TestCase):
         coef_vec = [-1.0719145972781818j, 1.0719145972781818j]
 
         # the operator to be exponentiated
-        minus_iH = qforte.QuantumOperator()
+        minus_iH = qforte.QubitOperator()
         for i in range(len(circ_vec)):
             minus_iH.add(coef_vec[i], circ_vec[i])
 

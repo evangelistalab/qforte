@@ -15,7 +15,7 @@ template <class T> std::complex<T> add_c(std::complex<T> a, std::complex<T> b) {
 class Gate;
 class Basis;
 class Circuit;
-class QuantumOperator;
+class QubitOperator;
 class QuantumOpPool;
 
 class Computer {
@@ -25,7 +25,7 @@ class Computer {
 
     /// apply a quantum operator to the current state with optimized algorithm
     /// (this operation is generally not a physical quantum computing operation).
-    void apply_operator(const QuantumOperator& qo);
+    void apply_operator(const QubitOperator& qo);
 
     /// apply a quantum circuit to the current state with standard algorithm
     void apply_circuit_safe(const Circuit& qc);
@@ -71,7 +71,7 @@ class Computer {
 
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
-    std::complex<double> direct_op_exp_val(const QuantumOperator& qo);
+    std::complex<double> direct_op_exp_val(const QubitOperator& qo);
 
     /// get the expectation value of many 1qubit gates directly
     /// (ie without simulated measurement)

@@ -5,7 +5,7 @@
 #include "helpers.h"
 #include "gate.h"
 #include "circuit.h"
-#include "quantum_operator.h"
+#include "qubit_operator.h"
 #include "sq_operator.h"
 
 void SQOperator::add_term(std::complex<double> circ_coeff, const std::vector<size_t>& cre_ops, const std::vector<size_t>& ann_ops) {
@@ -102,12 +102,12 @@ bool SQOperator::permutation_phase(std::vector<int> p) const {
     }
 }
 
-void SQOperator::jw_helper(QuantumOperator& holder, const std::vector<size_t>& operators, bool creator) const {
+void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& operators, bool creator) const {
     std::complex<double> halfi(0.0, 0.5);
     if (creator) { halfi *= -1; };
 
     for (const auto& sq_op : operators) {
-        QuantumOperator temp;
+        QubitOperator temp;
         Circuit Xcirc;
         Circuit Ycirc;
 
@@ -129,9 +129,9 @@ void SQOperator::jw_helper(QuantumOperator& holder, const std::vector<size_t>& o
     }
 }
 
-QuantumOperator SQOperator::jw_transform() {
+QubitOperator SQOperator::jw_transform() {
     simplify();
-    QuantumOperator qo;
+    QubitOperator qo;
 
     for (const auto& fermion_operator : terms_) {
         auto cre_length = std::get<1>(fermion_operator).size();
@@ -140,13 +140,13 @@ QuantumOperator SQOperator::jw_transform() {
         if (cre_length == 0 && ann_length == 0) {
             // Scalars need special logic.
             Circuit scalar_circ;
-            QuantumOperator scalar_op;
+            QubitOperator scalar_op;
             scalar_op.add_term(std::get<0>(fermion_operator), scalar_circ);
             qo.add_op(scalar_op);
             continue;
         }
 
-        QuantumOperator temp1;
+        QubitOperator temp1;
         jw_helper(temp1, std::get<1>(fermion_operator), true);
         jw_helper(temp1, std::get<2>(fermion_operator), false);
 

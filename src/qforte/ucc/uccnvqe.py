@@ -34,7 +34,7 @@ class UCCNVQE(UCCVQE):
     _nqubits : int
         The number of qubits the calculation empolys.
 
-    _operator : QuantumOperator
+    _operator : QubitOperator
         The operator to be measured (usually the Hamiltonian), mapped to a
         qubit representation.
 
@@ -95,7 +95,7 @@ class UCCNVQE(UCCVQE):
         interest.
 
     _commutator_pool : list
-        The QuantumOperator objects representing the commutators [H, Am] of the
+        The QubitOperator objects representing the commutators [H, Am] of the
         Hamiltonian (H) and each member of the operator pool (Am).
 
     _N_samples : int
