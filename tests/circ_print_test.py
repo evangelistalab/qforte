@@ -9,7 +9,7 @@ class CircPrintTest(TestCase):
     def test_gate_print(self):
 
         # initialize empty circuit
-        circ = qf.QuantumCircuit()
+        circ = qf.Circuit()
         # add (Z1 H2 Y4 X4) Pauli string
         # note: the rightmost gate is applied first
         circ.add(qf.gate('X', 4))
