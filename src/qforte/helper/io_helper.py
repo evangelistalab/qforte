@@ -43,26 +43,9 @@ def smart_print(Inputobj, print_type='compact'):
 
         if print_type == 'compact':
             strp = Inputobj.str()
-            print('[', end="")
-            subfirst = True
-            for termstr in strp:
-                tmpstr = termstr.split('\n')
-                tmp_a = tmpstr[0].split()
-                if subfirst:
-                    subfirst = False
-                else:
-                    print(" ", end=" ")
-                print(tmp_a[0], end="") #Print the action string (X, Y, Z, cX, R, ...)
-                tmp_b = tmpstr[0].split(':')
-                control = tmp_b[2]
-                tmp_c = tmp_b[1].split(',')
-                target = tmp_c[0]
-                if target == control: #Print the target and control(if necessary)
-                    print(target, end="")
-                else:
-                    print(target, end="-")
-                    print(control, end="")
-            print(']')
+            strp = strp[1:-1].split(' ')
+            strp = ' '.join(map(str, strp))
+            print('(',strp,')','|Ψ>')
 
     if isinstance(Inputobj, qforte.Computer):
         print('\n Quantum Computer:')
