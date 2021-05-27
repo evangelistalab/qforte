@@ -1,6 +1,6 @@
-#include "basis.h"
+#include "qubit_basis.h"
 
-std::string Basis::str(size_t nqubit) const {
+std::string QubitBasis::str(size_t nqubit) const {
     std::string s;
     s += "|";
     for (int i = 0; i < nqubit; ++i) {
@@ -14,4 +14,4 @@ std::string Basis::str(size_t nqubit) const {
     return s;
 }
 
-void Basis::set(basis_t state) { state_ = state; }
+void QubitBasis::set(basis_t state) { state_ = state; }

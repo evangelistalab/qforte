@@ -2,9 +2,9 @@ import unittest
 # import our `pybind11`-based extension module from package qforte
 from qforte import qforte
 
-# this function creates a Basis object from a string representation
+# this function creates a QubitBasis object from a string representation
 def make_basis(str):
-    return qforte.Basis(int(str[::-1], 2))
+    return qforte.QubitBasis(int(str[::-1], 2))
 
 class GatesTests(unittest.TestCase):
     def test_X_gate(self):

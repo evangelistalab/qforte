@@ -46,7 +46,7 @@ def get_op_from_basis_idx(ref, I):
     na_el = int(nel/2);
     nb_el = int(nel/2);
 
-    basis_I = qf.Basis(I)
+    basis_I = qf.QubitBasis(I)
 
     nbody = 0
     pn = 0

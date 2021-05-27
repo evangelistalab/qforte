@@ -6,7 +6,7 @@
 
 #include "fmt/format.h"
 
-#include "basis.h"
+#include "qubit_basis.h"
 #include "circuit.h"
 #include "gate.h"
 #include "qubit_operator.h"
@@ -25,20 +25,20 @@ extern const bool parallelism_enabled = false;
 
 Computer::Computer(int nqubit) : nqubit_(nqubit) {
     nbasis_ = std::pow(2, nqubit_);
-    basis_.assign(nbasis_, Basis());
+    basis_.assign(nbasis_, QubitBasis());
     coeff_.assign(nbasis_, 0.0);
     new_coeff_.assign(nbasis_, 0.0);
     for (size_t i = 0; i < nbasis_; i++) {
-        basis_[i] = Basis(i);
+        basis_[i] = QubitBasis(i);
     }
     coeff_[0] = 1.;
 }
 
-std::complex<double> Computer::coeff(const Basis& basis) {
+std::complex<double> Computer::coeff(const QubitBasis& basis) {
     return coeff_[basis.add()];
 }
 
-void Computer::set_state(std::vector<std::pair<Basis, double_c>> state) {
+void Computer::set_state(std::vector<std::pair<QubitBasis, double_c>> state) {
     std::fill(coeff_.begin(), coeff_.end(), 0.0);
     for (const auto& basis_c : state) {
         coeff_[basis_c.first.add()] = basis_c.second;
@@ -106,9 +106,9 @@ void Computer::apply_constant(const std::complex<double> a) {
 
 std::vector<double> Computer::measure_circuit(const Circuit& qc,
                                                      size_t n_measurements) {
-    // initialize a "Basis_rotator" QC to represent the corresponding change
+    // initialize a "QubitBasis_rotator" QC to represent the corresponding change
     // of basis
-    Circuit Basis_rotator;
+    Circuit QubitBasis_rotator;
 
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
@@ -122,20 +122,20 @@ std::vector<double> Computer::measure_circuit(const Circuit& qc,
         std::string gate_id = gate.gate_id();
         if (gate_id == "Z") {
             Gate temp = make_gate("I", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "X") {
             Gate temp = make_gate("H", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
             Gate temp = make_gate("Rzy", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // // // std::cout<<'unrecognized gate in operator!'<<std::endl;
         }
     }
 
-    // apply Basis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
-    apply_circuit(Basis_rotator);
+    // apply QubitBasis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
+    apply_circuit(QubitBasis_rotator);
     std::vector<double> probs(nbasis_);
     for (size_t k = 0; k < nbasis_; k++) {
         probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]);
@@ -190,9 +190,9 @@ std::vector<std::vector<int>> Computer::measure_z_readouts_fast(size_t na, size_
 
 std::vector<std::vector<int>> Computer::measure_readouts(const Circuit& qc,
                                                      size_t n_measurements) {
-    // initialize a "Basis_rotator" QC to represent the corresponding change
+    // initialize a "QubitBasis_rotator" QC to represent the corresponding change
     // of basis
-    Circuit Basis_rotator;
+    Circuit QubitBasis_rotator;
 
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
@@ -202,20 +202,20 @@ std::vector<std::vector<int>> Computer::measure_readouts(const Circuit& qc,
         std::string gate_id = gate.gate_id();
         if (gate_id == "Z") {
             Gate temp = make_gate("I", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "X") {
             Gate temp = make_gate("H", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
             Gate temp = make_gate("Rzy", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // // // std::cout<<'unrecognized gate in operator!'<<std::endl;
         }
     }
 
-    // apply Basis_rotator circuit to 'trick' qcomputer into measuring in non Z basis
-    apply_circuit(Basis_rotator);
+    // apply QubitBasis_rotator circuit to 'trick' qcomputer into measuring in non Z basis
+    apply_circuit(QubitBasis_rotator);
     std::vector<double> probs(nbasis_);
     for (size_t k = 0; k < nbasis_; k++) {
         probs[k] = std::real(std::conj(coeff_[k]) * coeff_[k]);
@@ -246,9 +246,9 @@ std::vector<std::vector<int>> Computer::measure_readouts(const Circuit& qc,
 }
 
 double Computer::perfect_measure_circuit(const Circuit& qc) {
-    // initialize a "Basis_rotator" QC to represent the corresponding change
+    // initialize a "QubitBasis_rotator" QC to represent the corresponding change
     // of basis
-    Circuit Basis_rotator;
+    Circuit QubitBasis_rotator;
 
     // copy old coefficients
     std::vector<std::complex<double>> old_coeff = coeff_;
@@ -258,20 +258,20 @@ double Computer::perfect_measure_circuit(const Circuit& qc) {
         std::string gate_id = gate.gate_id();
         if (gate_id == "Z") {
             Gate temp = make_gate("I", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "X") {
             Gate temp = make_gate("H", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
             Gate temp = make_gate("Rzy", target_qubit, target_qubit);
-            Basis_rotator.add_gate(temp);
+            QubitBasis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // std::cout<<'unrecognized gate in operator!'<<std::endl;
         }
     }
 
-    // apply Basis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
-    apply_circuit(Basis_rotator);
+    // apply QubitBasis_rotator circuit to 'trick' qcomputer into measureing in non Z basis
+    apply_circuit(QubitBasis_rotator);
 
     double sum = 0.0;
     for (size_t k = 0; k < nbasis_; k++){
@@ -297,9 +297,9 @@ void Computer::apply_1qubit_gate_safe(const Gate& qg) {
         for (size_t j = 0; j < 2; j++) {
             auto op_i_j = gate[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
-                for (const Basis& basis_J : basis_) {
+                for (const QubitBasis& basis_J : basis_) {
                     if (basis_J.get_bit(target) == j) {
-                        Basis basis_I = basis_J;
+                        QubitBasis basis_I = basis_J;
                         basis_I.set_bit(target, i);
                         new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
                     }
@@ -413,9 +413,9 @@ void Computer::apply_2qubit_gate_safe(const Gate& qg) {
             auto op_i_j = gate[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
                 // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
-                for (const Basis& basis_J : basis_) {
+                for (const QubitBasis& basis_J : basis_) {
                     if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
-                        Basis basis_I = basis_J;
+                        QubitBasis basis_I = basis_J;
                         basis_I.set_bit(control, i_c);
                         basis_I.set_bit(target, i_t);
                         new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
@@ -701,9 +701,9 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                 auto op_i_j = gate[i][j];
                 if (std::abs(op_i_j) > compute_threshold_) {
                     // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
-                    for (const Basis& basis_J : basis_) {
+                    for (const QubitBasis& basis_J : basis_) {
                         if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
-                            Basis basis_I = basis_J;
+                            QubitBasis basis_I = basis_J;
                             basis_I.set_bit(control, i_c);
                             basis_I.set_bit(target, i_t);
                             new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
@@ -893,7 +893,7 @@ std::pair< int, std::complex<double> > Computer::get_pauli_permuted_idx(
     const std::vector<int>& z_idxs
     ) {
 
-    Basis basis_I(I);
+    QubitBasis basis_I(I);
     std::complex<double> val = 1.0;
     std::complex<double> onei(0.0, 1.0);
 

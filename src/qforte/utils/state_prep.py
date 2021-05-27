@@ -17,7 +17,7 @@ def ref_string(ref, nqb):
     temp = ref.copy()
     temp.reverse()
     ref_basis_idx = int("".join(str(x) for x in temp), 2)
-    ref_basis = qforte.Basis(ref_basis_idx)
+    ref_basis = qforte.QubitBasis(ref_basis_idx)
     return ref_basis.str(nqb)
 
 def integer_to_ref(n, nqubits):
@@ -41,7 +41,7 @@ def integer_to_ref(n, nqubits):
             single Slater determinant.
 
     """
-    qb = qforte.Basis(n)
+    qb = qforte.QubitBasis(n)
     ref = []
     for i in range(nqubits):
         if (qb.get_bit(i)):

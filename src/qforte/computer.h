@@ -13,7 +13,7 @@ template <class T> std::complex<T> complex_prod(std::complex<T> a, std::complex<
 template <class T> std::complex<T> add_c(std::complex<T> a, std::complex<T> b) { return a + b; }
 
 class Gate;
-class Basis;
+class QubitBasis;
 class Circuit;
 class QubitOperator;
 class QubitOpPool;
@@ -100,7 +100,7 @@ class Computer {
     std::vector<std::complex<double>> get_coeff_vec() const { return coeff_; };
 
     /// return the coefficient of a basis state
-    std::complex<double> coeff(const Basis& basis);
+    std::complex<double> coeff(const QubitBasis& basis);
 
     /// return the number of qubits
     size_t get_nqubit() const { return nqubit_; }
@@ -120,7 +120,7 @@ class Computer {
     /// basis_1 * c_1 + basis_2 * c_2 + ...
     /// where this information is passed as a vectors of pairs
     ///  [(basis_1, c_1), (basis_2, c_2), ...]
-    void set_state(std::vector<std::pair<Basis, double_c>> state);
+    void set_state(std::vector<std::pair<QubitBasis, double_c>> state);
 
     void zero_state();
 
@@ -136,7 +136,7 @@ class Computer {
     /// the number of basis states (2 ^ nqubit_)
     size_t nbasis_;
     /// the tensor product basis
-    std::vector<Basis> basis_;
+    std::vector<QubitBasis> basis_;
     /// The coefficients of the starting state in the tensor product basis
     std::vector<std::complex<double>> coeff_;
     /// the coefficients of the ending state in the tensor product basis

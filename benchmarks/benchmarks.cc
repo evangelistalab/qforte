@@ -2,14 +2,14 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch.hpp>
 
-#include "basis.h"
+#include "qubit_basis.h"
 #include "circuit.h"
 #include "computer.h"
 #include "qubit_op_pool.h"
 #include "qubit_operator.h"
 #include "gate.h"
 
-Basis qb;
+QubitBasis qb;
 
 
 Circuit qcirc_18;
