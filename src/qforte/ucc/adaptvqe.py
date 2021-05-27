@@ -34,7 +34,7 @@ class ADAPTVQE(UCCVQE):
     _nqubits : int
         The number of qubits the calculation empolys.
 
-    _operator : QuantumOperator
+    _operator : QubitOperator
         The operator to be measured (usually the Hamiltonain), mapped to a
         qubit representation.
 
@@ -95,7 +95,7 @@ class ADAPTVQE(UCCVQE):
         operators in the pool.
 
     _commutator_pool : list
-        The QuantumOperator objects representing the commutators [H, Am] of the
+        The QubitOperator objects representing the commutators [H, Am] of the
         Hamiltonian (H) and each member of the operator pool (Am).
 
     _N_samples : int
@@ -136,7 +136,7 @@ class ADAPTVQE(UCCVQE):
         convergence.
 
     build_Uprep()
-        Returns a QuantumCircuit object corresponding to the state preparation
+        Returns a Circuit object corresponding to the state preparation
         circuit for the ADAPT-VQE ansatz on a given iteration.
 
     measure_gradient()

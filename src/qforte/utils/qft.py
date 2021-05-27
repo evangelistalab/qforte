@@ -16,7 +16,7 @@ def qft_circuit(na, nb, direct):
     """
 
     # Build qft circuit
-    qft_circ = qforte.QuantumCircuit()
+    qft_circ = qforte.Circuit()
     lens = nb - na + 1
     for j in range(lens):
         qft_circ.add(qforte.gate('H', j+na, j+na))
@@ -44,15 +44,15 @@ def qft_circuit(na, nb, direct):
 def qft(qc_state, na, nb):
 
     """
-    performs a Quantum Fourier Transformation on QuantumComputer states
+    performs a Quantum Fourier Transformation on Computer states
 
-    :param qc_state: (QuantumComputer) the input QuantumComputer state
+    :param qc_state: (Computer) the input Computer state
     :param na: (int) the begin qubit
     :param nb: (int) the end qubit
 
     """
 
-    if not isinstance(qc_state, qforte.QuantumComputer):
+    if not isinstance(qc_state, qforte.Computer):
         return NotImplemented
 
     # Apply qft circuits
@@ -69,15 +69,15 @@ def qft(qc_state, na, nb):
 def rev_qft(qc_state, na, nb):
 
     """
-    performs a inversed QuantumFourier Transformation on QuantumComputer states
+    performs a inversed QuantumFourier Transformation on Computer states
 
-    :param qc_state: (QuantumComputer) the input QuantumComputer
+    :param qc_state: (Computer) the input Computer
     :param na: (int) the begin qubit
     :param nb: (int) the end qubit
 
     """
 
-    if not isinstance(qc_state, qforte.QuantumComputer):
+    if not isinstance(qc_state, qforte.Computer):
         return NotImplemented
 
     # Apply qft circuits

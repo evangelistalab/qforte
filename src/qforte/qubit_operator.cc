@@ -1,7 +1,7 @@
 #include "helpers.h"
-#include "quantum_gate.h"
-#include "quantum_circuit.h"
-#include "quantum_operator.h"
+#include "gate.h"
+#include "circuit.h"
+#include "qubit_operator.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -9,8 +9,8 @@
 namespace std {
 
     template <>
-    struct hash<QuantumCircuit>{
-        std::size_t operator()(const QuantumCircuit& qc) const {
+    struct hash<Circuit>{
+        std::size_t operator()(const Circuit& qc) const {
             std::string hash_value = "";
 
             for (const auto& gate : qc.gates()){
@@ -23,17 +23,17 @@ namespace std {
     };
 }
 
-void QuantumOperator::add_term(std::complex<double> circ_coeff, const QuantumCircuit& circuit) {
+void QubitOperator::add_term(std::complex<double> circ_coeff, const Circuit& circuit) {
     terms_.push_back(std::make_pair(circ_coeff, circuit));
 }
 
-void QuantumOperator::add_op(const QuantumOperator& qo) {
+void QubitOperator::add_op(const QubitOperator& qo) {
     for (const auto& term : qo.terms()) {
         terms_.push_back(std::make_pair(term.first, term.second));
     }
 }
 
-void QuantumOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs) {
+void QubitOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs) {
     if(new_coeffs.size() != terms_.size()){
         throw std::invalid_argument( "number of new coefficients for quantum operator must equal " );
     }
@@ -42,17 +42,17 @@ void QuantumOperator::set_coeffs(const std::vector<std::complex<double>>& new_co
     }
 }
 
-void QuantumOperator::mult_coeffs(const std::complex<double>& multiplier) {
+void QubitOperator::mult_coeffs(const std::complex<double>& multiplier) {
     for (size_t l = 0; l < terms_.size(); l++){
         terms_[l].first *= multiplier;
     }
 }
 
-void QuantumOperator::order_terms() {
+void QubitOperator::order_terms() {
     simplify();
     std::sort(terms_.begin(), terms_.end(),
-        [&](const std::pair<std::complex<double>, QuantumCircuit>& a,
-            const std::pair<std::complex<double>, QuantumCircuit>& b) {
+        [&](const std::pair<std::complex<double>, Circuit>& a,
+            const std::pair<std::complex<double>, Circuit>& b) {
                 int a_sz = a.second.gates().size();
                 int b_sz = b.second.gates().size();
                 // 1. sort by qb
@@ -72,15 +72,15 @@ void QuantumOperator::order_terms() {
     );
 }
 
-void QuantumOperator::canonical_order() {
+void QubitOperator::canonical_order() {
     for (auto& term : terms_) {
         term.first *= term.second.canonicalize_pauli_circuit();
     }
 }
 
-void QuantumOperator::simplify(bool combine_like_terms) {
+void QubitOperator::simplify(bool combine_like_terms) {
     canonical_order();
-    std::unordered_map<QuantumCircuit, std::complex<double>> uniqe_trms;
+    std::unordered_map<Circuit, std::complex<double>> uniqe_trms;
     for (const auto& term : terms_) {
         if ( uniqe_trms.find(term.second) == uniqe_trms.end() ) {
             uniqe_trms.insert(std::make_pair(term.second, term.first));
@@ -102,15 +102,15 @@ void QuantumOperator::simplify(bool combine_like_terms) {
     }
 }
 
-void QuantumOperator::operator_product(const QuantumOperator& rqo, bool pre_simplify, bool post_simplify) {
+void QubitOperator::operator_product(const QubitOperator& rqo, bool pre_simplify, bool post_simplify) {
     if (pre_simplify) {
         simplify();
     }
 
-    QuantumOperator LR;
+    QubitOperator LR;
     for (auto& term_l : terms_) {
         for (auto& term_r : rqo.terms()){
-            QuantumCircuit temp_circ;
+            Circuit temp_circ;
             temp_circ.add_circuit(term_l.second);
             temp_circ.add_circuit(term_r.second);
             LR.add_term(term_l.first * term_r.first, temp_circ);
@@ -125,11 +125,11 @@ void QuantumOperator::operator_product(const QuantumOperator& rqo, bool pre_simp
     }
 }
 
-const std::vector<std::pair<std::complex<double>, QuantumCircuit>>& QuantumOperator::terms() const {
+const std::vector<std::pair<std::complex<double>, Circuit>>& QubitOperator::terms() const {
     return terms_;
 }
 
-bool QuantumOperator::check_op_equivalence(QuantumOperator qo, bool reorder) {
+bool QubitOperator::check_op_equivalence(QubitOperator qo, bool reorder) {
     if(reorder){
         order_terms();
         qo.order_terms();
@@ -148,7 +148,7 @@ bool QuantumOperator::check_op_equivalence(QuantumOperator qo, bool reorder) {
     return true;
 }
 
-std::string QuantumOperator::str() const {
+std::string QubitOperator::str() const {
     std::vector<std::string> s;
     for (const auto& term : terms_) {
         s.push_back(to_string(term.first) + term.second.str());
@@ -156,7 +156,7 @@ std::string QuantumOperator::str() const {
     return join(s, "\n");
 }
 
-size_t QuantumOperator::num_qubits() const {
+size_t QubitOperator::num_qubits() const {
     size_t max = 0;
     for (const auto& summand : terms_) {
         max = std::max(max, summand.second.num_qubits());

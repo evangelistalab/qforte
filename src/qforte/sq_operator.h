@@ -7,9 +7,9 @@
 #include <numeric>
 #include <map>
 
-class QuantumGate;
+class Gate;
 
-class QuantumOperator;
+class QubitOperator;
 
 class SQOperator {
     /* A SQOperator is a linear combination (over C) of vaccuum-normal products of fermionic
@@ -55,9 +55,9 @@ class SQOperator {
     /// Combine like terms in terms_. As a side-effect, canonicalizes the order.
     void simplify();
 
-    /// Return the QuantumOperator object corresponding the the Jordan-Wigner
+    /// Return the QubitOperator object corresponding the the Jordan-Wigner
     /// transform of this sq operator. Calls simplify as a side-effect.
-    QuantumOperator jw_transform();
+    QubitOperator jw_transform();
 
     /// return a vector of string representing this quantum operator
     std::string str() const;
@@ -73,7 +73,7 @@ class SQOperator {
 
     /// If operators is a vector of orbital indices, add the corresponding creator
     /// or annihilation qubit operators to holder.
-    void jw_helper(QuantumOperator& holder, const std::vector<size_t>& operators, bool creator) const;
+    void jw_helper(QubitOperator& holder, const std::vector<size_t>& operators, bool creator) const;
 };
 
 #endif // _sq_operator_h_

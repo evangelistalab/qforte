@@ -10,9 +10,9 @@ import copy
 def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
 
     """
-    returns a circuit equivilant to an exponentiated QuantumOperator
+    returns a circuit equivilant to an exponentiated QubitOperator
 
-    :param operator: (QuantumOperator) the operator or state preparation ansatz
+    :param operator: (QubitOperator) the operator or state preparation ansatz
     (represented as a sum of pauli terms) to be exponentiated
 
     :param trotter_number: (int) for an operator A with terms A_i, the trotter_number
@@ -23,7 +23,7 @@ def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
     """
 
     total_phase = 1.0
-    troterized_operator = qforte.QuantumCircuit()
+    troterized_operator = qforte.Circuit()
 
     if (trotter_number == 1) and (trotter_order == 1):
         #loop over terms in operator
@@ -38,7 +38,7 @@ def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
         if(trotter_order > 1):
             raise NotImplementedError("Higher order trotterization is not yet implemented.")
 
-        ho_op = qforte.QuantumOperator()
+        ho_op = qforte.QubitOperator()
 
         for k in range(1, trotter_number+1):
             for term in operator.terms():
@@ -55,11 +55,11 @@ def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
 def trotterize_w_cRz(operator, ancilla_qubit_idx, factor=1.0, Use_open_cRz=False, trotter_number=1, trotter_order=1):
 
     """
-    returns a circuit equivilant to an exponentiated QuantumOperator in which each term
+    returns a circuit equivilant to an exponentiated QubitOperator in which each term
     in the trotterization exp(-i * theta_k ) only acts on the register if the ancilla
     qubit is in the |1> state.
 
-    :param operator: (QuantumOperator) the operator or state preparation ansatz
+    :param operator: (QubitOperator) the operator or state preparation ansatz
     (represented as a sum of pauli terms) to be exponentiated
 
     :param ancilla_qubit_idx: (int) the index of the ancilla qubit
@@ -76,7 +76,7 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, factor=1.0, Use_open_cRz=False
     """
 
     total_phase = 1.0
-    troterized_operator = qforte.QuantumCircuit()
+    troterized_operator = qforte.Circuit()
 
     if (trotter_number == 1) and (trotter_order == 1):
         #loop over terms in operator
@@ -96,7 +96,7 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, factor=1.0, Use_open_cRz=False
     else:
         if(trotter_order > 1):
             raise NotImplementedError("Higher order trotterization is not yet implemented.")
-        ho_op = qforte.QuantumOperator()
+        ho_op = qforte.QubitOperator()
         for k in range(1, trotter_number+1):
             k = float(k)
             for term in operator.terms():

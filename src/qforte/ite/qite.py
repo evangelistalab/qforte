@@ -32,11 +32,11 @@ class QITE(Algorithm):
         How many QITE steps should be taken?
     _NI : int
         The number of operators in _sig.
-    _sig : QuantumOpPool
+    _sig : QubitOpPool
         The basis of operators allowed in a unitary evolution step.
     _sparseSb : bool
     _total_phase : complex
-    _Uqite: QuantumCircuit
+    _Uqite: Circuit
     _x_thresh : float
     """
     def run(self,
@@ -55,7 +55,7 @@ class QITE(Algorithm):
         self._expansion_type = expansion_type
         self._sparseSb = sparseSb
         self._total_phase = 1.0 + 0.0j
-        self._Uqite = qf.QuantumCircuit()
+        self._Uqite = qf.Circuit()
         self._b_thresh = b_thresh
         self._x_thresh = x_thresh
 
@@ -66,7 +66,7 @@ class QITE(Algorithm):
         self._do_lanczos = do_lanczos
         self._lanczos_gap = lanczos_gap
 
-        qc_ref = qf.QuantumComputer(self._nqb)
+        qc_ref = qf.Computer(self._nqb)
         qc_ref.apply_circuit(self._Uprep)
         self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
 
@@ -136,7 +136,7 @@ class QITE(Algorithm):
 
     def build_expansion_pool(self):
         print('\n==> Building expansion pool <==')
-        self._sig = qf.QuantumOpPool()
+        self._sig = qf.QubitOpPool()
 
         if(self._expansion_type == 'complete_qubit'):
             if (self._nqb > 6):
@@ -150,7 +150,7 @@ class QITE(Algorithm):
             P = qf.SQOpPool()
             P.set_orb_spaces(self._ref)
             P.fill_pool(self._expansion_type)
-            sig_temp = P.get_quantum_operator("commuting_grp_lex", False)
+            sig_temp = P.get_qubit_operator("commuting_grp_lex", False)
 
             # Filter the generated operators, so that only those with an odd number of Y gates are allowed.
             # See section "Real Hamiltonians and states" in the SI of Motta for theoretical justification.
@@ -158,14 +158,14 @@ class QITE(Algorithm):
             # thus vanish. This method will not be correct for non-real Hamiltonians or states.
             for alph, rho in sig_temp.terms():
                 nygates = 0
-                temp_rho = qf.QuantumCircuit()
+                temp_rho = qf.Circuit()
                 for gate in rho.gates():
                     temp_rho.add(qf.gate(gate.gate_id(), gate.target(), gate.control()))
                     if (gate.gate_id() == "Y"):
                         nygates += 1
 
                 if (nygates % 2 == 1):
-                    rho_op = qf.QuantumOperator()
+                    rho_op = qf.QubitOperator()
                     rho_op.add(1.0, temp_rho)
                     self._sig.add(1.0, rho_op)
 
@@ -186,7 +186,7 @@ class QITE(Algorithm):
 
         S = np.zeros((Idim, Idim), dtype=complex)
 
-        Ipsi_qc = qf.QuantumComputer(self._nqb)
+        Ipsi_qc = qf.Computer(self._nqb)
         Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
         # CI[I][J] = (σ_I Ψ)_J
         CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
@@ -214,7 +214,7 @@ class QITE(Algorithm):
 
         S = np.zeros((len(b_sparse),len(b_sparse)), dtype=complex)
 
-        Ipsi_qc = qf.QuantumComputer(self._nqb)
+        Ipsi_qc = qf.Computer(self._nqb)
         Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
         CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
 
@@ -241,7 +241,7 @@ class QITE(Algorithm):
 
         self._n_pauli_trm_measures += self._Nl * self._NI
 
-        Hpsi_qc = qf.QuantumComputer(self._nqb)
+        Hpsi_qc = qf.Computer(self._nqb)
         Hpsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
         Hpsi_qc.apply_operator(self._qb_ham)
         C_Hpsi_qc = copy.deepcopy(Hpsi_qc.get_coeff_vec())
@@ -257,7 +257,7 @@ class QITE(Algorithm):
     def do_qite_step(self):
 
         btot = self.build_b()
-        A = qf.QuantumOperator()
+        A = qf.QubitOperator()
 
         if(self._sparseSb):
             sp_idxs, S, btot = self.build_sparse_S_b(btot)
@@ -299,7 +299,7 @@ class QITE(Algorithm):
 
     def evolve(self):
         self._Uqite.add(self._Uprep)
-        self._qc = qf.QuantumComputer(self._nqb)
+        self._qc = qf.Computer(self._nqb)
         self._qc.apply_circuit(self._Uqite)
 
         if(self._do_lanczos):
@@ -308,7 +308,7 @@ class QITE(Algorithm):
 
             self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
 
-            qcSig_temp = qf.QuantumComputer(self._nqb)
+            qcSig_temp = qf.Computer(self._nqb)
             qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
             qcSig_temp.apply_operator(self._qb_ham)
             self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
@@ -330,7 +330,7 @@ class QITE(Algorithm):
                 if(kb % self._lanczos_gap == 0):
                     self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
 
-                    qcSig_temp = qf.QuantumComputer(self._nqb)
+                    qcSig_temp = qf.Computer(self._nqb)
                     qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
                     qcSig_temp.apply_operator(self._qb_ham)
                     self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))

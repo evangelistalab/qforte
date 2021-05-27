@@ -4,35 +4,35 @@
 
 #include "fmt/format.h"
 
-#include "quantum_basis.h"
-#include "quantum_circuit.h"
-#include "quantum_gate.h"
-#include "quantum_computer.h"
-#include "quantum_operator.h"
+#include "qubit_basis.h"
+#include "circuit.h"
+#include "gate.h"
+#include "computer.h"
+#include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
-#include "quantum_op_pool.h"
+#include "qubit_op_pool.h"
 #include "timer.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(qforte, m) {
-    py::class_<QuantumCircuit>(m, "QuantumCircuit")
+    py::class_<Circuit>(m, "Circuit")
         .def(py::init<>())
-        .def("add", &QuantumCircuit::add_gate)
-        .def("add", &QuantumCircuit::add_circuit)
-        .def("add_gate", &QuantumCircuit::add_gate)
-        .def("add_circuit", &QuantumCircuit::add_circuit)
-        .def("gates", &QuantumCircuit::gates)
-        .def("size", &QuantumCircuit::size)
-        .def("adjoint", &QuantumCircuit::adjoint)
-        .def("canonicalize_pauli_circuit", &QuantumCircuit::canonicalize_pauli_circuit)
-        .def("set_parameters", &QuantumCircuit::set_parameters)
-        .def("get_num_cnots", &QuantumCircuit::get_num_cnots)
-        .def("str", &QuantumCircuit::str)
-        .def("__str__", &QuantumCircuit::str)
-        .def("__repr__", &QuantumCircuit::str);
+        .def("add", &Circuit::add_gate)
+        .def("add", &Circuit::add_circuit)
+        .def("add_gate", &Circuit::add_gate)
+        .def("add_circuit", &Circuit::add_circuit)
+        .def("gates", &Circuit::gates)
+        .def("size", &Circuit::size)
+        .def("adjoint", &Circuit::adjoint)
+        .def("canonicalize_pauli_circuit", &Circuit::canonicalize_pauli_circuit)
+        .def("set_parameters", &Circuit::set_parameters)
+        .def("get_num_cnots", &Circuit::get_num_cnots)
+        .def("str", &Circuit::str)
+        .def("__str__", &Circuit::str)
+        .def("__repr__", &Circuit::str);
 
     py::class_<SQOperator>(m, "SQOperator")
         .def(py::init<>())
@@ -56,92 +56,92 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_coeffs", &SQOpPool::set_coeffs)
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
-        .def("get_quantum_op_pool", &SQOpPool::get_quantum_op_pool)
-        .def("get_quantum_operator", &SQOpPool::get_quantum_operator, py::arg("order_type"),
+        .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool)
+        .def("get_qubit_operator", &SQOpPool::get_qubit_operator, py::arg("order_type"),
              py::arg("combine_like_terms") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str)
         .def("__str__", &SQOpPool::str)
         .def("__repr__", &SQOpPool::str);
 
-    py::class_<QuantumOperator>(m, "QuantumOperator")
+    py::class_<QubitOperator>(m, "QubitOperator")
         .def(py::init<>())
-        .def("add", &QuantumOperator::add_term)
-        .def("add", &QuantumOperator::add_op)
-        .def("add_term", &QuantumOperator::add_term)
-        .def("add_op", &QuantumOperator::add_op)
-        .def("set_coeffs", &QuantumOperator::set_coeffs)
-        .def("mult_coeffs", &QuantumOperator::mult_coeffs)
-        .def("terms", &QuantumOperator::terms)
-        .def("order_terms", &QuantumOperator::order_terms)
-        .def("canonical_order", &QuantumOperator::canonical_order)
-        .def("simplify", &QuantumOperator::simplify)
-        .def("operator_product", &QuantumOperator::operator_product)
-        .def("check_op_equivalence", &QuantumOperator::check_op_equivalence)
-        .def("num_qubits", &QuantumOperator::num_qubits)
-        .def("str", &QuantumOperator::str)
-        .def("__str__", &QuantumOperator::str)
-        .def("__repr__", &QuantumOperator::str);
+        .def("add", &QubitOperator::add_term)
+        .def("add", &QubitOperator::add_op)
+        .def("add_term", &QubitOperator::add_term)
+        .def("add_op", &QubitOperator::add_op)
+        .def("set_coeffs", &QubitOperator::set_coeffs)
+        .def("mult_coeffs", &QubitOperator::mult_coeffs)
+        .def("terms", &QubitOperator::terms)
+        .def("order_terms", &QubitOperator::order_terms)
+        .def("canonical_order", &QubitOperator::canonical_order)
+        .def("simplify", &QubitOperator::simplify)
+        .def("operator_product", &QubitOperator::operator_product)
+        .def("check_op_equivalence", &QubitOperator::check_op_equivalence)
+        .def("num_qubits", &QubitOperator::num_qubits)
+        .def("str", &QubitOperator::str)
+        .def("__str__", &QubitOperator::str)
+        .def("__repr__", &QubitOperator::str);
 
-    py::class_<QuantumOpPool>(m, "QuantumOpPool")
+    py::class_<QubitOpPool>(m, "QubitOpPool")
         .def(py::init<>())
-        .def("add", &QuantumOpPool::add_term)
-        .def("add_term", &QuantumOpPool::add_term)
-        .def("set_coeffs", &QuantumOpPool::set_coeffs)
-        .def("set_op_coeffs", &QuantumOpPool::set_op_coeffs)
-        .def("set_terms", &QuantumOpPool::set_terms)
-        .def("terms", &QuantumOpPool::terms)
-        .def("join_op_from_right_lazy", &QuantumOpPool::join_op_from_right_lazy)
-        .def("join_op_from_right", &QuantumOpPool::join_op_from_right)
-        .def("join_op_from_left", &QuantumOpPool::join_op_from_left)
-        .def("join_as_commutator", &QuantumOpPool::join_as_commutator)
-        .def("square", &QuantumOpPool::square)
-        .def("fill_pool", &QuantumOpPool::fill_pool)
-        .def("str", &QuantumOpPool::str)
-        .def("__str__", &QuantumOpPool::str)
-        .def("__repr__", &QuantumOpPool::str);
+        .def("add", &QubitOpPool::add_term)
+        .def("add_term", &QubitOpPool::add_term)
+        .def("set_coeffs", &QubitOpPool::set_coeffs)
+        .def("set_op_coeffs", &QubitOpPool::set_op_coeffs)
+        .def("set_terms", &QubitOpPool::set_terms)
+        .def("terms", &QubitOpPool::terms)
+        .def("join_op_from_right_lazy", &QubitOpPool::join_op_from_right_lazy)
+        .def("join_op_from_right", &QubitOpPool::join_op_from_right)
+        .def("join_op_from_left", &QubitOpPool::join_op_from_left)
+        .def("join_as_commutator", &QubitOpPool::join_as_commutator)
+        .def("square", &QubitOpPool::square)
+        .def("fill_pool", &QubitOpPool::fill_pool)
+        .def("str", &QubitOpPool::str)
+        .def("__str__", &QubitOpPool::str)
+        .def("__repr__", &QubitOpPool::str);
 
-    py::class_<QuantumBasis>(m, "QuantumBasis")
+    py::class_<QubitBasis>(m, "QubitBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
-        .def("str", &QuantumBasis::str)
-        .def("__str__", &QuantumBasis::str)
-        .def("__repr__", &QuantumBasis::str)
-        .def("flip_bit", &QuantumBasis::flip_bit)
-        .def("set_bit", &QuantumBasis::set_bit)
-        .def("add", &QuantumBasis::add)
-        .def("get_bit", &QuantumBasis::get_bit);
+        .def("str", &QubitBasis::str)
+        .def("__str__", &QubitBasis::str)
+        .def("__repr__", &QubitBasis::str)
+        .def("flip_bit", &QubitBasis::flip_bit)
+        .def("set_bit", &QubitBasis::set_bit)
+        .def("add", &QubitBasis::add)
+        .def("get_bit", &QubitBasis::get_bit);
 
-    py::class_<QuantumComputer>(m, "QuantumComputer")
+    py::class_<Computer>(m, "Computer")
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
-        .def("apply_circuit_safe", &QuantumComputer::apply_circuit_safe)
-        .def("apply_operator", &QuantumComputer::apply_operator)
-        .def("apply_circuit", &QuantumComputer::apply_circuit)
-        .def("apply_gate_safe", &QuantumComputer::apply_gate_safe)
-        .def("apply_gate", &QuantumComputer::apply_gate)
-        .def("apply_constant", &QuantumComputer::apply_constant)
-        .def("measure_circuit", &QuantumComputer::measure_circuit)
-        .def("measure_z_readouts_fast", &QuantumComputer::measure_z_readouts_fast)
-        .def("measure_readouts", &QuantumComputer::measure_readouts)
-        .def("perfect_measure_circuit", &QuantumComputer::perfect_measure_circuit)
-        .def("direct_oppl_exp_val", &QuantumComputer::direct_oppl_exp_val)
-        .def("direct_idxd_oppl_exp_val", &QuantumComputer::direct_idxd_oppl_exp_val)
-        .def("direct_oppl_exp_val_w_mults", &QuantumComputer::direct_oppl_exp_val_w_mults)
-        .def("direct_op_exp_val", &QuantumComputer::direct_op_exp_val)
-        .def("direct_circ_exp_val", &QuantumComputer::direct_circ_exp_val)
-        .def("direct_pauli_circ_exp_val", &QuantumComputer::direct_pauli_circ_exp_val)
-        .def("direct_gate_exp_val", &QuantumComputer::direct_gate_exp_val)
-        .def("coeff", &QuantumComputer::coeff)
-        .def("get_coeff_vec", &QuantumComputer::get_coeff_vec)
-        .def("get_nqubit", &QuantumComputer::get_nqubit)
-        .def("set_coeff_vec", &QuantumComputer::set_coeff_vec)
-        .def("set_state", &QuantumComputer::set_state)
-        .def("zero_state", &QuantumComputer::zero_state)
-        .def("get_timings", &QuantumComputer::get_timings)
-        .def("clear_timings", &QuantumComputer::clear_timings)
-        .def("str", &QuantumComputer::str)
-        .def("__str__", &QuantumComputer::str)
-        .def("__repr__", [](const QuantumComputer& qc) {
-            std::string r("QuantumComputer(\n");
+        .def("apply_circuit_safe", &Computer::apply_circuit_safe)
+        .def("apply_operator", &Computer::apply_operator)
+        .def("apply_circuit", &Computer::apply_circuit)
+        .def("apply_gate_safe", &Computer::apply_gate_safe)
+        .def("apply_gate", &Computer::apply_gate)
+        .def("apply_constant", &Computer::apply_constant)
+        .def("measure_circuit", &Computer::measure_circuit)
+        .def("measure_z_readouts_fast", &Computer::measure_z_readouts_fast)
+        .def("measure_readouts", &Computer::measure_readouts)
+        .def("perfect_measure_circuit", &Computer::perfect_measure_circuit)
+        .def("direct_oppl_exp_val", &Computer::direct_oppl_exp_val)
+        .def("direct_idxd_oppl_exp_val", &Computer::direct_idxd_oppl_exp_val)
+        .def("direct_oppl_exp_val_w_mults", &Computer::direct_oppl_exp_val_w_mults)
+        .def("direct_op_exp_val", &Computer::direct_op_exp_val)
+        .def("direct_circ_exp_val", &Computer::direct_circ_exp_val)
+        .def("direct_pauli_circ_exp_val", &Computer::direct_pauli_circ_exp_val)
+        .def("direct_gate_exp_val", &Computer::direct_gate_exp_val)
+        .def("coeff", &Computer::coeff)
+        .def("get_coeff_vec", &Computer::get_coeff_vec)
+        .def("get_nqubit", &Computer::get_nqubit)
+        .def("set_coeff_vec", &Computer::set_coeff_vec)
+        .def("set_state", &Computer::set_state)
+        .def("zero_state", &Computer::zero_state)
+        .def("get_timings", &Computer::get_timings)
+        .def("clear_timings", &Computer::clear_timings)
+        .def("str", &Computer::str)
+        .def("__str__", &Computer::str)
+        .def("__repr__", [](const Computer& qc) {
+            std::string r("Computer(\n");
             for (const std::string& s : qc.str()) {
                 r += "  " + s + "\n";
             }
@@ -149,14 +149,14 @@ PYBIND11_MODULE(qforte, m) {
             return r;
         });
 
-    py::class_<QuantumGate>(m, "QuantumGate")
-        .def("target", &QuantumGate::target)
-        .def("control", &QuantumGate::control)
-        .def("gate_id", &QuantumGate::gate_id)
-        .def("adjoint", &QuantumGate::adjoint)
-        .def("str", &QuantumGate::str)
-        .def("__str__", &QuantumGate::str)
-        .def("__repr__", &QuantumGate::repr);
+    py::class_<Gate>(m, "Gate")
+        .def("target", &Gate::target)
+        .def("control", &Gate::control)
+        .def("gate_id", &Gate::gate_id)
+        .def("adjoint", &Gate::adjoint)
+        .def("str", &Gate::str)
+        .def("__str__", &Gate::str)
+        .def("__repr__", &Gate::repr);
 
     py::class_<local_timer>(m, "local_timer")
         .def(py::init<>())
@@ -212,5 +212,5 @@ PYBIND11_MODULE(qforte, m) {
         },
         "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0, "Make a gate.");
 
-    m.def("control_gate", &make_control_gate, "control"_a, "QuantumGate"_a);
+    m.def("control_gate", &make_control_gate, "control"_a, "Gate"_a);
 }

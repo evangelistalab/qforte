@@ -1,12 +1,12 @@
 #include "helpers.h"
-#include "quantum_gate.h"
-#include "quantum_circuit.h"
-#include "quantum_operator.h"
+#include "gate.h"
+#include "circuit.h"
+#include "qubit_operator.h"
 #include "sq_operator.h"
-#include "quantum_op_pool.h"
+#include "qubit_op_pool.h"
 #include "sq_op_pool.h"
 
-#include "quantum_basis.h"
+#include "qubit_basis.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -50,10 +50,10 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref){
     nvir_ = static_cast<int>(norb - nocc_);
 }
 
-QuantumOpPool SQOpPool::get_quantum_op_pool(){
-    QuantumOpPool A;
+QubitOpPool SQOpPool::get_qubit_op_pool(){
+    QubitOpPool A;
     for (auto& term : terms_) {
-        // QuantumOperator a = term.second.jw_transform();
+        // QubitOperator a = term.second.jw_transform();
         // a.mult_coeffs(term.first);
         A.add_term(term.first, term.second.jw_transform());
     }
@@ -61,8 +61,8 @@ QuantumOpPool SQOpPool::get_quantum_op_pool(){
 }
 
 
-QuantumOperator SQOpPool::get_quantum_operator(const std::string& order_type, bool combine_like_terms){
-    QuantumOperator parent;
+QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool combine_like_terms){
+    QubitOperator parent;
 
     if(order_type=="unique_lex"){
         for (auto& term : terms_) {
@@ -277,7 +277,7 @@ void SQOpPool::fill_pool(std::string pool_type){
         for (int I=0; I<std::pow(2, nqb); I++) {
 
             // get the basis state (I) | 11001100 > or whatever..
-            QuantumBasis basis_I(I);
+            QubitBasis basis_I(I);
 
             int nbody = 0;
             int pn = 0;

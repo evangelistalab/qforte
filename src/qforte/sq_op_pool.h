@@ -6,8 +6,8 @@
 #include <vector>
 
 class SQOperator;
-class QuantumOperator;
-class QuantumOpPool;
+class QubitOperator;
+class QubitOpPool;
 
 // Represents an arbitrary linear combination of second quantized operators.
 // May also represent an array of second quantized operators by ignoring
@@ -30,11 +30,11 @@ class SQOpPool {
     ///     of occupied spin orbitals of each point group symmetry
     void set_orb_spaces(const std::vector<int>& ref);
 
-    /// returns a QuantumOpPool object with one term for each term in terms_
-    QuantumOpPool get_quantum_op_pool();
+    /// returns a QubitOpPool object with one term for each term in terms_
+    QubitOpPool get_qubit_op_pool();
 
-    /// returns a single QuantumOperator of the JW transformed sq ops
-    QuantumOperator get_quantum_operator(const std::string& order_type, bool combine_like_terms=true);
+    /// returns a single QubitOperator of the JW transformed sq ops
+    QubitOperator get_qubit_operator(const std::string& order_type, bool combine_like_terms=true);
 
     /// builds the sq operator pool
     void fill_pool(std::string pool_type);

@@ -1,10 +1,10 @@
 #include <algorithm>
 
 #include "helpers.h"
-#include "quantum_gate.h"
-#include "quantum_circuit.h"
+#include "gate.h"
+#include "circuit.h"
 
-void QuantumCircuit::set_parameters(const std::vector<double>& params) {
+void Circuit::set_parameters(const std::vector<double>& params) {
     // need a loop over only gates in state preparation circuit that
     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
     // TODO: make a indexing funciton using a map (Nick)
@@ -19,14 +19,14 @@ void QuantumCircuit::set_parameters(const std::vector<double>& params) {
     }
 }
 
-void QuantumCircuit::add_circuit(const QuantumCircuit& circ) {
+void Circuit::add_circuit(const Circuit& circ) {
     for (const auto gate : circ.gates()) {
         gates_.push_back(gate);
     }
 }
 
-QuantumCircuit QuantumCircuit::adjoint() {
-    QuantumCircuit qcirc_adjoint;
+Circuit Circuit::adjoint() {
+    Circuit qcirc_adjoint;
     for (auto& gate : gates_) {
         qcirc_adjoint.add_gate(gate.adjoint());
     }
@@ -34,7 +34,7 @@ QuantumCircuit QuantumCircuit::adjoint() {
     return qcirc_adjoint;
 }
 
-std::complex<double> QuantumCircuit::canonicalize_pauli_circuit() {
+std::complex<double> Circuit::canonicalize_pauli_circuit() {
     if (gates_.size()==0){
         // If there are no gates, there's nothing to order.
         return 1.0;
@@ -42,7 +42,7 @@ std::complex<double> QuantumCircuit::canonicalize_pauli_circuit() {
     for (const auto& gate: gates_) {
         const auto& id = gate.gate_id();
         if (id != "X" && id != "Y" && id != "Z") {
-            throw ("QuantumCircuit::canonicalize_pauli_circuit is undefined for circuits with gates other than X, Y, or Z");
+            throw ("Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other than X, Y, or Z");
         }
     }
     //using namespace std::complex_literals;
@@ -67,13 +67,13 @@ std::complex<double> QuantumCircuit::canonicalize_pauli_circuit() {
 
     // Apply gate commutation to sort gates from those acting on smallest-index qubit to largest.
     std::stable_sort(gates_.begin(), gates_.end(),
-        [&](const QuantumGate& a, const QuantumGate& b) {
+        [&](const Gate& a, const Gate& b) {
             return (a.target() < b.target());
         }
     );
 
     int n_gates = gates_.size();
-    QuantumCircuit simplified_circ;
+    Circuit simplified_circ;
     std::complex<double> coeff = 1.0;
     std::string s;
     bool first_gate_for_qubit = true;
@@ -106,7 +106,7 @@ std::complex<double> QuantumCircuit::canonicalize_pauli_circuit() {
     return coeff;
 }
 
-int QuantumCircuit::get_num_cnots() const {
+int Circuit::get_num_cnots() const {
     int n_cnots = 0;
     for (const auto& gate : gates_) {
         if(gate.gate_id() == "CNOT" || gate.gate_id() == "cX"){
@@ -116,7 +116,7 @@ int QuantumCircuit::get_num_cnots() const {
     return n_cnots;
 }
 
-std::string QuantumCircuit::str() const {
+std::string Circuit::str() const {
     std::vector<std::string> s;
     for (const auto& gate : gates_) {
         s.push_back(gate.str());
@@ -124,7 +124,7 @@ std::string QuantumCircuit::str() const {
     return "[" + join(s, " ") + "]";
 }
 
-size_t QuantumCircuit::num_qubits() const {
+size_t Circuit::num_qubits() const {
     size_t max = 0;
     for (const auto& gate: gates_) {
         max = std::max({max, gate.target() + 1, gate.control() + 1});
@@ -132,7 +132,7 @@ size_t QuantumCircuit::num_qubits() const {
     return max;
 }
 
-// std::vector<double> QuantumCircuit::get_parameters() {
+// std::vector<double> Circuit::get_parameters() {
 //     // need a loop over only gates in state preparation circuit that
 //     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
 //     // TODO: make a indexing funciton using a map (Nick)
@@ -149,7 +149,7 @@ size_t QuantumCircuit::num_qubits() const {
 //     }
 // }
 
-bool operator==(const QuantumCircuit& qc1, const QuantumCircuit& qc2)  {
+bool operator==(const Circuit& qc1, const Circuit& qc2)  {
     if(qc1.gates().size() == qc2.gates().size()){
         for (int k=0; k<qc1.gates().size(); k++){
             if (qc1.gates()[k].gate_id() != qc2.gates()[k].gate_id()){

@@ -28,7 +28,7 @@ def Toffoli(i,j,k):
     C23 = qforte.gate('cX', k, j)
     H3 = qforte.gate('H', k, k)
 
-    T_circ = qforte.QuantumCircuit()
+    T_circ = qforte.Circuit()
     T_circ.add(H3)
     T_circ.add(C23)
     T_circ.add(T3.adjoint())
@@ -63,7 +63,7 @@ def Fredkin(i,j,k):
     CV23 = qforte.gate('cV', k, j)
     CV13 = qforte.gate('cV', k, i)
 
-    F_circ = qforte.QuantumCircuit()
+    F_circ = qforte.Circuit()
     F_circ.add(C32)
     F_circ.add(CV23)
     F_circ.add(CV13)

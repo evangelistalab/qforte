@@ -77,7 +77,7 @@ class JordanWignerTests(unittest.TestCase):
         qforte.build_circuit('Y_2 X_3 Y_4 Z_5 Y_6')
         ]
 
-        correct_op = qforte.QuantumOperator()
+        correct_op = qforte.QubitOperator()
         for coeff, circ in zip(coeff_vec, circ_vec):
             correct_op.add(coeff, circ)
 
@@ -122,7 +122,7 @@ class JordanWignerTests(unittest.TestCase):
             "Z_0 Y_1 X_3 X_4",
             "Z_0 Y_1 X_3 Y_4"
             ]]
-        correct_op = qforte.QuantumOperator()
+        correct_op = qforte.QubitOperator()
         for coeff, circ in zip(coeff_vec, circ_vec):
             correct_op.add(coeff, circ)
         a = qforte.SQOperator()

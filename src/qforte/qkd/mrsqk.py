@@ -267,7 +267,7 @@ class MRSQK(QSD):
                 List of time steps to use for each reference (ususally the same for
                 all references).
 
-            H : QuantumOperator
+            H : QubitOperator
                 The operator to time evolove and measure with respect to
                 (usually the Hamiltonain).
 
@@ -302,7 +302,7 @@ class MRSQK(QSD):
         for i, ref in enumerate(self._single_det_refs):
             for m in range(self._nstates_per_ref):
                 # NOTE: do NOT use Uprep here (is determinant specific).
-                Um = qforte.QuantumCircuit()
+                Um = qforte.Circuit()
                 for j in range(self._nqb):
                     if ref[j] == 1:
                         Um.add(qforte.gate('X', j, j))
@@ -313,7 +313,7 @@ class MRSQK(QSD):
                     expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
                     Um.add(expn_op1)
 
-                QC = qforte.QuantumComputer(self._nqb)
+                QC = qforte.Computer(self._nqb)
                 QC.apply_circuit(Um)
                 QC.apply_constant(phase1)
                 omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
@@ -368,12 +368,12 @@ class MRSQK(QSD):
 
         for i, ref in enumerate(self._pre_sa_ref_lst):
             # NOTE: do NOT use Uprep here (is determinant specific).
-            Un = qforte.QuantumCircuit()
+            Un = qforte.Circuit()
             for j in range(self._nqb):
                 if ref[j] == 1:
                     Un.add(qforte.gate('X', j, j))
 
-            QC = qforte.QuantumComputer(self._nqb)
+            QC = qforte.Computer(self._nqb)
             QC.apply_circuit(Un)
             omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
 
@@ -419,7 +419,7 @@ class MRSQK(QSD):
                 List of time steps to use for each reference (ususally the same for
                 all references).
 
-            H : QuantumOperator
+            H : QubitOperator
                 The operator to time evolove and measure with respect to
                 (usually the Hamiltonain).
 
@@ -454,20 +454,20 @@ class MRSQK(QSD):
             for m in range(self._nstates_per_ref):
 
                 # TODO (cleanup): will need to consider gate count for this part.
-                Um = qforte.QuantumCircuit()
+                Um = qforte.Circuit()
                 phase1 = 1.0
                 if(m>0):
                     fact = (0.0-1.0j) * m * self._mr_dt
                     expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
                     Um.add(expn_op1)
 
-                QC = qforte.QuantumComputer(self._nqb)
+                QC = qforte.Computer(self._nqb)
                 state_prep_lst = []
                 for term in ref:
                     coeff = term[0]
                     det = term[1]
                     idx = ref_to_basis_idx(det)
-                    state = qforte.QuantumBasis(idx)
+                    state = qforte.QubitBasis(idx)
                     state_prep_lst.append( (state, coeff) )
 
                 QC.set_state(state_prep_lst)
@@ -552,8 +552,8 @@ class MRSQK(QSD):
                 The time step (delta t) to use in the inital quantum Krylov
                 calculation.
 
-            H : QuantumOperator
-                The QuantumOperator object to use in MRSQK.
+            H : QubitOperator
+                The QubitOperator object to use in MRSQK.
 
             target_root : int
                 Determines which state to return the energy for.
@@ -640,7 +640,7 @@ class MRSQK(QSD):
             print('index                     determinant  ')
             print('----------------------------------------')
             for i, idx in enumerate(true_idx_lst):
-                basis = qforte.QuantumBasis(idx)
+                basis = qforte.QubitBasis(idx)
                 print('  ', i+1, '                ', basis.str(self._nqb))
 
         else:
@@ -648,7 +648,7 @@ class MRSQK(QSD):
             print('index                     determinant  ')
             print('----------------------------------------')
             for i, idx in enumerate(idx_lst):
-                basis = qforte.QuantumBasis(idx)
+                basis = qforte.QubitBasis(idx)
                 print('  ', i+1, '                ', basis.str(self._nqb))
 
         for idx in true_idx_lst:
@@ -702,8 +702,8 @@ class MRSQK(QSD):
             The time step (delta t) to use in the inital quantum Krylov
             calculation.
 
-        H : QuantumOperator
-            The QuantumOperator object to use in MRSQK.
+        H : QubitOperator
+            The QubitOperator object to use in MRSQK.
 
         target_root : int
             Determines which state to return the energy for.
@@ -796,7 +796,7 @@ class MRSQK(QSD):
         print('----------------------------------------')
         for i, det in enumerate(self._pre_sa_ref_lst):
             qf_det_idx = ref_to_basis_idx(det)
-            basis = qforte.QuantumBasis(qf_det_idx)
+            basis = qforte.QubitBasis(qf_det_idx)
             if(target_state[i] > 0.0):
                 print('   ', round(target_state[i], 4), '                ', basis.str(self._nqb))
             else:
@@ -827,7 +827,7 @@ class MRSQK(QSD):
                 basis_vec.append( temp )
 
                 qf_det_idx = ref_to_basis_idx(temp[1])
-                basis = qforte.QuantumBasis(qf_det_idx)
+                basis = qforte.QubitBasis(qf_det_idx)
                 if(temp[0] > 0.0):
                     print('   ', round(temp[0], 4), '     ', basis.str(self._nqb))
                 else:

@@ -12,7 +12,7 @@ class QKDTests(unittest.TestCase):
 
         # The He hamilitonian
         circ_vec = [
-        qforte.QuantumCircuit(),
+        qforte.Circuit(),
          qforte.build_circuit('Z_0'),
          qforte.build_circuit('Y_0 Z_1 Z_2 Z_3 Y_4'),
          qforte.build_circuit('X_0 Z_1 Z_2 Z_3 X_4'),
@@ -385,7 +385,7 @@ class QKDTests(unittest.TestCase):
         0.05395287215237218,
         0.11278693858600855]
 
-        H4_qubit_hamiltonian = qforte.QuantumOperator()
+        H4_qubit_hamiltonian = qforte.QubitOperator()
         for i in range(len(circ_vec)):
             H4_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 

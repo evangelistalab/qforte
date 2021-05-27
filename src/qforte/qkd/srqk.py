@@ -185,7 +185,7 @@ class SRQK(QSD):
 
         for m in range(self._nstates):
             # Compute U_m = exp(-i m dt H)
-            Um = qforte.QuantumCircuit()
+            Um = qforte.Circuit()
             Um.add(self._Uprep)
             phase1 = 1.0
 
@@ -195,7 +195,7 @@ class SRQK(QSD):
                 Um.add(expn_op1)
 
             # Compute U_m |φ>
-            QC = qforte.QuantumComputer(self._nqb)
+            QC = qforte.Computer(self._nqb)
             QC.apply_circuit(Um)
             QC.apply_constant(phase1)
             self._omega_lst.append(np.asarray(QC.get_coeff_vec(), dtype=complex))
@@ -281,13 +281,13 @@ class SRQK(QSD):
             n : int
                 The number of time steps for the Un evolution.
 
-            H : QuantumOperator
+            H : QubitOperator
                 The operator to time evolove with respect to (usually the Hamiltonain).
 
             nqubits : int
                 The number of qubits
 
-            A : QuantumOperator
+            A : QubitOperator
                 The overal operator to measure with respect to (optional).
 
             trot_number : int
@@ -305,8 +305,8 @@ class SRQK(QSD):
         """
         value = 0.0
         ancilla_idx = self._nqb
-        Uk = qforte.QuantumCircuit()
-        temp_op1 = qforte.QuantumOperator()
+        Uk = qforte.Circuit()
+        temp_op1 = qforte.QubitOperator()
         # TODO (opt): move to C side.
         for t in self._qb_ham.terms():
             c, op = t
@@ -320,9 +320,9 @@ class SRQK(QSD):
         for gate in expn_op1.gates():
             Uk.add(gate)
 
-        Ub = qforte.QuantumCircuit()
+        Ub = qforte.Circuit()
 
-        temp_op2 = qforte.QuantumOperator()
+        temp_op2 = qforte.QubitOperator()
         for t in self._qb_ham.terms():
             c, op = t
             phase = -1.0j * m * self._dt * c
@@ -338,7 +338,7 @@ class SRQK(QSD):
 
         if not use_op:
             # TODO (opt): use Uprep
-            cir = qforte.QuantumCircuit()
+            cir = qforte.Circuit()
             for j in range(self._nqb):
                 if self._ref[j] == 1:
                     cir.add(qforte.gate('X', j, j))
@@ -351,10 +351,10 @@ class SRQK(QSD):
             cir.add(Ub)
             cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
 
-            X_op = qforte.QuantumOperator()
-            x_circ = qforte.QuantumCircuit()
-            Y_op = qforte.QuantumOperator()
-            y_circ = qforte.QuantumCircuit()
+            X_op = qforte.QubitOperator()
+            x_circ = qforte.Circuit()
+            Y_op = qforte.QubitOperator()
+            y_circ = qforte.Circuit()
 
             x_circ.add(qforte.gate('X', ancilla_idx, ancilla_idx))
             y_circ.add(qforte.gate('Y', ancilla_idx, ancilla_idx))
@@ -378,14 +378,14 @@ class SRQK(QSD):
                 c, V_l = t
 
                 # TODO (opt):
-                cV_l = qforte.QuantumCircuit()
+                cV_l = qforte.Circuit()
                 for gate in V_l.gates():
                     gate_str = gate.gate_id()
                     target = gate.target()
                     control_gate_str = 'c' + gate_str
                     cV_l.add(qforte.gate(control_gate_str, target, ancilla_idx))
 
-                cir = qforte.QuantumCircuit()
+                cir = qforte.Circuit()
                 # TODO (opt): use Uprep
                 for j in range(self._nqb):
                     if self._ref[j] == 1:
@@ -400,10 +400,10 @@ class SRQK(QSD):
                 cir.add(Ub)
                 cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
 
-                X_op = qforte.QuantumOperator()
-                x_circ = qforte.QuantumCircuit()
-                Y_op = qforte.QuantumOperator()
-                y_circ = qforte.QuantumCircuit()
+                X_op = qforte.QubitOperator()
+                x_circ = qforte.Circuit()
+                Y_op = qforte.QubitOperator()
+                y_circ = qforte.Circuit()
 
                 x_circ.add(qforte.gate('X', ancilla_idx, ancilla_idx))
                 y_circ.add(qforte.gate('Y', ancilla_idx, ancilla_idx))

@@ -8,11 +8,11 @@ class CircuitTests(unittest.TestCase):
         print('\n')
         num_qubits = 10
 
-        qc1 = qforte.QuantumComputer(num_qubits)
-        qc2 = qforte.QuantumComputer(num_qubits)
+        qc1 = qforte.Computer(num_qubits)
+        qc2 = qforte.Computer(num_qubits)
 
-        prep_circ = qforte.QuantumCircuit()
-        circ = qforte.QuantumCircuit()
+        prep_circ = qforte.Circuit()
+        circ = qforte.Circuit()
 
         for i in range(num_qubits):
             prep_circ.add(qforte.gate('H',i, i))

@@ -15,7 +15,7 @@ def exponentiate_single_term(coefficient, term, Use_cRz=False, ancilla_idx=None,
     ----------
     :param coefficient: float
         an imaginary coefficient that multiplies the Pauli string
-    :param term: QuantumCircuit
+    :param term: Circuit
         a Pauli string to be exponentiated
     """
     # This function assumes that the factor is imaginary. The following tests for it.
@@ -25,12 +25,12 @@ def exponentiate_single_term(coefficient, term, Use_cRz=False, ancilla_idx=None,
 
     # If the Pauli string has no terms this is just a phase factor
     if term.size() == 0:
-        return (qforte.QuantumCircuit(), np.exp(coefficient))
+        return (qforte.Circuit(), np.exp(coefficient))
 
-    exponential = qforte.QuantumCircuit()
-    to_z = qforte.QuantumCircuit()
-    to_original = qforte.QuantumCircuit()
-    cX_circ = qforte.QuantumCircuit()
+    exponential = qforte.Circuit()
+    to_z = qforte.Circuit()
+    to_original = qforte.Circuit()
+    cX_circ = qforte.Circuit()
 
     prev_target = None
     max_target = None

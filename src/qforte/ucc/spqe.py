@@ -270,12 +270,12 @@ class SPQE(UCCPQE):
         for param, top in zip(trial_amps, self._tops):
             temp_pool.add(param, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('commuting_grp_lex')
+        A = temp_pool.get_qubit_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)
         if U_phase != 1.0 + 0.0j:
             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
 
-        qc_res = qforte.QuantumComputer(self._nqb)
+        qc_res = qforte.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
         qc_res.apply_circuit(U)
         qc_res.apply_operator(self._qb_ham)
@@ -301,7 +301,7 @@ class SPQE(UCCPQE):
             destroyed = False
             denom = 1.0
 
-            basis_I = qforte.QuantumBasis(self._nqb)
+            basis_I = qforte.QubitBasis(self._nqb)
             for k, occ in enumerate(self._ref):
                 basis_I.set_bit(k, occ)
 
@@ -330,7 +330,7 @@ class SPQE(UCCPQE):
                 nel_I = sum(det_I)
                 cor_spin_I = correct_spin(det_I, 0)
 
-                qc_temp = qforte.QuantumComputer(self._nqb)
+                qc_temp = qforte.Computer(self._nqb)
                 qc_temp.apply_circuit(self._Uprep)
                 qc_temp.apply_operator(sq_op.jw_transform())
                 sign_adjust = qc_temp.get_coeff_vec()[I]
@@ -379,12 +379,12 @@ class SPQE(UCCPQE):
 
         print('\nBuilding single particle energies list:')
         print('---------------------------------------')
-        qc = qforte.QuantumComputer(self._nqb)
+        qc = qforte.Computer(self._nqb)
         qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
         E0 = qc.direct_op_exp_val(self._qb_ham)
 
         for i in range(self._nqb):
-            qc = qforte.QuantumComputer(self._nqb)
+            qc = qforte.Computer(self._nqb)
             qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
             qc.apply_gate(qforte.gate('X', i, i))
             Ei = qc.direct_op_exp_val(self._qb_ham)
@@ -408,12 +408,12 @@ class SPQE(UCCPQE):
         for param, top in zip(self._tamps, self._tops):
             temp_pool.add(param, self._pool[top][1])
 
-        A = temp_pool.get_quantum_operator('commuting_grp_lex')
+        A = temp_pool.get_qubit_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)
         if U_phase != 1.0 + 0.0j:
             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
 
-        qc_res = qf.QuantumComputer(self._nqb)
+        qc_res = qf.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
         qc_res.apply_circuit(U)
         qc_res.apply_circuit(self._eiH)
@@ -562,7 +562,7 @@ class SPQE(UCCPQE):
         # TODO(Nick): incorparate more flexability into this
         na_el = int(nel/2);
         nb_el = int(nel/2);
-        basis_I = qf.QuantumBasis(I)
+        basis_I = qf.QubitBasis(I)
 
         nbody = 0
         pn = 0
@@ -630,7 +630,7 @@ class SPQE(UCCPQE):
         # TODO(Nick): incorparate more flexability into this
         na_el = int(nel/2);
         nb_el = int(nel/2);
-        basis_I = qf.QuantumBasis(I)
+        basis_I = qf.QubitBasis(I)
 
         nbody = 0
         pn = 0

@@ -20,9 +20,9 @@ class Experiment(object):
 
         :param n_qubits: (int) the number of qubits for the quantum experiment.
 
-        :param generator: (QuantumCircuit) the parameterized state preparation circuit.
+        :param generator: (Circuit) the parameterized state preparation circuit.
 
-        :param operator: (QuantumOperator) the qubit operator to be measured.
+        :param operator: (QubitOperator) the qubit operator to be measured.
 
         :param N_samples: (int) the number of measurements made for each term in the operator
 
@@ -48,7 +48,7 @@ class Experiment(object):
 
         if(self.prepare_each_time_==False):
             #1 initialize a quantum computer
-            qc = qforte.QuantumComputer(self.n_qubits_)
+            qc = qforte.Computer(self.n_qubits_)
 
             #2 build/update generator with params
             # self.generator_.set_parameters(params)
@@ -82,7 +82,7 @@ class Experiment(object):
 
         if(self.prepare_each_time_==False):
             #1 initialize a quantum computer
-            qc = qforte.QuantumComputer(self.n_qubits_)
+            qc = qforte.Computer(self.n_qubits_)
 
             #2 build/update generator with params
             # self.generator_.set_parameters(params)

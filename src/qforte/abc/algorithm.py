@@ -12,7 +12,7 @@ class Algorithm(ABC):
     _nqb : int
         The number of qubits the calculation empolys.
 
-    _qb_ham : QuantumOperator
+    _qb_ham : QubitOperator
         The operator to be measured (usually the Hamiltonian), mapped to a
         qubit representation.
 
@@ -32,7 +32,7 @@ class Algorithm(ABC):
     _Egs : float
         The final ground state energy value.
 
-    _Umaxdepth : QuantumCircuit
+    _Umaxdepth : Circuit
         The deepest circuit used during any part of the algorithm.
 
     _n_ham_measurements : int
@@ -44,7 +44,7 @@ class Algorithm(ABC):
     Methods
     -------
     build_Uprep()
-        Returns a QuantumCircuit object corresponding to the state preparation
+        Returns a Circuit object corresponding to the state preparation
         circuit reference state (usually a small product of X gates).
 
 
@@ -74,14 +74,14 @@ class Algorithm(ABC):
             self._Uprep = build_Uprep(self._ref, state_prep_type)
 
         elif self._state_prep_type == 'unitary_circ':
-            if not isinstance(reference, qf.QuantumCircuit):
-                raise ValueError("unitary_circ reference must be a QuantumCircuit.")
+            if not isinstance(reference, qf.Circuit):
+                raise ValueError("unitary_circ reference must be a Circuit.")
 
             self._ref = system.get_hf_reference()
             self._Uprep = reference
 
         else:
-            raise ValueError("QForte only suppors references as occupation lists and QuantumCircuits.")
+            raise ValueError("QForte only suppors references as occupation lists and Circuits.")
 
 
         self._nqb = len(self._ref)
@@ -190,7 +190,7 @@ class AnsatzAlgorithm(Algorithm):
 
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
-        """ This function returns the QuantumCircuit object built
+        """ This function returns the Circuit object built
         from the appropriate amplitudes (tops)
 
         Parameters
@@ -202,7 +202,7 @@ class AnsatzAlgorithm(Algorithm):
 
         U = self.ansatz_circuit(amplitudes)
 
-        Uvqc = qforte.QuantumCircuit()
+        Uvqc = qforte.Circuit()
         Uvqc.add(self._Uprep)
         Uvqc.add(U)
 
@@ -226,11 +226,11 @@ class AnsatzAlgorithm(Algorithm):
         """
         Parameters
         ----------
-        Ucirc : QuantumCircuit
+        Ucirc : Circuit
             The state preparation circuit.
         """
         if self._fast:
-            myQC = qforte.QuantumComputer(self._nqb)
+            myQC = qforte.Computer(self._nqb)
             myQC.apply_circuit(Ucirc)
             val = np.real(myQC.direct_op_exp_val(self._qb_ham))
         else:

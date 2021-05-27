@@ -3,7 +3,7 @@ import unittest
 
 class QFTTests(unittest.TestCase):
     def test_qft(self):
-        trial_state = QuantumComputer(4)
+        trial_state = Computer(4)
         trial_circ = build_circuit('X_0 X_1')
         trial_state.apply_circuit(trial_circ)
 

@@ -26,7 +26,7 @@ class QPE(Algorithm):
         self._success_prob = success_prob
         self._num_precise_bits = num_precise_bits
         self._return_phases = return_phases
-        self._Uqpe = qforte.QuantumCircuit()
+        self._Uqpe = qforte.Circuit()
         self._n_state_qubits = self._nqb
         eps = 1 - success_prob
         self._n_ancilla = num_precise_bits + int(np.log2(2 + (1.0/eps)))
@@ -54,7 +54,7 @@ class QPE(Algorithm):
         # add reverse QFT
         self._Uqpe.add(self.get_qft_circuit('reverse'))
 
-        computer = qforte.QuantumComputer(self._n_tot_qubits)
+        computer = qforte.Computer(self._n_tot_qubits)
         computer.apply_circuit(self._Uqpe)
 
         self._n_cnot = self._Uqpe.get_num_cnots()
@@ -180,10 +180,10 @@ class QPE(Algorithm):
             Returns
             -------
 
-            qft_circ : QuantumCircuit
+            qft_circ : Circuit
                 A circuit of consecutive Hadamard gates.
         """
-        Uhad = qforte.QuantumCircuit()
+        Uhad = qforte.Circuit()
         for j in range(self._abegin, self._aend + 1):
             Uhad.add(qforte.gate('H', j, j))
 
@@ -196,7 +196,7 @@ class QPE(Algorithm):
             Arguments
             ---------
 
-            H : QuantumOperator
+            H : QubitOperator
                 The hermetian operaotr whos dynamics and eigenstates are of interest,
                 ususally the Hamiltonian.
 
@@ -217,15 +217,15 @@ class QPE(Algorithm):
             Returns
             -------
 
-            Udyn : QuantumCircuit
+            Udyn : Circuit
                 A circuit approximating controlled application of e^-iHt.
         """
-        Udyn = qforte.QuantumCircuit()
+        Udyn = qforte.Circuit()
         ancilla_idx = self._abegin
         total_phase = 1.0
         for n in range(self._n_ancilla):
             tn = 2 ** n
-            temp_op = qforte.QuantumOperator()
+            temp_op = qforte.QubitOperator()
             scaler_terms = []
             for h in self._qb_ham.terms():
                 c, op = h
@@ -272,11 +272,11 @@ class QPE(Algorithm):
             Returns
             -------
 
-            qft_circ : QuantumCircuit
+            qft_circ : Circuit
                 A circuit representing the Quantum Fourier Transform.
         """
 
-        qft_circ = qforte.QuantumCircuit()
+        qft_circ = qforte.Circuit()
         lens = self._aend - self._abegin + 1
         for j in range(lens):
             qft_circ.add(qforte.gate('H', j+self._abegin, j+self._abegin))
@@ -308,11 +308,11 @@ class QPE(Algorithm):
             Returns
             -------
 
-            z_circ : QuantumCircuit
+            z_circ : Circuit
                 A circuit representing the the Z gates to be measured.
         """
 
-        Z_circ = qforte.QuantumCircuit()
+        Z_circ = qforte.Circuit()
         for j in range(self._abegin, self._aend + 1):
             Z_circ.add(qforte.gate('Z', j, j))
 

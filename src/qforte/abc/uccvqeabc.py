@@ -23,7 +23,7 @@ class UCCVQE(VQE, UCC):
 
     def fill_commutator_pool(self):
         print('\n\n==> Building commutator pool for gradient measurement.')
-        self._commutator_pool = self._pool_obj.get_quantum_op_pool()
+        self._commutator_pool = self._pool_obj.get_qubit_op_pool()
         self._commutator_pool.join_as_commutator(self._qb_ham)
         print('==> Commutator pool construction complete.')
 
@@ -31,10 +31,10 @@ class UCCVQE(VQE, UCC):
         """
         Parameters
         ----------
-        operators : QuantumOpPool
+        operators : QubitOpPool
             All operators to be measured
 
-        Ucirc : QuantumCircuit
+        Ucirc : Circuit
             The state preparation circuit.
 
         idxs : list of int
@@ -43,7 +43,7 @@ class UCCVQE(VQE, UCC):
         """
 
         if self._fast:
-            myQC = qforte.QuantumComputer(self._nqb)
+            myQC = qforte.Computer(self._nqb)
             myQC.apply_circuit(Ucirc)
             if not idxs:
                 grads = myQC.direct_oppl_exp_val(operators)
@@ -61,10 +61,10 @@ class UCCVQE(VQE, UCC):
         """
         Parameters
         ----------
-        HAm : QuantumOpPool
+        HAm : QubitOpPool
             The commutator to measure.
 
-        Ucirc : QuantumCircuit
+        Ucirc : Circuit
             The state preparation circuit.
         """
 
@@ -88,9 +88,9 @@ class UCCVQE(VQE, UCC):
         else:
             Utot = self.build_Uvqc(params)
 
-        qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
+        qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
         qc_psi.apply_circuit(Utot)
-        qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
+        qc_sig = qforte.Computer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
         psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
         qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
         qc_sig.apply_operator(self._qb_ham)
@@ -166,11 +166,11 @@ class UCCVQE(VQE, UCC):
         grads = np.zeros(M)
         Utot = self.build_Uvqc()
 
-        qc_psi = qforte.QuantumComputer(self._nqb) # build | sig_N > according to ADAPT-VQE analytical grad section
+        qc_psi = qforte.Computer(self._nqb) # build | sig_N > according to ADAPT-VQE analytical grad section
         qc_psi.apply_circuit(Utot)
         psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
 
-        qc_sig = qforte.QuantumComputer(self._nqb) # build | psi_N > according to ADAPT-VQE analytical grad section
+        qc_sig = qforte.Computer(self._nqb) # build | psi_N > according to ADAPT-VQE analytical grad section
         # TODO: Check if it's faster to recompute psi_i or copy it.
         qc_sig.set_coeff_vec(copy.deepcopy(psi_i))
         qc_sig.apply_operator(self._qb_ham)

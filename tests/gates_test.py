@@ -2,9 +2,9 @@ import unittest
 # import our `pybind11`-based extension module from package qforte
 from qforte import qforte
 
-# this function creates a Basis object from a string representation
+# this function creates a QubitBasis object from a string representation
 def make_basis(str):
-    return qforte.QuantumBasis(int(str[::-1], 2))
+    return qforte.QubitBasis(int(str[::-1], 2))
 
 class GatesTests(unittest.TestCase):
     def test_X_gate(self):
@@ -12,7 +12,7 @@ class GatesTests(unittest.TestCase):
         nqubits = 1
         basis0 = make_basis('0')
         basis1 = make_basis('1')
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         X = qforte.gate('X',0);
         # test X|0> = |1>
         computer.apply_gate(X)
@@ -34,7 +34,7 @@ class GatesTests(unittest.TestCase):
         nqubits = 1
         basis0 = make_basis('0')
         basis1 = make_basis('1')
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         Y = qforte.gate('Y',0,0);
         # test Y|0> = i|1>
         computer.apply_gate(Y)
@@ -56,7 +56,7 @@ class GatesTests(unittest.TestCase):
         nqubits = 1
         basis0 = make_basis('0')
         basis1 = make_basis('1')
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         Z = qforte.gate('Z',0,0);
         # test Z|0> = |0>
         computer.apply_gate(Z)
@@ -79,7 +79,7 @@ class GatesTests(unittest.TestCase):
         basis1 = make_basis('01') # basis1:|10>
         basis2 = make_basis('10') # basis2:|01>
         basis3 = make_basis('11') # basis3:|11>
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         CNOT = qforte.gate('CNOT',0,1);
 
         # test CNOT|00> = |00>
@@ -141,7 +141,7 @@ class GatesTests(unittest.TestCase):
         basis1 = make_basis('01') # basis1:|10>
         basis2 = make_basis('10') # basis2:|01>
         basis3 = make_basis('11') # basis3:|11>
-        computer = qforte.QuantumComputer(nqubits)
+        computer = qforte.Computer(nqubits)
         cY = qforte.gate('cY',0,1);
 
         # test cY|00> = |00>
@@ -218,15 +218,15 @@ class GatesTests(unittest.TestCase):
         print(cY)
         cZ = qforte.gate('cZ',0,1);
         print(cZ)
-       # qcircuit = qforte.QuantumCircuit()
+       # qcircuit = qforte.Circuit()
        # qcircuit.add(qg)
-       # qcircuit.add(qforte.QuantumGate(qforte.QuantumGateType.Hgate,1,1));
+       # qcircuit.add(qforte.Gate(qforte.GateType.Hgate,1,1));
        # print('\n'.join(qcircuit.str()))
        # self.assertEqual(qforte.subtract(1, 1), 0)
 
-        computer = qforte.QuantumComputer(16)
+        computer = qforte.Computer(16)
        # print(repr(computer))
-       # circuit = qforte.QuantumCircuit()
+       # circuit = qforte.Circuit()
        # circuit.add(X)
         for i in range(3000):
             computer.apply_gate(X)
@@ -237,7 +237,7 @@ class GatesTests(unittest.TestCase):
 
     def test_op_exp_val_1(self):
         # test direct expectation value measurement
-        trial_state = qforte.QuantumComputer(4)
+        trial_state = qforte.Computer(4)
 
         trial_prep = [None]*5
         trial_prep[0] = qforte.gate('H',0,0)
@@ -246,7 +246,7 @@ class GatesTests(unittest.TestCase):
         trial_prep[3] = qforte.gate('H',3,3)
         trial_prep[4] = qforte.gate('cX',0,1)
 
-        trial_circ = qforte.QuantumCircuit()
+        trial_circ = qforte.Circuit()
 
         #prepare the circuit
         for gate in trial_prep:
@@ -262,21 +262,21 @@ class GatesTests(unittest.TestCase):
         Y2 = qforte.gate('Y',2,2)
 
         # initialize circuits to make operator
-        circ1 = qforte.QuantumCircuit()
+        circ1 = qforte.Circuit()
         circ1.add(X2)
         circ1.add(Y1)
-        circ2 = qforte.QuantumCircuit()
+        circ2 = qforte.Circuit()
         circ2.add(Y2)
         circ2.add(Y1)
-        circ3 = qforte.QuantumCircuit()
+        circ3 = qforte.Circuit()
         circ3.add(X2)
         circ3.add(X1)
-        circ4 = qforte.QuantumCircuit()
+        circ4 = qforte.Circuit()
         circ4.add(Y2)
         circ4.add(X1)
 
         #build the quantum operator for [a1^ a2]
-        a1_dag_a2 = qforte.QuantumOperator()
+        a1_dag_a2 = qforte.QubitOperator()
         a1_dag_a2.add(0.0-0.25j, circ1)
         a1_dag_a2.add(0.25, circ2)
         a1_dag_a2.add(0.25, circ3)

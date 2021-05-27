@@ -50,23 +50,23 @@ def fermop_to_sq_excitation(fermop):
 
 #TODO: Rename organizer to operator (Nick)
 def organizer_to_circuit(op_organizer):
-    """Builds a QuantumCircuit from a operator orgainizer.
+    """Builds a Circuit from a operator orgainizer.
 
     Parameters
     ----------
     op_organizer : list
         An object to organize what the coefficient and Pauli operators in terms
-        of the QuantumOperator will be.
+        of the QubitOperator will be.
 
         The orginzer is of the form
         [[coeff_a, [ ("X", i), ("Z", j),  ("Y", k), ...  ] ], [...] ...]
         where X, Y, Z are strings that indicate Pauli opterators;
         i, j, k index qubits and coeff_a indicates the coefficient for the ath
-        term in the QuantumOperator.
+        term in the QubitOperator.
     """
-    operator = qforte.QuantumOperator()
+    operator = qforte.QubitOperator()
     for coeff, word in op_organizer:
-        circ = qforte.QuantumCircuit()
+        circ = qforte.Circuit()
         for letter in word:
             circ.add(qforte.gate(letter[0], letter[1], letter[1]))
 
@@ -76,18 +76,18 @@ def organizer_to_circuit(op_organizer):
 
 #TODO: Rename operator to organizer (Nick)
 def circuit_to_organizer(operator):
-    """Builds a operator orgainizer from a QuantumCircuit.
+    """Builds a operator orgainizer from a Circuit.
 
     Parameters
     ----------
-    operator : QuantumOperator
-        The QuantumOperator object to converted to organizer form
+    operator : QubitOperator
+        The QubitOperator object to converted to organizer form
 
         The orginzer is of the form
         [[coeff_a, [ ("X", i), ("Z", j),  ("Y", k), ...  ] ], [...] ...]
         where X, Y, Z are strings that indicate Pauli opterators;
         i, j, k index qubits and coeff_a indicates the coefficient for the ath
-        term in the QuantumOperator.
+        term in the QubitOperator.
     """
     op_organizer = []
     for term in operator.terms():

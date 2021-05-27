@@ -27,7 +27,7 @@ class QITETests(unittest.TestCase):
                     0.1458551902800438]
 
         circ_vec = [
-        qforte.QuantumCircuit( ),
+        qforte.Circuit( ),
         qforte.build_circuit( 'Z_0' ),
         qforte.build_circuit( 'Z_1' ),
         qforte.build_circuit( 'Z_2' ),
@@ -43,7 +43,7 @@ class QITETests(unittest.TestCase):
         qforte.build_circuit( 'Z_1   Z_3' ),
         qforte.build_circuit( 'Z_2   Z_3' )]
 
-        H2_qubit_hamiltonian = qforte.QuantumOperator()
+        H2_qubit_hamiltonian = qforte.QubitOperator()
         for i in range(len(circ_vec)):
             H2_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 
