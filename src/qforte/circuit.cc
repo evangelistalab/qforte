@@ -121,6 +121,7 @@ std::string Circuit::str() const {
     for (const auto& gate : gates_) {
         s.push_back(gate.str());
     }
+    std::reverse(s.begin(), s.end());
     return "[" + join(s, " ") + "]";
 }
 
