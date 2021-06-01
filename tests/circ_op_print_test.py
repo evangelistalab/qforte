@@ -18,9 +18,8 @@ class Circ_Op_PrintTest(TestCase):
         circ1.add(qf.gate('Z', 1))
 
         # test built-in print function
-        with patch('sys.stdout', new = StringIO()) as fake_out:
-            print(circ1)
-            self.assertEqual(fake_out.getvalue(), '[Z1 H2 Y4 X4]\n')
+        out = str(circ1)
+        self.assertEqual(out, '[Z1 H2 Y4 X4]')
 
         # test smart_print function
         with patch('sys.stdout', new = StringIO()) as fake_out:
@@ -58,11 +57,10 @@ class Circ_Op_PrintTest(TestCase):
         q_op.add(u3, circ3)
 
         # test built-in print function
-        with patch('sys.stdout', new = StringIO()) as fake_out:
-            print(q_op)
-            self.assertEqual(fake_out.getvalue(), '+0.500000 +0.100000i[Z1 H2 Y4 X4]\n'\
-                             '-0.500000j[H1 Y2 S3 I4]\n'\
-                             '+0.300000[X1 Y2 H3 Z4]\n')
+        out = str(q_op)
+        self.assertEqual(out, '+0.500000 +0.100000i[Z1 H2 Y4 X4]\n'\
+                         '-0.500000j[H1 Y2 S3 I4]\n'\
+                         '+0.300000[X1 Y2 H3 Z4]')
 
         # test smart_print function
         with patch('sys.stdout', new = StringIO()) as fake_out:
@@ -71,4 +69,4 @@ class Circ_Op_PrintTest(TestCase):
                              '+ (-0-0.5j) (H1 Y2 S3 I4) |Ψ>\n'\
                              '+ (0.3+0j) (X1 Y2 H3 Z4) |Ψ>\n')
 if __name__ == '__main__':
-    unittest.main(argv=['first-arg-is-ignored'], exit=False)
+    unittest.main()
