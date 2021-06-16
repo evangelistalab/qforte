@@ -1,7 +1,18 @@
+"""
+QSD base classes
+====================================
+The abstract base classes inheritied by any quantum subspace diagonalizaiton (QSD)
+variant.
+"""
 from abc import abstractmethod
 from qforte.abc.algorithm import Algorithm
 
 class QSD(Algorithm):
+    """The abstract base class inheritied by any algorithm that seeks to find
+    eigenstates of the Hamiltonian in a (generally) non-orthogonal basis on
+    many-body states. 
+
+    """
 
     @abstractmethod
     def build_qk_mats(self):

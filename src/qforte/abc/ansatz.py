@@ -1,13 +1,23 @@
+"""
+Ansatz base classes
+====================================
+The abstract base classes inheritied by any algorithm that uses a parameterized
+ansatz.
+"""
+
 import qforte as qf
 from qforte.abc.algorithm import AnsatzAlgorithm
 
 from qforte.utils.trotterization import trotterize
 
 class UCC(AnsatzAlgorithm):
+    """The abstract base class inheritied by any algorithm that uses a unitary
+    coupled cluster (UCC) inspired ansatz.
+    """
 
     def ansatz_circuit(self, amplitudes=None):
         """ This function returns the Circuit object built
-        from the appropriate amplitudes (tops)
+        from the appropriate amplitudes (tops).
 
         Parameters
         ----------
@@ -26,4 +36,3 @@ class UCC(AnsatzAlgorithm):
         if phase1 != 1.0 + 0.0j:
             raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
         return U
-

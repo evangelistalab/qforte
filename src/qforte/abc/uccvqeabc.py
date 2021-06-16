@@ -1,3 +1,10 @@
+"""
+UCC-VQE base classes
+====================================
+The abstract base classes inheritied by any variational quantum eigensolver (VQE)
+variant that utilizes a unitary coupled cluster (UCC) type ansatz.
+"""
+
 import qforte as qf
 from abc import abstractmethod
 from qforte.abc.vqeabc import VQE
@@ -12,6 +19,59 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 
 class UCCVQE(VQE, UCC):
+    """The abstract base class inheritied by any algorithm that seeks to find
+    eigenstates by variational minimization of the Energy
+
+    .. math::
+        E(\mathbf{t}) = \langle \Phi_0 | \hat{U}^\dagger(\mathbf{\mathbf{t}}) \hat{H} \hat{U}(\mathbf{\mathbf{t}}) | \Phi_0 \\rangle
+
+    using a disentagled UCC type ansatz
+
+    .. math::
+        \hat{U}(\mathbf{t}) = \prod_\mu e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger)},
+
+    were :math:`\hat{\\tau}_\mu` is a Fermionic excitation operator and
+    :math:`t_\mu` is a cluster amplitude.
+
+    Attributes
+    ----------
+
+    _pool_type : string
+        Specifies the kinds of tamplitudes allowed in the UCCN-VQE
+        parameterization.
+            SA_SD: At most two orbital excitations. Assumes a singlet wavefunction and closed-shell Slater determinant
+                   reducing the number of amplitudes.
+            SD: At most two orbital excitations.
+            SDT: At most three orbital excitations.
+            SDTQ: At most four orbital excitations.
+            SDTQP: At most five orbital excitations.
+            SDTQPH: At most six orbital excitations.
+
+    _grad_vec_evals : int
+        The number of gradient vector evalutions over the course of the optimization.
+
+    _grad_m_evals : int
+        The number of gradient element evalutions over the course of the optimization.
+
+    _prev_energy : float
+        The energy from the previous iteration.
+
+    _curr_energy : float
+        The energy from the current iteration.
+
+    _curr_grad_norm : float
+        The current norm of the gradient
+
+    _Nm : int
+        A list containing the number of pauli terms in each Jordan-Wigner
+        transformed excitaiton/de-excitaion operator in the pool.
+
+    _use_analytic_grad : bool
+        Whether or not to use an analytic function for the gradient to pass to
+        the optimizer. If false, the optimizer will use self-generated approximate
+        gradients from finite differences (if BFGS algorithm is used).
+        
+    """
 
     @abstractmethod
     def get_num_ham_measurements(self):
@@ -27,6 +87,7 @@ class UCCVQE(VQE, UCC):
         self._commutator_pool.join_as_commutator(self._qb_ham)
         print('==> Commutator pool construction complete.')
 
+    #TODO: depricate this function
     def measure_operators(self, operators, Ucirc, idxs=[]):
         """
         Parameters
@@ -40,6 +101,7 @@ class UCCVQE(VQE, UCC):
         idxs : list of int
             The indices of select operators in the pool of operators. If provided, only these
             operators will be measured.
+
         """
 
         if self._fast:
@@ -57,15 +119,19 @@ class UCCVQE(VQE, UCC):
 
         return np.real(grads)
 
+    # TODO: depricate the 'use_entire_pool' parameter, is no longer used.
     def measure_gradient(self, params=None, use_entire_pool=False):
-        """
+        """ Returns the disentangeld (factorized) UCC gradient, using a
+        recursive approach.
+
         Parameters
         ----------
-        HAm : QubitOpPool
-            The commutator to measure.
+        params : list of floats
+            The variational parameters which characterize _Uvqc.
 
-        Ucirc : Circuit
-            The state preparation circuit.
+        use_entire_pool : bool
+            Whether or not the gradient is calculated for the entire pool or
+            just the operators currently in _Uvqc.
         """
 
         if not self._fast:
@@ -153,6 +219,11 @@ class UCCVQE(VQE, UCC):
         return grads
 
     def measure_gradient3(self):
+        """ Calcualtes the so-called residual gradient, defined by <[H, K_mu]>
+        which gives the gradient only with respect to operaotrs t_mu which would
+        be added to the end of Uprep. Primaraly used in ADAPT-VQE operator
+        selection.
+        """
 
         if self._fast==False:
             raise ValueError("self._fast must be True for gradient measurement.")
@@ -205,7 +276,6 @@ class UCCVQE(VQE, UCC):
         self._k_counter += 1
 
         if(self._k_counter == 1):
-            # print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}       -----------      {self._grad_vec_evals:4}         {self._curr_grad_norm:+12.10f}')
             print('\n    k iteration         Energy               dE           Ngvec ev      Ngm ev*         ||g||')
             print('--------------------------------------------------------------------------------------------------')
             if (self._print_summary_file):
