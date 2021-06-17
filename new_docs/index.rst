@@ -16,4 +16,6 @@ written in C++ and exposed in Python via Pybind11.
    abc/qsdabc
    abc/vqeabc
    ucc/uccnvqe
+   ucc/uccnpqe
    ucc/adapt
+   ucc/spqe

@@ -1,8 +1,8 @@
 """
-uccpqe.py
+UCCNPQE classes
 ====================================
-A class for solving the schrodinger equation via measurement of its projections
-and subsequent updates of the UCC amplitudes.
+Classes for solving the schrodinger equation via measurement of its projections
+and subsequent updates of the disentangled UCC amplitudes.
 """
 
 import qforte
@@ -21,13 +21,24 @@ from scipy.linalg import lstsq
 
 class UCCNPQE(UCCPQE):
     """
-    A class that encompasses the three components of using the variational
-    quantum eigensolver to optimize a parameterized unitary CCSD like wave function.
+    A class that encompasses the three components of using the projective
+    quantum eigensolver to optimize a disentangld UCCN-like wave function.
 
     UCC-PQE: (1) prepares a quantum state on the quantum computer
-    representing the wave function to be simulated, (2) evaluates the residuals by
-    measurement, and (3) optimizes the wave fuction via projective solution of
-    the UCC Schrodinger Equation.
+    representing the wave function to be simulated, (2) evaluates the residuals
+
+    .. math::
+        r_\mu = \langle \Phi_\mu | \hat{U}^\dagger(\mathbf{t}) \hat{H} \hat{U}(\mathbf{t}) | \Phi_0 \\rangle
+
+    and (3) optimizes the wave fuction via projective solution of
+    the UCC Schrodinger Equation via a quazi-Newton update equation.
+    Using this stratagy, an amplitude :math:`t_\mu^{(k+1)}` for iteration :math:`k+1`
+    is given by
+
+    .. math::
+        t_\mu^{(k+1)} = t_\mu^{(k)} + \\frac{r_\mu^{(k)}}{\Delta_\mu}
+
+    where :math:`\Delta_\mu` is the standard Moller Plesset denominator.
 
     Attributes
     ----------
@@ -144,19 +155,13 @@ class UCCNPQE(UCCPQE):
         print('Number of non-zero res element evaluations:  ', int(self._res_vec_evals)*self._n_nonzero_params)
 
     def solve(self):
-        """
-        Parameters
-        ----------
-        fast : bool
-            Wether or not to use the optemized but unphysical energy evaluation
-            function.
-        maxiter : int
-            The maximum number of iterations for the scipy optimizer.
-        """
-
         self.diis_solve()
 
     def diis_solve(self):
+        """This function attempts to minimizes the norm of the residual vector
+        by using a quasi-Newton uptate procedure for the amplutudes paired with
+        the direct inversion of iterative subspace (DIIS) convergece acceleration.
+        """
         # draws heavy insiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
         diis_dim = 0
         t_diis = [copy.deepcopy(self._tamps)]
@@ -235,6 +240,15 @@ class UCCNPQE(UCCPQE):
         self._Egs = Ek
 
     def get_residual_vector(self, trial_amps):
+        """Returns the residual vector with elements pertaining to all operators
+        in in the ansatz circuit.
+
+        Parameters
+        ----------
+        trial_amps : list of floats
+            The list of (real) floating point number which will characterize
+            the state preparation circuit used in calculation of the residuals.
+        """
         if(self._pool_type == 'sa_SD'):
             raise ValueError('Must use single term particle-hole nbody operators for residual calculation')
 
@@ -324,6 +338,15 @@ class UCCNPQE(UCCPQE):
         return residuals
 
     def get_res_over_mpdenom(self, residuals):
+        """This function returns a vector given by the residuals dividied by the
+        respective Moller Plesset denominators.
+
+        Parameters
+        ----------
+        residuals : list of floats
+            The list of (real) floating point numbers which represent the
+            residulas.
+        """
 
         resids_over_denoms = []
         # each operator needs a score, so loop over toperators
@@ -348,6 +371,9 @@ class UCCNPQE(UCCPQE):
         return resids_over_denoms
 
     def build_orb_energies(self):
+        """Calcualtes Hartree-Fock orbital energies to used in determintation
+        of the MP denominators.
+        """
         self._orb_e = []
 
         print('\nBuilding single particle energies list:')
@@ -371,6 +397,9 @@ class UCCNPQE(UCCPQE):
             self._orb_e.append(ei)
 
     def initialize_ansatz(self):
+        """Adds all operators in the pool to the list of operators in the circuit,
+        with amplitude 0.
+        """
         for l in range(len(self._pool)):
             self._tops.append(l)
             self._tamps.append(0.0)

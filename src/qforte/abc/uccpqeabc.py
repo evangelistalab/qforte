@@ -33,7 +33,29 @@ class UCCPQE(PQE, UCC):
     were :math:`\hat{\\tau}_\mu` is a Fermionic excitation operator and
     :math:`t_\mu` is a cluster amplitude.
 
+    Attributes
+    ----------
 
+    _noise_factor : float
+        The standard deviation of a normal distribution from which noisy residual
+        values may be sampled from. Is zero by default such that all residuals
+        are exact.
+
+    _diis_maxiter : int
+        The maximum number of DIIS iteratios to perform.
+
+    _res_vec_thresh : float
+        The numberical threshold for the norm of the residual vector, used to
+        determine when PQE has converged.
+
+    _res_vec_evals : int
+        The total number of times the entire residual was evaluated.
+
+    _res_m_evals : int
+        The total number of times an individal residual element was evaluated.
+
+    _orb_e : list floats
+        The Hartree-Fock orbital energies
 
     """
 

@@ -1,0 +1,4 @@
+.. sectionauthor:: Nicholas H. Stair
+
+.. automodule:: qforte.ucc.spqe
+    :members:
