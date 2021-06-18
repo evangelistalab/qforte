@@ -1,9 +1,17 @@
+"""
+Algorithm and AnsatzAlgorithm base classes
+==========================================
+The abstract base classes inherited by all algorithm subclasses.
+"""
+
 from abc import ABC, abstractmethod
 import qforte as qf
 from qforte.utils.state_prep import *
 
 class Algorithm(ABC):
-    """
+    """A class that characterizes the most basic functionality for all
+    other algorithms.
+
     Attributes
     ----------
     _ref : list
@@ -12,41 +20,41 @@ class Algorithm(ABC):
     _nqb : int
         The number of qubits the calculation empolys.
 
-    _qb_ham : QubitOperator
+    _qb_ham : QuantumOperator
         The operator to be measured (usually the Hamiltonian), mapped to a
         qubit representation.
 
     _fast : bool
         Whether or not to use a faster version of the algorithm that bypasses
-        measurment (unphysical for quantum computer).
+        measurment (unphysical for quantum computer). Most algorithms only
+        have a fast implentation.
 
     _trotter_order : int
         The Trotter order to use for exponentiated operators.
         (exact in the infinte limit).
 
     _trotter_number : int
-        The Trotter number (or the number of trotter steps)
-        to use for exponentiated operators.
-        (exact in the infinte limit).
+        The number of trotter steps (m) to perform when approximating the matrix
+        exponentials (Um or Un). For the exponential of two non commuting terms
+        e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
+        exact in the infinite m limit.
 
     _Egs : float
         The final ground state energy value.
 
-    _Umaxdepth : Circuit
+    _Umaxdepth : QuantumCircuit
         The deepest circuit used during any part of the algorithm.
 
-    _n_ham_measurements : int
-        The total number of times the energy was evaluated via
-        measurement of the Hamiltonian
+    _n_classical_params : int
+        The number of classical parameters used by the algorithm.
 
+    _n_cnot : int
+        The number of controlled-not (CNOT) opperations used in the (deepest)
+        quantum circuit (_Umaxdepth).
 
-
-    Methods
-    -------
-    build_Uprep()
-        Returns a Circuit object corresponding to the state preparation
-        circuit reference state (usually a small product of X gates).
-
+    _n_pauli_trm_measures : int
+        The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)
+        mesaured over the entire algorithm.
 
     """
 
@@ -112,28 +120,44 @@ class Algorithm(ABC):
 
     @abstractmethod
     def print_options_banner(self):
+        """Prints the run options used for algorithm.
+        """
         pass
 
     @abstractmethod
     def print_summary_banner(self):
+        """Prints a summary of the post-run information.
+        """
         pass
 
     @abstractmethod
     def run(self):
+        """Executes the algorithm.
+        """
         pass
 
     @abstractmethod
     def run_realistic(self):
+        """Executes the algorithm using only operations physically possable for
+        quantum hardware. Not implented for most algorithms.
+        """
         pass
 
     @abstractmethod
     def verify_run(self):
+        """Verifies that the abstract sub-class(es) define the required attributes.
+        """
         pass
 
     def get_gs_energy(self):
+        """Returns the final ground state energy.
+        """
         return self._Egs
 
     def get_Umaxdepth(self):
+        """Returns the deepest circuit used during any part of the
+        algorithm (_Umaxdepth).
+        """
         pass
 
     def get_tot_measurements(self):
@@ -143,6 +167,8 @@ class Algorithm(ABC):
         pass
 
     def verify_required_attributes(self):
+        """Verifies that the concrete sub-class(es) define the required attributes.
+        """
         if self._Egs is None:
             raise NotImplementedError('Concrete Algorithm class must define self._Egs attribute.')
 
@@ -159,7 +185,9 @@ class Algorithm(ABC):
             raise NotImplementedError('Concrete Algorithm class must define self._n_pauli_trm_measures attribute.')
 
 class AnsatzAlgorithm(Algorithm):
-    """
+    """A class that characterizes the most basic functionality for all
+    other algorithms which utilize an operator ansatz such as VQE.
+
     Attributes
     ----------
     _curr_energy: float
@@ -209,6 +237,8 @@ class AnsatzAlgorithm(Algorithm):
         return Uvqc
 
     def fill_pool(self):
+        """ This function populates an operator pool with SQOperator objects.
+        """
 
         self._pool_obj = qf.SQOpPool()
         self._pool_obj.set_orb_spaces(self._ref)
@@ -224,6 +254,9 @@ class AnsatzAlgorithm(Algorithm):
 
     def measure_energy(self, Ucirc):
         """
+        This funciton retruns the energy expectation value of the state
+        Uprep|0>.
+
         Parameters
         ----------
         Ucirc : Circuit
@@ -251,6 +284,17 @@ class AnsatzAlgorithm(Algorithm):
         self._pool_obj = qf.SQOpPool()
 
     def energy_feval(self, params):
+        """
+        This funciton retruns the energy expectation value of the state
+        Uprep(params)|0>, where params are parameters that can be optimized
+        for some purpouse such as energy minimizaiton.
+
+        Parameters
+        ----------
+        params : list of floats
+            The dist of (real) floating point number which will characterize
+            the state preparation circuit.
+        """
         Ucirc = self.build_Uvqc(amplitudes=params)
         Energy = self.measure_energy(Ucirc)
 

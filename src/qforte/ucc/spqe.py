@@ -1,7 +1,7 @@
 """
-spqe.py
+SPQE classes
 ====================================
-A class for implementing the selected variant of the projetive quantum eigensolver
+Classes for implementing the selected variant of the projetive quantum eigensolver
 """
 
 import qforte as qf
@@ -16,8 +16,37 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 
 class SPQE(UCCPQE):
-    """
+    """This class implents the selected projective quantum eigensolver (SPQE) for
+    disentagled UCC like ansatz.
+    In SPQE, a batch of imporant particl-hole operators
+    :math:`\{ e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger )} \}` are
+    added at each macro-iteration :math:`n` to the SPQE unitary :math:`\hat{U}(\mathbf{t})`,
+    wile all current parameters are optemized using the quasi-Newton PQE update
+    with micro-iterations :math:`k`.
 
+    In our selection approach we consider a (normalized) quantum state of the form
+
+    .. math::
+        | \\tilde{r} \\rangle  = \\tilde{r}_0 | \Phi_0 \\rangle + \sum_\mu \\tilde{r}_\mu  | \Phi_\mu \\rangle
+
+    where the quantities :math:`\\tilde{r}_\mu` are approximately proportional to
+    the residuals :math:`r_\mu`.
+    The state :math:`| \\tilde{r} \\rangle` can be approximately reproduced via
+
+    .. math::
+        | \\tilde{r} \\rangle \\approx \hat{U}^\dagger e^{i \Delta t \hat{H}} \hat{U} | \Phi_0 \\rangle
+
+    .. math::
+        \\approx (1 + i\Delta t \hat{U}^\dagger \hat{H} \hat{U})  | \Phi_0 \\rangle + \mathcal{O}(\Delta t^2).
+
+    We note that in this implementation we use a Trotter approximation for the time
+    evolution unitary.
+    Measuring :math:`\\langle \hat{Z} \\rangle` for each qubit yields a bitstring
+    that has corresponding determinat and operator
+    :math:`(\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger )`
+    with probablility proportional to :math:`|\\tilde{r}_\mu|^2`.
+    The operators corresponding to the largest :math:`|\\tilde{r}_\mu|^2` values
+    are then added to :math:`\hat{U}(\mathbf{t})` at each macro-iteration.   
     """
     def run(self,
             spqe_thresh=1.0e-2,

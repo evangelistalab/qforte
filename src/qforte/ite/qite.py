@@ -1,3 +1,9 @@
+"""
+QITE classes
+=================================================
+Classes for using a quantum computer to carry
+out the quantum imaginary time evolution algorithm.
+"""
 import qforte as qf
 from qforte.abc.algorithm import Algorithm
 from qforte.utils.transforms import (get_jw_organizer,
@@ -15,29 +21,104 @@ from qforte.maths.eigsolve import canonical_geig_solve
 ### Throughout this file, we'll refer to DOI 10.1038/s41567-019-0704-4 as Motta.
 
 class QITE(Algorithm):
-    """
+    """This class implements the quantum imaginary time evolution (QITE)
+    algorithm in a fashion amenable to non k-local hamiltonains, which is
+    the focus of the origional algorithm (see DOI 10.1038/s41567-019-0704-4).
+
+    In QITE one attepmts to approximate the action of the imaginary time evolution
+    operator on a state :math:`| \Phi \\rangle` with a parameterized unitary
+    operation:
+
+    .. math::
+        c(\\Delta \\beta)^{-1/2} e^{-\\Delta \\beta \hat{H}} | \Phi \\rangle \\approx e^{-i \\Delta \\beta \hat{A}(\\vec{\\theta})} | \Phi \\rangle,
+
+    where :math:`\\Delta \\beta` is a small time step and
+    :math:`c(\\Delta \\beta)^{-1/2}` is a normalization coefficient approximated
+    by :math:`1-2\\Delta \\beta \\langle \Phi | \hat{H} | \Phi \\rangle`.
+
+    The parameterized anti-hermetian operator :math:`\hat{A}(\\vec{\\theta})`
+    is given by the linear combination of :math:`N_\mu` operators
+
+    .. math::
+        \hat{A}(\\vec{\\theta}) = \sum_\mu^{N_\mu} \\theta_\mu \hat{P}_\mu,
+
+    where :math:`\hat{P}_\mu` is a product of Pauli operators. In practice the
+    operators that enter in to the sum are a subset of an operator pool specified
+    by the user.
+
+    To determine the parameters :math:`\\theta_\mu` one seeks to satisfy the
+    condition:
+
+    .. math::
+        c(\\beta)^{-1/2} \\langle \Phi |  \sum_{\mu} \\theta_\mu \hat{P}_\mu^\dagger \hat{H} | \Phi \\rangle
+        \\approx -i  \\langle \Phi | \sum_{\mu} \\theta_\mu \\theta_\\nu \hat{P}_\mu^\dagger  \hat{P}_\\nu | \Phi \\rangle
+
+    which corresponding to solving the linear systems
+
+    .. math::
+        \mathbf{S} \\vec{\\theta} = \\vec{b}
+
+    where the elements
+
+    .. math::
+        S_{\mu \\nu} = \\langle \Phi | \hat{P}_\mu^\dagger \hat{P}_\\nu | \Phi \\rangle,
+
+    .. math::
+        b_\mu = \\frac{-i}{\sqrt{c(\Delta \\beta)}} \\langle \Phi | \hat{P}_\mu^\dagger \hat{H} | \Phi \\rangle
+
+    can be measured on a quantum device.
+
+    Note that the QITE procedure is iterative and is repated for a specified
+    number of time steps to reach a target total evolution time.
+
     Attributes
     ----------
 
-    _b_thresh :
+    _b_thresh : float
+        The minimum threshold absolute vale for the elements of :math:`b_\mu` to be included
+        in the solving of the linear system. Operators :math:`\hat{P}_\mu`
+        corresponding to elements of :math:`|b_\mu|` < _b_thresh will not enter
+        into the operator :math:`\hat{A}`.
+
+    _x_thresh : float
+        Operators :math:`\hat{P}_\mu` corresponding to elements of :math:`|\\theta_\mu|`
+        < _b_thresh will not enter into the operator :math:`\hat{A}`.
+
     _beta : float
+        The target total evolution time.
+
     _db : float
+        The imaginary time step to use.
+
     _do_lanczos : bool
+        Whether or not to additionaly compute the QLanczos QSD matrices and
+        solve the corresponding generailzed eigenvalue problem.
+
     _Ekb : list of float
-        The list of energies for each step of the algorithm.
+        The list of after each additional time step.
+
     _expansion_type: {'complete_qubit', 'cqoy', 'SD', 'GSD', 'SDT', SDTQ', 'SDTQP', 'SDTQPH', 'test'}
-        The family of operators that each evolution operator will be built of.
+        The family of operators that each evolution operator :math:`\hat{A}` will be built of.
+
     _lanczos_gap : int
+        The number of time steps between generation of Lanczos basis vectors.
+
     _nbeta: int
-        How many QITE steps should be taken?
+        How many QITE steps should be taken? (not directly specified by user).
+
     _NI : int
         The number of operators in _sig.
+
     _sig : QubitOpPool
         The basis of operators allowed in a unitary evolution step.
+
     _sparseSb : bool
-    _total_phase : complex
-    _Uqite: Circuit
-    _x_thresh : float
+        Use sparse tensors to solve the linear system?
+
+    _Uqite : Circuit
+        The circuit that prepares the QITE state at the current iteration.
+
+
     """
     def run(self,
             beta=1.0,
@@ -179,8 +260,7 @@ class QITE(Algorithm):
 
 
     def build_S(self):
-        """
-        Construct the matrix S (eq. 5a) of Motta.
+        """Construct the matrix S (eq. 5a) of Motta.
         """
         Idim = self._NI
 
@@ -230,8 +310,7 @@ class QITE(Algorithm):
         return idx_sparse, np.real(S), np.real(b_sparse)
 
     def build_b(self):
-        """
-        Construct the vector b (eq. 5b) of Motta, with h[m] the full Hamiltonian.
+        """Construct the vector b (eq. 5b) of Motta, with h[m] the full Hamiltonian.
         """
 
         b  = np.zeros(self._NI, dtype=complex)
@@ -298,6 +377,8 @@ class QITE(Algorithm):
             qf.smart_print(self._qc)
 
     def evolve(self):
+        """Perform QITE for a time step :math:`\\Delta \\beta`.
+        """
         self._Uqite.add(self._Uprep)
         self._qc = qf.Computer(self._nqb)
         self._qc.apply_circuit(self._Uqite)
@@ -350,7 +431,8 @@ class QITE(Algorithm):
 
 
     def do_qlanczos(self):
-        """"""
+        """Execute out the quantum Lanczos algorithm for the given run of QITE.
+        """
         n_lanczos_vecs = len(self._lanczos_vecs)
         h_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
         s_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)

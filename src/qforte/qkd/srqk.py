@@ -1,18 +1,14 @@
 """
-srqk.py
+SRQK classes
 =================================================
-A module for calculating reference states for quantum
-mechanical systems for the multireference selected
+Classes for calculating reference states for quantum
+mechanical systems for the single referece selected
 quantum Krylov algorithm.
 """
 
 import qforte
 from qforte.abc.qsdabc import QSD
 from qforte.helper.printing import matprint
-# from qforte.utils.transforms import (circuit_to_organizer,
-#                                     organizer_to_circuit,
-#                                     join_organizers,
-#                                     get_jw_organizer)
 
 from qforte.maths.eigsolve import canonical_geig_solve
 
@@ -24,29 +20,34 @@ import numpy as np
 from scipy.linalg import lstsq
 
 class SRQK(QSD):
+    """A quantum subspace diagonalization algorithm that generates the many-body
+    basis from different durations of real time evolution:
+
+    .. math::
+        | \Psi_n \\rangle = e^{-i n \Delta t \hat{H}} | \Phi_0 \\rangle
+
+    In practice Trotterization is used to approximate the time evolution operator.
+
+    Attributes
+    ----------
+
+    _dt : float
+        The time step used in the time evolution unitaries.
+
+    _nstates : int
+        The total number of basis states (s + 1).
+
+    _s : int
+        The greatest m to use in unitaries, equal to the number of time evolutions.
+
+
+    """
     def run(self,
             s=3,
             dt=0.5,
             target_root=0,
             diagonalize_each_step=True
             ):
-        """
-        Construct a reference state for the MRSQK algorithm as some root of the Hamiltonian in the space
-        of H U_n φ where U_m = exp(-i m dt H) and φ a single determinant.
-
-        _diagonalize_each_step : bool
-            For diagnostic purposes, should the eigenvalue of the target root of the quantum Krylov subspace
-            be printed after each new unitary? We recommend passing an s so the change in the eigenvalue is
-            small.
-        _dt : float
-            The dt used in the unitaries
-        _nstates : int
-            The number of states
-        _s : int
-            The greatest m to use in unitaries
-        _target_root : int
-            Which root of the quantum Krylov subspace should be taken?
-        """
 
         self._s = s
         self._nstates = s+1
@@ -148,7 +149,7 @@ class SRQK(QSD):
         print('Number of Pauli term measurements:         ', self._n_pauli_trm_measures)
 
     def build_qk_mats(self):
-        """Returns matrices S and H needed for the MRSQK algorithm using the Trotterized
+        """Returns matrices S and H needed for the QK algorithm using the Trotterized
         form of the unitary operators U_n = exp(-i n dt H)
 
         The mathematical operations of this function are unphysical for a quantum
@@ -259,48 +260,28 @@ class SRQK(QSD):
         return s_mat, h_mat
 
 
+    #TODO depricate this function
     def matrix_element(self, m, n, use_op=False):
         """Returns a single matrix element M_mn based on the evolution of
-        two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt *H)
+        two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt * H)
         on a reference state |Phi_o>, (optionally) with respect to an operator A.
         Specifically, M_mn is given by <Phi_o| Um^dag Un | Phi_o> or
         (optionally if A is specified) <Phi_o| Um^dag A Un | Phi_o>.
 
-            Arguments
-            ---------
+        Arguments
+        ---------
 
-            ref : list
-                The the reference state |Phi_o>.
+        m : int
+            The number of time steps for the Um evolution.
 
-            dt : float
-                The real time step value (delta t).
+        n : int
+            The number of time steps for the Un evolution.
 
-            m : int
-                The number of time steps for the Um evolution.
-
-            n : int
-                The number of time steps for the Un evolution.
-
-            H : QubitOperator
-                The operator to time evolove with respect to (usually the Hamiltonain).
-
-            nqubits : int
-                The number of qubits
-
-            A : QubitOperator
-                The overal operator to measure with respect to (optional).
-
-            trot_number : int
-                The number of trotter steps (m) to perform when approximating the matrix
-                exponentials (Um or Un). For the exponential of two non commuting terms
-                e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
-                exact in the infinite m limit.
-
-            Returns
-            -------
-            value : complex
-                The outcome of measuring <X> and <Y> to determine <2*sigma_+>,
-                ultimately the value of the matrix elemet.
+        Returns
+        -------
+        value : complex
+            The outcome of measuring <X> and <Y> to determine <2*sigma_+>,
+            ultimately the value of the matrix elemet.
 
         """
         value = 0.0

@@ -1,8 +1,9 @@
 """
-adaptvqe.py
+ADAPT-VQE classes
 ====================================
-A class for using an experiment to execute the variational quantum eigensolver
-for the Adaptive Derivative-Assembled Pseudo-Trotter (ADAPT) anxatz.
+Classes for using the variational quantum eigensolver
+with variants of the Adaptive Derivative-Assembled Pseudo-Trotter
+(ADAPT) anxatz.
 """
 
 import qforte as qf
@@ -18,51 +19,36 @@ import numpy as np
 from scipy.optimize import minimize
 
 class ADAPTVQE(UCCVQE):
-    """
-    A class that encompases the three componants of using the variational
+    """A class that encompases the three componants of using the variational
     quantum eigensolver to optemize a parameterized unitary CC like wave function
     comprised of adaptivly selected operators. Growing a cirquit over many iterations
     the ADAPT-VQE: (1) prepares a quantum state on the quantum computer
     representing the wave function to be simulated, (2) evauates the energy by
-    measurement, and (3) optemizes the the wave funciton by minimizing the energy.
+    and gradients, and (3) optimizes the the wave funciton by minimizing the energy.
+
+    In ADAPT-VQE, the unitary ansatz at maco-iteration :math:`k` is defined as
+
+    .. math::
+        \hat{U}_\mathrm{ADAPT}^{(k)}(\mathbf{t}) = \prod_\\nu^{k} e^{ t_\\nu^{(k)} \hat{\kappa}_\\nu^{(k)} },
+
+    where the index :math:`\\nu` is likewise a index corresponding to unique operators
+    :math:`\hat{\kappa}_\\nu` in a pool of operators.
+    Note that the parameters :math:`t_\\nu^{(k)}` are re-optimized at each macro-iteration.
+    New operators are determined from the pool by computing the energy gradient
+
+    .. math::
+        g_\\nu = \\langle \Psi_\mathrm{VQE} | [ \hat{H}, \hat{\kappa}_\\nu ] | \Psi_\mathrm{VQE} \\rangle,
+
+    with respect to :math:`t_\\nu` of each operator in the pool and selecting
+    the operator with the largest gradient magnitude to place at the end of
+    the ansatz in the next iteration.
 
     Attributes
     ----------
-    _ref : list
-        The set of 1s and 0s indicating the initial quantum state.
-
-    _nqubits : int
-        The number of qubits the calculation empolys.
-
-    _operator : QubitOperator
-        The operator to be measured (usually the Hamiltonain), mapped to a
-        qubit representation.
 
     _avqe_thresh : float
         The gradient norm threshold to determine when the ADAPT-VQE
         algorithm has converged.
-
-    _opt_thresh : float
-        The gradient norm threshold to determine when the classical optemizer
-        algorithm has converged.
-
-    _use_fast_measurement : bool
-        Whether or not to use a faster version of the algorithm that bypasses
-        measurment (unphysical for quantum computer).
-
-    _use_analytic_grad : bool
-        Whether or not to use an alaystic function for the gradient to pass to
-        the optemizer. If false, the optemizer will use self-generated approximate
-        gradients (if BFGS algorithm is used).
-
-    _optimizer : string
-        The type of opterizer to use for the classical portion of VQE. Suggested
-        algorithms are 'BFGS' or 'Nelder-Mead' although there are many options
-        (see SciPy.optemize.minimize documentation).
-
-    _trott_num : int
-        The Trotter number for the calculation
-        (exact in the infinte limit).
 
     _results : list
         The optemizer result objects from each iteration of ADAPT-VQE.
@@ -76,32 +62,6 @@ class ADAPTVQE(UCCVQE):
     _curr_grad_norm : float
         The gradient norm for the current iteration of ADAPT-VQE.
 
-    _pool_obj : SDOpPool
-        An SDOpPool object corresponding to the specefied operators of
-        interest.
-
-    _pool : list of lists with tuple and float
-        The list of (optionally symmetrized) singe and double excitation
-        operators to consizer. represented in the form,
-        [ [(p,q), t_pq], .... , [(p,q,s,r), t_pqrs], ... ]
-        where p, q, r, s are idicies of normal ordered creation or anihilation
-        operators.
-
-    _tops : list
-        A list of indices representing selected operators in the pool.
-
-    _tamps : list
-        A list of amplitudes (to be optemized) representing selected
-        operators in the pool.
-
-    _commutator_pool : list
-        The QubitOperator objects representing the commutators [H, Am] of the
-        Hamiltonian (H) and each member of the operator pool (Am).
-
-    _N_samples : int
-        The number of times to measure each term in _operator
-        (not yet functional).
-
     _converged : bool
         Whether or not the ADAPT-VQE has converged according to the gradient-norm
         threshold.
@@ -112,69 +72,6 @@ class ADAPTVQE(UCCVQE):
     _final_result : Result
         The last result object from the optemizer.
 
-    _n_ham_measurements : int
-        The total number of times the energy was evaluated via
-        measurement of the Hamiltoanin
-
-    _n_commut_measurements : int
-        The total number of times the commutator was evaluated via
-        measurement of [H, Am].
-
-
-    Methods
-    -------
-    fill_pool()
-        Fills the pool_ with indices pertaining spin-complete, single and
-        double excitation operators according to _nocc and _nvir.
-
-    fill_commutator_pool()
-        Fills the _commutator_pool with circuits considering the _operator to
-        be measured and the _pool.
-
-    update_ansatz()
-        Adds a paramater and operator to the ADAPT-VQE circuit, and checks for
-        convergence.
-
-    build_Uprep()
-        Returns a Circuit object corresponding to the state preparation
-        circuit for the ADAPT-VQE ansatz on a given iteration.
-
-    measure_gradient()
-        Returns the measured energy gradient with respect to a single
-        paramater Am.
-
-    measure_energy()
-        Returns the measured energy.
-
-    energy_feval()
-        Builds a state preparation circuit given a parameter list and returns
-        the measured energy. Used as the function the minimizer calls.
-
-    gradient_ary_feval()
-        Computes the gradients with respect to all operators currently in the
-        ADAPT-VQE ansatz. Used as the jacobian the minimizer calls.
-
-    solve()
-        Runs the optimizer to mimimize the energy. Sets certain optimizer
-        parameters internally.
-
-    conv_status()
-        Sets the convergence states.
-
-    get_num_ham_measurements()
-        Returns the total number of times the energy was evaluated via
-        measurement of the Hamiltoanin.
-
-    get_num_commut_measurements()
-        Returns the total number of times the commutator was evaluated via
-        measurement of [H, Am].
-
-    get_final_energy()
-        Returns the final energy.
-
-    get_final_result()
-        Retruns the fianl optemization result from the optemizer. Contains
-        the final amplitudes used.
     """
     def run(self,
             avqe_thresh=1.0e-2,
@@ -368,15 +265,6 @@ class ADAPTVQE(UCCVQE):
 
     # Define VQE abstract methods.
     def solve(self):
-        """
-        Parameters
-        ----------
-        fast : bool
-            Whether or not to use the optemized but unphysical energy evaluation
-            function.
-        maxiter : int
-            The maximum number of iterations for the scipy optimizer.
-        """
 
         self._k_counter = 0
 
@@ -431,6 +319,10 @@ class ADAPTVQE(UCCVQE):
 
     # Define ADAPT-VQE methods.
     def update_ansatz(self):
+        """Adds a paramater and operator to the ADAPT-VQE circuit based on the
+        magnigue of the gradeints of pool operators, checks for
+        convergence.
+        """
         self._n_pauli_measures_k = 0
 
         curr_norm = 0.0
@@ -515,6 +407,8 @@ class ADAPTVQE(UCCVQE):
 
 
     def conv_status(self):
+        """Sets the convergence states.
+        """
         if abs(self._curr_grad_norm) < abs(self._avqe_thresh):
             self._converged = 1
             self._final_energy = self._energies[-1]

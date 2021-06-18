@@ -1,8 +1,8 @@
 """
-uccsdvqe.py
+UCCNVQE classes
 ====================================
-A class for using an experiment to execute the variational quantum eigensolver
-for a trotterized UCCN ansatz.
+Classes for using an experiment to execute the variational quantum eigensolver
+for a Trotterized (disentangeld) UCCN ansatz with fixed operators.
 """
 
 import qforte
@@ -18,63 +18,14 @@ import numpy as np
 from scipy.optimize import minimize
 
 class UCCNVQE(UCCVQE):
-    """
-    A class that encompasses the three components of using the variational
-    quantum eigensolver to optimize a parameterized unitary CCN-like wave function.
-
-    UCCN-VQE: (1) prepares a quantum state on the quantum computer
-    representing the wave function to be simulated, (2) evauates the energy by
-    measurement, and (3) optemizes the the wave funciton by minimizing the energy.
+    """A class that encompasses the three components of using the variational
+    quantum eigensolver to optimize a parameterized disentangled UCCN-like
+    wave function. (1) prepares a quantum state on the quantum computer
+    representing the wave function to be simulated, (2) evauates the energy and
+    gradients (3) optemizes the the wave funciton by minimizing the energy
 
     Attributes
     ----------
-    _ref : list
-        The set of 1s and 0s indicating the initial quantum state.
-
-    _nqubits : int
-        The number of qubits the calculation empolys.
-
-    _operator : QubitOperator
-        The operator to be measured (usually the Hamiltonian), mapped to a
-        qubit representation.
-
-    _avqe_thresh : float
-        The gradient norm threshold to determine when the UCCN-VQE
-        algorithm has converged.
-
-    _opt_thresh : float
-        The gradient norm threshold to determine when the classical optimizer
-        algorithm has converged.
-
-    _use_fast_measurement : bool
-        Whether or not to use a faster version of the algorithm that bypasses
-        measurment (unphysical for quantum computer).
-
-    _use_analytic_grad : bool
-        Whether or not to use an analytic function for the gradient to pass to
-        the optimizer. If false, the optimizer will use self-generated approximate
-        gradients (if BFGS algorithm is used).
-
-    _optimizer : string
-        The type of optimizer to use for the classical portion of VQE. Suggested
-        algorithms are 'BFGS' or 'Nelder-Mead' although there are many options
-        (see SciPy.optimize.minimize documentation).
-
-    _pool_type : string
-        A string specifying the kinds of tamplitudes allowed in the UCCN-VQE
-        parameterization.
-            SA_SD: At most two orbital excitations. Assumes a singlet wavefunction and closed-shell Slater determinant
-                   reducing the number of amplitudes.
-            SD: At most two orbital excitations.
-            SDT: At most three orbital excitations.
-            SDTQ: At most four orbital excitations.
-            SDTQP: At most five orbital excitations.
-            SDTQPH: At most six orbital excitations.
-
-    _trott_num : int
-        The Trotter number for the calculation
-        (exact in the infinte limit).
-
     _results : list
         The optimizer result objects from each iteration of UCCN-VQE.
 
@@ -84,97 +35,6 @@ class UCCNVQE(UCCVQE):
     _grad_norms : list
         The gradient norms from each iteration of UCCN-VQE.
 
-    _curr_grad_norm : float
-        The gradient norm for the current iteration of UCCN-VQE.
-
-    _initial_guess_energy
-        The initial guess energy from each iteration of UCCN-VQE.
-
-    _pool_obj : SDOpPool
-        An SDOpPool object corresponding to the specified operators of
-        interest.
-
-    _commutator_pool : list
-        The QubitOperator objects representing the commutators [H, Am] of the
-        Hamiltonian (H) and each member of the operator pool (Am).
-
-    _N_samples : int
-        The number of times to measure each term in _operator
-        (not yet functional).
-
-    _converged : bool
-        Whether or not the UCCN-VQE has converged according to the gradient-norm
-        threshold.
-
-    _final_energy : float
-        The final UCCN-VQE energy value.
-
-    _final_result : Result
-        The last result object from the optimizer.
-
-    _n_ham_measurements : int
-        The total number of times the energy was evaluated via
-        measurement of the Hamiltonian
-
-    _n_commut_measurements : int
-        The total number of times the commutator was evaluated via
-        measurement of [H, Am].
-
-
-    Methods
-    -------
-    fill_pool()
-        Fills the _pool with orbital indices of UCC amplitudes specified
-        by the pool_type. Indices are according to _nocc and _nvir.
-
-    fill_commutator_pool()
-        Fills the _commutator_pool with circuits considering the _operator to
-        be measured and the _pool.
-
-    initialize_ansatz()
-        Adds all operators in the pool to the list of operators in the circuit,
-        with amplitude 0.
-
-    build_Uprep()
-        Returns a Circuit object corresponding to the state preparation
-        circuit for the UCCN-VQE ansatz on a given iteration.
-
-    measure_gradient()
-        Returns the measured energy gradient with respect to a single
-        parameter Am.
-
-    measure_energy()
-        Returns the measured energy.
-
-    energy_feval()
-        Builds a state preparation circuit given a parameter list and returns
-        the measured energy. Used as the function the minimizer calls.
-
-    gradient_ary_feval()
-        Computes the gradients with respect to all operators currently in the
-        UCCN-VQE ansatz. Used as the jacobian the minimizer calls.
-
-    solve()
-        Runs the optimizer to mimimize the energy. Sets certain optimizer
-        parameters internally.
-
-    conv_status()
-        Sets the convergence states.
-
-    get_num_ham_measurements()
-        Returns the total number of times the energy was evaluated via
-        measurement of the Hamiltoanin.
-
-    get_num_commut_measurements()
-        Returns the total number of times the commutator was evaluated via
-        measurement of [H, Am].
-
-    get_final_energy()
-        Returns the final energy.
-
-    get_final_result()
-        Returns the final optimization result from the optimizer. Contains
-        the final amplitudes used.
     """
     def run(self,
             opt_thresh=1.0e-5,
@@ -301,16 +161,6 @@ class UCCNVQE(UCCVQE):
 
     # Define VQE abstract methods.
     def solve(self):
-        """
-        Parameters
-        ----------
-        fast : bool
-            Whether or not to use the optimized but unphysical energy evaluation
-            function.
-        maxiter : int
-            The maximum number of iterations for the scipy optimizer.
-        """
-
         # Construct arguments to hand to the minimizer.
         opts = {}
         opts['gtol'] = self._opt_thresh
@@ -377,13 +227,22 @@ class UCCNVQE(UCCVQE):
 
 
     def initialize_ansatz(self):
+        """Adds all operators in the pool to the list of operators in the circuit,
+        with amplitude 0.
+        """
         self._tops = list(range(len(self._pool)))
         self._tamps = [0.0] * len(self._pool)
 
+
+    # TODO: change to get_num_pt_evals
     def get_num_ham_measurements(self):
+        """Returns the total number of times the energy was evaluated via
+        measurement of the Hamiltoanin.
+        """
         self._n_ham_measurements = self._final_result.nfev
         return self._n_ham_measurements
 
+    # TODO: depricate this function
     def get_num_commut_measurements(self):
         # if self._use_analytic_grad:
         #     self._n_commut_measurements = self._final_result.njev * (len(self._pool))
