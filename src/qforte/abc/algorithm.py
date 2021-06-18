@@ -34,9 +34,10 @@ class Algorithm(ABC):
         (exact in the infinte limit).
 
     _trotter_number : int
-        The Trotter number (or the number of trotter steps)
-        to use for exponentiated operators.
-        (exact in the infinte limit).
+        The number of trotter steps (m) to perform when approximating the matrix
+        exponentials (Um or Un). For the exponential of two non commuting terms
+        e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
+        exact in the infinite m limit.
 
     _Egs : float
         The final ground state energy value.

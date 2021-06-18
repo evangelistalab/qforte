@@ -1,7 +1,7 @@
 """
-mrsqk.py
+MRSQK classes
 =================================================
-A class for calculating the energies of quantum-
+Classes for calculating the energies of quantum-
 mechanical systems the multireference selected
 quantum Krylov algorithm.
 """
@@ -27,6 +27,100 @@ from scipy.linalg import (lstsq,
                           eig)
 
 class MRSQK(QSD):
+    """A quantum subspace diagonalization algorithm that generates the many-body
+    basis from :math:`s` real time evolutions of :math:`d` differnt orthogonal
+    reference states :math:`| \Phi_I \\rangle`:
+
+    .. math::
+        | \Psi_n^I \\rangle = e^{-i n \Delta t \hat{H}} | \Phi_I \\rangle
+
+    In practice Trotterization is used to approximate the time evolution operator.
+
+    The reference states are determined using an initial single-reference QK
+    calculation with its own specified values for the time step :math:`\Delta t_0`
+    and number of SRQK time evolutions :math:`s_0`. One can then determine from
+    the target SRQK eigenvector :math:`\\vec{C}` an estimate of the most important
+    determinats via the importance value
+
+    .. math::
+        P_I = \sum_n^{s_0 + 1} | \\langle \Phi_I | \Psi_n \\rangle |^2 |C_n|^2.
+
+    The quantity :math:`| \\langle \Phi_I | \Psi_n \\rangle |^2` can be
+    approximated by measuring each of time evolved states in the computational
+    basis (if the Jordan Wigner transform was used).
+
+    Onece a set of important determinants :math:`\{ \Phi_I \}` is determined it
+    is (optionally) augmented to additionally include spin any complements and
+    the Hamiltonain is diagonalized in space of the new spin-complement list.
+    The final reference states (if _use_spin_adapted_refs==True) are then given
+    by the spin adapted (small) linear combinations of determinats with coefficients
+    determined by the aformentioned diagonalization.
+
+    Attributes
+    ----------
+
+    _d : int
+        The number of reference states :math:`\Phi_I` to use.
+
+    _diagonalize_each_step : bool
+        For diagnostic purposes, should the eigenvalue of the target root of the
+        quantum Krylov subspace be printed after each new unitary? We recommend
+        passing an s such that the change in the eigenvalue is small.
+
+    _nstates : int
+        The number MRSQK basis states :math:`d(s+1)`.
+
+    _nstates_per_ref : int
+        The number of states for a generated reference :math:`s+1`.
+
+    _reference_generator : {"SRQK"}
+        Specifies an algorithm to choose the reference state.
+
+    _s : int
+        The number of time evalutions per reference state :math:`s`.
+
+    _target_root : int
+        Which root of the quantum Krylov subspace should be taken?
+
+    _use_phase_based_selection : bool
+        Whether or not to use the exact phase condition for the
+        determination of important references (default is False, as is unphysical
+        for quantum hardware).
+
+    _use_spin_adapted_refs : bool
+        Whether or not to generate spin-adapted version of the list of imporatnt
+        determinants generated from the SRQK calculation.
+
+    _pre_sa_ref_lst : list of lists
+        The list of important individual determinants (each specified as an
+        occupation number list [1,1,1,0,1,...]) selected during SRQK.
+
+    _sa_ref_lst : list of lists of pairs
+        A list containing all of the spin adapted references selected in the
+        initial quantum Krylov procedure.
+        It is specifically a list of lists of pairs containing coefficient vales
+        and a lists pertaning to single determinants.
+        As an example:
+        ref_lst = [ [ (1.0, [1,1,0,0]) ], [ (0.7071, [0,1,1,0]), (0.7071, [1,0,0,1]) ] ].
+
+    Prelimenary SRQK Reference Specific Keywords
+
+    _dt_o : float
+        The time step :math:`\Delta t` to use for SRQK.
+
+    _s_o : int
+        The :math:`s` value for SRQK.
+
+    _ninitial_states : int
+        The number of states :math:`(s_0 + 1)` used by the preliminary SRQK
+        calcualtion.
+
+    _trotter_number_o : int
+        The number of Trotter steps to be used in the SRQK algorithm.
+
+    _trotter_order_o : int
+        The operator ordering to be used in the Trotter product.
+    """
     def run(self,
             d=2,
             s=3,
@@ -41,37 +135,6 @@ class MRSQK(QSD):
             trotter_number_o=1,
             diagonalize_each_step=True
             ):
-        """
-        _d : int
-            The number of reference states.
-        _diagonalize_each_step : bool
-            For diagnostic purposes, should the eigenvalue of the target root of the quantum Krylov subspace
-            be printed after each new unitary? We recommend passing an s so the change in the eigenvalue is
-            small.
-        _ninitial_states : bool
-        _nstates : int
-            The number of states
-        _nstates_per_ref : int
-            The number of states for a generated reference.
-        _reference_generator : {"SRQK"}
-            Specifies an algorithm to choose the reference state.
-        _s : int
-            The greatest m to use in unitaries
-        _target_root : int
-            Which root of the quantum Krylov subspace should be taken?
-        _use_phase_based_selection : bool
-        _use_spin_adapted_refs : bool
-
-        SRQK Reference Specific Keywords
-        _dt_o : float
-            dt for SRQK.
-        _s_o : int
-            s for SRQK.
-        _trotter_number_o : int
-            The number of Trotter steps to be used in the SRQK algorithm.
-        _trotter_order_o : int
-            The operator ordering to be used in the Trotter product.
-        """
 
         self._d = d
         self._s = s
@@ -242,54 +305,6 @@ class MRSQK(QSD):
 
     # Define QK abstract methods.
     def build_qk_mats(self):
-        """Returns matrices P and Q with dimension
-        (nstates_per_ref * len(ref_lst) X nstates_per_ref * len(ref_lst))
-        based on the evolution of two unitary operators Um = exp(-i * m * dt * H)
-        and Un = exp(-i * n * dt *H).
-
-        This is done for all single determinant refrerences |Phi_K> in ref_lst,
-        with (Q) and without (P) measuring with respect to the operator H.
-        Elements P_mn are given by <Phi_I| Um^dag Un | Phi_J>.
-        Elements Q_mn are given by <Phi_I| Um^dag H Un | Phi_J>.
-        This function builds P and Q in an efficient manor and gives the same result
-        as M built from 'matrix_element', but is unphysical for a quantum computer.
-
-            Arguments
-            ---------
-
-            ref_lst : list of lists
-                A list containing all of the references |Phi_K> to perfrom evolutions on.
-
-            nstates_per_ref : int
-                The number of Krylov basis states to generate for each reference.
-
-            dt_lst : list
-                List of time steps to use for each reference (ususally the same for
-                all references).
-
-            H : QubitOperator
-                The operator to time evolove and measure with respect to
-                (usually the Hamiltonain).
-
-            nqubits : int
-                The number of qubits
-
-            trot_number : int
-                The number of trotter steps (m) to perform when approximating the matrix
-                exponentials (Um or Un). For the exponential of two non commuting terms
-                e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
-                exact in the infinite m limit.
-
-            Returns
-            -------
-            s_mat : ndarray
-                A numpy array containing the elements P_mn
-
-            h_mat : ndarray
-                A numpy array containing the elements Q_mn
-
-        """
-
         num_tot_basis = len(self._single_det_refs) * self._nstates_per_ref
 
         h_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
@@ -389,57 +404,8 @@ class MRSQK(QSD):
         return h_CI
 
     def build_sa_qk_mats(self):
-        # TODO (cleanup): imporve/update docs
-        """Returns matrices P and Q with dimension
-        (nstates_per_ref * len(ref_lst) X nstates_per_ref * len(ref_lst))
-        based on the evolution of two unitary operators Um = exp(-i * m * dt * H)
-        and Un = exp(-i * n * dt *H).
-
-        This is done for all spin adapted refrerences |Phi_K> in ref_lst,
-        with (Q) and without (P) measuring with respect to the operator H.
-        Elements P_mn are given by <Phi_I| Um^dag Un | Phi_J>.
-        Elements Q_mn are given by <Phi_I| Um^dag H Un | Phi_J>.
-        This function builds P and Q in an efficient manor and gives the same result
-        as M built from 'matrix_element', but is unphysical for a quantum computer.
-
-            Arguments
-            ---------
-
-            ref_lst : list of lists
-                A list containing all of the spin adapted references |Phi_K> to perfrom evolutions on.
-                Is specifically a list of lists of pairs containing coefficient vales
-                and a lists pertaning to single determinants.
-                As an example,
-                ref_lst = [ [ (1.0, [1,1,0,0]) ], [ (0.7071, [0,1,1,0]), (0.7071, [1,0,0,1]) ] ].
-
-            nstates_per_ref : int
-                The number of Krylov basis states to generate for each reference.
-
-            dt_lst : list
-                List of time steps to use for each reference (ususally the same for
-                all references).
-
-            H : QubitOperator
-                The operator to time evolove and measure with respect to
-                (usually the Hamiltonain).
-
-            nqubits : int
-                The number of qubits
-
-            trot_number : int
-                The number of trotter steps (m) to perform when approximating the matrix
-                exponentials (Um or Un). For the exponential of two non commuting terms
-                e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
-                exact in the infinite m limit.
-
-            Returns
-            -------
-            s_mat : ndarray
-                A numpy array containing the elements P_mn
-
-            h_mat : ndarray
-                A numpy array containing the elements Q_mn
-
+        """Returns the QK effective hamiltonain and overlap matrices in a basis
+        of spin adapted references.
         """
 
         num_tot_basis = len(self._sa_ref_lst) * self._nstates_per_ref
@@ -452,8 +418,6 @@ class MRSQK(QSD):
 
         for i, ref in enumerate(self._sa_ref_lst):
             for m in range(self._nstates_per_ref):
-
-                # TODO (cleanup): will need to consider gate count for this part.
                 Um = qforte.Circuit()
                 phase1 = 1.0
                 if(m>0):
@@ -519,7 +483,6 @@ class MRSQK(QSD):
         pass
 
     def build_refs_from_srqk(self):
-        # Build a list of single determinant references form partial tomography.
         self.build_refs()
         if (self._use_spin_adapted_refs):
             self.build_sa_refs()
@@ -529,53 +492,9 @@ class MRSQK(QSD):
 
 
     def build_refs(self):
-        """Builds a list of single determinant references to be used in the MRSQK
-        procedure.
-
-            Arguments
-            ---------
-
-            initial_ref : list
-                A list of 1's and 0's representing spin orbital occupations for a
-                single open-shell Slater determinant. It serves as the reference
-                for the initial quantum Krylov calculation used to pick additional
-                references.
-
-            d : int
-                The totoal number of references to find.
-
-            ninitial_states : int
-                The size of the inital quantum Krylov basis to use. Equal to the
-                number of inital time evolutions plus one (s_0 +1).
-
-            initial_dt : float
-                The time step (delta t) to use in the inital quantum Krylov
-                calculation.
-
-            H : QubitOperator
-                The QubitOperator object to use in MRSQK.
-
-            target_root : int
-                Determines which state to return the energy for.
-
-            fast : bool
-                Whether or not to use a faster version of the algorithm that bypasses
-                measurment (unphysical for quantum computer).
-
-            use_phase_based_selection : bool
-                Whether or not to account for sign discrepencaies when selecting important
-                determinants from initial quantum Krylov procedure.
-
-            Returns
-            -------
-
-            initial_ref_lst : list of lists
-                A list of the most important single determinants according to the initial
-                quantum Krylov procedure.
-
+        """Builds a list of single determinant references (non spin-adapted) to
+        be used in the MRSQK procedure.
         """
-
-        # TODO: re-write this function, it is quite messy
 
         initial_ref_lst = []
         true_initial_ref_lst = []
@@ -681,52 +600,6 @@ class MRSQK(QSD):
 
     def build_sa_refs(self):
         """Builds a list of spin adapted references to be used in the MRSQK procedure.
-
-        Arguments
-        ---------
-
-        initial_ref : list
-            A list of 1's and 0's representing spin orbital occupations for a
-            single open-shell Slater determinant. It serves as the reference
-            for the initial quantum Krylov calculation used to pick additional
-            references.
-
-        d : int
-            The totoal number of references to find.
-
-        ninitial_states : int
-            The size of the inital quantum Krylov basis to use. Equal to the
-            number of inital time evolutions plus one (s_0 +1).
-
-        initial_dt : float
-            The time step (delta t) to use in the inital quantum Krylov
-            calculation.
-
-        H : QubitOperator
-            The QubitOperator object to use in MRSQK.
-
-        target_root : int
-            Determines which state to return the energy for.
-
-        fast : bool
-            Whether or not to use a faster version of the algorithm that bypasses
-            measurment (unphysical for quantum computer).
-
-        use_phase_based_selection : bool
-            Whether or not to account for sign discrepencaies when selecting important
-            determinants from initial quantum Krylov procedure.
-
-        Returns
-        -------
-
-        sa_ref_lst : list of lists
-            A list containing all of the spin adapted references selected in the
-            initial quantum Krylov procedure.
-            It is specifically a list of lists of pairs containing coefficient vales
-            and a lists pertaning to single determinants.
-            As an example,
-            ref_lst = [ [ (1.0, [1,1,0,0]) ], [ (0.7071, [0,1,1,0]), (0.7071, [1,0,0,1]) ] ].
-
         """
 
         if(self._fast==False):
@@ -811,8 +684,6 @@ class MRSQK(QSD):
 
         sorted_basis_importnace_lst = sorted_largest_idxs(basis_importnace_lst, use_real=True, rev=True)
 
-        # Construct final ref list, of form
-        # [ [ (coeff, [1100]) ], [ (coeff, [1001]), (coeff, [0110]) ], ... ]
         print('\n\n        ==> Final MRSQK reference space summary <==')
         print('-----------------------------------------------------------')
 
