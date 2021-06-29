@@ -139,8 +139,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_timings", &Computer::get_timings)
         .def("clear_timings", &Computer::clear_timings)
         .def("str", &Computer::str)
-        .def("__str__", &Computer::str)
-        .def("__repr__", [](const Computer& qc) {
+        .def("__str__", [](const Computer& qc) {
             std::string r("Computer(\n");
             for (const std::string& s : qc.str()) {
                 r += "  " + s + "\n";
