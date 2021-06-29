@@ -231,7 +231,14 @@ class QITE(Algorithm):
             P = qf.SQOpPool()
             P.set_orb_spaces(self._ref)
             P.fill_pool(self._expansion_type)
+            print(P, '\n')
             sig_temp = P.get_qubit_operator("commuting_grp_lex", False)
+
+            counter = 0
+            for alph, rho in sig_temp.terms():
+                print(f" {counter}     {alph}       {rho}")
+                counter += 1
+
 
             # Filter the generated operators, so that only those with an odd number of Y gates are allowed.
             # See section "Real Hamiltonians and states" in the SI of Motta for theoretical justification.
@@ -329,7 +336,7 @@ class QITE(Algorithm):
             Hpsi_qc.apply_operator(operator)
             exp_val = np.vdot(self._qc.get_coeff_vec(), Hpsi_qc.get_coeff_vec())
             b[I] = prefactor * op_coefficient * exp_val
-            Hpsi_qc.set_coeff_vec(C_Hpsi_qc)
+            Hpsi_qc.set_coeff_vec(copy.deepcopy(C_Hpsi_qc))
 
         return np.real(b)
 
@@ -345,6 +352,10 @@ class QITE(Algorithm):
 
         x = lstsq(S, btot)[0]
         x = np.real(x)
+
+
+        # sing_vals = lstsq(S, btot)[3]
+        # print(np.abs(sing_vals[-1] / sing_vals[0]))
 
         if(self._sparseSb):
             for I, spI in enumerate(sp_idxs):
