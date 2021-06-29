@@ -143,8 +143,8 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2aaaa.add_term(-1.0, {ja,ia}, {ba,aa});
                             temp2aaaa.simplify();
                             if(temp2aaaa.terms().size() > 0){
-                                std::vector<size_t> vtemp {std::get<1>(temp2aaaa.terms()[0])[0], std::get<1>(temp2aaaa.terms()[0])[1], std::get<1>(temp2aaaa.terms()[0])[2], std::get<1>(temp2aaaa.terms()[0])[3]};
-                                std::vector<size_t> vadjt {std::get<1>(temp2aaaa.terms()[1])[0], std::get<1>(temp2aaaa.terms()[1])[1], std::get<1>(temp2aaaa.terms()[1])[2], std::get<1>(temp2aaaa.terms()[1])[3]};
+                                std::vector<size_t> vtemp {std::get<1>(temp2aaaa.terms()[0])[0], std::get<1>(temp2aaaa.terms()[0])[1], std::get<2>(temp2aaaa.terms()[0])[0], std::get<2>(temp2aaaa.terms()[0])[1]};
+                                std::vector<size_t> vadjt {std::get<1>(temp2aaaa.terms()[1])[0], std::get<1>(temp2aaaa.terms()[1])[1], std::get<2>(temp2aaaa.terms()[1])[0], std::get<2>(temp2aaaa.terms()[1])[1]};
                                 if( (std::find(uniqe_2bdy.begin(), uniqe_2bdy.end(), vtemp) == uniqe_2bdy.end()) ){
                                     if( (std::find(adjnt_2bdy.begin(), adjnt_2bdy.end(), vtemp) == adjnt_2bdy.end()) ){
                                         uniqe_2bdy.push_back(vtemp);
@@ -161,8 +161,8 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2bbbb.add_term(-1.0, {jb,ib}, {bb,ab});
                             temp2bbbb.simplify();
                             if(temp2bbbb.terms().size() > 0){
-                                std::vector<size_t> vtemp {std::get<1>(temp2bbbb.terms()[0])[0], std::get<1>(temp2bbbb.terms()[0])[1], std::get<1>(temp2bbbb.terms()[0])[2], std::get<1>(temp2bbbb.terms()[0])[3]};
-                                std::vector<size_t> vadjt {std::get<1>(temp2bbbb.terms()[1])[0], std::get<1>(temp2bbbb.terms()[1])[1], std::get<1>(temp2bbbb.terms()[1])[2], std::get<1>(temp2bbbb.terms()[1])[3]};
+                                std::vector<size_t> vtemp {std::get<1>(temp2bbbb.terms()[0])[0], std::get<1>(temp2bbbb.terms()[0])[1], std::get<2>(temp2bbbb.terms()[0])[0], std::get<2>(temp2bbbb.terms()[0])[1]};
+                                std::vector<size_t> vadjt {std::get<1>(temp2bbbb.terms()[1])[0], std::get<1>(temp2bbbb.terms()[1])[1], std::get<2>(temp2bbbb.terms()[1])[0], std::get<2>(temp2bbbb.terms()[1])[1]};
                                 if( (std::find(uniqe_2bdy.begin(), uniqe_2bdy.end(), vtemp) == uniqe_2bdy.end()) ){
                                     if( (std::find(adjnt_2bdy.begin(), adjnt_2bdy.end(), vtemp) == adjnt_2bdy.end()) ){
                                         uniqe_2bdy.push_back(vtemp);
@@ -179,8 +179,8 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2abab.add_term(-1.0, {jb,ia}, {bb,aa});
                             temp2abab.simplify();
                             if(temp2abab.terms().size() > 0){
-                                std::vector<size_t> vtemp {std::get<1>(temp2abab.terms()[0])[0], std::get<1>(temp2abab.terms()[0])[1], std::get<1>(temp2abab.terms()[0])[2], std::get<1>(temp2abab.terms()[0])[3]};
-                                std::vector<size_t> vadjt {std::get<1>(temp2abab.terms()[1])[0], std::get<1>(temp2abab.terms()[1])[1], std::get<1>(temp2abab.terms()[1])[2], std::get<1>(temp2abab.terms()[1])[3]};
+                                std::vector<size_t> vtemp {std::get<1>(temp2abab.terms()[0])[0], std::get<1>(temp2abab.terms()[0])[1], std::get<2>(temp2abab.terms()[0])[0], std::get<2>(temp2abab.terms()[0])[1]};
+                                std::vector<size_t> vadjt {std::get<1>(temp2abab.terms()[1])[0], std::get<1>(temp2abab.terms()[1])[1], std::get<2>(temp2abab.terms()[1])[0], std::get<2>(temp2abab.terms()[1])[1]};
                                 if( (std::find(uniqe_2bdy.begin(), uniqe_2bdy.end(), vtemp) == uniqe_2bdy.end()) ){
                                     if( (std::find(adjnt_2bdy.begin(), adjnt_2bdy.end(), vtemp) == adjnt_2bdy.end()) ){
                                         uniqe_2bdy.push_back(vtemp);
@@ -197,8 +197,8 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2baba.add_term(-1.0, {ja,ib}, {ba,ab});
                             temp2baba.simplify();
                             if(temp2baba.terms().size() > 0){
-                                std::vector<size_t> vtemp {std::get<1>(temp2baba.terms()[0])[0], std::get<1>(temp2baba.terms()[0])[1], std::get<1>(temp2baba.terms()[0])[2], std::get<1>(temp2baba.terms()[0])[3]};
-                                std::vector<size_t> vadjt {std::get<1>(temp2baba.terms()[1])[0], std::get<1>(temp2baba.terms()[1])[1], std::get<1>(temp2baba.terms()[1])[2], std::get<1>(temp2baba.terms()[1])[3]};
+                                std::vector<size_t> vtemp {std::get<1>(temp2baba.terms()[0])[0], std::get<1>(temp2baba.terms()[0])[1], std::get<2>(temp2baba.terms()[0])[0], std::get<2>(temp2baba.terms()[0])[1]};
+                                std::vector<size_t> vadjt {std::get<1>(temp2baba.terms()[1])[0], std::get<1>(temp2baba.terms()[1])[1], std::get<2>(temp2baba.terms()[1])[0], std::get<2>(temp2baba.terms()[1])[1]};
                                 if( (std::find(uniqe_2bdy.begin(), uniqe_2bdy.end(), vtemp) == uniqe_2bdy.end()) ){
                                     if( (std::find(adjnt_2bdy.begin(), adjnt_2bdy.end(), vtemp) == adjnt_2bdy.end()) ){
                                         uniqe_2bdy.push_back(vtemp);
@@ -215,8 +215,8 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2abba.add_term(-1.0, {ja,ib}, {bb,aa});
                             temp2abba.simplify();
                             if(temp2abba.terms().size() > 0){
-                                std::vector<size_t> vtemp {std::get<1>(temp2abba.terms()[0])[0], std::get<1>(temp2abba.terms()[0])[1], std::get<1>(temp2abba.terms()[0])[2], std::get<1>(temp2abba.terms()[0])[3]};
-                                std::vector<size_t> vadjt {std::get<1>(temp2abba.terms()[1])[0], std::get<1>(temp2abba.terms()[1])[1], std::get<1>(temp2abba.terms()[1])[2], std::get<1>(temp2abba.terms()[1])[3]};
+                                std::vector<size_t> vtemp {std::get<1>(temp2abba.terms()[0])[0], std::get<1>(temp2abba.terms()[0])[1], std::get<2>(temp2abba.terms()[0])[0], std::get<2>(temp2abba.terms()[0])[1]};
+                                std::vector<size_t> vadjt {std::get<1>(temp2abba.terms()[1])[0], std::get<1>(temp2abba.terms()[1])[1], std::get<2>(temp2abba.terms()[1])[0], std::get<2>(temp2abba.terms()[1])[1]};
                                 if( (std::find(uniqe_2bdy.begin(), uniqe_2bdy.end(), vtemp) == uniqe_2bdy.end()) ){
                                     if( (std::find(adjnt_2bdy.begin(), adjnt_2bdy.end(), vtemp) == adjnt_2bdy.end()) ){
                                         uniqe_2bdy.push_back(vtemp);
@@ -234,8 +234,8 @@ void SQOpPool::fill_pool(std::string pool_type){
                             temp2baab.add_term(-1.0, {jb,ia}, {ba,ab});
                             temp2baab.simplify();
                             if(temp2baab.terms().size() > 0){
-                                std::vector<size_t> vtemp {std::get<1>(temp2baab.terms()[0])[0], std::get<1>(temp2baab.terms()[0])[1], std::get<1>(temp2baab.terms()[0])[2], std::get<1>(temp2baab.terms()[0])[3]};
-                                std::vector<size_t> vadjt {std::get<1>(temp2baab.terms()[1])[0], std::get<1>(temp2baab.terms()[1])[1], std::get<1>(temp2baab.terms()[1])[2], std::get<1>(temp2baab.terms()[1])[3]};
+                                std::vector<size_t> vtemp {std::get<1>(temp2baab.terms()[0])[0], std::get<1>(temp2baab.terms()[0])[1], std::get<2>(temp2baab.terms()[0])[0], std::get<2>(temp2baab.terms()[0])[1]};
+                                std::vector<size_t> vadjt {std::get<1>(temp2baab.terms()[1])[0], std::get<1>(temp2baab.terms()[1])[1], std::get<2>(temp2baab.terms()[1])[0], std::get<2>(temp2baab.terms()[1])[1]};
                                 if( (std::find(uniqe_2bdy.begin(), uniqe_2bdy.end(), vtemp) == uniqe_2bdy.end()) ){
                                     if( (std::find(adjnt_2bdy.begin(), adjnt_2bdy.end(), vtemp) == adjnt_2bdy.end()) ){
                                         uniqe_2bdy.push_back(vtemp);

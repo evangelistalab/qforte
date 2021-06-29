@@ -329,7 +329,7 @@ class QITE(Algorithm):
             Hpsi_qc.apply_operator(operator)
             exp_val = np.vdot(self._qc.get_coeff_vec(), Hpsi_qc.get_coeff_vec())
             b[I] = prefactor * op_coefficient * exp_val
-            Hpsi_qc.set_coeff_vec(C_Hpsi_qc)
+            Hpsi_qc.set_coeff_vec(copy.deepcopy(C_Hpsi_qc))
 
         return np.real(b)
 
@@ -345,6 +345,10 @@ class QITE(Algorithm):
 
         x = lstsq(S, btot)[0]
         x = np.real(x)
+
+
+        # sing_vals = lstsq(S, btot)[3]
+        # print(np.abs(sing_vals[-1] / sing_vals[0]))
 
         if(self._sparseSb):
             for I, spI in enumerate(sp_idxs):
