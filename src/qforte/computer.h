@@ -23,6 +23,10 @@ class Computer {
     /// default constructor: create a quantum computer with nqubit qubits
     Computer(int nqubit);
 
+    /// applies a matrix representation of a Gate, Gircuit, or QubitOoperator
+    /// to the quantum state.
+    void apply_matrix(const std::vector<std::vector< std::complex<double> >>& Opmat);
+
     /// apply a quantum operator to the current state with optimized algorithm
     /// (this operation is generally not a physical quantum computing operation).
     void apply_operator(const QubitOperator& qo);

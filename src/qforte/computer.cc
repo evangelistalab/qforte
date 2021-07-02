@@ -47,6 +47,22 @@ void Computer::set_state(std::vector<std::pair<QubitBasis, double_c>> state) {
 
 void Computer::zero_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
 
+void Computer::apply_matrix(const std::vector<std::vector< std::complex<double> >>& Opmat){
+    std::vector<std::complex<double>> old_coeff = coeff_;
+    std::vector<std::complex<double>> result(nbasis_, 0.0);
+
+    for(size_t I = 0; I < nbasis_; I++){
+        result[I] = std::inner_product(Opmat[I].begin(),
+                                       Opmat[I].end(),
+                                       old_coeff.begin(),
+                                       std::complex<double>(0.0, 0.0),
+                                       add_c<double>,
+                                       complex_prod<double>);
+    }
+    coeff_ = result;
+}
+
+
 void Computer::apply_operator(const QubitOperator& qo) {
     std::vector<std::complex<double>> old_coeff = coeff_;
     std::vector<std::complex<double>> result(nbasis_, 0.0);
