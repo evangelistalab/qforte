@@ -1,8 +1,10 @@
 #include <algorithm>
+#include <numeric>
 
 #include "helpers.h"
 #include "gate.h"
 #include "circuit.h"
+#include "computer.h"
 
 void Circuit::set_parameters(const std::vector<double>& params) {
     // need a loop over only gates in state preparation circuit that
@@ -131,6 +133,37 @@ size_t Circuit::num_qubits() const {
         max = std::max({max, gate.target() + 1, gate.control() + 1});
     }
     return max;
+}
+
+const std::vector<std::vector< std::complex<double> >> Circuit::matrix(size_t nqubit) const {
+
+    size_t nbasis = std::pow(2, nqubit);
+
+    std::vector<std::vector< std::complex<double> >>
+        Rtpose(nbasis, std::vector<std::complex<double>>(nbasis, 0.0));
+
+    std::vector<std::vector< std::complex<double> >>
+        Ltpose(nbasis, std::vector<std::complex<double>>(nbasis, 0.0));
+
+    for(size_t I = 0; I < nbasis; I++){
+        Rtpose[I][I] = 1.0;
+    }
+
+    for (auto& gate : gates_) {
+        auto gate_mat = gate.matrix(nqubit);
+        for(size_t I = 0; I < nbasis; I++){
+            for(size_t J = 0; J < nbasis; J++){
+                Ltpose[J][I] = std::inner_product(gate_mat[I].begin(),
+                                                  gate_mat[I].end(),
+                                                  Rtpose[J].begin(),
+                                                  std::complex<double>(0.0, 0.0),
+                                                  add_c<double>,
+                                                  complex_prod<double>);
+            }
+        }
+        Rtpose = Ltpose;
+    }
+    return Ltpose;
 }
 
 // std::vector<double> Circuit::get_parameters() {

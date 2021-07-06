@@ -25,6 +25,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_gate", &Circuit::add_gate)
         .def("add_circuit", &Circuit::add_circuit)
         .def("gates", &Circuit::gates)
+        .def("matrix", &Circuit::matrix)
         .def("size", &Circuit::size)
         .def("adjoint", &Circuit::adjoint)
         .def("canonicalize_pauli_circuit", &Circuit::canonicalize_pauli_circuit)
