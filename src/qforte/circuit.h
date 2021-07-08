@@ -45,17 +45,17 @@ class Circuit {
     /// get the number of CNOT gates in the circuit
     int get_num_cnots() const;
 
-    /// Returns the lifted 2^nqubit X 2^nqubit matrix representaion of the circuit,
-    /// the matrix should always be unitary.
-    const std::vector<std::vector< std::complex<double> >> matrix(size_t nqubit) const;
-
     /// Returns the lifted sparse matrix representaion of the circuit,
     /// the matrix should always be unitary.
     const SparseMatrix sparse_matrix(size_t nqubit) const;
 
-    /// return a vector of string representing this circuit
+    /// Return a vector of string representing this circuit.
     std::string str() const;
 
+    /// Return the number of qubits pertaining to this circuit. Note this is
+    /// not the numebr of unique qubits but the minimum number of qubits needed
+    /// to execute the circuit. For example the circut [X_0 Y_4 X_8] would requre
+    /// nine qubits.    
     size_t num_qubits() const;
 
   private:

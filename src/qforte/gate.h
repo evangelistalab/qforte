@@ -36,12 +36,8 @@ class Gate {
     /// Returns the 4X4 matrix representation of the gate
     const complex_4_4_mat& gate() const;
 
-    /// Returns the lifted 2^nqubit X 2^nqubit matrix representaion of the gate
-    const std::vector<std::vector< std::complex<double> >> matrix(size_t nqubit) const;
-
     /// Returns the lifted sparse matrix representaion of the gate
     const SparseMatrix sparse_matrix(size_t nqubit) const;
-    // const std::map<size_t, std::map<size_t, std::complex<double>>> sparse_matrix(size_t nqubit) const;
 
     /// Return a string representation of the gate
     std::string str() const;
