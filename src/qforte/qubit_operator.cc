@@ -2,6 +2,7 @@
 #include "gate.h"
 #include "circuit.h"
 #include "qubit_operator.h"
+#include "sparse_tensor.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -146,6 +147,21 @@ bool QubitOperator::check_op_equivalence(QubitOperator qo, bool reorder) {
         }
     }
     return true;
+}
+
+const SparseMatrix QubitOperator::sparse_matrix(size_t nqubit) const {
+    SparseMatrix Rmat = SparseMatrix();
+    if (terms_.empty()){
+        size_t nbasis = std::pow(2, nqubit);
+        Rmat.make_identity(nbasis);
+        return Rmat;
+    }
+
+    for(const auto& term : terms_){ // term -> [complex, Circuit]
+        SparseMatrix Lmat = term.second.sparse_matrix(nqubit);
+        Rmat.add(Lmat, term.first);
+    }
+    return Rmat;
 }
 
 std::string QubitOperator::str() const {

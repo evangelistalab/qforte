@@ -8,9 +8,10 @@
 #include <iostream>
 
 class Gate;
+class SparseMatrix;
 
 class Circuit {
-    /* A Circuit is a product of quantum gates. An individual gate acts on 
+    /* A Circuit is a product of quantum gates. An individual gate acts on
      * at most one or two qubits and must be of the forms we can efficiently prepare,
      * e.g., CNOT, Hadamard, Rotation.
      * */
@@ -44,9 +45,17 @@ class Circuit {
     /// get the number of CNOT gates in the circuit
     int get_num_cnots() const;
 
-    /// return a vector of string representing this circuit
+    /// Returns the lifted sparse matrix representaion of the circuit,
+    /// the matrix should always be unitary.
+    const SparseMatrix sparse_matrix(size_t nqubit) const;
+
+    /// Return a vector of string representing this circuit.
     std::string str() const;
 
+    /// Return the number of qubits pertaining to this circuit. Note this is
+    /// not the numebr of unique qubits but the minimum number of qubits needed
+    /// to execute the circuit. For example the circut [X_0 Y_4 X_8] would requre
+    /// nine qubits.    
     size_t num_qubits() const;
 
   private:

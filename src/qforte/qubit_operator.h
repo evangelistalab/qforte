@@ -7,6 +7,8 @@
 #include <map>
 #include <unordered_map>
 
+class SparseMatrix;
+
 class QubitOperator {
     /* A QubitOperator is a linear combination (over C) of quantum circuits,
      * and therefore a linear combination of products of quantum gates.
@@ -56,6 +58,9 @@ class QubitOperator {
     /// check if this operator is equivalent to another operator qo
     /// mostly used for testing
     bool check_op_equivalence(QubitOperator qo, bool reorder);
+
+    /// Returns the lifted sparse matrix representaion of the operator.
+    const SparseMatrix sparse_matrix(size_t nqubit) const;
 
     /// return a string representing this quantum operator
     std::string str() const;

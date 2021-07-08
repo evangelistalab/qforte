@@ -12,6 +12,7 @@
 #include "sq_operator.h"
 #include "sq_op_pool.h"
 #include "qubit_op_pool.h"
+#include "sparse_tensor.h"
 #include "timer.h"
 
 namespace py = pybind11;
@@ -25,6 +26,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_gate", &Circuit::add_gate)
         .def("add_circuit", &Circuit::add_circuit)
         .def("gates", &Circuit::gates)
+        .def("sparse_matrix", &Circuit::sparse_matrix)
         .def("size", &Circuit::size)
         .def("adjoint", &Circuit::adjoint)
         .def("canonicalize_pauli_circuit", &Circuit::canonicalize_pauli_circuit)
@@ -79,6 +81,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("operator_product", &QubitOperator::operator_product)
         .def("check_op_equivalence", &QubitOperator::check_op_equivalence)
         .def("num_qubits", &QubitOperator::num_qubits)
+        .def("sparse_matrix", &QubitOperator::sparse_matrix)
         .def("str", &QubitOperator::str)
         .def("__str__", &QubitOperator::str)
         .def("__repr__", &QubitOperator::str);
@@ -114,6 +117,8 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<Computer>(m, "Computer")
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
         .def("apply_circuit_safe", &Computer::apply_circuit_safe)
+        .def("apply_matrix", &Computer::apply_matrix)
+        .def("apply_sparse_matrix", &Computer::apply_sparse_matrix)
         .def("apply_operator", &Computer::apply_operator)
         .def("apply_circuit", &Computer::apply_circuit)
         .def("apply_gate_safe", &Computer::apply_gate_safe)
@@ -152,10 +157,23 @@ PYBIND11_MODULE(qforte, m) {
         .def("target", &Gate::target)
         .def("control", &Gate::control)
         .def("gate_id", &Gate::gate_id)
+        .def("sparse_matrix", &Gate::sparse_matrix)
         .def("adjoint", &Gate::adjoint)
         .def("str", &Gate::str)
         .def("__str__", &Gate::str)
         .def("__repr__", &Gate::repr);
+
+    py::class_<SparseVector>(m, "SparseVector")
+        .def(py::init<>())
+        .def("get_element", &SparseVector::get_element)
+        .def("set_element", &SparseVector::set_element)
+        .def("to_map", &SparseVector::to_map);
+
+    py::class_<SparseMatrix>(m, "SparseMatrix")
+        .def(py::init<>())
+        .def("get_element", &SparseMatrix::get_element)
+        .def("set_element", &SparseMatrix::set_element)
+        .def("to_map", &SparseMatrix::to_map);
 
     py::class_<local_timer>(m, "local_timer")
         .def(py::init<>())

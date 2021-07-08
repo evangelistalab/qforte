@@ -3,8 +3,14 @@
 
 #include <array>
 #include <vector>
+#include <map>
 
 #include "qforte-def.h" // double_c
+// #include "helpers.h"
+
+class QubitBasis;
+class SparseMatrix;
+class SparseVector;
 
 /// alias for a 4 x 4 complex matrix stored as an array of arrays
 using complex_4_4_mat = std::array<std::array<std::complex<double>, 4>, 4>;
@@ -27,7 +33,11 @@ class Gate {
     /// Return the control qubit
     size_t control() const;
 
+    /// Returns the 4X4 matrix representation of the gate
     const complex_4_4_mat& gate() const;
+
+    /// Returns the lifted sparse matrix representaion of the gate
+    const SparseMatrix sparse_matrix(size_t nqubit) const;
 
     /// Return a string representation of the gate
     std::string str() const;
