@@ -2,6 +2,7 @@
 
 #include "gate.h"
 #include "qubit_basis.h"
+#include "sparse_tensor.h"
 
 const std::vector<std::pair<size_t, size_t>> Gate::two_qubits_basis_{
     {0, 0}, {0, 1}, {1, 0}, {1, 1}};
@@ -55,6 +56,36 @@ const std::vector<std::vector< std::complex<double> >> Gate::matrix(size_t nqubi
 
     return Opmat;
     }
+
+    const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
+        size_t nbasis = std::pow(2, nqubit);
+        if(target_ != control_){
+            throw ("Gate must be a Pauli to convert to matrix!");
+        }
+        else if(target_ >= nqubit){
+            throw ("Target index is too large for specified nqbits!");
+        }
+
+        SparseMatrix Spmat = SparseMatrix();
+
+        for (size_t i = 0; i < 2; i++) {
+            for (size_t j = 0; j < 2; j++) {
+                auto op_i_j = gate_[i][j];
+                if (std::abs(op_i_j) > 1.0e-16) {
+                    for(size_t I = 0; I < nbasis; I++) {
+                        QubitBasis basis_I = QubitBasis(I);
+                        if (basis_I.get_bit(target_) == j) {
+                            QubitBasis basis_J = basis_I;
+                            basis_J.set_bit(target_, i);
+                            Spmat.set_element(basis_J.add(), basis_I.add(), op_i_j);
+                        }
+                    }
+                }
+            }
+        }
+        return Spmat;
+        }
+
 
 std::string Gate::gate_id() const { return label_; }
 

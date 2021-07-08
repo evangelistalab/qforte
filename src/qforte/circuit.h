@@ -8,6 +8,7 @@
 #include <iostream>
 
 class Gate;
+class SparseMatrix;
 
 class Circuit {
     /* A Circuit is a product of quantum gates. An individual gate acts on
@@ -47,6 +48,10 @@ class Circuit {
     /// Returns the lifted 2^nqubit X 2^nqubit matrix representaion of the circuit,
     /// the matrix should always be unitary.
     const std::vector<std::vector< std::complex<double> >> matrix(size_t nqubit) const;
+
+    /// Returns the lifted sparse matrix representaion of the circuit,
+    /// the matrix should always be unitary.
+    const SparseMatrix sparse_matrix(size_t nqubit) const;
 
     /// return a vector of string representing this circuit
     std::string str() const;

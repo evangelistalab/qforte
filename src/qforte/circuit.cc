@@ -5,6 +5,7 @@
 #include "gate.h"
 #include "circuit.h"
 #include "computer.h"
+#include "sparse_tensor.h"
 
 void Circuit::set_parameters(const std::vector<double>& params) {
     // need a loop over only gates in state preparation circuit that
@@ -164,6 +165,24 @@ const std::vector<std::vector< std::complex<double> >> Circuit::matrix(size_t nq
         Rtpose = Ltpose;
     }
     return Ltpose;
+}
+
+const SparseMatrix Circuit::sparse_matrix(size_t nqubit) const {
+    size_t ngates = gates_.size();
+    if (ngates==0){
+        SparseMatrix Rmat = SparseMatrix();
+        size_t nbasis = std::pow(2, nqubit);
+        Rmat.make_identity(nbasis);
+        return Rmat;
+    }
+
+    SparseMatrix Rmat = gates_[0].sparse_matrix(nqubit);
+
+    for(size_t i=1; i < ngates ;i++){
+        SparseMatrix Lmat = gates_[i].sparse_matrix(nqubit);
+        Rmat.left_multiply(Lmat);
+    }
+    return Rmat;
 }
 
 // std::vector<double> Circuit::get_parameters() {

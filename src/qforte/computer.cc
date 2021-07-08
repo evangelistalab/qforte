@@ -12,6 +12,7 @@
 #include "qubit_operator.h"
 #include "qubit_op_pool.h"
 #include "timer.h"
+#include "sparse_tensor.h"
 
 #include "computer.h"
 
@@ -48,16 +49,28 @@ void Computer::set_state(std::vector<std::pair<QubitBasis, double_c>> state) {
 void Computer::zero_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
 
 void Computer::apply_matrix(const std::vector<std::vector< std::complex<double> >>& Opmat){
-    std::vector<std::complex<double>> old_coeff = coeff_;
+    // std::vector<std::complex<double>> old_coeff = coeff_;
     std::vector<std::complex<double>> result(nbasis_, 0.0);
 
     for(size_t I = 0; I < nbasis_; I++){
         result[I] = std::inner_product(Opmat[I].begin(),
                                        Opmat[I].end(),
-                                       old_coeff.begin(),
+                                       coeff_.begin(),
                                        std::complex<double>(0.0, 0.0),
                                        add_c<double>,
                                        complex_prod<double>);
+    }
+    coeff_ = result;
+}
+
+void Computer::apply_sparse_matrix(const SparseMatrix& Spmat) {
+    // std::vector<std::complex<double>> old_coeff = coeff_;
+    std::vector<std::complex<double>> result(nbasis_, 0.0);
+
+    for(auto const& i : Spmat.to_vec_map()){ // i-> [ size_t, SparseVector ]
+        for(auto const& j : i.second.to_map()){ // j-> [size_t, complex double]
+            result[i.first] += j.second * coeff_[j.first];
+        }
     }
     coeff_ = result;
 }
