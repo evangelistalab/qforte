@@ -5,7 +5,7 @@ Functions for exponentiation of qubit operator terms (circuits)
 import qforte
 import numpy as np
 
-def exponentiate_single_term(coefficient, term, Use_cRz=False, ancilla_idx=None, Use_open_cRz=False):
+def exponentiate_pauli_string(coefficient, term, Use_cRz=False, ancilla_idx=None, Use_open_cRz=False):
     """
     returns the exponential of an string of Pauli operators multiplied by an imaginary coefficient
 
@@ -13,17 +13,16 @@ def exponentiate_single_term(coefficient, term, Use_cRz=False, ancilla_idx=None,
 
     Parameters
     ----------
-    :param coefficient: float
+    :param coefficient: complex
         an imaginary coefficient that multiplies the Pauli string
     :param term: Circuit
         a Pauli string to be exponentiated
     """
     # This function assumes that the factor is imaginary. The following tests for it.
     if np.abs(np.real(coefficient)) > 1.0e-16:
-        print("exp factor: ", coefficient)
-        raise ValueError('exponentiate_single_term() called with a real coefficient')
+        raise ValueError(f'exponentiate_pauli_string() called with a real coefficient {coefficient}')
 
-    # If the Pauli string has no terms this is just a phase factor
+    # If the Pauli string has no terms this is just a phase factor times the identity circuit
     if term.size() == 0:
         return (qforte.Circuit(), np.exp(coefficient))
 
