@@ -126,14 +126,22 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
 
     } else {
         if (type == "A") {
+            // std::complex<double> c = std::cos(2.0*parameter);
+            // std::complex<double> s = -onei*std::sin(2.0*parameter);
             std::complex<double> c = std::cos(parameter);
             std::complex<double> s = std::sin(parameter);
             std::complex<double> gate[4][4]{
                 {1.0, 0.0, 0.0, 0.0},
                 {0.0, c  ,  s,  0.0},
-                {0.0, s  , -c,  1.0},
-                {0.0, 0.0, 1.0, 0.0},
+                {0.0, s  , -c,  0.0},
+                {0.0, 0.0, 0.0, 1.0},
             };
+            // std::complex<double> gate[4][4]{
+            //     {1.0, 0.0, 0.0, 0.0},
+            //     {0.0, c  ,  s,  0.0},
+            //     {0.0, s  ,  c,  0.0},
+            //     {0.0, 0.0, 0.0, 1.0},
+            // };
             return Gate(type, target, control, gate);
         }
         if ((type == "cX") or (type == "CNOT")) {

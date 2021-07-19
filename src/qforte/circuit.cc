@@ -114,6 +114,8 @@ int Circuit::get_num_cnots() const {
     for (const auto& gate : gates_) {
         if(gate.gate_id() == "CNOT" || gate.gate_id() == "cX"){
             n_cnots++;
+        } else if (gate.gate_id() == "A"){
+            n_cnots += 3;
         }
     }
     return n_cnots;
