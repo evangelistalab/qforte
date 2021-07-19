@@ -212,9 +212,10 @@ class AnsatzAlgorithm(Algorithm):
         operators in the pool.
     """
 
-    @abstractmethod
-    def ansatz_circuit(self):
-        pass
+    # TODO: combine mixin class with anstract function definiton 
+    # @abstractmethod
+    # def ansatz_circuit(self):
+    #     raise NotImplementedError("Concrete class must inherit mixin with valid definition of ansatz_circuit().")
 
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
