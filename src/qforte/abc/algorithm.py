@@ -212,9 +212,6 @@ class AnsatzAlgorithm(Algorithm):
         operators in the pool.
     """
 
-    def ansatz_circuit(self):
-        raise NotImplementedError("Concrete class derived from AnsatzAlgorithm must inherit a mixin that defines the ansatz_circuit() member function.")
-
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
         """ This function returns the Circuit object built

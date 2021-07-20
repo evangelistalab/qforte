@@ -1,4 +1,4 @@
-
+#include <algorithm>
 #include "sparse_tensor.h"
 
 //// SparseVector
