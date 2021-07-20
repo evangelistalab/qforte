@@ -6,11 +6,10 @@ ansatz.
 """
 
 import qforte as qf
-from qforte.abc.algorithm import AnsatzAlgorithm
 
 from qforte.utils.trotterization import trotterize
 
-class UCC(AnsatzAlgorithm):
+class UCC:
     """The abstract base class inheritied by any algorithm that uses a unitary
     coupled cluster (UCC) inspired ansatz.
     """
