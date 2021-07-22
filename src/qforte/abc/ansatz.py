@@ -7,7 +7,6 @@ the ansatz circut and potential supporting utility functions.
 """
 
 import qforte as qf
-# from qforte.abc.algorithm import AnsatzAlgorithm
 
 from qforte.utils.trotterization import trotterize
 
