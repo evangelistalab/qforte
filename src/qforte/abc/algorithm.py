@@ -212,10 +212,6 @@ class AnsatzAlgorithm(Algorithm):
         operators in the pool.
     """
 
-    @abstractmethod
-    def ansatz_circuit(self):
-        pass
-
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
         """ This function returns the Circuit object built

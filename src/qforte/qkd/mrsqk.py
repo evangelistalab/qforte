@@ -502,12 +502,12 @@ class MRSQK(QSD):
 
         # Adjust dimension of system in case matrix was ill conditioned.
         if(self._ninitial_states > len(self._srqk._eigenvalues)):
-            print('\n', ninitial_states, ' initial states requested, but QK produced ',
+            print('\n', self._ninitial_states, ' initial states requested, but QK produced ',
                         len(self._srqk._eigenvalues), ' stable roots.\n Using ',
                         len(self._srqk._eigenvalues),
                         'intial states instead.')
 
-            self._ninitial_states = len(self._ninitial_states)
+            self._ninitial_states = len(self._srqk._eigenvalues)
 
         sorted_evals_idxs = sorted_largest_idxs(self._srqk._eigenvalues, use_real=True, rev=False)
         sorted_evals = np.zeros((self._ninitial_states), dtype=complex)

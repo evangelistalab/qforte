@@ -1,18 +1,18 @@
 """
 Ansatz base classes
 ====================================
-The abstract base classes inheritied by any algorithm that uses a parameterized
-ansatz.
+The mixin classes inheritied by any algorithm that uses a parameterized
+ansatz. Member functions should be minimal and aim only to implement
+the ansatz circut and potential supporting utility functions.
 """
 
 import qforte as qf
-from qforte.abc.algorithm import AnsatzAlgorithm
 
 from qforte.utils.trotterization import trotterize
 
-class UCC(AnsatzAlgorithm):
-    """The abstract base class inheritied by any algorithm that uses a unitary
-    coupled cluster (UCC) inspired ansatz.
+class UCC:
+    """A mixin class for implementing the UCC circuit ansatz, to be inherited by a
+    concrete class UCC+algorithm class.
     """
 
     def ansatz_circuit(self, amplitudes=None):
