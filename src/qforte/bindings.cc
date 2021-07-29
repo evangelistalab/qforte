@@ -173,6 +173,7 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<>())
         .def("get_element", &SparseMatrix::get_element)
         .def("set_element", &SparseMatrix::set_element)
+        .def("to_vec_map", &SparseMatrix::to_vec_map)
         .def("to_map", &SparseMatrix::to_map);
 
     py::class_<local_timer>(m, "local_timer")

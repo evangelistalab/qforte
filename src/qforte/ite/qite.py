@@ -269,6 +269,7 @@ class QITE(Algorithm):
         Ipsi_qc = qf.Computer(self._nqb)
         Ipsi_qc.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
         # CI[I][J] = (σ_I Ψ)_J
+        self._n_pauli_trm_measures += int(self._NI*(self._NI+1)*0.5)
         CI = np.zeros(shape=(Idim, int(2**self._nqb)), dtype=complex)
 
         for i in range(Idim):

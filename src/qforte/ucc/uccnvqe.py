@@ -187,8 +187,15 @@ class UCCNVQE(UCCVQE):
                                     callback=self.report_iteration)
 
             # account for paulit term measurement for gradient evaluations
-            for m in range(len(self._tamps)):
-                self._n_pauli_trm_measures += self._Nm[m] * self._Nl * res.njev
+            # for m in range(len(self._tamps)):
+            #     self._n_pauli_trm_measures += self._Nm[m] * self._Nl * res.njev
+
+            for tmu in res.x:
+                if(np.abs(tmu) > 1.0e-12):
+                    self._n_pauli_trm_measures += int(2 * self._Nl * res.njev)
+
+            self._n_pauli_trm_measures += int(self._Nl * res.nfev)
+
 
         else:
             print('  \n--> Begin opt with grad estimated using first-differences:')
@@ -197,6 +204,9 @@ class UCCNVQE(UCCVQE):
                                     method=self._optimizer,
                                     options=opts,
                                     callback=self.report_iteration)
+
+            # account for pauli term measurement for energy evaluations
+            self._n_pauli_trm_measures += self._Nl * res.nfev
 
         if(res.success):
             print('  => Minimization successful!')
@@ -221,9 +231,6 @@ class UCCNVQE(UCCVQE):
 
         self._n_classical_params = len(self._tamps)
         self._n_cnot = self.build_Uvqc().get_num_cnots()
-
-        # account for pauli term measurement for energy evaluations
-        self._n_pauli_trm_measures += self._Nl * res.nfev
 
 
     def initialize_ansatz(self):

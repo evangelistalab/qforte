@@ -103,6 +103,8 @@ class UCCNPQE(UCCPQE):
             if(np.abs(tmu) > 1.0e-12):
                 self._n_nonzero_params += 1
 
+        self._n_pauli_trm_measures = int(2*self._Nl*self._res_vec_evals*self._n_nonzero_params + self._Nl*self._res_vec_evals)
+
         self.print_summary_banner()
         self.verify_run()
 

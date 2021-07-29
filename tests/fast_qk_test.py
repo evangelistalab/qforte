@@ -2,7 +2,9 @@ import unittest
 from qforte import qforte
 from qforte.qkd.mrsqk import MRSQK
 from qforte.qkd.srqk import SRQK
+from qforte.qkd.nt_srqk import NTSRQK
 from qforte.system.molecular_info import Molecule
+import numpy as np
 
 class QKDTests(unittest.TestCase):
     def test_H4_fast_qkd(self):
@@ -395,17 +397,23 @@ class QKDTests(unittest.TestCase):
         mol = Molecule()
         mol.set_hamiltonian(H4_qubit_hamiltonian)
 
-        MRSQK
+        # MRSQK
         alg2 = MRSQK(mol, reference=ref, trotter_number=100)
         alg2.run(s=3, d=3)
         Egs2 = alg2.get_gs_energy()
         self.assertLess(abs(Egs2-E_fci), 1.0e-6)
 
-        SRQK
+        # SRQK
         alg1 = SRQK(mol, reference=ref, trotter_number=100)
         alg1.run(s=6)
         Egs1 = alg1.get_gs_energy()
         self.assertLess(abs(Egs1-E_fci), 1.0e-4)
+
+        # Non-Trotteized (exact) SRQK
+        alg0 = NTSRQK(mol, reference=ref)
+        alg0.run(s=6, dt = 0.8)
+        Egs0 = alg0.get_gs_energy()
+        self.assertLess(abs(Egs0-E_fci), 1.0e-4)
 
 
 if __name__ == '__main__':

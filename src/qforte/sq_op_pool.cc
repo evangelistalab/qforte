@@ -249,13 +249,15 @@ void SQOpPool::fill_pool(std::string pool_type){
                 }
             }
         }
-    } else if ( (pool_type=="SD") || (pool_type=="SDT") || (pool_type=="SDTQ") || (pool_type=="SDTQP") || (pool_type=="SDTQPH") ) {
+    } else if ( (pool_type=="S") || (pool_type=="SD") || (pool_type=="SDT") || (pool_type=="SDTQ") || (pool_type=="SDTQP") || (pool_type=="SDTQPH") ) {
 
         int max_nbody = 0;
 
-        if(pool_type=="SD") {
+        if(pool_type=="S") {
+            max_nbody = 1;
+        } else if(pool_type=="SD") {
             max_nbody = 2;
-        } else if(pool_type=="SDT") {
+        }else if(pool_type=="SDT") {
             max_nbody = 3;
         } else if(pool_type=="SDTQ") {
             max_nbody = 4;
