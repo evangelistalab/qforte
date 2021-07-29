@@ -194,6 +194,8 @@ class UCCNVQE(UCCVQE):
                 if(np.abs(tmu) > 1.0e-12):
                     self._n_pauli_trm_measures += int(2 * self._Nl * res.njev)
 
+            self._n_pauli_trm_measures += int(self._Nl * res.nfev)
+
 
         else:
             print('  \n--> Begin opt with grad estimated using first-differences:')

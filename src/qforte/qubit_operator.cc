@@ -92,7 +92,7 @@ void QubitOperator::simplify(bool combine_like_terms) {
     terms_.clear();
     if(combine_like_terms){
         for (const auto &uniqe_trm : uniqe_trms){
-            if (std::abs(uniqe_trm.second) > 1.0e-16) {
+            if (std::abs(uniqe_trm.second) > 1.0e-12) {
                 terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
             }
         }

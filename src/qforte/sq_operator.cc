@@ -78,7 +78,7 @@ void SQOperator::simplify() {
     }
     terms_.clear();
     for (const auto &unique_term : unique_terms){
-        if (std::abs(unique_term.second) > 1.0e-16){
+        if (std::abs(unique_term.second) > 1.0e-12){
             terms_.push_back(std::make_tuple(unique_term.second, unique_term.first.first, unique_term.first.second));
         }
     }

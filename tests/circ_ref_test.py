@@ -28,7 +28,6 @@ class CircuitReferenceTest(unittest.TestCase):
                              build_type = 'psi4',
                              basis='sto-3g',
                              mol_geometry = geom)
-                             # filename=data_path)
 
 
         alg = UCCNVQE(mol)
@@ -40,7 +39,7 @@ class CircuitReferenceTest(unittest.TestCase):
         alg2.run(dt=1.0, s=12)
 
         Egs = alg2.get_gs_energy()
-        self.assertLess(abs(Egs-Efci), 1.0e-6)
+        self.assertLess(abs(Egs-Efci), 5.0e-6)
 
 
 
