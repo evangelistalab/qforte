@@ -375,29 +375,6 @@ class SPQE(UCCPQE):
 
         return residuals
 
-    def build_orb_energies(self):
-        self._orb_e = []
-
-        print('\nBuilding single particle energies list:')
-        print('---------------------------------------')
-        qc = qforte.Computer(self._nqb)
-        qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
-        E0 = qc.direct_op_exp_val(self._qb_ham)
-
-        for i in range(self._nqb):
-            qc = qforte.Computer(self._nqb)
-            qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
-            qc.apply_gate(qforte.gate('X', i, i))
-            Ei = qc.direct_op_exp_val(self._qb_ham)
-
-            if(i<sum(self._ref)):
-                ei = E0 - Ei
-            else:
-                ei = Ei - E0
-
-            print(f'  {i:3}     {ei:+16.12f}')
-            self._orb_e.append(ei)
-
     # Define SPQE methods.
     def update_ansatz(self):
         self._n_pauli_measures_k = 0
