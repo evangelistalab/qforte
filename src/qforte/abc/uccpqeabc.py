@@ -95,13 +95,9 @@ class UCCPQE(PQE, UCC):
                 sq_creators = sq_op.terms()[0][2]
                 sq_annihilators = sq_op.terms()[0][1]
 
-            destroyed = False
-            denom = 0.0
-
             denom = sum(self._orb_e[x] for x in sq_annihilators) - sum(self._orb_e[x] for x in sq_creators)
 
-            res_mu = copy.deepcopy(residuals[mu])
-            res_mu /= denom # divide by energy denominator
+            res_mu = residuals[mu] / denom
 
             resids_over_denoms.append(res_mu)
 
