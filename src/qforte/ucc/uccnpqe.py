@@ -164,7 +164,7 @@ class UCCNPQE(UCCPQE):
         by using a quasi-Newton uptate procedure for the amplutudes paired with
         the direct inversion of iterative subspace (DIIS) convergece acceleration.
         """
-        # draws heavy insiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
+        # draws heavy inspiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
         diis_dim = 0
         t_diis = [copy.deepcopy(self._tamps)]
         e_diis = []

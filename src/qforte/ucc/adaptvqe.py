@@ -336,7 +336,6 @@ class ADAPTVQE(UCCVQE):
         if self._use_commutator_grad_selection:
             grads = self.measure_operators(self._commutator_pool, Uvqc)
         else:
-            # grads = self.measure_gradient(use_entire_pool=True)
             grads = self.measure_gradient3()
 
         for m, grad_m in enumerate(grads):
