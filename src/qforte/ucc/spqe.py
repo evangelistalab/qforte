@@ -375,34 +375,6 @@ class SPQE(UCCPQE):
 
         return residuals
 
-    def get_res_over_mpdenom(self, residuals):
-
-        resids_over_denoms = []
-
-        # each operator needs a score, so loop over toperators
-        for mu, m in enumerate(self._tops):
-            sq_op = self._pool[m][1]
-
-            temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
-                sq_creators = sq_op.terms()[0][1]
-                sq_annihilators = sq_op.terms()[0][2]
-            else:
-                sq_creators = sq_op.terms()[0][2]
-                sq_annihilators = sq_op.terms()[0][1]
-
-            destroyed = False
-            denom = 0.0
-
-            denom = sum(self._orb_e[x] for x in sq_annihilators) - sum(self._orb_e[x] for x in sq_creators)
-
-            res_mu = copy.deepcopy(residuals[mu])
-            res_mu /= denom # divide by energy denominator
-
-            resids_over_denoms.append(res_mu)
-
-        return resids_over_denoms
-
     def build_orb_energies(self):
         self._orb_e = []
 

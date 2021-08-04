@@ -339,39 +339,6 @@ class UCCNPQE(UCCPQE):
 
         return residuals
 
-    def get_res_over_mpdenom(self, residuals):
-        """This function returns a vector given by the residuals dividied by the
-        respective Moller Plesset denominators.
-
-        Parameters
-        ----------
-        residuals : list of floats
-            The list of (real) floating point numbers which represent the
-            residulas.
-        """
-
-        resids_over_denoms = []
-        # each operator needs a score, so loop over toperators
-        for m in self._tops:
-            sq_op = self._pool[m][1]
-
-            temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
-                sq_creators = sq_op.terms()[0][1]
-                sq_annihilators = sq_op.terms()[0][2]
-            else:
-                sq_creators = sq_op.terms()[0][2]
-                sq_annihilators = sq_op.terms()[0][1]
-
-            denom = sum(self._orb_e[x] for x in sq_annihilators) - sum(self._orb_e[x] for x in sq_creators)
-
-            res_m = copy.deepcopy(residuals[m])
-            res_m /= denom # divide by energy denominator
-
-            resids_over_denoms.append(res_m)
-
-        return resids_over_denoms
-
     def build_orb_energies(self):
         """Calcualtes Hartree-Fock orbital energies to used in determintation
         of the MP denominators.
