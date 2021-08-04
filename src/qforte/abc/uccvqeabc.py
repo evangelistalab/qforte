@@ -119,33 +119,20 @@ class UCCVQE(VQE, UCC):
 
         return np.real(grads)
 
-    # TODO: depricate the 'use_entire_pool' parameter, is no longer used.
-    def measure_gradient(self, params=None, use_entire_pool=False):
-        """ Returns the disentangeld (factorized) UCC gradient, using a
+    def measure_gradient(self, params=None):
+        """ Returns the disentangled (factorized) UCC gradient, using a
         recursive approach.
 
         Parameters
         ----------
         params : list of floats
             The variational parameters which characterize _Uvqc.
-
-        use_entire_pool : bool
-            Whether or not the gradient is calculated for the entire pool or
-            just the operators currently in _Uvqc.
         """
 
         if not self._fast:
             raise ValueError("self._fast must be True for gradient measurement.")
 
-        grads = np.zeros(len(self._tamps))
-
-        if use_entire_pool:
-            M = len(self._pool)
-            pool_amps = np.zeros(M)
-            for tamp, top in zip(self._tamps, self._tops):
-                pool_amps[top] = tamp
-        else:
-            M = len(self._tamps)
+        M = len(self._tamps)
 
         grads = np.zeros(M)
 
@@ -164,12 +151,8 @@ class UCCVQE(VQE, UCC):
         mu = M-1
 
         # find <sing_N | K_N | psi_N>
-        if use_entire_pool:
-            Kmu_prev = self._pool[mu][1].jw_transform()
-            Kmu_prev.mult_coeffs(self._pool[mu][0])
-        else:
-            Kmu_prev = self._pool[self._tops[mu]][1].jw_transform()
-            Kmu_prev.mult_coeffs(self._pool[self._tops[mu]][0])
+        Kmu_prev = self._pool[self._tops[mu]][1].jw_transform()
+        Kmu_prev.mult_coeffs(self._pool[self._tops[mu]][0])
 
         qc_psi.apply_operator(Kmu_prev)
         grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
@@ -184,19 +167,13 @@ class UCCVQE(VQE, UCC):
             # Kmu => KN-1
             # Kmu_prev => KN
 
-            if use_entire_pool:
-                tamp = pool_amps[mu+1]
-            elif params is None:
+            if params is None:
                 tamp = self._tamps[mu+1]
             else:
                 tamp = params[mu+1]
 
-            if use_entire_pool:
-                Kmu = self._pool[mu][1].jw_transform()
-                Kmu.mult_coeffs(self._pool[mu][0])
-            else:
-                Kmu = self._pool[self._tops[mu]][1].jw_transform()
-                Kmu.mult_coeffs(self._pool[self._tops[mu]][0])
+            Kmu = self._pool[self._tops[mu]][1].jw_transform()
+            Kmu.mult_coeffs(self._pool[self._tops[mu]][0])
 
             Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
 
