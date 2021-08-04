@@ -43,6 +43,8 @@ class QubitBasis {
 
     std::string str(size_t nqubit) const;
 
+    std::string default_str() const { return str(max_qubits_); }
+
   private:
     /// the state
     basis_t state_;
