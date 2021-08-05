@@ -70,36 +70,3 @@ class UCCPQE(PQE, UCC):
     #TODO: consider moving functions from uccnpqe or spqe into this class to
     #      to prevent duplication of code
 
-    def get_res_over_mpdenom(self, residuals):
-        """This function returns a vector given by the residuals dividied by the
-        respective Moller Plesset denominators.
-
-        Parameters
-        ----------
-        residuals : list of floats
-            The list of (real) floating point numbers which represent the
-            residuals.
-        """
-
-        resids_over_denoms = []
-
-        # each operator needs a score, so loop over toperators
-        for mu, m in enumerate(self._tops):
-            sq_op = self._pool[m][1]
-
-            temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
-                sq_creators = sq_op.terms()[0][1]
-                sq_annihilators = sq_op.terms()[0][2]
-            else:
-                sq_creators = sq_op.terms()[0][2]
-                sq_annihilators = sq_op.terms()[0][1]
-
-            denom = sum(self._orb_e[x] for x in sq_annihilators) - sum(self._orb_e[x] for x in sq_creators)
-
-            res_mu = residuals[mu] / denom
-
-            resids_over_denoms.append(res_mu)
-
-        return resids_over_denoms
-

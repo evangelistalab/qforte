@@ -210,24 +210,16 @@ class UCCNVQE(UCCVQE):
 
         if(res.success):
             print('  => Minimization successful!')
-            print(f'  => Minimum Energy: {res.fun:+12.10f}')
-            self._Egs = res.fun
-            if(self._optimizer == 'POWELL'):
-                print(type(res.fun))
-                print(res.fun)
-                self._Egs = res.fun[()]
-            self._final_result = res
-            self._tamps = list(res.x)
         else:
             print('  => WARNING: minimization result may not be tightly converged.')
-            print(f'  => Minimum Energy: {res.fun:+12.10f}')
-            self._Egs = res.fun
-            if(self._optimizer == 'POWELL'):
-                print(type(res.fun))
-                print(res.fun)
-                self._Egs = res.fun[()]
-            self._final_result = res
-            self._tamps = list(res.x)
+        print(f'  => Minimum Energy: {res.fun:+12.10f}')
+        self._Egs = res.fun
+        if(self._optimizer == 'POWELL'):
+            print(type(res.fun))
+            print(res.fun)
+            self._Egs = res.fun[()]
+        self._final_result = res
+        self._tamps = list(res.x)
 
         self._n_classical_params = len(self._tamps)
         self._n_cnot = self.build_Uvqc().get_num_cnots()
