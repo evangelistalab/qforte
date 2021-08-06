@@ -54,7 +54,7 @@ class SPQE(UCCPQE):
             dt=0.001,
             M_omega = 'inf',
             res_vec_thresh = 1.0e-5,
-            diis_maxiter = 30,
+            opt_maxiter = 30,
             use_cumulative_thresh=True):
 
         if(self._state_prep_type != 'occupation_list'):
@@ -70,7 +70,7 @@ class SPQE(UCCPQE):
 
         self._use_cumulative_thresh = use_cumulative_thresh
         self._res_vec_thresh = res_vec_thresh
-        self._diis_maxiter = diis_maxiter
+        self._opt_maxiter = opt_maxiter
 
         self._nbody_counts = []
         self._n_classical_params_lst = []
@@ -200,7 +200,7 @@ class SPQE(UCCPQE):
 
         opt_thrsh_str = '{:.2e}'.format(self._res_vec_thresh)
         spqe_thrsh_str = '{:.2e}'.format(self._spqe_thresh)
-        print('DIIS maxiter:                            ',  self._diis_maxiter)
+        print('DIIS maxiter:                            ',  self._opt_maxiter)
         print('DIIS residual-norm threshold (omega_r):  ',  opt_thrsh_str)
         print('Operator pool type:                      ',  'full')
         print('SPQE residual-norm threshold (Omega):    ',  spqe_thrsh_str)
@@ -234,7 +234,7 @@ class SPQE(UCCPQE):
         print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
         print('---------------------------------------------------------------------------------------------------')
 
-        for k in range(1, self._diis_maxiter+1):
+        for k in range(1, self._opt_maxiter+1):
             t_old = copy.deepcopy(self._tamps)
 
             #do regular update

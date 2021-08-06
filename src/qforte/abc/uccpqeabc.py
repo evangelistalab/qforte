@@ -41,9 +41,6 @@ class UCCPQE(PQE, UCC):
         values may be sampled from. Is zero by default such that all residuals
         are exact.
 
-    _diis_maxiter : int
-        The maximum number of DIIS iteratios to perform.
-
     _res_vec_thresh : float
         The numberical threshold for the norm of the residual vector, used to
         determine when PQE has converged.
@@ -62,10 +59,10 @@ class UCCPQE(PQE, UCC):
     def verify_required_UCCPQE_attributes(self):
 
         if not hasattr(self, '_pool_type'):
-            raise NotImplementedError('Concrete UCCVQE class must define self._pool_type attribute.')
+            raise NotImplementedError('Concrete UCCPQE class must define self._pool_type attribute.')
 
         if not hasattr(self, '_pool_obj'):
-            raise NotImplementedError('Concrete UCCVQE class must define self._pool_obj attribute.')
+            raise NotImplementedError('Concrete UCCPQE class must define self._pool_obj attribute.')
 
     #TODO: consider moving functions from uccnpqe or spqe into this class to
     #      to prevent duplication of code

@@ -196,6 +196,9 @@ class AnsatzAlgorithm(Algorithm):
     _Nm: list of int
         Number of circuits for each operator in the pool.
 
+    _opt_maxiter : int
+        The maximum number of iterations for the classical optimizer.
+
     _pool : list of tuple(complex, SqOperator)
         The linear combination of (optionally symmetrized) single and double
         excitation operators to consider. This is represented as a list.
