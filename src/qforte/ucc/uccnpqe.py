@@ -135,7 +135,7 @@ class UCCNPQE(UCCPQE):
             print('Measurement varience thresh:             ',  0.01)
 
         res_thrsh_str = '{:.2e}'.format(self._res_vec_thresh)
-        print('DIIS maxiter:                            ',  self._opt_maxiter) # RENAME
+        print('DIIS maxiter:                            ',  self._opt_maxiter)
         print('DIIS res-norm threshold:                 ',  res_thrsh_str)
 
         print('Operator pool type:                      ',  str(self._pool_type))
