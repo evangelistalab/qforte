@@ -56,6 +56,11 @@ class Algorithm(ABC):
         The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)
         mesaured over the entire algorithm.
 
+    _res_vec_evals : int
+        The total number of times the entire residual was evaluated.
+
+    _res_m_evals : int
+        The total number of times an individal residual element was evaluated.
     """
 
     def __init__(self,

@@ -62,9 +62,8 @@ class UCCNVQE(UCCVQE):
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
         self._res_vec_evals = 0
-        self._grad_m_evals = 0
+        self._res_m_evals = 0
         self._k_counter = 0
-        self._grad_m_evals = 0
 
         self._curr_grad_norm = 0.0
 
@@ -157,7 +156,7 @@ class UCCNVQE(UCCVQE):
         print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
 
         print('Number of grad vector evaluations:           ', self._res_vec_evals)
-        print('Number of individual grad evaluations:       ', self._grad_m_evals)
+        print('Number of individual grad evaluations:       ', self._res_m_evals)
 
     # Define VQE abstract methods.
     def solve(self):

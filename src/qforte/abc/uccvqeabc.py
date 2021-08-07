@@ -47,12 +47,6 @@ class UCCVQE(VQE, UCC):
             SDTQP: At most five orbital excitations.
             SDTQPH: At most six orbital excitations.
 
-    _res_vec_evals : int
-        The number of gradient vector evalutions over the course of the optimization.
-
-    _grad_m_evals : int
-        The number of gradient element evalutions over the course of the optimization.
-
     _prev_energy : float
         The energy from the previous iteration.
 
@@ -244,7 +238,7 @@ class UCCVQE(VQE, UCC):
 
         self._curr_grad_norm = np.linalg.norm(grads)
         self._res_vec_evals += 1
-        self._grad_m_evals += len(self._tamps)
+        self._res_m_evals += len(self._tamps)
 
         return np.asarray(grads)
 
@@ -263,11 +257,11 @@ class UCCVQE(VQE, UCC):
 
         # else:
         dE = self._curr_energy - self._prev_energy
-        print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._grad_m_evals:6}       {self._curr_grad_norm:+12.10f}')
+        print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.10f}')
 
         if (self._print_summary_file):
             f = open("summary.dat", "a", buffering=1)
-            f.write(f'\n       {self._k_counter:7}        {self._curr_energy:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._grad_m_evals:6}       {self._curr_grad_norm:+12.12f}')
+            f.write(f'\n       {self._k_counter:7}        {self._curr_energy:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.12f}')
             f.close()
 
         self._prev_energy = self._curr_energy
