@@ -97,7 +97,6 @@ class SPQE(UCCPQE):
         self._pool = [0.0 for I in range(2**self._nqb)]
 
         self._pool_obj = qf.SQOpPool()
-        self._grad_vec_evals = 0
         self._Nm = []
         self._pool_type = 'full'
         self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
