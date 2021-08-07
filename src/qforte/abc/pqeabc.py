@@ -30,5 +30,4 @@ class PQE(AnsatzAlgorithm):
             raise NotImplementedError('Concrete PQE class must define self._opt_maxiter attribute.')
 
         if not hasattr(self, '_opt_thresh'):
-            if not hasattr(self, '_res_vec_thresh'):
-                raise NotImplementedError('Concrete PQE class must define self._res_vec_thresh OR self._opt_thresh attribute.')
+            raise NotImplementedError('Concrete PQE class must define self._opt_thresh attribute.')

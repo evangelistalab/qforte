@@ -48,7 +48,7 @@ class UCCNPQE(UCCPQE):
     """
     def run(self,
             pool_type='SD',
-            res_vec_thresh = 1.0e-5,
+            opt_thresh = 1.0e-5,
             opt_maxiter = 40,
             noise_factor = 0.0):
 
@@ -56,7 +56,7 @@ class UCCNPQE(UCCPQE):
             raise ValueError("PQE implementation can only handle occupation_list Hartree-Fock reference.")
 
         self._pool_type = pool_type
-        self._res_vec_thresh = res_vec_thresh
+        self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
         self._noise_factor = noise_factor
 
@@ -134,7 +134,7 @@ class UCCNPQE(UCCPQE):
         else:
             print('Measurement varience thresh:             ',  0.01)
 
-        res_thrsh_str = '{:.2e}'.format(self._res_vec_thresh)
+        res_thrsh_str = '{:.2e}'.format(self._opt_thresh)
         print('DIIS maxiter:                            ',  self._opt_maxiter)
         print('DIIS res-norm threshold:                 ',  res_thrsh_str)
 
@@ -205,7 +205,7 @@ class UCCNPQE(UCCPQE):
                 f.write(f'\n     {k:7}        {Ek:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.12f}')
                 f.close()
 
-            if(rk_norm < self._res_vec_thresh):
+            if(rk_norm < self._opt_thresh):
                 self._Egs = Ek
                 break
 
