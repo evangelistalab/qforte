@@ -30,11 +30,6 @@ class VQE(AnsatzAlgorithm):
         The result object returned by the scipy optimizer at the end of the
         optimization.
 
-    _opt_thresh : float
-        The numerical convergence threshold for the specified classical
-        optimization algorithm. Is usually the norm of the gradient, but
-        is algorithm dependant, see scipy.minimize.optimize for detials.
-
     """
 
 

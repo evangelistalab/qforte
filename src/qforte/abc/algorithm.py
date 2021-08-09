@@ -31,7 +31,7 @@ class Algorithm(ABC):
 
     _trotter_order : int
         The Trotter order to use for exponentiated operators.
-        (exact in the infinte limit).
+        (exact in the infinite limit).
 
     _trotter_number : int
         The number of trotter steps (m) to perform when approximating the matrix
@@ -56,6 +56,11 @@ class Algorithm(ABC):
         The number of pauli terms (Hermitian products of Pauli X, Y, and/or Z gates)
         mesaured over the entire algorithm.
 
+    _res_vec_evals : int
+        The total number of times the entire residual was evaluated.
+
+    _res_m_evals : int
+        The total number of times an individual residual element was evaluated.
     """
 
     def __init__(self,
@@ -198,6 +203,11 @@ class AnsatzAlgorithm(Algorithm):
 
     _opt_maxiter : int
         The maximum number of iterations for the classical optimizer.
+
+    _opt_thresh : float
+        The numerical convergence threshold for the specified classical
+        optimization algorithm. Is usually the norm of the gradient, but
+        is algorithm dependant, see scipy.minimize.optimize for details.
 
     _pool : list of tuple(complex, SqOperator)
         The linear combination of (optionally symmetrized) single and double

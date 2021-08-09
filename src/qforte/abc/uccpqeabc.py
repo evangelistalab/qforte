@@ -41,16 +41,6 @@ class UCCPQE(PQE, UCC):
         values may be sampled from. Is zero by default such that all residuals
         are exact.
 
-    _res_vec_thresh : float
-        The numberical threshold for the norm of the residual vector, used to
-        determine when PQE has converged.
-
-    _res_vec_evals : int
-        The total number of times the entire residual was evaluated.
-
-    _res_m_evals : int
-        The total number of times an individal residual element was evaluated.
-
     _orb_e : list floats
         The Hartree-Fock orbital energies
 

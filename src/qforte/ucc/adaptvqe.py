@@ -114,10 +114,9 @@ class ADAPTVQE(UCCVQE):
         self._n_pauli_trm_measures = 0
         self._n_pauli_trm_measures_lst = []
 
-        self._grad_vec_evals = 0
-        self._grad_m_evals = 0
+        self._res_vec_evals = 0
+        self._res_m_evals = 0
         self._k_counter = 0
-        self._grad_m_evals = 0
 
         self._curr_grad_norm = 0.0
         self._prev_energy = self.energy_feval([])
@@ -259,8 +258,8 @@ class ADAPTVQE(UCCVQE):
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
         print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
 
-        print('Number of grad vector evaluations:           ', self._grad_vec_evals)
-        print('Number of individual grad evaluations:       ', self._grad_m_evals)
+        print('Number of grad vector evaluations:           ', self._res_vec_evals)
+        print('Number of individual grad evaluations:       ', self._res_m_evals)
 
 
     # Define VQE abstract methods.

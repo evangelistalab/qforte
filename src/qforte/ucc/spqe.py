@@ -53,7 +53,7 @@ class SPQE(UCCPQE):
             spqe_maxiter=20,
             dt=0.001,
             M_omega = 'inf',
-            res_vec_thresh = 1.0e-5,
+            opt_thresh = 1.0e-5,
             opt_maxiter = 30,
             use_cumulative_thresh=True):
 
@@ -69,7 +69,7 @@ class SPQE(UCCPQE):
             self._M_omega = M_omega
 
         self._use_cumulative_thresh = use_cumulative_thresh
-        self._res_vec_thresh = res_vec_thresh
+        self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
 
         self._nbody_counts = []
@@ -97,7 +97,6 @@ class SPQE(UCCPQE):
         self._pool = [0.0 for I in range(2**self._nqb)]
 
         self._pool_obj = qf.SQOpPool()
-        self._grad_vec_evals = 0
         self._Nm = []
         self._pool_type = 'full'
         self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
@@ -198,7 +197,7 @@ class SPQE(UCCPQE):
         else:
             print('Measurement varience thresh:             ',  0.01)
 
-        opt_thrsh_str = '{:.2e}'.format(self._res_vec_thresh)
+        opt_thrsh_str = '{:.2e}'.format(self._opt_thresh)
         spqe_thrsh_str = '{:.2e}'.format(self._spqe_thresh)
         print('DIIS maxiter:                            ',  self._opt_maxiter)
         print('DIIS residual-norm threshold (omega_r):  ',  opt_thrsh_str)
@@ -253,7 +252,7 @@ class SPQE(UCCPQE):
 
             print(f'     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}')
 
-            if(rk_norm < self._res_vec_thresh):
+            if(rk_norm < self._opt_thresh):
                 self._results.append('Fake result string')
                 self._final_result = 'nothing'
                 self._Egs = Ek
