@@ -4,11 +4,11 @@ import copy
 import numpy as np
 
 def diis_solve(self, residual):
-    """This function attempts to minimizes the norm of the residual vector
-    by using a quasi-Newton uptate procedure for the amplutudes paired with
-    the direct inversion of iterative subspace (DIIS) convergece acceleration.
+    """This function attempts to minimize the norm of the residual vector
+    by using a quasi-Newton update procedure for the amplitudes paired with
+    the direct inversion of iterative subspace (DIIS) convergence acceleration.
     """
-    # draws heavy inspiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
+    # draws heavy inspiration from Daniel Smith's ccsd_diis.py code in psi4 numpy
     diis_dim = 0
     t_diis = [copy.deepcopy(self._tamps)]
     e_diis = []
@@ -80,7 +80,7 @@ def diis_solve(self, residual):
 
             self._tamps = copy.deepcopy(t_new)
 
-    self._n_classical_params = self._n_classical_params = len(self._tamps)
+    self._n_classical_params = len(self._tamps)
     self._n_cnot = self.build_Uvqc().get_num_cnots()
     self._n_pauli_trm_measures += 2*self._Nl*k*len(self._tamps) + self._Nl*k
     self._Egs = Ek

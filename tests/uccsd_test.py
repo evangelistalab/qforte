@@ -10,13 +10,13 @@ import os
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.join(THIS_DIR, 'He-ccpvdz.json')
 
+# Note: These system are all a single atom, so we can ignore nuclear repulsion energy.
+
 class UccTests(unittest.TestCase):
     def test_He_uccsd_vqe_exact(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
-        # The Nuclear repulsion energy
-        Enuc =  0.0
 
         mol = system_factory(system_type = 'molecule',
                                      build_type = 'external',
@@ -29,15 +29,12 @@ class UccTests(unittest.TestCase):
                 use_analytic_grad = True)
 
         Egs_elec = alg.get_gs_energy()
-        Egs = Egs_elec + Enuc
-        self.assertLess(abs(Egs-Efci), 1.0e-11)
+        self.assertAlmostEqual(Egs_elec, Efci, 10)
 
-    def test_He_uccsd_vqe_exact(self):
+    def test_He_uccsd_vqe_exact_diis(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
-        # The Nuclear repulsion energy
-        Enuc =  0.0
 
         mol = system_factory(system_type = 'molecule',
                                      build_type = 'external',
@@ -51,21 +48,17 @@ class UccTests(unittest.TestCase):
                 optimizer = "diis_solve")
 
         Egs_elec = alg.get_gs_energy()
-        Egs = Egs_elec + Enuc
-        self.assertLess(abs(Egs-Efci), 1.0e-11)
+        self.assertAlmostEqual(Egs_elec, Efci, 11)
 
     def test_He_uccsd_vqe_exact_psi(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
-        # The Nuclear repulsion energy
-        Enuc =  0.0
 
         mol = system_factory(system_type = 'molecule',
                                      build_type = 'psi4',
                                      basis='cc-pvdz',
                                      mol_geometry = [('He', (0, 0, 0))],
-                                     filename=data_path,
                                      symmetry = "c2v")
 
         alg = UCCNVQE(mol)
@@ -73,15 +66,12 @@ class UccTests(unittest.TestCase):
                 use_analytic_grad = True)
 
         Egs_elec = alg.get_gs_energy()
-        Egs = Egs_elec + Enuc
-        self.assertLess(abs(Egs-Efci), 1.0e-11)
+        self.assertAlmostEqual(Egs_elec, Efci, 10)
 
     def test_He_uccsd_vqe_frozen_virtual(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis, according to Psi, one frozen virtual
         Efci = -2.8819250903
-        # The Nuclear repulsion energy
-        Enuc =  0.0
 
         mol = system_factory(system_type = 'molecule',
                                      build_type = 'openfermion',
@@ -94,15 +84,12 @@ class UccTests(unittest.TestCase):
                 use_analytic_grad = True)
 
         Egs_elec = alg.get_gs_energy()
-        Egs = Egs_elec + Enuc
-        self.assertLess(abs(Egs-Efci), 1.0e-10)
+        self.assertAlmostEqual(Egs_elec, Efci, 11)
 
     def test_He_uccsd_pqe_exact(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
-        # The Nuclear repulsion energy
-        Enuc =  0.0
 
         mol = system_factory(system_type = 'molecule',
                                      build_type = 'external',
@@ -114,8 +101,7 @@ class UccTests(unittest.TestCase):
                 opt_thresh = 1.0e-7)
 
         Egs_elec = alg.get_gs_energy()
-        Egs = Egs_elec + Enuc
-        self.assertLess(abs(Egs-Efci), 1.0e-11)
+        self.assertAlmostEqual(Egs_elec, Efci, 11)
 
 
 if __name__ == '__main__':

@@ -242,7 +242,7 @@ class UCCNVQE(UCCVQE):
     # TODO: change to get_num_pt_evals
     def get_num_ham_measurements(self):
         """Returns the total number of times the energy was evaluated via
-        measurement of the Hamiltoanin.
+        measurement of the Hamiltonian.
         """
         try:
             self._n_ham_measurements = self._final_result.nfev
