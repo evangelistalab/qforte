@@ -63,9 +63,6 @@ class VQE(AnsatzAlgorithm):
         if self._converged is None:
             raise NotImplementedError('Concrete VQE class must define self._converged attribute.')
 
-        if self._final_result is None:
-            raise NotImplementedError('Concrete VQE class must define self._final_result attribute.')
-
         if self._opt_maxiter is None:
             raise NotImplementedError('Concrete VQE class must define self._opt_maxiter attribute.')
 
