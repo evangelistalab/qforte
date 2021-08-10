@@ -9,6 +9,7 @@ import qforte
 from qforte.abc.uccvqeabc import UCCVQE
 
 from qforte.experiment import *
+from qforte.maths import optimizer
 from qforte.utils.transforms import *
 from qforte.utils.op_pools import *
 from qforte.utils.state_prep import *
@@ -158,8 +159,14 @@ class UCCNVQE(UCCVQE):
         print('Number of grad vector evaluations:           ', self._res_vec_evals)
         print('Number of individual grad evaluations:       ', self._res_m_evals)
 
-    # Define VQE abstract methods.
     def solve(self):
+        if self._optimizer.lower() == "diis_solve":
+            self.build_orb_energies()
+            return self.diis_solve(self.gradient_ary_feval)
+        else:
+            return self.scipy_solve()
+
+    def scipy_solve(self):
         # Construct arguments to hand to the minimizer.
         opts = {}
         opts['gtol'] = self._opt_thresh
@@ -237,8 +244,12 @@ class UCCNVQE(UCCVQE):
         """Returns the total number of times the energy was evaluated via
         measurement of the Hamiltoanin.
         """
-        self._n_ham_measurements = self._final_result.nfev
-        return self._n_ham_measurements
+        try:
+            self._n_ham_measurements = self._final_result.nfev
+            return self._n_ham_measurements
+        except AttributeError:
+            # TODO: Determine the number of Hamiltonian measurements
+            return "Not Yet Implemented"
 
     # TODO: depricate this function
     def get_num_commut_measurements(self):
@@ -248,3 +259,5 @@ class UCCNVQE(UCCVQE):
         # else:
         #     return 0
         return 0
+
+UCCNVQE.diis_solve = optimizer.diis_solve

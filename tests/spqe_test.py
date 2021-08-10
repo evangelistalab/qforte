@@ -33,7 +33,7 @@ class SPQETests(unittest.TestCase):
         alg = SPQE(mol, print_summary_file=False)
         alg.run(spqe_maxiter=20,
                 spqe_thresh=1.0e-4,
-                res_vec_thresh=1.0e-5,
+                opt_thresh=1.0e-5,
                 dt = 0.0001)
 
         Egs_elec = alg.get_gs_energy()
