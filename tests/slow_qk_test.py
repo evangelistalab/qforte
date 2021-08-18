@@ -393,7 +393,7 @@ class PhysicalQKDTests(unittest.TestCase):
 
         # make test with algorithm class
         mol = Molecule()
-        mol.set_hamiltonian(H4_qubit_hamiltonian)
+        mol.hamiltonian = H4_qubit_hamiltonian
 
         # SRQK
         alg1 = SRQK(mol, reference=ref, trotter_number=1, fast=False)

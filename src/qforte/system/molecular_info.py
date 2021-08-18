@@ -8,29 +8,37 @@ Classes for system information, e.g., molecule or Hubbard model.
 class System(object):
     """Class for a generic quantum many-body system."""
 
-    def set_fci_energy(self, fci_energy):
-        self._fci_energy = fci_energy
-
-    def get_fci_energy(self):
+    @property
+    def fci_energy(self):
         return self._fci_energy
 
-    def set_hamiltonian(self, hamiltonian_operator):
-        self._hamiltonian = hamiltonian_operator
+    @fci_energy.setter
+    def fci_energy(self, fci_energy):
+        self._fci_energy = fci_energy
 
-    def set_sq_hamiltonian(self, sq_hamiltonian_operator):
-        self._sq_hamiltonian = sq_hamiltonian_operator
-
-    def set_sq_of_ham(self, sq_of_ham):
-        self._sq_of_ham = sq_of_ham
-
-    def get_hamiltonian(self):
+    @property
+    def hamiltonian(self):
         return self._hamiltonian
 
-    def get_sq_hamiltonian(self):
+    @hamiltonian.setter
+    def hamiltonian(self, hamiltonian_operator):
+        self._hamiltonian = hamiltonian_operator
+
+    @property
+    def sq_hamiltonian(self):
         return self._sq_hamiltonian
 
-    def get_sq_of_ham(self):
-        return self._sq_of_ham
+    @sq_hamiltonian.setter
+    def sq_hamiltonian(self, sq_hamiltonian_operator):
+        self._sq_hamiltonian = sq_hamiltonian_operator
+
+    @property
+    def hf_reference(self):
+        return self._hf_reference
+
+    @hf_reference.setter
+    def hf_reference(self, hf_reference):
+        self._hf_reference = hf_reference
 
 class Molecule(System):
     """Class for storing moleucular information. Should be instatiated using using
@@ -112,44 +120,45 @@ class Molecule(System):
         self.filename = filename
         self.hdf5_dir = hdf5_dir
 
-    def set_hf_reference(self, hf_reference):
-        self._hf_reference = hf_reference
+    @property
+    def ccsd_amps(self):
+        return self._ccsd_singles, self._ccsd_doubles
 
-    def set_ccsd_amps(self, ccsd_singles, ccsd_doubles):
+    @ccsd_amps.setter
+    def ccsd_amps(self, ccsd_amps):
+        ccsd_singles, ccsd_doubles = ccsd_amps
         self._ccsd_singles = ccsd_singles
         self._ccsd_doubles = ccsd_doubles
 
-    def set_nuclear_repulsion_energy(self, nuc_rep_energy):
-        self._nuc_rep_energy = nuc_rep_energy
-
-    def set_hf_energy(self, hf_energy):
-        self._hf_energy = hf_energy
-
-    def set_mp2_energy(self, mp2_energy):
-        self._mp2_energy = mp2_energy
-
-    def set_cisd_energy(self, cisd_energy):
-        self._cisd_energy = cisd_energy
-
-    def set_ccsd_energy(self, ccsd_energy):
-        self._ccsd_energy = ccsd_energy
-
-
-    def get_ccsd_amps(self):
-        return self._ccsd_singles, self._ccsd_doubles
-
-    def get_hf_reference(self):
-        return self._hf_reference
-
-    def get_hf_energy(self):
+    @property
+    def hf_energy(self):
         return self._hf_energy
 
-    def get_mp2_energy(self):
+    @hf_energy.setter
+    def hf_energy(self, hf_energy):
+        self._hf_energy = hf_energy
+
+    @property
+    def mp2_energy(self):
         return self._mp2_energy
 
-    def get_cisd_energy(self):
+    @mp2_energy.setter
+    def mp2_energy(self, mp2_energy):
+        self._mp2_energy = mp2_energy
+
+    @property
+    def cisd_energy(self):
         return self._cisd_energy
 
-    def get_ccsd_energy(self):
+    @cisd_energy.setter
+    def cisd_energy(self, cisd_energy):
+        self._cisd_energy = cisd_energy
+
+    @property
+    def ccsd_energy(self):
         return self._ccsd_energy
+
+    @ccsd_energy.setter
+    def ccsd_energy(self, ccsd_energy):
+        self._ccsd_energy = ccsd_energy
 

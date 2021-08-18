@@ -395,7 +395,7 @@ class QKDTests(unittest.TestCase):
 
         # make test with algorithm class
         mol = Molecule()
-        mol.set_hamiltonian(H4_qubit_hamiltonian)
+        mol.hamiltonian = H4_qubit_hamiltonian
 
         # MRSQK
         alg2 = MRSQK(mol, reference=ref, trotter_number=100)
@@ -409,9 +409,9 @@ class QKDTests(unittest.TestCase):
         Egs1 = alg1.get_gs_energy()
         self.assertLess(abs(Egs1-E_fci), 1.0e-4)
 
-        # Non-Trotteized (exact) SRQK
+        # Non-Trotterized (exact) SRQK
         alg0 = NTSRQK(mol, reference=ref)
-        alg0.run(s=6, dt = 0.8)
+        alg0.run(s=7, dt = 0.8)
         Egs0 = alg0.get_gs_energy()
         self.assertLess(abs(Egs0-E_fci), 1.0e-4)
 

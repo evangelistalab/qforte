@@ -72,8 +72,8 @@ class QITETests(unittest.TestCase):
 
         # make test with algorithm class #
         mol = Molecule()
-        mol.set_hamiltonian(H2_qubit_hamiltonian)
-        mol.set_sq_hamiltonian(H2_sq_hamiltonian)
+        mol.hamiltonian = H2_qubit_hamiltonian
+        mol.sq_hamiltonian = H2_sq_hamiltonian
 
         alg = QITE(mol, reference=ref)
         alg.run(beta=18.0, do_lanczos=True, lanczos_gap=49)

@@ -71,7 +71,7 @@ class UccTests(unittest.TestCase):
     def test_He_uccsd_vqe_frozen_virtual(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis, according to Psi, one frozen virtual
-        Efci = -2.8819250903
+        Efci = -2.881925090255593
 
         mol = system_factory(system_type = 'molecule',
                                      build_type = 'openfermion',
