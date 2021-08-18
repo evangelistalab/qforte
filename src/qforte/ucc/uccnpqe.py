@@ -256,6 +256,9 @@ class UCCNPQE(UCCPQE):
 
             residuals.append(res_m)
 
+        self._res_vec_evals += 1
+        self._res_m_evals += len(self._tamps)
+
         return residuals
 
     def initialize_ansatz(self):
