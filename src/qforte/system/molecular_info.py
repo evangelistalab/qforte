@@ -1,12 +1,38 @@
 """
-A class for the system information, either a molecule or a lattice system such as
-Hubbard model.
+Classes for system information, e.g., molecule or Hubbard model.
 """
 
 # TODO: Documentation needs to be fixed, attributes should be listed below
 #       as opposed to arguments for __init__() (Nick).
 
-class Molecule(object):
+class System(object):
+    """Class for a generic quantum many-body system."""
+
+    def set_fci_energy(self, fci_energy):
+        self._fci_energy = fci_energy
+
+    def get_fci_energy(self):
+        return self._fci_energy
+
+    def set_hamiltonian(self, hamiltonian_operator):
+        self._hamiltonian = hamiltonian_operator
+
+    def set_sq_hamiltonian(self, sq_hamiltonian_operator):
+        self._sq_hamiltonian = sq_hamiltonian_operator
+
+    def set_sq_of_ham(self, sq_of_ham):
+        self._sq_of_ham = sq_of_ham
+
+    def get_hamiltonian(self):
+        return self._hamiltonian
+
+    def get_sq_hamiltonian(self):
+        return self._sq_hamiltonian
+
+    def get_sq_of_ham(self):
+        return self._sq_of_ham
+
+class Molecule(System):
     """Class for storing moleucular information. Should be instatiated using using
     a MolAdapter and populated by calling MolAdapter.run(**kwargs).
 
@@ -86,15 +112,6 @@ class Molecule(object):
         self.filename = filename
         self.hdf5_dir = hdf5_dir
 
-    def set_hamiltonian(self, hamiltonian_operator):
-        self._hamiltonian = hamiltonian_operator
-
-    def set_sq_hamiltonian(self, sq_hamiltonian_operator):
-        self._sq_hamiltonian = sq_hamiltonian_operator
-
-    def set_sq_of_ham(self, sq_of_ham):
-        self._sq_of_ham = sq_of_ham
-
     def set_nel(self, nel):
         self._nel = nel
 
@@ -120,21 +137,9 @@ class Molecule(object):
     def set_ccsd_energy(self, ccsd_energy):
         self._ccsd_energy = ccsd_energy
 
-    def set_fci_energy(self, fci_energy):
-        self._fci_energy = fci_energy
-
 
     def get_ccsd_amps(self):
         return self._ccsd_singles, self._ccsd_doubles
-
-    def get_hamiltonian(self):
-        return self._hamiltonian
-
-    def get_sq_hamiltonian(self):
-        return self._sq_hamiltonian
-
-    def get_sq_of_ham(self):
-        return self._sq_of_ham
 
     def get_hf_reference(self):
         return self._hf_reference
@@ -151,5 +156,3 @@ class Molecule(object):
     def get_ccsd_energy(self):
         return self._ccsd_energy
 
-    def get_fci_energy(self):
-        return self._fci_energy
