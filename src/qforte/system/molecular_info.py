@@ -112,9 +112,6 @@ class Molecule(System):
         self.filename = filename
         self.hdf5_dir = hdf5_dir
 
-    def set_nel(self, nel):
-        self._nel = nel
-
     def set_hf_reference(self, hf_reference):
         self._hf_reference = hf_reference
 
