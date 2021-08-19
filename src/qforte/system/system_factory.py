@@ -51,6 +51,6 @@ def system_factory(system_type = 'molecule', build_type = 'openfermion', **kwarg
             raise TypeError(f"build type {build_type} not supported, supported types are: " + ", ".join(model_adapters.keys()))
 
     else:
-        raise TypeError("system type not supported, supported type is 'molecule'.")
+        raise TypeError("system type not supported, supported types are 'molecule' and 'model'.")
 
     return adapter(**kwargs)

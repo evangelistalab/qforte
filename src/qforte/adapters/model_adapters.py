@@ -1,10 +1,20 @@
 import qforte as qf
 from qforte.system.molecular_info import System
 
-def create_TFIM(n: int, h: float, J: float, closed = False):
-    """Creates a Transverse Field Ising Model hamiltonian with
+def create_TFIM(n: int, h: float, J: float):
+    """Creates a 1D Transverse Field Ising Model hamiltonian with
     open boundary conditions, i.e., no interaction between the
-    first and last spin sites."""
+    first and last spin sites.
+
+    n: int
+        Number of lattice sites
+
+    h: float
+        Strength of magnetic field
+
+    j: float
+        Interaction strength 
+    """
 
     TFIM = System()
     TFIM.hamiltonian = qf.QubitOperator()
