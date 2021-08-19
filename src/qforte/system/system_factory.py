@@ -1,4 +1,5 @@
 from qforte.adapters import molecule_adapters as MA
+from qforte.adapters import model_adapters as mod
 
 def system_factory(system_type = 'molecule', build_type = 'openfermion', **kwargs):
 
@@ -21,26 +22,35 @@ def system_factory(system_type = 'molecule', build_type = 'openfermion', **kwarg
 
     """
 
-    kwargs.setdefault('basis', 'sto-3g')
-    kwargs.setdefault('multiplicity', 1)
-    kwargs.setdefault('charge', 0)
-    kwargs.setdefault('description', "")
-    kwargs.setdefault('filename', "")
-    kwargs.setdefault('hdf5_dir', None)
 
-    adapters = {
+    molecule_adapters = {
         "openfermion": MA.create_openfermion_mol,
         "external": MA.create_external_mol,
         "psi4": MA.create_psi_mol
     }
 
+    model_adapters = {
+        "TFIM": mod.create_TFIM
+    }
+
     if (system_type=='molecule'):
+        kwargs.setdefault('basis', 'sto-3g')
+        kwargs.setdefault('multiplicity', 1)
+        kwargs.setdefault('charge', 0)
+        kwargs.setdefault('description', "")
+        kwargs.setdefault('filename', "")
+        kwargs.setdefault('hdf5_dir', None)
         try:
-            adapter = adapters[build_type]
+            adapter = molecule_adapters[build_type]
         except:
-            raise TypeError(f"build type {build_type} not supported, supported types are: " + ", ".join(adapters.keys()))
+            raise TypeError(f"build type {build_type} not supported, supported types are: " + ", ".join(molecule_adapters.keys()))
+    elif (system_type=='model'):
+        try:
+            adapter = model_adapters[build_type]
+        except:
+            raise TypeError(f"build type {build_type} not supported, supported types are: " + ", ".join(model_adapters.keys()))
 
     else:
-        raise TypeError("system type not supported, supported type is 'molecule'.")
+        raise TypeError("system type not supported, supported types are 'molecule' and 'model'.")
 
     return adapter(**kwargs)
