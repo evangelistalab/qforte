@@ -44,7 +44,7 @@ class UCC:
         self._orb_e = []
 
         print('\nBuilding single particle energies list:')
-        print('---------------------------------------')
+        print('---------------------------------------', flush=True)
         qc = qf.Computer(self._nqb)
         qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
         E0 = qc.direct_op_exp_val(self._qb_ham)
@@ -60,7 +60,7 @@ class UCC:
             else:
                 ei = Ei - E0
 
-            print(f'  {i:3}     {ei:+16.12f}')
+            print(f'  {i:3}     {ei:+16.12f}', flush=True)
             self._orb_e.append(ei)
 
     def get_res_over_mpdenom(self, residuals):

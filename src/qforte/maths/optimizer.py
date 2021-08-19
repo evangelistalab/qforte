@@ -16,7 +16,7 @@ def diis_solve(self, residual):
     Ek0 = self.energy_feval(self._tamps)
 
     print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*        ||r||')
-    print('---------------------------------------------------------------------------------------------------')
+    print('---------------------------------------------------------------------------------------------------', flush=True)
 
     if (self._print_summary_file):
         f = open("summary.dat", "w+", buffering=1)
@@ -39,7 +39,7 @@ def diis_solve(self, residual):
         dE = Ek - Ek0
         Ek0 = Ek
 
-        print(f'     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}')
+        print(f'     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}', flush=True)
 
         if (self._print_summary_file):
             f = open("summary.dat", "a", buffering=1)

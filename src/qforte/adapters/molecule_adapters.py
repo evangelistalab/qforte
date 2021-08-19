@@ -90,10 +90,10 @@ def create_openfermion_mol(**kwargs):
     """
 
     if not use_openfermion:
-        raise ImportError("openfermion was not imported correctely.")
+        raise ImportError("openfermion was not imported correctly.")
 
     if not use_openfermion_psi4:
-        raise ImportError("openfermion-psi4 was not imported correctely.")
+        raise ImportError("openfermion-psi4 was not imported correctly.")
 
     qforte_mol = Molecule(mol_geometry = kwargs['mol_geometry'],
                                basis = kwargs['basis'],
@@ -192,31 +192,29 @@ def create_openfermion_mol(**kwargs):
         qubit_hamiltonian = jordan_wigner(fermion_hamiltonian)
         qforte_hamiltonian = build_from_openfermion(qubit_hamiltonian)
 
-    qforte_mol.set_hf_reference(hf_reference)
-    qforte_mol.set_hamiltonian(qforte_hamiltonian)
-    qforte_mol.set_sq_hamiltonian( build_sqop_from_openfermion(fermion_hamiltonian) )
-    qforte_mol.set_sq_of_ham(fermion_hamiltonian)
+    qforte_mol.hf_reference = hf_reference
+    qforte_mol.hamiltonian = qforte_hamiltonian
+    qforte_mol.sq_hamiltonian = build_sqop_from_openfermion(fermion_hamiltonian)
 
     # Set qforte energies from openfermion
     if(kwargs['run_scf']):
-        qforte_mol.set_hf_energy(openfermion_mol.hf_energy)
+        qforte_mol.hf_energy = openfermion_mol.hf_energy
 
     if(kwargs['run_mp2']):
-        qforte_mol.set_mp2_energy(openfermion_mol.mp2_energy)
+        qforte_mol.mp2_energy = openfermion_mol.mp2_energy
 
     if(kwargs['run_cisd']):
-        qforte_mol.set_cisd_energy(openfermion_mol.cisd_energy)
+        qforte_mol.cisd_energy = openfermion_mol.cisd_energy
 
     if(kwargs['run_ccsd']):
-        qforte_mol.set_ccsd_energy(openfermion_mol.ccsd_energy)
+        qforte_mol.ccsd_energy = openfermion_mol.ccsd_energy
 
         # Store uccsd circuit with initial guess from ccsd amplitudes
         if(kwargs['store_uccsd_amps']==True):
-            qforte_mol.set_ccsd_amps(openfermion_mol.ccsd_single_amps,
-                          openfermion_mol.ccsd_double_amps)
+            qforte_mol.ccsd_amps = (openfermion_mol.ccsd_single_amps, openfermion_mol.ccsd_double_amps)
 
     if(kwargs['run_fci']):
-        qforte_mol.set_fci_energy(openfermion_mol.fci_energy)
+        qforte_mol.fci_energy = openfermion_mol.fci_energy
 
     return qforte_mol
 
@@ -282,16 +280,16 @@ def create_psi_mol(**kwargs):
     p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
 
     if(kwargs['run_mp2']):
-        qforte_mol.set_mp2_energy(psi4.energy('MP2'))
+        qforte_mol.mp2_energy = psi4.energy('MP2')
 
     if(kwargs['run_ccsd']):
-        qforte_mol.set_ccsd_energy(psi4.energy('CCSD'))
+        qforte_mol.ccsd_energy = psi4.energy('CCSD')
 
     if(kwargs['run_cisd']):
-        qforte_mol.set_cisd_energy(psi4.energy('CISD'))
+        qforte_mol.cisd_energy = psi4.energy('CISD')
 
     if(kwargs['run_fci']):
-        qforte_mol.set_fci_energy(psi4.energy('FCI'))
+        qforte_mol.fci_energy = psi4.energy('FCI')
 
     # Get integrals using MintsHelper.
     mints = psi4.core.MintsHelper(p4_wfn.basisset())
@@ -347,11 +345,11 @@ def create_psi_mol(**kwargs):
                         Hsq.add( mo_teis[i,l,k,j]/2, [ib, jb], [kb, lb] ) # bbbb
 
     # Set attributes
-    qforte_mol.set_nuclear_repulsion_energy(p4_Enuc_ref)
-    qforte_mol.set_hf_energy(p4_Escf)
-    qforte_mol.set_hf_reference(hf_reference)
-    qforte_mol.set_sq_hamiltonian(Hsq)
-    qforte_mol.set_hamiltonian(Hsq.jw_transform())
+    qforte_mol.nuclear_repulsion_energy = p4_Enuc_ref
+    qforte_mol.hf_energy = p4_Escf
+    qforte_mol.hf_reference = hf_reference
+    qforte_mol.sq_hamiltonian = Hsq
+    qforte_mol.hamiltonian = Hsq.jw_transform()
 
     return qforte_mol
 
@@ -388,10 +386,10 @@ def create_external_mol(**kwargs):
     for n in range(external_data['na']['data'] + external_data['nb']['data']):
         hf_reference[n] = 1
 
-    qforte_mol.set_hf_reference(hf_reference)
+    qforte_mol.hf_reference = hf_reference
 
-    qforte_mol.set_sq_hamiltonian(qforte_sq_hamiltonian)
+    qforte_mol.sq_hamiltonian = qforte_sq_hamiltonian
 
-    qforte_mol.set_hamiltonian(qforte_sq_hamiltonian.jw_transform())
+    qforte_mol.hamiltonian = qforte_sq_hamiltonian.jw_transform()
 
     return qforte_mol

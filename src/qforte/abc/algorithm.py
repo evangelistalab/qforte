@@ -78,7 +78,7 @@ class Algorithm(ABC):
 
         if self._state_prep_type == 'occupation_list':
             if(reference==None):
-                self._ref = system.get_hf_reference()
+                self._ref = system.hf_reference
             else:
                 if not (isinstance(reference, list)):
                     raise ValueError("occupation_list reference must be list of 1s and 0s.")
@@ -90,7 +90,7 @@ class Algorithm(ABC):
             if not isinstance(reference, qf.Circuit):
                 raise ValueError("unitary_circ reference must be a Circuit.")
 
-            self._ref = system.get_hf_reference()
+            self._ref = system.hf_reference
             self._Uprep = reference
 
         else:
@@ -98,12 +98,12 @@ class Algorithm(ABC):
 
 
         self._nqb = len(self._ref)
-        self._qb_ham = system.get_hamiltonian()
+        self._qb_ham = system.hamiltonian
         if self._qb_ham.num_qubits() != self._nqb:
             raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
-        if hasattr(system, '_hf_energy'):
-            self._hf_energy = system.get_hf_energy()
-        else:
+        try:
+            self._hf_energy = system.hf_energy
+        except AttributeError:
             self._hf_energy = 0.0
 
         self._Nl = len(self._qb_ham.terms())
