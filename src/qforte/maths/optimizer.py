@@ -39,9 +39,6 @@ def diis_solve(self, residual):
         dE = Ek - Ek0
         Ek0 = Ek
 
-        self._res_vec_evals += 1
-        self._res_m_evals += len(self._tamps)
-
         print(f'     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}')
 
         if (self._print_summary_file):
