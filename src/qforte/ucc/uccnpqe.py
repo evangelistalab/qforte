@@ -33,7 +33,7 @@ class UCCNPQE(UCCPQE):
 
     and (3) optimizes the wave fuction via projective solution of
     the UCC Schrodinger Equation via a quazi-Newton update equation.
-    Using this stratagy, an amplitude :math:`t_\mu^{(k+1)}` for iteration :math:`k+1`
+    Using this strategy, an amplitude :math:`t_\mu^{(k+1)}` for iteration :math:`k+1`
     is given by
 
     .. math::
@@ -67,6 +67,8 @@ class UCCNPQE(UCCPQE):
 
         self._res_vec_evals = 0
         self._res_m_evals = 0
+        # list: tuple(excited determinant, phase_factor)
+        self._excited_dets = []
 
         self._n_classical_params = 0
         self._n_cnot = 0
@@ -88,6 +90,7 @@ class UCCNPQE(UCCPQE):
             print('\nt operators included from pool: \n', self._tops)
             print('Initial tamplitudes for tops: \n', self._tamps)
 
+        self.fill_excited_dets()
         self.build_orb_energies()
         self.solve()
 
@@ -160,40 +163,9 @@ class UCCNPQE(UCCPQE):
     def solve(self):
         self.diis_solve(self.get_residual_vector)
 
-    def get_residual_vector(self, trial_amps):
-        """Returns the residual vector with elements pertaining to all operators
-        in in the ansatz circuit.
-
-        Parameters
-        ----------
-        trial_amps : list of floats
-            The list of (real) floating point number which will characterize
-            the state preparation circuit used in calculation of the residuals.
-        """
-        if(self._pool_type == 'sa_SD'):
-            raise ValueError('Must use single term particle-hole nbody operators for residual calculation')
-
-        temp_pool = qforte.SQOpPool()
-        for param, top in zip(trial_amps, self._tops):
-            temp_pool.add(param, self._pool[top][1])
-
-        A = temp_pool.get_qubit_operator('commuting_grp_lex')
-        U, U_phase = trotterize(A, trotter_number=self._trotter_number)
-        if U_phase != 1.0 + 0.0j:
-            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
-
-        qc_res = qforte.Computer(self._nqb)
-        qc_res.apply_circuit(self._Uprep)
-        qc_res.apply_circuit(U)
-        qc_res.apply_operator(self._qb_ham)
-        qc_res.apply_circuit(U.adjoint())
-
-        coeffs = qc_res.get_coeff_vec()
-        residuals = []
-
-        for m in self._tops:
+    def fill_excited_dets(self):
+        for _, sq_op in self._pool:
             # 1. Identify the excitation operator
-            sq_op = self._pool[m][1]
             # occ => i,j,k,...
             # vir => a,b,c,...
             # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
@@ -240,13 +212,47 @@ class UCCNPQE(UCCPQE):
 
             I = excited_det.add()
 
-            # 3. Compute the phase of the operator, relative to its determinant.
             qc_temp = qforte.Computer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
             qc_temp.apply_operator(sq_op.jw_transform())
             phase_factor = qc_temp.get_coeff_vec()[I]
 
-            # 4. Get the residual element, after accounting for numerical noise.
+            self._excited_dets.append((I, phase_factor))
+
+    def get_residual_vector(self, trial_amps):
+        """Returns the residual vector with elements pertaining to all operators
+        in the ansatz circuit.
+
+        Parameters
+        ----------
+        trial_amps : list of floats
+            The list of (real) floating point numbers which will characterize
+            the state preparation circuit used in calculation of the residuals.
+        """
+        if(self._pool_type == 'sa_SD'):
+            raise ValueError('Must use single term particle-hole nbody operators for residual calculation')
+
+        temp_pool = qforte.SQOpPool()
+        for param, top in zip(trial_amps, self._tops):
+            temp_pool.add(param, self._pool[top][1])
+
+        A = temp_pool.get_qubit_operator('commuting_grp_lex')
+        U, U_phase = trotterize(A, trotter_number=self._trotter_number)
+        if U_phase != 1.0 + 0.0j:
+            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+
+        qc_res = qforte.Computer(self._nqb)
+        qc_res.apply_circuit(self._Uprep)
+        qc_res.apply_circuit(U)
+        qc_res.apply_operator(self._qb_ham)
+        qc_res.apply_circuit(U.adjoint())
+
+        coeffs = qc_res.get_coeff_vec()
+        residuals = []
+
+        for I, phase_factor in self._excited_dets:
+
+            # Get the residual element, after accounting for numerical noise.
             res_m = coeffs[I] * phase_factor
             if(np.imag(res_m) != 0.0):
                 raise ValueError("residual has imaginary component, something went wrong!!")
