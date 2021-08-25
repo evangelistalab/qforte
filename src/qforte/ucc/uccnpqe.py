@@ -221,12 +221,12 @@ class UCCNPQE(UCCPQE):
 
     def get_residual_vector(self, trial_amps):
         """Returns the residual vector with elements pertaining to all operators
-        in in the ansatz circuit.
+        in the ansatz circuit.
 
         Parameters
         ----------
         trial_amps : list of floats
-            The list of (real) floating point number which will characterize
+            The list of (real) floating point numbers which will characterize
             the state preparation circuit used in calculation of the residuals.
         """
         if(self._pool_type == 'sa_SD'):
