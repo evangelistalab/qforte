@@ -27,6 +27,8 @@ class Gate {
     Gate(const std::string& label, size_t target, size_t control,
                 std::complex<double> gate[4][4]);
 
+    Gate(const Gate& gate) = default;
+
     /// Return the target qubit
     size_t target() const;
 
