@@ -36,9 +36,10 @@ class UCCVQE(VQE, UCC):
     Attributes
     ----------
 
-    _pool_type : string
+    _pool_type : string or SQOpPool
         Specifies the kinds of tamplitudes allowed in the UCCN-VQE
-        parameterization.
+        parameterization. If an SQOpPool is supplied, that is used as the
+        operator pool. The following strings are allowed:
             SA_SD: At most two orbital excitations. Assumes a singlet wavefunction and closed-shell Slater determinant
                    reducing the number of amplitudes.
             SD: At most two orbital excitations.
