@@ -397,6 +397,9 @@ class QKDTests(unittest.TestCase):
         mol = Molecule()
         mol.hamiltonian = H4_qubit_hamiltonian
 
+        # WARNING! With large s, these methods can become numerically unstable.
+        # Near 0 eigenvalues in the overlap matrices lead to unstable eigenvectors.
+
         # MRSQK
         alg2 = MRSQK(mol, reference=ref, trotter_number=100)
         alg2.run(s=3, d=3)
@@ -410,10 +413,10 @@ class QKDTests(unittest.TestCase):
         self.assertLess(abs(Egs1-E_fci), 1.0e-4)
 
         # Non-Trotterized (exact) SRQK
-        alg0 = NTSRQK(mol, reference=ref)
-        alg0.run(s=7, dt = 0.8)
+        alg0 = NTSRQK(mol, reference=ref, verbose=True)
+        alg0.run(s=4, dt = 0.8)
         Egs0 = alg0.get_gs_energy()
-        self.assertLess(abs(Egs0-E_fci), 1.0e-4)
+        self.assertLess(abs(Egs0-E_fci), 1.0e-3)
 
 
 if __name__ == '__main__':
