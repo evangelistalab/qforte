@@ -18,7 +18,7 @@ conda activate qforte_env
 
 #### install psi4 and openfermion:
 ```bash
-conda install psi4 openfermion openfermionpsi4 -c psi4
+conda install psi4=1.4 openfermion openfermionpsi4 -c psi4
 ```
 
 Installation (For Development)
