@@ -47,6 +47,7 @@ class UCCVQE(VQE, UCC):
             SDTQ: At most four orbital excitations.
             SDTQP: At most five orbital excitations.
             SDTQPH: At most six orbital excitations.
+            GSD: At most two excitations, from any orbital to any orbital.
 
     _prev_energy : float
         The energy from the previous iteration.
