@@ -214,7 +214,7 @@ class AnsatzAlgorithm(Algorithm):
         excitation operators to consider. This is represented as a list.
         Each entry is a pair of a complex coefficient and an SqOperator object.
 
-    _pool_obj : SqOpPool
+    _pool_obj : SQOpPool
         A pool of second quantized operators we use in the ansatz.
 
     _tops : list
@@ -249,11 +249,12 @@ class AnsatzAlgorithm(Algorithm):
         """ This function populates an operator pool with SQOperator objects.
         """
 
-        self._pool_obj = qf.SQOpPool()
-        self._pool_obj.set_orb_spaces(self._ref)
-
         if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+            self._pool_obj = qf.SQOpPool()
+            self._pool_obj.set_orb_spaces(self._ref)
             self._pool_obj.fill_pool(self._pool_type)
+        elif isinstance(self._pool_type, qf.SQOpPool):
+            self._pool_obj = self._pool_type
         else:
             raise ValueError('Invalid operator pool type specified.')
 
