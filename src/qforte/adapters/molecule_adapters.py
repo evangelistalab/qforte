@@ -351,6 +351,9 @@ def create_psi_mol(**kwargs):
     qforte_mol.sq_hamiltonian = Hsq
     qforte_mol.hamiltonian = Hsq.jw_transform()
 
+    # Order Psi4 to delete its temporary files.
+    psi4.core.clean()
+    
     return qforte_mol
 
 
