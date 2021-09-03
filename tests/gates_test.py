@@ -8,6 +8,9 @@ def make_basis(str):
 
 class GatesTests(unittest.TestCase):
     def test_X_gate(self):
+
+        print('\nSTART test_X_gate\n')
+
         # test the Pauli X gate
         nqubits = 1
         basis0 = make_basis('0')
@@ -30,6 +33,9 @@ class GatesTests(unittest.TestCase):
 
 
     def test_Y_gate(self):
+
+        print('\nSTART test_Y_gate\n')
+
         # test the Pauli Y gate
         nqubits = 1
         basis0 = make_basis('0')
@@ -52,6 +58,9 @@ class GatesTests(unittest.TestCase):
 
 
     def test_Z_gate(self):
+
+        print('\nSTART test_Z_gate\n')
+
         # test the Pauli Y gate
         nqubits = 1
         basis0 = make_basis('0')
@@ -73,6 +82,9 @@ class GatesTests(unittest.TestCase):
         self.assertAlmostEqual(coeff1, -1.0 + 0.0j)
 
     def test_cX_gate(self):
+
+        print('\nSTART test_cX_gate\n')
+
         # test the cX/CNOT gate
         nqubits = 2
         basis0 = make_basis('00') # basis0:|00>
@@ -135,6 +147,9 @@ class GatesTests(unittest.TestCase):
             self.assertTrue(')' in str(context.exception))
 
     def test_cY_gate(self):
+
+        print('\nSTART test_cY_gate\n')
+
         # test the cY gate
         nqubits = 2
         basis0 = make_basis('00') # basis0:|00>
@@ -194,7 +209,7 @@ class GatesTests(unittest.TestCase):
 
 
     def test_computer(self):
-        print('\n')
+        print('\nSTART test_computer\n')
         # test that 1 - 1 = 0
 
         # print('\n'.join(qc.str()))
@@ -236,6 +251,9 @@ class GatesTests(unittest.TestCase):
        # print(repr(computer))
 
     def test_op_exp_val_1(self):
+
+        print('\nSTART test_op_exp_val_1\n')
+
         # test direct expectation value measurement
         trial_state = qforte.Computer(4)
 

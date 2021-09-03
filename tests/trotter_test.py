@@ -5,6 +5,8 @@ from qforte import qforte
 class ExperimentTests(unittest.TestCase):
     def test_trotterization(self):
 
+        print('\nSTART test_trotterization\n')
+
         circ_vec = [qforte.Circuit(), qforte.build_circuit('Z_0')]
         coef_vec = [-1.0j * 0.5, -1.0j * -0.04544288414432624]
 
@@ -39,6 +41,8 @@ class ExperimentTests(unittest.TestCase):
         self.assertAlmostEqual(np.imag(coeffs[12]),  0.25349397560041553)
 
     def test_trotterization_with_controlled_U(self):
+
+        print('\nSTART test_trotterization_with_controlled_U\n')
 
         circ_vec = [qforte.build_circuit('Y_0 X_1'), qforte.build_circuit('X_0 Y_1')]
         coef_vec = [-1.0719145972781818j, 1.0719145972781818j]

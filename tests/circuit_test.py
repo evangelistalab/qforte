@@ -5,7 +5,7 @@ import numpy as np
 
 class CircuitTests(unittest.TestCase):
     def test_circuit(self):
-        print('\n')
+        print('\nSTART test_circuit\n')
         num_qubits = 10
 
         qc1 = qforte.Computer(num_qubits)
@@ -47,3 +47,6 @@ class CircuitTests(unittest.TestCase):
         print('-----------------------------')
         print('   ', diff_norm)
         self.assertAlmostEqual(diff_norm, 0.0 + 0.0j)
+
+if __name__ == '__main__':
+    unittest.main()

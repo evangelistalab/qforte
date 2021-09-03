@@ -4,6 +4,9 @@ import numpy as np
 
 class SparseOpTests(unittest.TestCase):
     def test_sparse_operator(self):
+
+        print('\nSTART test_sparse_operator\n')
+
         """
         test the SparseMatrix and SparseVector classes
         """

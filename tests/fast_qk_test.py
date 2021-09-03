@@ -8,7 +8,7 @@ import numpy as np
 
 class QKDTests(unittest.TestCase):
     def test_H4_fast_qkd(self):
-        print('\n')
+        print('\nSTART test_H4_fast_qkd\n')
         # The FCI energy for H4 at 1.5 Angstrom in a sto-6g basis
         E_fci = -2.0126741263939656
 

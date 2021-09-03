@@ -14,7 +14,7 @@ data_path = os.path.join(THIS_DIR, 'He-ccpvdz.json')
 
 class UccTests(unittest.TestCase):
     def test_He_uccsd_vqe_exact(self):
-        print('\n')
+        print('\nSTART test_He_uccsd_vqe_exact\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
 
@@ -32,7 +32,7 @@ class UccTests(unittest.TestCase):
         self.assertAlmostEqual(Egs_elec, Efci, 10)
 
     def test_He_uccsd_vqe_exact_diis(self):
-        print('\n')
+        print('\nSTART test_He_uccsd_vqe_exact_diis\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
 
@@ -51,7 +51,7 @@ class UccTests(unittest.TestCase):
         self.assertAlmostEqual(Egs_elec, Efci, 11)
 
     def test_He_uccsd_vqe_exact_psi(self):
-        print('\n')
+        print('\nSTART test_He_uccsd_vqe_exact_psi\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
 
@@ -69,7 +69,7 @@ class UccTests(unittest.TestCase):
         self.assertAlmostEqual(Egs_elec, Efci, 10)
 
     def test_He_uccsd_vqe_frozen_virtual(self):
-        print('\n')
+        print('\nSTART test_He_uccsd_vqe_frozen_virtual\n')
         # The FCI energy for He atom in a cc-pvdz basis, according to Psi, one frozen virtual
         Efci = -2.881925090255593
 
@@ -87,7 +87,7 @@ class UccTests(unittest.TestCase):
         self.assertAlmostEqual(Egs_elec, Efci, 11)
 
     def test_He_uccsd_pqe_exact(self):
-        print('\n')
+        print('\nSTART test_He_uccsd_pqe_exact\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
 

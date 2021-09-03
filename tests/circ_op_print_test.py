@@ -8,6 +8,8 @@ from qforte import *
 class Circ_Op_PrintTest(TestCase):
     def test_circ_op_print(self):
 
+        print('\nSTART test_circ_op_print\n')
+
         # initialize empty circuit
         circ1 = qf.Circuit()
         # add (Z1 H2 Y4 X4) Pauli string

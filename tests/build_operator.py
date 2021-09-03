@@ -5,7 +5,7 @@ from openfermion.ops import QubitOperator
 
 class BuilderTests(unittest.TestCase):
     def test_build_from_openfermion(self):
-        print('\n')
+        print('\nSTART test_build_from_openfermion\n')
         trial_state = qforte.Computer(4)
 
         trial_prep = [None]*5

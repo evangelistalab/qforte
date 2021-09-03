@@ -5,6 +5,7 @@ import os
 class MainTest(unittest.TestCase):
     def test_cpp(self):
         print("\n\nTesting C++ code...")
+        print('\nSTART test_cpp\n')
         subprocess.check_call(os.path.join(os.path.dirname(
             os.path.relpath(__file__)), 'bin', 'qforte_test'))
         print()  # for prettier output

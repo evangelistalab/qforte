@@ -6,7 +6,7 @@ from qforte.system import system_factory
 class CustomPoolTests(unittest.TestCase):
 
     def test_vqe(self):
-        print('\n')
+        print('\nSTART test_vqe\n')
         Efci = -1.108873060057971
 
         mol = system_factory(system_type = 'molecule',
@@ -18,8 +18,8 @@ class CustomPoolTests(unittest.TestCase):
 
         pool = qf.SQOpPool()
         sq_op = qf.SQOperator()
-        sq_op.add_term( 1, [0, 1], [2, 3]) 
-        sq_op.add_term(-1, [2, 3], [0, 1]) 
+        sq_op.add_term( 1, [0, 1], [2, 3])
+        sq_op.add_term(-1, [2, 3], [0, 1])
         pool.add_term(1, sq_op)
 
         alg = UCCNVQE(mol)

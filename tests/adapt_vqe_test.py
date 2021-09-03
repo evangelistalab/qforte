@@ -11,7 +11,7 @@ data_path = os.path.join(THIS_DIR, 'H4-sto6g-075a.json')
 
 class ADAPTVQETests(unittest.TestCase):
     def test_H4_adapt_vqe_exact(self):
-        print('\n')
+        print('\nSTART test_H4_adapt_vqe_exact\n')
 
         # The FCI energy for H4 at 0.75 Angstrom in a sto-6g basis
         Efci = -2.1628978832666865

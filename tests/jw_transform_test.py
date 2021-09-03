@@ -3,6 +3,9 @@ from qforte import qforte
 
 class JordanWignerTests(unittest.TestCase):
     def test_jw1(self):
+
+        print('\nSTART JordanWignerTests\n')
+
         """
         test JW transform of 1.0(2^ 3^ 4 6) + 1.5(1^ 2^ 3 4)
         """
@@ -93,6 +96,9 @@ class JordanWignerTests(unittest.TestCase):
         #TODO: add more jw test cases
 
     def test_jw2(self):
+
+        print('\nSTART test_jw2\n')
+
         coeff_vec = [
             -0.25j,
             -0.25,

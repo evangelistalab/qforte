@@ -12,7 +12,7 @@ import os
 
 class CircuitReferenceTest(unittest.TestCase):
     def test_srqk_with_uccsdpqe_ref(self):
-        print('\n')
+        print('\nSTART test_srqk_with_uccsdpqe_ref\n')
         # The FCI energy of the equidistant H4/STO-3G chain with r = 1.5 angs,.
         Efci = -1.9961503253000235
 

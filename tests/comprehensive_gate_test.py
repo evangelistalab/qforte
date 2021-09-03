@@ -61,6 +61,7 @@ def circuit_tester(prep, test_circ):
 
 class ComprehensiveGatesTests(unittest.TestCase):
     def test_comp_cX_gates(self):
+        print('\nSTART test_comp_cX_gates\n')
         id = 'cX'
         circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
@@ -77,6 +78,7 @@ class ComprehensiveGatesTests(unittest.TestCase):
             self.assertAlmostEqual(tc_val, 0.0 + 0.0j)
 
     def test_comp_cY_gates(self):
+        print('\nSTART test_comp_cY_gates\n')
         id = 'cY'
         circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
@@ -93,6 +95,7 @@ class ComprehensiveGatesTests(unittest.TestCase):
             self.assertAlmostEqual(tc_val, 0.0 + 0.0j)
 
     def test_comp_cZ_gates(self):
+        print('\nSTART test_comp_cZ_gates\n')
         id = 'cZ'
         circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
@@ -109,6 +112,7 @@ class ComprehensiveGatesTests(unittest.TestCase):
             self.assertAlmostEqual(tc_val, 0.0 + 0.0j)
 
     def test_comp_cR_gates(self):
+        print('\nSTART test_comp_cR_gates\n')
         id = 'cR'
         circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
@@ -125,6 +129,7 @@ class ComprehensiveGatesTests(unittest.TestCase):
             self.assertAlmostEqual(tc_val, 0.0 + 0.0j)
 
     def test_comp_cV_gates(self):
+        print('\nSTART test_comp_cV_gates\n')
         id = 'cV'
         circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
 
@@ -139,3 +144,6 @@ class ComprehensiveGatesTests(unittest.TestCase):
         for circ in circ_tc:
             tc_val = circuit_tester(prep_circ, circ)
             self.assertAlmostEqual(tc_val, 0.0 + 0.0j)
+
+if __name__ == '__main__':
+    unittest.main()

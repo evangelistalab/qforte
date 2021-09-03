@@ -3,6 +3,9 @@ from qforte import qforte
 
 class IOTests(unittest.TestCase):
     def test_io_simplified(self):
+
+        print('\nSTART test_io_simplified\n')
+
         # test direct expectation value measurement
         trial_state = qforte.Computer(4)
         trial_circ = qforte.build_circuit('H_0 H_1 H_2 H_3 cX_0_1')

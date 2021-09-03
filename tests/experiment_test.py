@@ -3,7 +3,7 @@ from qforte import qforte
 
 class ExperimentTests(unittest.TestCase):
     def test_H2_experiment(self):
-        print('\n')
+        print('\nSTART test_H2_experiment\n')
         #the RHF H2 energy at equilibrium bond length
         E_hf = -1.1166843870661929
 
@@ -62,7 +62,7 @@ class ExperimentTests(unittest.TestCase):
         self.assertLess(experimental_error, 4.0e-4)
 
     def test_H2_experiment_perfect(self):
-        print('\n')
+        print('\nSTART test_H2_experiment_perfect\n')
         #the RHF H2 energy at equilibrium bond length
         E_hf = -1.1166843870661929
 
