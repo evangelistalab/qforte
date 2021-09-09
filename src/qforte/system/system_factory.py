@@ -38,7 +38,7 @@ def system_factory(system_type = 'molecule', build_type = 'openfermion', **kwarg
         kwargs.setdefault('multiplicity', 1)
         kwargs.setdefault('charge', 0)
         kwargs.setdefault('description', "")
-        kwargs.setdefault('filename', "")
+        kwargs.setdefault('filename', "output")
         kwargs.setdefault('hdf5_dir', None)
         try:
             adapter = molecule_adapters[build_type]

@@ -162,3 +162,26 @@ class Molecule(System):
     def ccsd_energy(self, ccsd_energy):
         self._ccsd_energy = ccsd_energy
 
+    @property
+    def point_group(self):
+        return self._point_group
+
+    @point_group.setter
+    def point_group(self, point_group):
+        self._point_group = point_group
+
+    @property
+    def orb_irreps(self):
+        return self._orb_irreps
+
+    @orb_irreps.setter
+    def orb_irreps(self, orb_irreps):
+        self._orb_irreps = orb_irreps
+
+    @property
+    def orb_irreps_to_int(self):
+        return self._orb_irreps_to_int
+
+    @orb_irreps_to_int.setter
+    def orb_irreps_to_int(self, orb_irreps_to_int):
+        self._orb_irreps_to_int = orb_irreps_to_int

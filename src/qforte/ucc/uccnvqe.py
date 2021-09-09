@@ -44,7 +44,8 @@ class UCCNVQE(UCCVQE):
             pool_type='SD',
             optimizer='BFGS',
             use_analytic_grad = True,
-            noise_factor = 0.0):
+            noise_factor = 0.0,
+            irrep = 0):
 
         self._opt_thresh = opt_thresh
         self._opt_ftol = opt_ftol
@@ -53,6 +54,7 @@ class UCCNVQE(UCCVQE):
         self._optimizer = optimizer
         self._pool_type = pool_type
         self._noise_factor = noise_factor
+        self._irrep = irrep
 
         self._tops = []
         self._tamps = []
@@ -75,8 +77,8 @@ class UCCNVQE(UCCVQE):
 
         self.fill_pool()
 
-        if self._verbose:
-            self._pool_obj.print_pool()
+        #if self._verbose:
+        #    self._pool_obj.print_pool()
 
         self.initialize_ansatz()
 
@@ -237,7 +239,6 @@ class UCCNVQE(UCCVQE):
         """
         self._tops = list(range(len(self._pool)))
         self._tamps = [0.0] * len(self._pool)
-
 
     # TODO: change to get_num_pt_evals
     def get_num_ham_measurements(self):

@@ -89,11 +89,16 @@ def create_openfermion_mol(**kwargs):
         The qforte Molecule object which holds the molecular information.
     """
 
+    from qforte import psi4_symmetry
+
     if not use_openfermion:
         raise ImportError("openfermion was not imported correctly.")
 
     if not use_openfermion_psi4:
         raise ImportError("openfermion-psi4 was not imported correctly.")
+
+    print('WARNING: \'openfermion\' does not support point group symmetry.')
+    print('          Consider using \'psi4\' instead.')
 
     qforte_mol = Molecule(mol_geometry = kwargs['mol_geometry'],
                                basis = kwargs['basis'],
@@ -130,6 +135,9 @@ def create_openfermion_mol(**kwargs):
                                              run_fci=kwargs['run_fci'])
 
     openfermion_mol.load()
+
+    # Get symmetry information
+    point_group, orb_irreps, orb_irreps_to_int = psi4_symmetry(kwargs['filename']+'.out')
 
     # Set qforte hamiltonian from openfermion
     molecular_hamiltonian = openfermion_mol.get_molecular_hamiltonian()
@@ -216,6 +224,11 @@ def create_openfermion_mol(**kwargs):
     if(kwargs['run_fci']):
         qforte_mol.fci_energy = openfermion_mol.fci_energy
 
+    # Set symmetry attributes
+    qforte_mol.point_group = point_group
+    qforte_mol.orb_irreps = orb_irreps
+    qforte_mol.orb_irreps_to_int = orb_irreps_to_int
+
     return qforte_mol
 
 
@@ -227,6 +240,8 @@ def create_psi_mol(**kwargs):
     Molecule
         The qforte Molecule object which holds the molecular information.
     """
+
+    from qforte import psi4_symmetry
 
     kwargs.setdefault('symmetry', 'c1')
     kwargs.setdefault('charge', 0)
@@ -253,7 +268,7 @@ def create_psi_mol(**kwargs):
 
     # Setup psi4 calculation(s)
     psi4.set_memory('2 GB')
-    psi4.core.set_output_file('output.dat', False)
+    psi4.core.set_output_file(kwargs['filename']+'.out', False)
 
     p4_geom_str =  f"{int(charge)}  {int(multiplicity)}"
     for geom_line in mol_geometry:
@@ -279,6 +294,10 @@ def create_psi_mol(**kwargs):
     # run psi4 caclulation
     p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
 
+    # Get symmetry information
+    point_group, orb_irreps, orb_irreps_to_int = psi4_symmetry(kwargs['filename']+'.out')
+
+    # Run additional computations requested by the user
     if(kwargs['run_mp2']):
         qforte_mol.mp2_energy = psi4.energy('MP2')
 
@@ -350,10 +369,13 @@ def create_psi_mol(**kwargs):
     qforte_mol.hf_reference = hf_reference
     qforte_mol.sq_hamiltonian = Hsq
     qforte_mol.hamiltonian = Hsq.jw_transform()
+    qforte_mol.point_group = point_group
+    qforte_mol.orb_irreps = orb_irreps
+    qforte_mol.orb_irreps_to_int = orb_irreps_to_int
 
     # Order Psi4 to delete its temporary files.
     psi4.core.clean()
-    
+
     return qforte_mol
 
 
