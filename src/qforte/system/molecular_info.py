@@ -185,3 +185,11 @@ class Molecule(System):
     @orb_irreps_to_int.setter
     def orb_irreps_to_int(self, orb_irreps_to_int):
         self._orb_irreps_to_int = orb_irreps_to_int
+
+    @property
+    def hf_orbital_energies(self):
+        return self._hf_orbital_energies
+
+    @hf_orbital_energies.setter
+    def hf_orbital_energies(self, hf_orbital_energies):
+        self._hf_orbital_energies = hf_orbital_energies

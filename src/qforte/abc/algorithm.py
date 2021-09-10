@@ -249,7 +249,7 @@ class AnsatzAlgorithm(Algorithm):
         """ This function populates an operator pool with SQOperator objects.
         """
 
-        from qforte import symmetry_check
+        from qforte import sq_op_find_symmetry
 
         if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
             self._pool_obj = qf.SQOpPool()
@@ -266,10 +266,13 @@ class AnsatzAlgorithm(Algorithm):
             for sq_operator in self._pool_obj.terms():
                 create = sq_operator[1].terms()[0][1]
                 annihilate = sq_operator[1].terms()[0][2]
-                if symmetry_check(self._sys.orb_irreps_to_int, create, annihilate) == self._irrep:
+                if sq_op_find_symmetry(self._sys.orb_irreps_to_int, create, annihilate) == self._irrep:
                     temp_sq_pool.add(sq_operator[0], sq_operator[1])
             self._pool_obj = temp_sq_pool
-        except:
+        except AttributeError:
+            # An attribute error means that self._sys does not have an orb_irreps_to_int attribute and/or
+            # self does not have an _irrep attribute. Currently, point group symmetry is implemented
+            # for system_type = 'molecules' with build_type = 'psi4'.
             pass
 
         self._pool = self._pool_obj.terms()

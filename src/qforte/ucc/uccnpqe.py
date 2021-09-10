@@ -51,7 +51,8 @@ class UCCNPQE(UCCPQE):
             pool_type='SD',
             opt_thresh = 1.0e-5,
             opt_maxiter = 40,
-            noise_factor = 0.0):
+            noise_factor = 0.0,
+            irrep = 0):
 
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("PQE implementation can only handle occupation_list Hartree-Fock reference.")
@@ -60,6 +61,7 @@ class UCCNPQE(UCCPQE):
         self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
         self._noise_factor = noise_factor
+        self._irrep = irrep
 
         self._tops = []
         self._tamps = []

@@ -89,8 +89,6 @@ def create_openfermion_mol(**kwargs):
         The qforte Molecule object which holds the molecular information.
     """
 
-    from qforte import psi4_symmetry
-
     if not use_openfermion:
         raise ImportError("openfermion was not imported correctly.")
 
@@ -135,9 +133,6 @@ def create_openfermion_mol(**kwargs):
                                              run_fci=kwargs['run_fci'])
 
     openfermion_mol.load()
-
-    # Get symmetry information
-    point_group, orb_irreps, orb_irreps_to_int = psi4_symmetry(kwargs['filename']+'.out')
 
     # Set qforte hamiltonian from openfermion
     molecular_hamiltonian = openfermion_mol.get_molecular_hamiltonian()
@@ -224,11 +219,6 @@ def create_openfermion_mol(**kwargs):
     if(kwargs['run_fci']):
         qforte_mol.fci_energy = openfermion_mol.fci_energy
 
-    # Set symmetry attributes
-    qforte_mol.point_group = point_group
-    qforte_mol.orb_irreps = orb_irreps
-    qforte_mol.orb_irreps_to_int = orb_irreps_to_int
-
     return qforte_mol
 
 
@@ -240,8 +230,6 @@ def create_psi_mol(**kwargs):
     Molecule
         The qforte Molecule object which holds the molecular information.
     """
-
-    from qforte import psi4_symmetry
 
     kwargs.setdefault('symmetry', 'c1')
     kwargs.setdefault('charge', 0)
@@ -295,7 +283,22 @@ def create_psi_mol(**kwargs):
     p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
 
     # Get symmetry information
-    point_group, orb_irreps, orb_irreps_to_int = psi4_symmetry(kwargs['filename']+'.out')
+    orbitals = []
+    for irrep in range(len(p4_wfn.epsilon_a().nph)):
+        for orbital in p4_wfn.epsilon_a().nph[irrep]:
+            orbitals.append([orbital, irrep])
+
+    orbitals.sort()
+    hf_orbital_energies = []
+    orb_irreps_to_int = []
+    for row in orbitals:
+        hf_orbital_energies.append(row[0])
+        orb_irreps_to_int.append(row[1])
+    del orbitals
+
+    point_group = p4_mol.symmetry_from_input().lower()
+    irreps = p4_mol.irrep_labels()
+    orb_irreps = [irreps[i] for i in orb_irreps_to_int]
 
     # Run additional computations requested by the user
     if(kwargs['run_mp2']):
@@ -369,9 +372,10 @@ def create_psi_mol(**kwargs):
     qforte_mol.hf_reference = hf_reference
     qforte_mol.sq_hamiltonian = Hsq
     qforte_mol.hamiltonian = Hsq.jw_transform()
-    qforte_mol.point_group = point_group
+    qforte_mol.point_group = [point_group, irreps]
     qforte_mol.orb_irreps = orb_irreps
     qforte_mol.orb_irreps_to_int = orb_irreps_to_int
+    qforte_mol.hf_orbital_energies = hf_orbital_energies
 
     # Order Psi4 to delete its temporary files.
     psi4.core.clean()
