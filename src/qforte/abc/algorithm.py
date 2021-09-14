@@ -7,6 +7,7 @@ The abstract base classes inherited by all algorithm subclasses.
 from abc import ABC, abstractmethod
 import qforte as qf
 from qforte.utils.state_prep import *
+from qforte.utils.point_groups import sq_op_find_symmetry
 
 class Algorithm(ABC):
     """A class that characterizes the most basic functionality for all
@@ -250,8 +251,6 @@ class AnsatzAlgorithm(Algorithm):
         """ This function populates an operator pool with SQOperator objects.
         """
 
-        from qforte import sq_op_find_symmetry
-
         if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
             self._pool_obj = qf.SQOpPool()
             self._pool_obj.set_orb_spaces(self._ref)
@@ -309,8 +308,8 @@ class AnsatzAlgorithm(Algorithm):
 
         kwargs.setdefault('irrep', None)
         if hasattr(self._sys, 'point_group'):
-            irreps = [x for x in range(len(self._sys.point_group[1]))]
-            if kwargs['irrep'] == None:
+            irreps = list(range(len(self._sys.point_group[1])))
+            if kwargs['irrep'] is None:
                 print('\nWARNING: The {0} point group was detected, but no irreducible representation was specified.\n'
                         '         Proceeding with totally symmetric.\n'.format(self._sys.point_group[0].capitalize()))
                 self._irrep = 0
@@ -323,7 +322,7 @@ class AnsatzAlgorithm(Algorithm):
                                      self._sys.point_group[0].capitalize(),
                                      irreps,
                                      self._sys.point_group[1]))
-        elif kwargs['irrep'] != None:
+        elif kwargs['irrep'] is not None:
             print('\nWARNING: Point group information not found.\n'
                     '         Ignoring "irrep" and proceeding without symmetry.\n')
 

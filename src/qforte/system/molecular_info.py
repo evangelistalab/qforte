@@ -77,6 +77,26 @@ class Molecule(System):
         Default is "<openfermion_src_dir>/data", if populated using a
         OpenFermionMolAdapter.
 
+    point_group: list of two elements
+        It contains the information about the point group and its irreps.
+        point_group[0] is a string holding the name of the point group.
+        point_group[1] is a list that holds the irreps of the group in the Cotton ordering.
+        Example: point_group = ['c2v', ['A1', 'A2', 'B1', 'B2']]
+
+    ###### In the following attributes, the spatial orbitals are in ascending energy order. ######
+
+    orb_irreps : list of strings
+        It contains the information about the irrep of each spatial orbital of the system.
+        In the case of H2/STO-3G, for example: orb_irreps = ['Ag', 'B1u']
+
+    orb_irreps_to_int : list of integers
+        It contains the same information as orb_irreps with each irrep mapped to an integer, using Cotton ordering.
+        In the case of H2/STO-3G, for example: orb_irreps_to_int = [0, 5]
+
+    hf_orbital_energies : list of floats
+        It contains the RHF orbital energies (in hartree) of the system, as computed by Psi4.
+        In the case of H2/STO-3G, r = 3.0 angs, for example: hf_orbital_energies = [-0.1805392218304829, 0.018071329565966215]
+
     """
 
     def __init__(self, mol_geometry=None, basis='sto-3g', multiplicity=1, charge=0,

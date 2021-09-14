@@ -22,7 +22,7 @@ def char_table(point_group):
     if not isinstance(point_group, (list, tuple)):
         raise TypeError("""{0} is not a list.
                 This function takes arguments of the form:\n
-                ['c2v', ['A1', 'A2', 'B1', 'B2']]]\n
+                ['c2v', ['A1', 'A2', 'B1', 'B2']]\n
                 using the so-called Cotton ordering of the irreps.""".format(type(point_group)))
 
     group = point_group[0].lower()
