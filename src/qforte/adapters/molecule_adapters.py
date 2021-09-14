@@ -284,8 +284,8 @@ def create_psi_mol(**kwargs):
 
     # Get symmetry information
     orbitals = []
-    for irrep in range(len(p4_wfn.epsilon_a().nph)):
-        for orbital in p4_wfn.epsilon_a().nph[irrep]:
+    for irrep, block in enumerate(p4_wfn.epsilon_a().nph):
+        for orbital in block:
             orbitals.append([orbital, irrep])
 
     orbitals.sort()

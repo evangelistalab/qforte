@@ -1,206 +1,152 @@
-import unittest
+import pytest
 from unittest.mock import patch
 from io import StringIO
 from qforte import system_factory, char_table, UCCNVQE, ADAPTVQE, UCCNPQE
 
-class PointGroupSymmetryTests(unittest.TestCase):
+#class PointGroupSymmetryTests(unittest.TestCase):
 
-    def test_symmetry_attributes(self):
+def test_symmetry_attributes():
 
-        groups = ['c1',
-                  'c2',
-                  'cs',
-                  'ci',
-                  'd2',
-                  'c2h',
-                  'c2v',
-                  'd2h']
+    groups = ['c1',
+              'c2',
+              'cs',
+              'ci',
+              'd2',
+              'c2h',
+              'c2v',
+              'd2h']
 
-        irreps = [['A'],
-                  ['A', 'B'],
-                  ['Ap', 'App'],
-                  ['Ag', 'Au'],
-                  ['A', 'B1', 'B2', 'B3'],
-                  ['Ag', 'Bg', 'Au', 'Bu'],
-                  ['A1', 'A2', 'B1', 'B2'],
-                  ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']]
+    irreps = [['A'],
+              ['A', 'B'],
+              ['Ap', 'App'],
+              ['Ag', 'Au'],
+              ['A', 'B1', 'B2', 'B3'],
+              ['Ag', 'Bg', 'Au', 'Bu'],
+              ['A1', 'A2', 'B1', 'B2'],
+              ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']]
 
-        orb_irreps = [['A', 'A', 'A', 'A', 'A', 'A', 'A'],
-                      ['A', 'A', 'A', 'B', 'B', 'A', 'A'],
-                      ['Ap', 'Ap', 'Ap', 'App', 'Ap', 'Ap', 'Ap'],
-                      ['Ag', 'Ag', 'Au', 'Au', 'Au', 'Ag', 'Au'],
-                      ['A', 'A', 'B1', 'B2', 'B3', 'A', 'B1'],
-                      ['Ag', 'Ag', 'Au', 'Bu', 'Bu', 'Ag', 'Au'],
-                      ['A1', 'A1', 'A1', 'B1', 'B2', 'A1', 'A1'],
-                      ['Ag', 'Ag', 'B1u', 'B2u', 'B3u', 'Ag', 'B1u']]
+    orb_irreps = [['A', 'A', 'A', 'A', 'A', 'A', 'A'],
+                  ['A', 'A', 'A', 'B', 'B', 'A', 'A'],
+                  ['Ap', 'Ap', 'Ap', 'App', 'Ap', 'Ap', 'Ap'],
+                  ['Ag', 'Ag', 'Au', 'Au', 'Au', 'Ag', 'Au'],
+                  ['A', 'A', 'B1', 'B2', 'B3', 'A', 'B1'],
+                  ['Ag', 'Ag', 'Au', 'Bu', 'Bu', 'Ag', 'Au'],
+                  ['A1', 'A1', 'A1', 'B1', 'B2', 'A1', 'A1'],
+                  ['Ag', 'Ag', 'B1u', 'B2u', 'B3u', 'Ag', 'B1u']]
 
-        orb_irreps_to_int = [[0, 0, 0, 0, 0, 0, 0],
-                             [0, 0, 0, 1, 1, 0, 0],
-                             [0, 0, 0, 1, 0, 0, 0],
-                             [0, 0, 1, 1, 1, 0, 1],
-                             [0, 0, 1, 2, 3, 0, 1],
-                             [0, 0, 2, 3, 3, 0, 2],
-                             [0, 0, 0, 2, 3, 0, 0],
-                             [0, 0, 5, 6, 7, 0, 5]]
+    orb_irreps_to_int = [[0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 1, 1, 0, 0],
+                         [0, 0, 0, 1, 0, 0, 0],
+                         [0, 0, 1, 1, 1, 0, 1],
+                         [0, 0, 1, 2, 3, 0, 1],
+                         [0, 0, 2, 3, 3, 0, 2],
+                         [0, 0, 0, 2, 3, 0, 0],
+                         [0, 0, 5, 6, 7, 0, 5]]
 
-        c1_char_tbl  = ('==========> C1 <==========\n\n'
-                        '      A    \n\n'
-                        'A     A    \n')
+    c1_char_tbl  = ('==========> C1 <==========\n\n'
+                    '      A    \n\n'
+                    'A     A    \n')
 
-        c2_char_tbl  = ('==========> C2 <==========\n\n'
-                        '      A    B    \n\n'
-                        'A     A    B    \n'
-                        'B     B    A    \n')
+    c2_char_tbl  = ('==========> C2 <==========\n\n'
+                    '      A    B    \n\n'
+                    'A     A    B    \n'
+                    'B     B    A    \n')
 
-        cs_char_tbl  = ('==========> Cs <==========\n\n'
-                        '      Ap   App  \n\n'
-                        'Ap    Ap   App  \n'
-                        'App   App  Ap   \n')
+    cs_char_tbl  = ('==========> Cs <==========\n\n'
+                    '      Ap   App  \n\n'
+                    'Ap    Ap   App  \n'
+                    'App   App  Ap   \n')
 
-        ci_char_tbl  = ('==========> Ci <==========\n\n'
-                        '      Ag   Au   \n\n'
-                        'Ag    Ag   Au   \n'
-                        'Au    Au   Ag   \n')
+    ci_char_tbl  = ('==========> Ci <==========\n\n'
+                    '      Ag   Au   \n\n'
+                    'Ag    Ag   Au   \n'
+                    'Au    Au   Ag   \n')
 
-        d2_char_tbl  = ('==========> D2 <==========\n\n'
-                        '      A    B1   B2   B3   \n\n'
-                        'A     A    B1   B2   B3   \n'
-                        'B1    B1   A    B3   B2   \n'
-                        'B2    B2   B3   A    B1   \n'
-                        'B3    B3   B2   B1   A    \n')
+    d2_char_tbl  = ('==========> D2 <==========\n\n'
+                    '      A    B1   B2   B3   \n\n'
+                    'A     A    B1   B2   B3   \n'
+                    'B1    B1   A    B3   B2   \n'
+                    'B2    B2   B3   A    B1   \n'
+                    'B3    B3   B2   B1   A    \n')
 
-        c2h_char_tbl = ('==========> C2h <==========\n\n'
-                        '      Ag   Bg   Au   Bu   \n\n'
-                        'Ag    Ag   Bg   Au   Bu   \n'
-                        'Bg    Bg   Ag   Bu   Au   \n'
-                        'Au    Au   Bu   Ag   Bg   \n'
-                        'Bu    Bu   Au   Bg   Ag   \n')
+    c2h_char_tbl = ('==========> C2h <==========\n\n'
+                    '      Ag   Bg   Au   Bu   \n\n'
+                    'Ag    Ag   Bg   Au   Bu   \n'
+                    'Bg    Bg   Ag   Bu   Au   \n'
+                    'Au    Au   Bu   Ag   Bg   \n'
+                    'Bu    Bu   Au   Bg   Ag   \n')
 
-        c2v_char_tbl = ('==========> C2v <==========\n\n'
-                        '      A1   A2   B1   B2   \n\n'
-                        'A1    A1   A2   B1   B2   \n'
-                        'A2    A2   A1   B2   B1   \n'
-                        'B1    B1   B2   A1   A2   \n'
-                        'B2    B2   B1   A2   A1   \n')
+    c2v_char_tbl = ('==========> C2v <==========\n\n'
+                    '      A1   A2   B1   B2   \n\n'
+                    'A1    A1   A2   B1   B2   \n'
+                    'A2    A2   A1   B2   B1   \n'
+                    'B1    B1   B2   A1   A2   \n'
+                    'B2    B2   B1   A2   A1   \n')
 
-        d2h_char_tbl = ('==========> D2h <==========\n\n'
-                        '      Ag   B1g  B2g  B3g  Au   B1u  B2u  B3u  \n\n'
-                        'Ag    Ag   B1g  B2g  B3g  Au   B1u  B2u  B3u  \n'
-                        'B1g   B1g  Ag   B3g  B2g  B1u  Au   B3u  B2u  \n'
-                        'B2g   B2g  B3g  Ag   B1g  B2u  B3u  Au   B1u  \n'
-                        'B3g   B3g  B2g  B1g  Ag   B3u  B2u  B1u  Au   \n'
-                        'Au    Au   B1u  B2u  B3u  Ag   B1g  B2g  B3g  \n'
-                        'B1u   B1u  Au   B3u  B2u  B1g  Ag   B3g  B2g  \n'
-                        'B2u   B2u  B3u  Au   B1u  B2g  B3g  Ag   B1g  \n'
-                        'B3u   B3u  B2u  B1u  Au   B3g  B2g  B1g  Ag   \n')
+    d2h_char_tbl = ('==========> D2h <==========\n\n'
+                    '      Ag   B1g  B2g  B3g  Au   B1u  B2u  B3u  \n\n'
+                    'Ag    Ag   B1g  B2g  B3g  Au   B1u  B2u  B3u  \n'
+                    'B1g   B1g  Ag   B3g  B2g  B1u  Au   B3u  B2u  \n'
+                    'B2g   B2g  B3g  Ag   B1g  B2u  B3u  Au   B1u  \n'
+                    'B3g   B3g  B2g  B1g  Ag   B3u  B2u  B1u  Au   \n'
+                    'Au    Au   B1u  B2u  B3u  Ag   B1g  B2g  B3g  \n'
+                    'B1u   B1u  Au   B3u  B2u  B1g  Ag   B3g  B2g  \n'
+                    'B2u   B2u  B3u  Au   B1u  B2g  B3g  Ag   B1g  \n'
+                    'B3u   B3u  B2u  B1u  Au   B3g  B2g  B1g  Ag   \n')
 
-        char_tables = [c1_char_tbl,
-                       c2_char_tbl,
-                       cs_char_tbl,
-                       ci_char_tbl,
-                       d2_char_tbl,
-                       c2h_char_tbl,
-                       c2v_char_tbl,
-                       d2h_char_tbl]
+    char_tables = [c1_char_tbl,
+                   c2_char_tbl,
+                   cs_char_tbl,
+                   ci_char_tbl,
+                   d2_char_tbl,
+                   c2h_char_tbl,
+                   c2v_char_tbl,
+                   d2h_char_tbl]
 
-        for count, group in enumerate(groups):
+    for count, group in enumerate(groups):
 
-            mol = system_factory(system_type = 'molecule',
-                                             build_type = 'psi4',
-                                             basis='sto-3g',
-                                             mol_geometry = [('O', (0., 0., 0)),
-                                                             ('H', (0., 0, -1.5)),
-                                                             ('H', (0., 0, 1.5))],
-                                             symmetry = group)
-
-            self.assertEqual(mol.point_group, [group, irreps[count]])
-            self.assertEqual(mol.orb_irreps, orb_irreps[count])
-            self.assertEqual(mol.orb_irreps_to_int, orb_irreps_to_int[count])
-
-            with patch('sys.stdout', new = StringIO()) as fake_out:
-                char_table([group, irreps[count]])
-                self.assertEqual(fake_out.getvalue(), char_tables[count])
-
-    def test_symmetry_uccnvqe(self):
-
-        groups = ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']
-
-        for count, group in enumerate(groups):
-
-            mol = system_factory(system_type = 'molecule',
+        mol = system_factory(system_type = 'molecule',
                                          build_type = 'psi4',
-                                         basis = 'cc-pVDZ',
-                                         mol_geometry = [('He', (0, 0, 0))],
+                                         basis='sto-3g',
+                                         mol_geometry = [('O', (0., 0., 0)),
+                                                         ('H', (0., 0, -1.5)),
+                                                         ('H', (0., 0, 1.5))],
                                          symmetry = group)
 
-            alg = UCCNVQE(mol)
+        assert mol.point_group == [group, irreps[count]]
+        assert mol.orb_irreps == orb_irreps[count]
+        assert mol.orb_irreps_to_int == orb_irreps_to_int[count]
 
-            alg.run(pool_type='SD',
-                    irrep=0)
+        with patch('sys.stdout', new = StringIO()) as fake_out:
+            char_table([group, irreps[count]])
+            assert fake_out.getvalue() == char_tables[count]
 
-            Egs = alg.get_gs_energy()
-            Efci = mol.fci_energy
+@pytest.mark.parametrize("method, options", [
+    (UCCNVQE, {"pool_type" : 'SD'}),
+    (ADAPTVQE, {"pool_type" : 'SD', "avqe_thresh" : 1.0e-3}),
+    (UCCNPQE, {"pool_type" : 'SD'})
+    ])
+def test_symmetry_ucc(method, options):
 
-            t_ops = [24, 12, 12, 16, 6, 8, 10, 6]
+    groups = ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']
 
-            self.assertAlmostEqual(Egs, Efci, 10)
+    for count, group in enumerate(groups):
 
-            self.assertEqual(len(alg._pool), t_ops[count])
+        mol = system_factory(system_type = 'molecule',
+                                     build_type = 'psi4',
+                                     basis = 'cc-pVDZ',
+                                     mol_geometry = [('He', (0, 0, 0))],
+                                     symmetry = group)
 
-    def test_symmetry_adaptvqe(self):
+        alg = method(mol, irrep = 0)
 
-        groups = ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']
+        alg.run(**options)
 
-        for count, group in enumerate(groups):
+        Egs = alg.get_gs_energy()
+        Efci = mol.fci_energy
 
-            mol = system_factory(system_type = 'molecule',
-                                         build_type = 'psi4',
-                                         basis = 'cc-pVDZ',
-                                         mol_geometry = [('He', (0, 0, 0))],
-                                         symmetry = group)
+        t_ops = [24, 12, 12, 16, 6, 8, 10, 6]
 
-            alg = ADAPTVQE(mol)
+        assert Egs == pytest.approx(Efci, 0.0000000001)
 
-            alg.run(pool_type='SD',
-                    avqe_thresh=1.0e-3,
-                    irrep=0)
-
-            Egs = alg.get_gs_energy()
-            Efci = mol.fci_energy
-
-            t_ops = [24, 12, 12, 16, 6, 8, 10, 6]
-
-            self.assertAlmostEqual(Egs, Efci, 10)
-
-            self.assertEqual(len(alg._pool), t_ops[count])
-
-
-    def test_symmetry_uccnpqe(self):
-
-        groups = ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']
-
-        for count, group in enumerate(groups):
-
-            mol = system_factory(system_type = 'molecule',
-                                         build_type = 'psi4',
-                                         basis = 'cc-pVDZ',
-                                         mol_geometry = [('He', (0, 0, 0))],
-                                         symmetry = group)
-
-            alg = UCCNPQE(mol)
-
-            alg.run(pool_type='SD',
-                    irrep=0)
-
-            Egs = alg.get_gs_energy()
-            Efci = mol.fci_energy
-
-            t_ops = [24, 12, 12, 16, 6, 8, 10, 6]
-
-            self.assertAlmostEqual(Egs, Efci, 10)
-
-            self.assertEqual(len(alg._pool), t_ops[count])
-
-if __name__ == '__main__':
-    unittest.main()
-
+        assert len(alg._pool) == t_ops[count]

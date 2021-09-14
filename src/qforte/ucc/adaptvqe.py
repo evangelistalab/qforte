@@ -83,8 +83,7 @@ class ADAPTVQE(UCCVQE):
             use_analytic_grad = True,
             use_commutator_grad_selection = False,
             use_cumulative_thresh = False,
-            add_equiv_ops = False,
-            irrep = 0):
+            add_equiv_ops = False):
 
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
@@ -96,7 +95,6 @@ class ADAPTVQE(UCCVQE):
         self._use_commutator_grad_selection = use_commutator_grad_selection
         self._use_cumulative_thresh = use_cumulative_thresh
         self._add_equiv_ops = add_equiv_ops
-        self._irrep = irrep
 
         self._results = []
         self._energies = []

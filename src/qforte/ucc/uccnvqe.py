@@ -44,8 +44,7 @@ class UCCNVQE(UCCVQE):
             pool_type='SD',
             optimizer='BFGS',
             use_analytic_grad = True,
-            noise_factor = 0.0,
-            irrep = 0):
+            noise_factor = 0.0):
 
         self._opt_thresh = opt_thresh
         self._opt_ftol = opt_ftol
@@ -54,7 +53,6 @@ class UCCNVQE(UCCVQE):
         self._optimizer = optimizer
         self._pool_type = pool_type
         self._noise_factor = noise_factor
-        self._irrep = irrep
 
         self._tops = []
         self._tamps = []
@@ -77,8 +75,8 @@ class UCCNVQE(UCCVQE):
 
         self.fill_pool()
 
-        #if self._verbose:
-        #    self._pool_obj.print_pool()
+        if self._verbose:
+            print(self._pool_obj.str())
 
         self.initialize_ansatz()
 

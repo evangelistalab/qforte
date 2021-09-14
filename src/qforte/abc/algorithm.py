@@ -71,7 +71,8 @@ class Algorithm(ABC):
                  trotter_number=1,
                  fast=True,
                  verbose=False,
-                 print_summary_file=False):
+                 print_summary_file=False,
+                 **kwargs):
 
         self._sys = system
         self._state_prep_type = state_prep_type
@@ -261,7 +262,8 @@ class AnsatzAlgorithm(Algorithm):
             raise ValueError('Invalid operator pool type specified.')
 
         # If possible, impose symmetry restriction to operator pool
-        try:
+        # Currently, symmetry is supported for system_type='molecule' and build_type='psi4'
+        if hasattr(self._sys, 'point_group'):
             temp_sq_pool = qf.SQOpPool()
             for sq_operator in self._pool_obj.terms():
                 create = sq_operator[1].terms()[0][1]
@@ -269,11 +271,6 @@ class AnsatzAlgorithm(Algorithm):
                 if sq_op_find_symmetry(self._sys.orb_irreps_to_int, create, annihilate) == self._irrep:
                     temp_sq_pool.add(sq_operator[0], sq_operator[1])
             self._pool_obj = temp_sq_pool
-        except AttributeError:
-            # An attribute error means that self._sys does not have an orb_irreps_to_int attribute and/or
-            # self does not have an _irrep attribute. Currently, point group symmetry is implemented
-            # for system_type = 'molecules' with build_type = 'psi4'.
-            pass
 
         self._pool = self._pool_obj.terms()
 
@@ -309,6 +306,26 @@ class AnsatzAlgorithm(Algorithm):
         self._tops = []
         self._pool = []
         self._pool_obj = qf.SQOpPool()
+
+        kwargs.setdefault('irrep', None)
+        if hasattr(self._sys, 'point_group'):
+            irreps = [x for x in range(len(self._sys.point_group[1]))]
+            if kwargs['irrep'] == None:
+                print('\nWARNING: The {0} point group was detected, but no irreducible representation was specified.\n'
+                        '         Proceeding with totally symmetric.\n'.format(self._sys.point_group[0].capitalize()))
+                self._irrep = 0
+            elif kwargs['irrep'] in irreps:
+                self._irrep = kwargs['irrep']
+            else:
+                raise ValueError("{0} is not an irreducible representation of {1}.\n"
+                                 "               Choose one of {2} corresponding to the\n"
+                                 "               {3} irreducible representations of {1}".format(kwargs['irrep'],
+                                     self._sys.point_group[0].capitalize(),
+                                     irreps,
+                                     self._sys.point_group[1]))
+        elif kwargs['irrep'] != None:
+            print('\nWARNING: Point group information not found.\n'
+                    '         Ignoring "irrep" and proceeding without symmetry.\n')
 
     def energy_feval(self, params):
         """

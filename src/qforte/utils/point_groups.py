@@ -14,21 +14,22 @@ def char_table(point_group):
 
     Parameters
     ----------
-    point_group: list of two lists; point_group[0] holds the name of the group
-                                    point_group[1] is a list that holds the irreps of the group
+    point_group: list of two elements; point_group[0] is a string holding the name of the point group
+                                       point_group[1] is a list that holds the irreps of the group in the Cotton ordering
 
     """
 
-    if type(point_group) != list:
+    if not isinstance(point_group, (list, tuple)):
         raise TypeError("""{0} is not a list.
                 This function takes arguments of the form:\n
-                [['c2v'], ['A1', 'A2', 'B1', 'B2']]]\n
+                ['c2v', ['A1', 'A2', 'B1', 'B2']]]\n
                 using the so-called Cotton ordering of the irreps.""".format(type(point_group)))
 
     group = point_group[0].lower()
+    groups = ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']
 
-    if group not in ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']:
-        raise ValueError('The given point group is not supported. Choose one of:\nC1, C2, Ci, Cs, D2, C2h, C2v, D2h.')
+    if group not in groups:
+        raise ValueError('The given point group is not supported. Choose one of:\n{0}'.format(groups))
 
     irreps = point_group[1]
 
@@ -54,7 +55,7 @@ def sq_op_find_symmetry(orb_irreps_to_int, annihilate, create):
 
     Parameters
     ----------
-    orb_irreps_to_int: list of integers; each integer corresponds to a particular irrep
+    orb_irreps_to_int: list of integers; integer n indexes the irrep of spatial orbital n
 
     annihilate: list of spinorbital indices to be annihilated
 
