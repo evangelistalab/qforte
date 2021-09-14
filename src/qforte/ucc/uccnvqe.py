@@ -76,7 +76,7 @@ class UCCNVQE(UCCVQE):
         self.fill_pool()
 
         if self._verbose:
-            self._pool_obj.print_pool()
+            print(self._pool_obj.str())
 
         self.initialize_ansatz()
 
@@ -237,7 +237,6 @@ class UCCNVQE(UCCVQE):
         """
         self._tops = list(range(len(self._pool)))
         self._tamps = [0.0] * len(self._pool)
-
 
     # TODO: change to get_num_pt_evals
     def get_num_ham_measurements(self):

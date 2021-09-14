@@ -46,7 +46,7 @@ class SPQE(UCCPQE):
     :math:`(\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger )`
     with probablility proportional to :math:`|\\tilde{r}_\mu|^2`.
     The operators corresponding to the largest :math:`|\\tilde{r}_\mu|^2` values
-    are then added to :math:`\hat{U}(\mathbf{t})` at each macro-iteration.   
+    are then added to :math:`\hat{U}(\mathbf{t})` at each macro-iteration.
     """
     def run(self,
             spqe_thresh=1.0e-2,
@@ -104,8 +104,6 @@ class SPQE(UCCPQE):
         for i, occupation in enumerate(self._ref):
             if(occupation):
                 self._nbody_counts.append(0)
-
-        self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor=1.0j*self._dt, trotter_number=self._trotter_number)
 
         self.build_orb_energies()
         spqe_iter = 0
