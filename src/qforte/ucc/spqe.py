@@ -9,7 +9,6 @@ import qforte as qf
 from qforte.abc.uccpqeabc import UCCPQE
 from qforte.experiment import *
 from qforte.utils.transforms import *
-from qforte.utils.op_pools import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
 

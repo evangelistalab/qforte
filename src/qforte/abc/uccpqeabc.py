@@ -9,7 +9,6 @@ import qforte as qf
 from abc import abstractmethod
 from qforte.abc.pqeabc import PQE
 from qforte.abc.ansatz import UCC
-from qforte.utils.op_pools import *
 
 from qforte.experiment import *
 from qforte.utils.transforms import *
