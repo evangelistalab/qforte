@@ -9,7 +9,6 @@ import qforte as qf
 from abc import abstractmethod
 from qforte.abc.vqeabc import VQE
 from qforte.abc.ansatz import UCC
-from qforte.utils.op_pools import *
 
 from qforte.experiment import *
 from qforte.utils.transforms import *
@@ -66,7 +65,7 @@ class UCCVQE(VQE, UCC):
         Whether or not to use an analytic function for the gradient to pass to
         the optimizer. If false, the optimizer will use self-generated approximate
         gradients from finite differences (if BFGS algorithm is used).
-        
+
     """
 
     @abstractmethod
