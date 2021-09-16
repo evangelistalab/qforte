@@ -25,7 +25,7 @@ Installation (For Development)
 ------------------------------
 
 ```bash
-git clone https://github.com/evangelistalab/qforte.git
+git clone --recurse-submodules https://github.com/evangelistalab/qforte.git
 cd qforte
 python setup.py develop
 ```

@@ -1,0 +1,11 @@
+[submodule "lib/pybind11"]
+	path = lib/pybind11
+	url = ../../pybind/pybind11
+	branch = stable
+[submodule "lib/fmt"]
+	path = lib/fmt
+	url = ../../fmtlib/fmt
+[submodule "lib/catch2"]
+	path = lib/catch2
+	url = ../../catchorg/Catch2
+	branch = v2.x
