@@ -32,4 +32,4 @@ class TestCircuitReference:
         alg2.run(dt=1.0, s=12)
 
         Egs = alg2.get_gs_energy()
-        assert Egs == approx(Efci, abs=5.0e-7)
+        assert Egs == approx(Efci, abs=5.0e-6)
