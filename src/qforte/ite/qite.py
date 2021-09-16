@@ -97,7 +97,7 @@ class QITE(Algorithm):
     _Ekb : list of float
         The list of after each additional time step.
 
-    _expansion_type: {'complete_qubit', 'cqoy', 'SD', 'GSD', 'SDT', SDTQ', 'SDTQP', 'SDTQPH', 'test'}
+    _expansion_type: {'complete_qubit', 'cqoy', 'SD', 'GSD', 'SDT', SDTQ', 'SDTQP', 'SDTQPH'}
         The family of operators that each evolution operator :math:`\hat{A}` will be built of.
 
     _lanczos_gap : int
@@ -249,9 +249,6 @@ class QITE(Algorithm):
                     rho_op = qf.QubitOperator()
                     rho_op.add(1.0, temp_rho)
                     self._sig.add(1.0, rho_op)
-
-        elif(self._expansion_type == 'test'):
-            self._sig.fill_pool("test", self._ref)
 
         else:
             raise ValueError('Invalid expansion type specified.')
