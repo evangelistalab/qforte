@@ -277,7 +277,7 @@ class AnsatzAlgorithm(Algorithm):
 
     def measure_energy(self, Ucirc):
         """
-        This funciton retruns the energy expectation value of the state
+        This function returns the energy expectation value of the state
         Uprep|0>.
 
         Parameters
