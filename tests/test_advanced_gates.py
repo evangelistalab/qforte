@@ -1,7 +1,7 @@
-import unittest
-from qforte import *
+from pytest import approx
+from qforte import Computer, build_circuit, Toffoli, build_operator, Fredkin
 
-class AdvGateTests(unittest.TestCase):
+class TestAdvGate:
     def test_advanced_gates(self):
         print('\n')
         trial_state = Computer(4)
@@ -14,7 +14,7 @@ class AdvGateTests(unittest.TestCase):
         trial_state.apply_circuit(T_circ) # This should turn the state to 1110
         a1_dag_a2 = build_operator('1.0, Z_2')
         exp = trial_state.direct_op_exp_val(a1_dag_a2)
-        self.assertAlmostEqual(exp, -0.9999999999999991+0j) # Measure qubit 2 should give -1
+        assert exp == approx(-1, abs=9e-16) # Measure qubit 2 should give -1
 
         # verify Fredkin gate
         F_circ = Fredkin(1, 2, 3)
@@ -23,7 +23,4 @@ class AdvGateTests(unittest.TestCase):
         # trial_state.apply_circuit_safe(F_circ) # This should turn the state to 1101
         a1_dag_a2 = build_operator('1.0, Z_2')
         exp = trial_state.direct_op_exp_val(a1_dag_a2)
-        self.assertAlmostEqual(exp, 0.9999999999999991+0j) # Measure qubit 2 should give +1
-
-if __name__ == '__main__':
-    unittest.main()
+        assert exp == approx(1, abs=9e-16) # Measure qubit 2 should give +1

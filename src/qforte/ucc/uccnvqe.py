@@ -168,15 +168,22 @@ class UCCNVQE(UCCVQE):
     def scipy_solve(self):
         # Construct arguments to hand to the minimizer.
         opts = {}
-        opts['gtol'] = self._opt_thresh
 
-        opts['fatol'] = self._opt_ftol
-        opts['ftol'] = self._opt_ftol
-        opts['tol'] = self._opt_ftol
-
+        # Options common to all minimization algorithms
         opts['disp'] = True
         opts['maxiter'] = self._opt_maxiter
-        opts['maxfun']  = self._opt_maxiter
+
+        # Optimizer-specific options
+        if self._optimizer in ['BFGS', 'CG', 'L-BFGS-B', 'TNC', 'trust-constr']:
+            opts['gtol'] = self._opt_thresh
+        if self._optimizer == 'Nelder-Mead':
+            opts['fatol'] = self._opt_ftol
+        if self._optimizer in ['Powell', 'L-BFGS-B', 'TNC', 'SLSQP']:
+            opts['ftol'] = self._opt_ftol
+        if self._optimizer == 'COBYLA':
+            opts['tol'] = self._opt_ftol
+        if self._optimizer in ['L-BFGS-B', 'TNC']:
+            opts['maxfun']  = self._opt_maxiter
 
         x0 = copy.deepcopy(self._tamps)
         init_gues_energy = self.energy_feval(x0)

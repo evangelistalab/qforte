@@ -1,15 +1,12 @@
-import unittest
-from qforte import qforte
-from qforte.ucc.spqe import SPQE
-from qforte.system.molecular_info import Molecule
-from qforte.system import system_factory
+from pytest import approx
+from qforte import QubitOperator, smart_print, system_factory, SPQE
 
 import os
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.join(THIS_DIR, 'H4-sto6g-075a.json')
 
-class SPQETests(unittest.TestCase):
+class TestSPQE:
     def test_H4_spqe_exact(self):
         print('\n')
 
@@ -23,12 +20,12 @@ class SPQETests(unittest.TestCase):
                                      basis='sto-6g',
                                      filename=data_path)
 
-        Hnonzero = qforte.QubitOperator()
+        Hnonzero = QubitOperator()
         for term in mol._hamiltonian.terms():
             if abs(term[0]) > 1.0e-14:
                 Hnonzero.add(term[0], term[1])
         mol._hamiltonian = Hnonzero
-        qforte.smart_print(Hnonzero)
+        smart_print(Hnonzero)
 
         alg = SPQE(mol, print_summary_file=False)
         alg.run(spqe_maxiter=20,
@@ -39,8 +36,4 @@ class SPQETests(unittest.TestCase):
         Egs_elec = alg.get_gs_energy()
         # Egs = Egs_elec + Enuc
         Egs = Egs_elec
-        self.assertLess(abs(Egs-Efci), 5.0e-11)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert Egs == approx(Efci, abs=5.0e-11)

@@ -1,15 +1,13 @@
-import unittest
-from qforte import qforte
-from qforte.ucc.adaptvqe import ADAPTVQE
-from qforte.system.molecular_info import Molecule
-from qforte.system import system_factory
+from pytest import approx
+from qforte import ADAPTVQE
+from qforte import system_factory
 
 import os
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.join(THIS_DIR, 'H4-sto6g-075a.json')
 
-class ADAPTVQETests(unittest.TestCase):
+class TestADAPTVQE:
     def test_H4_adapt_vqe_exact(self):
         print('\n')
 
@@ -34,8 +32,4 @@ class ADAPTVQETests(unittest.TestCase):
         Egs_elec = alg.get_gs_energy()
         # Egs = Egs_elec + Enuc
         Egs = Egs_elec
-        self.assertLess(abs(Egs-Efci), 5.0e-11)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert Egs == approx(Efci, abs=5.0e-11)
