@@ -1,4 +1,5 @@
 import pytest
+from pytest import approx
 from unittest.mock import patch
 from io import StringIO
 from qforte import system_factory, char_table, UCCNVQE, ADAPTVQE, UCCNPQE
@@ -147,6 +148,6 @@ class TestPointGroupSymmetry():
 
             t_ops = [24, 12, 12, 16, 6, 8, 10, 6]
 
-            assert Egs == pytest.approx(Efci, 0.0000000001)
+            assert Egs == approx(Efci, abs=1.0e-10)
 
             assert len(alg._pool) == t_ops[count]

@@ -1,9 +1,5 @@
-import unittest
-from qforte import qforte
-from qforte.ucc.uccnvqe import UCCNVQE
-from qforte.ucc.uccnpqe import UCCNPQE
-from qforte.system.molecular_info import Molecule
-from qforte.system import system_factory
+from pytest import approx
+from qforte import system_factory, UCCNVQE, UCCNPQE
 
 import os
 
@@ -12,7 +8,7 @@ data_path = os.path.join(THIS_DIR, 'He-ccpvdz.json')
 
 # Note: These system are all a single atom, so we can ignore nuclear repulsion energy.
 
-class UccTests(unittest.TestCase):
+class TestUcc:
     def test_He_uccsd_vqe_exact(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis
@@ -29,7 +25,7 @@ class UccTests(unittest.TestCase):
                 use_analytic_grad = True)
 
         Egs_elec = alg.get_gs_energy()
-        self.assertAlmostEqual(Egs_elec, Efci, 10)
+        assert Egs_elec == approx(Efci, abs=1.0e-10)
 
     def test_He_uccsd_vqe_exact_diis(self):
         print('\n')
@@ -48,7 +44,7 @@ class UccTests(unittest.TestCase):
                 optimizer = "diis_solve")
 
         Egs_elec = alg.get_gs_energy()
-        self.assertAlmostEqual(Egs_elec, Efci, 11)
+        assert Egs_elec == approx(Efci, abs=1.0e-11)
 
     def test_He_uccsd_vqe_exact_psi(self):
         print('\n')
@@ -66,7 +62,7 @@ class UccTests(unittest.TestCase):
                 use_analytic_grad = True)
 
         Egs_elec = alg.get_gs_energy()
-        self.assertAlmostEqual(Egs_elec, Efci, 10)
+        assert Egs_elec == approx(Efci, abs=1.0e-10)
 
     def test_He_uccsd_vqe_frozen_virtual(self):
         print('\n')
@@ -84,7 +80,7 @@ class UccTests(unittest.TestCase):
                 use_analytic_grad = True)
 
         Egs_elec = alg.get_gs_energy()
-        self.assertAlmostEqual(Egs_elec, Efci, 11)
+        assert Egs_elec == approx(Efci, abs=1.0e-11)
 
     def test_He_uccsd_pqe_exact(self):
         print('\n')
@@ -101,8 +97,4 @@ class UccTests(unittest.TestCase):
                 opt_thresh = 1.0e-7)
 
         Egs_elec = alg.get_gs_energy()
-        self.assertAlmostEqual(Egs_elec, Efci, 11)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert Egs_elec == approx(Efci, abs=1.0e-11)

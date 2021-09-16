@@ -1,9 +1,8 @@
-import unittest
+from pytest import approx
 import qforte
 from openfermion.ops import QubitOperator
-#from openfermion.ops import QubitOperator
 
-class BuilderTests(unittest.TestCase):
+class TestBuilder:
     def test_build_from_openfermion(self):
         print('\n')
         trial_state = qforte.Computer(4)
@@ -36,7 +35,4 @@ class BuilderTests(unittest.TestCase):
 
         exp = trial_state.direct_op_exp_val(qforte_operator)
         print(exp)
-        self.assertAlmostEqual(exp, 0.2499999999999999 + 0.0j)
-
-if __name__ == '__main__':
-    unittest.main()
+        assert exp == approx(0.25, abs=2.0e-16)

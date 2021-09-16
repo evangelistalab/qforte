@@ -34,7 +34,8 @@ To supply custom arguments to `cmake` for installation, you can either edit `set
 
 #### run tests:
 ```bash
-python setup.py test
+cd tests
+pytest
 ```
 
 Getting Started

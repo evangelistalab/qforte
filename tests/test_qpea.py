@@ -1,10 +1,8 @@
-import unittest
-from qforte import qforte
-from qforte.qpea.qpe import QPE
-from qforte.system.molecular_info import Molecule
+from pytest import approx
+from qforte import Circuit, build_circuit, QubitOperator, Molecule, QPE
 
-class QPETests(unittest.TestCase):
-    def test_H2(self):
+class TestQPE:
+    def test_H2_qpe(self):
         print('\n'),
         # The FCI energy for H2 at 1.5 Angstrom in a sto-3g basis
         E_fci = -0.9981493534
@@ -26,23 +24,23 @@ class QPETests(unittest.TestCase):
                     0.1458551902800438]
 
         circ_vec = [
-        qforte.Circuit( ),
-        qforte.build_circuit( 'Z_0' ),
-        qforte.build_circuit( 'Z_1' ),
-        qforte.build_circuit( 'Z_2' ),
-        qforte.build_circuit( 'Z_3' ),
-        qforte.build_circuit( 'Z_0   Z_1' ),
-        qforte.build_circuit( 'Y_0   X_1   X_2   Y_3' ),
-        qforte.build_circuit( 'X_0   X_1   Y_2   Y_3' ),
-        qforte.build_circuit( 'Y_0   Y_1   X_2   X_3' ),
-        qforte.build_circuit( 'X_0   Y_1   Y_2   X_3' ),
-        qforte.build_circuit( 'Z_0   Z_2' ),
-        qforte.build_circuit( 'Z_0   Z_3' ),
-        qforte.build_circuit( 'Z_1   Z_2' ),
-        qforte.build_circuit( 'Z_1   Z_3' ),
-        qforte.build_circuit( 'Z_2   Z_3' )]
+        Circuit( ),
+        build_circuit( 'Z_0' ),
+        build_circuit( 'Z_1' ),
+        build_circuit( 'Z_2' ),
+        build_circuit( 'Z_3' ),
+        build_circuit( 'Z_0   Z_1' ),
+        build_circuit( 'Y_0   X_1   X_2   Y_3' ),
+        build_circuit( 'X_0   X_1   Y_2   Y_3' ),
+        build_circuit( 'Y_0   Y_1   X_2   X_3' ),
+        build_circuit( 'X_0   Y_1   Y_2   X_3' ),
+        build_circuit( 'Z_0   Z_2' ),
+        build_circuit( 'Z_0   Z_3' ),
+        build_circuit( 'Z_1   Z_2' ),
+        build_circuit( 'Z_1   Z_3' ),
+        build_circuit( 'Z_2   Z_3' )]
 
-        H2_qubit_hamiltonian = qforte.QubitOperator()
+        H2_qubit_hamiltonian = QubitOperator()
         for i in range(len(circ_vec)):
             H2_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
 
@@ -62,8 +60,4 @@ class QPETests(unittest.TestCase):
                 num_precise_bits = 8)
 
         Egs = alg.get_gs_energy()
-        self.assertLess(abs(Egs-E_fci), 1.1e-3)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert Egs == approx(E_fci, abs=1.1e-3)

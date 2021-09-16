@@ -1,19 +1,12 @@
-import unittest
-from qforte import qforte
-from qforte.ucc.uccnvqe import UCCNVQE
-from qforte.qkd.srqk import SRQK
-from qforte.system.molecular_info import Molecule
-from qforte.system import system_factory
+from pytest import approx
+from qforte import system_factory
+from qforte import UCCNVQE
+from qforte import SRQK
 
-import os
-
-# THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-# data_path = os.path.join(THIS_DIR, 'He-ccpvdz.json')
-
-class CircuitReferenceTest(unittest.TestCase):
-    def test_srqk_with_uccsdpqe_ref(self):
+class TestCircuitReference:
+    def test_srqk_with_uccsdvqe_ref(self):
         print('\n')
-        # The FCI energy of the equidistant H4/STO-3G chain with r = 1.5 angs,.
+        # The FCI energy of the equidistant H4/STO-3G chain with r = 1.5 angs.
         Efci = -1.9961503253000235
 
         geom = [
@@ -39,10 +32,4 @@ class CircuitReferenceTest(unittest.TestCase):
         alg2.run(dt=1.0, s=12)
 
         Egs = alg2.get_gs_energy()
-        self.assertLess(abs(Egs-Efci), 5.0e-6)
-
-
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert Egs == approx(Efci, abs=5.0e-7)
