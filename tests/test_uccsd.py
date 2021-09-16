@@ -64,24 +64,6 @@ class TestUcc:
         Egs_elec = alg.get_gs_energy()
         assert Egs_elec == approx(Efci, abs=1.0e-10)
 
-    def test_He_uccsd_vqe_frozen_virtual(self):
-        print('\n')
-        # The FCI energy for He atom in a cc-pvdz basis, according to Psi, one frozen virtual
-        Efci = -2.881925090255593
-
-        mol = system_factory(system_type = 'molecule',
-                                     build_type = 'openfermion',
-                                     basis='cc-pvdz',
-                                     mol_geometry = [('He', (0, 0, 0))],
-                                     virtual_indices = [8, 9])
-
-        alg = UCCNVQE(mol)
-        alg.run(pool_type = 'SD',
-                use_analytic_grad = True)
-
-        Egs_elec = alg.get_gs_energy()
-        assert Egs_elec == approx(Efci, abs=1.0e-11)
-
     def test_He_uccsd_pqe_exact(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis

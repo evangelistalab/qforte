@@ -17,13 +17,6 @@ class QubitOperator {
     /// default constructor: creates an empty quantum operator
     QubitOperator() {}
 
-    /// build from a string of open fermion qubit operators
-    void build_from_openferm_str(std::string op) {}
-
-    /// build from an openfermion qubit operator directly
-    /// might make this a python function?
-    void build_from_openferm(std::string op) {}
-
     /// add a circuit as a term in the quantum operator
     void add_term(std::complex<double> circ_coeff, const Circuit& circuit);
 

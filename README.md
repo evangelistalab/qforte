@@ -12,13 +12,14 @@ Install Dependencies (Recommended)
 
 #### create and activate qforte environment:
 ```bash
-conda create -n qforte_env python=3.7
+conda create -n qforte_env python
 conda activate qforte_env
 ```
 
-#### install psi4 and openfermion:
+#### install required packages:
 ```bash
-conda install psi4=1.4 openfermion openfermionpsi4 -c psi4
+conda install psi4 -c psi4
+conda install scipy
 ```
 
 Installation (For Development)
