@@ -14,10 +14,12 @@ class TestCustomPool:
                                      symmetry = "d2h")
 
         pool = SQOpPool()
+        assert len(pool) == 0
         sq_op = SQOperator()
         sq_op.add_term( 1, [0, 1], [2, 3])
         sq_op.add_term(-1, [2, 3], [0, 1])
         pool.add_term(1, sq_op)
+        assert len(pool) == 1
 
         alg = UCCNVQE(mol)
         alg.run(pool_type = pool,

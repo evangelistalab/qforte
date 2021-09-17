@@ -146,7 +146,7 @@ class UCCNVQE(UCCVQE):
         print('\n\n                ==> UCCN-VQE summary <==')
         print('-----------------------------------------------------------')
         print('Final UCCN-VQE Energy:                      ', round(self._Egs, 10))
-        print('Number of operators in pool:                 ', len(self._pool))
+        print('Number of operators in pool:                 ', len(self._pool_obj))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
         print('Total number of commutator measurements:     ', self.get_num_commut_measurements())
@@ -241,8 +241,8 @@ class UCCNVQE(UCCVQE):
         """Adds all operators in the pool to the list of operators in the circuit,
         with amplitude 0.
         """
-        self._tops = list(range(len(self._pool)))
-        self._tamps = [0.0] * len(self._pool)
+        self._tops = list(range(len(self._pool_obj)))
+        self._tamps = [0.0] * len(self._pool_obj)
 
     # TODO: change to get_num_pt_evals
     def get_num_ham_measurements(self):
@@ -259,7 +259,7 @@ class UCCNVQE(UCCVQE):
     # TODO: depricate this function
     def get_num_commut_measurements(self):
         # if self._use_analytic_grad:
-        #     self._n_commut_measurements = self._final_result.njev * (len(self._pool))
+        #     self._n_commut_measurements = self._final_result.njev * (len(self._pool_obj))
         #     return self._n_commut_measurements
         # else:
         #     return 0

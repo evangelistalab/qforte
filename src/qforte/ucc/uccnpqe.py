@@ -149,7 +149,7 @@ class UCCNPQE(UCCPQE):
         print('\n\n                   ==> UCC-PQE summary <==')
         print('-----------------------------------------------------------')
         print('Final UCCN-PQE Energy:                      ', round(self._Egs, 10))
-        print('Number of operators in pool:                 ', len(self._pool))
+        print('Number of operators in pool:                 ', len(self._pool_obj))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Number of classical parameters used:         ', len(self._tamps))
         print('Number of non-zero parameters used:          ', self._n_nonzero_params)
@@ -270,7 +270,7 @@ class UCCNPQE(UCCPQE):
         """Adds all operators in the pool to the list of operators in the circuit,
         with amplitude 0.
         """
-        for l in range(len(self._pool)):
+        for l in range(len(self._pool_obj)):
             self._tops.append(l)
             self._tamps.append(0.0)
 
