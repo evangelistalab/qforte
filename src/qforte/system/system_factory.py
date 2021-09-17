@@ -1,9 +1,9 @@
 from qforte.adapters import molecule_adapters as MA
 from qforte.adapters import model_adapters as mod
 
-def system_factory(system_type = 'molecule', build_type = 'openfermion', **kwargs):
+def system_factory(system_type = 'molecule', build_type = 'psi4', **kwargs):
 
-    """Builds an empty system object of type ('molecule', 'hubbard', 'jellium', etc...) using
+    """Builds an empty system object of type ('molecule' or 'model') using
        adapters specified by build_type.
 
         Arguments
@@ -11,7 +11,7 @@ def system_factory(system_type = 'molecule', build_type = 'openfermion', **kwarg
         system_type : {"molecule"}
             Gives the type of system object to return.
 
-        build_type : {"openfermion", "external", "psi4"}
+        build_type : {"external", "psi4"}
             Specifies the adapter used to build the system.
 
         Returns
@@ -24,7 +24,6 @@ def system_factory(system_type = 'molecule', build_type = 'openfermion', **kwarg
 
 
     molecule_adapters = {
-        "openfermion": MA.create_openfermion_mol,
         "external": MA.create_external_mol,
         "psi4": MA.create_psi_mol
     }
