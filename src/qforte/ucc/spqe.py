@@ -207,6 +207,8 @@ class SPQE(UCCPQE):
         print('\n\n                ==> SPQE summary <==')
         print('-----------------------------------------------------------')
         print('Final SPQE Energy:                           ', round(self._Egs, 10))
+        # TODO: Change below to len(self._pool_obj) when the _pool object is synchronized
+        # with the _pool_obj object again.
         print('Number of operators in pool:                 ', len(self._pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Number of classical parameters used:         ', self._n_classical_params)

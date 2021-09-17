@@ -201,7 +201,7 @@ class UCCVQE(VQE, UCC):
             raise ValueError("self._fast must be True for gradient measurement.")
 
         # Initialize amplitudes
-        M = len(self._pool)
+        M = len(self._pool_obj)
         pool_amps = np.zeros(M)
         for tamp, top in zip(self._tamps, self._tops):
             pool_amps[top] = tamp
