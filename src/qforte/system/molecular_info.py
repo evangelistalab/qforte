@@ -84,6 +84,17 @@ class Molecule(System):
         It contains the RHF orbital energies (in hartree) of the system, as computed by Psi4.
         In the case of H2/STO-3G, r = 3.0 angs, for example: hf_orbital_energies = [-0.1805392218304829, 0.018071329565966215]
 
+    ###### Attributes pertaining to frozen-orbital approximations ######
+
+    frozen_core : integer
+        Number of lowest-energy frozen core orbitals.
+
+    frozen_virtual : integer
+        Number of highest-energy frozen virtual orbitals.
+
+    frozen_core_energy: float
+        The contribution to the Hartree-Fock energy associated with the frozen core orbitals
+
     """
 
     def __init__(self, mol_geometry=None, basis='sto-3g', multiplicity=1, charge=0,
@@ -189,3 +200,27 @@ class Molecule(System):
     @hf_orbital_energies.setter
     def hf_orbital_energies(self, hf_orbital_energies):
         self._hf_orbital_energies = hf_orbital_energies
+
+    @property
+    def frozen_core(self):
+        return self._frozen_core
+
+    @frozen_core.setter
+    def frozen_core(self, frozen_core):
+        self._frozen_core = frozen_core
+
+    @property
+    def frozen_virtual(self):
+        return self._frozen_virtual
+
+    @frozen_virtual.setter
+    def frozen_virtual(self, frozen_virtual):
+        self._frozen_virtual = frozen_virtual
+
+    @property
+    def frozen_core_energy(self):
+        return self._frozen_core_energy
+
+    @frozen_core_energy.setter
+    def frozen_core_energy(self, frozen_core_energy):
+        self._frozen_core_energy = frozen_core_energy

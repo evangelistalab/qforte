@@ -108,6 +108,9 @@ class Algorithm(ABC):
         except AttributeError:
             self._hf_energy = 0.0
 
+        if hasattr(system, 'frozen_core_energy'):
+            self._frozen_core_energy = system.frozen_core_energy
+
         self._Nl = len(self._qb_ham.terms())
         self._trotter_order = trotter_order
         self._trotter_number = trotter_number
