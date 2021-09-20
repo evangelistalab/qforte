@@ -63,6 +63,9 @@ PYBIND11_MODULE(qforte, m) {
              py::arg("combine_like_terms") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str)
+        .def("__getitem__", [](const SQOpPool &pool, size_t i) { return pool.terms()[i]; })
+        .def("__iter__", [](const SQOpPool &pool) { return py::make_iterator(pool.terms()); },
+            py::keep_alive<0, 1>())
         .def("__len__", [](const SQOpPool &pool) { return pool.terms().size(); })
         .def("__str__", &SQOpPool::str)
         .def("__repr__", &SQOpPool::str);

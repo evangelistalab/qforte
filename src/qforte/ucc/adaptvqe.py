@@ -345,7 +345,7 @@ class ADAPTVQE(UCCVQE):
 
             curr_norm += grad_m ** 2
             if (self._verbose):
-                print(f'       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}      {self._pool[m][1].terms()[0][1]}')
+                print(f'       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}      {self._pool_obj[m][1].terms()[0][1]}')
 
             if (abs(grad_m) > abs(lgrst_grad)):
 
