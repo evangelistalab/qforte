@@ -15,9 +15,9 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 
 class SPQE(UCCPQE):
-    """This class implents the selected projective quantum eigensolver (SPQE) for
+    """This class implements the selected projective quantum eigensolver (SPQE) for
     disentagled UCC like ansatz.
-    In SPQE, a batch of imporant particl-hole operators
+    In SPQE, a batch of imporant particle-hole operators
     :math:`\{ e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger )} \}` are
     added at each macro-iteration :math:`n` to the SPQE unitary :math:`\hat{U}(\mathbf{t})`,
     wile all current parameters are optemized using the quasi-Newton PQE update
@@ -80,7 +80,7 @@ class SPQE(UCCPQE):
         self._tops = []
         self._tamps = []
         self._commutator_pool = []
-        self._converged = 0
+        self._converged = False
         self._res_vec_evals = 0
         self._res_m_evals = 0
 
@@ -93,6 +93,9 @@ class SPQE(UCCPQE):
         self._n_pauli_trm_measures_lst = []
 
         self.print_options_banner()
+        # We have a certain order we want for elements of _pool. However, we don't want all of them.
+        # By defining _pool in this way, we can insert an element at the position it should have in the
+        # "complete" pool, but we've decoupled it from the _pool_obj.
         self._pool = [0.0 for I in range(2**self._nqb)]
 
         self._pool_obj = qf.SQOpPool()
@@ -100,8 +103,8 @@ class SPQE(UCCPQE):
         self._pool_type = 'full'
         self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
-        for i, occupation in enumerate(self._ref):
-            if(occupation):
+        for occupation in self._ref:
+            if occupation:
                 self._nbody_counts.append(0)
 
         self.build_orb_energies()
@@ -373,9 +376,9 @@ class SPQE(UCCPQE):
 
         return residuals
 
-    # Define SPQE methods.
     def update_ansatz(self):
         self._n_pauli_measures_k = 0
+        # TODO: Check if this deepcopy is needed. The one argument of energy_feval should be const.
         x0 = copy.deepcopy(self._tamps)
         init_gues_energy = self.energy_feval(x0)
 
@@ -396,10 +399,6 @@ class SPQE(UCCPQE):
         qc_res.apply_circuit(U.adjoint())
 
         res_coeffs = qc_res.get_coeff_vec()
-        lgrst_op_factor = 0.0
-
-        # ned to sort the coeffs to psi_tilde
-        temp_order_resids = []
 
         # build different res_sq list using M_omega
         if(self._M_omega != 'inf'):
@@ -431,11 +430,7 @@ class SPQE(UCCPQE):
             res_sq.sort()
 
             ## 2. set norm
-            self._curr_res_sq_norm = 0.0
-            for rmu_sq in res_sq[:-1]:
-                self._curr_res_sq_norm += rmu_sq[0]
-
-            self._curr_res_sq_norm /= (self._dt * self._dt)
+            self._curr_res_sq_norm = sum(rmu_sq[0] for rmu_sq in res_sq[:-1]) / (self._dt * self._dt)
 
             ## 3. print stuff
             print('  \n--> Begin selection opt with residual magnitudes:')
@@ -445,11 +440,11 @@ class SPQE(UCCPQE):
             ## 4. check conv status (need up update function with if(M_omega != 'inf'))
             if(len(Nmu_lst)==1):
                 print('  SPQE converged with M_omega thresh!')
-                self._converged = 1
+                self._converged = True
                 self._final_energy = self._energies[-1]
                 self._final_result = self._results[-1]
             else:
-                self._converged = 0
+                self._converged = False
 
             ## 5. add new toperator
             if not self._converged:
@@ -458,12 +453,9 @@ class SPQE(UCCPQE):
                     print('     op index (Imu)     Number of times measured')
                     print('  -----------------------------------------------')
 
-                res_sq_sum = 0.0
-                n_ops_added = 0
                 for Nmu_tup in Nmu_lst[:-1]:
                     if(self._verbose):
                         print(f"  {Nmu_tup[1]:10}                  {np.real(Nmu_tup[0]):14}")
-                    n_ops_added += 1
                     if(Nmu_tup[1] not in self._tops):
                         self._tops.insert(0,Nmu_tup[1])
                         self._tamps.insert(0,0.0)
@@ -474,11 +466,7 @@ class SPQE(UCCPQE):
         else: # when M_omega == 'inf', proceed with standard SPQE
             res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in range(len(res_coeffs))]
             res_sq.sort()
-            self._curr_res_sq_norm = 0.0
-            for rmu_sq in res_sq[:-1]:
-                self._curr_res_sq_norm += rmu_sq[0]
-
-            self._curr_res_sq_norm /= (self._dt * self._dt)
+            self._curr_res_sq_norm = sum(rmu_sq[0] for rmu_sq in res_sq[:-1]) / (self._dt * self._dt)
 
             print('  \n--> Begin selection opt with residual magnitudes |r_mu|:')
             print('  Initial guess energy: ', round(init_gues_energy,10))
@@ -489,43 +477,39 @@ class SPQE(UCCPQE):
             if not self._converged:
                 if self._verbose:
                     print('\n')
-                    print('     op index (Imu)           Residual Facotr')
+                    print('     op index (Imu)           Residual Factor')
                     print('  -----------------------------------------------')
                 res_sq_sum = 0.0
-                n_ops_added = 0
 
-                # for the canonical SPQE batch addition from |r^2| as a importance criterion
                 if(self._use_cumulative_thresh):
+                    # Make a running list of operators. When the sum of res_sq exceeds the target, every operator
+                    # from here out is getting added to the ansatz..
                     temp_ops = []
-                    for rmu_sq in res_sq[:-1]:
-                        res_sq_sum += (rmu_sq[0]/(self._dt * self._dt))
+                    for rmu_sq, op_idx in res_sq[:-1]:
+                        res_sq_sum += rmu_sq / (self._dt * self._dt)
                         if res_sq_sum > (self._spqe_thresh * self._spqe_thresh):
                             if(self._verbose):
-                                Ktemp = self.get_op_from_basis_idx(rmu_sq[1])
-                                print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}   {Ktemp.str()}" )
-                            n_ops_added += 1
-                            if(rmu_sq[1] not in self._tops):
-                                temp_ops.append(rmu_sq[1])
-                                self.add_from_basis_idx(rmu_sq[1])
+                                Ktemp = self.get_op_from_basis_idx(op_idx)
+                                print(f"  {op_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}   {Ktemp.str()}" )
+                            if op_idx not in self._tops:
+                                temp_ops.append(op_idx)
+                                self.add_from_basis_idx(op_idx)
 
-                    ### consistant with op ordering inspired by traditional renormalization approaches ###
                     for temp_op in temp_ops[::-1]:
                         self._tops.insert(0, temp_op)
                         self._tamps.insert(0, 0.0)
 
-                else: # add individual ops
+                else:
+                    # Add the single operator with greatest rmu_sq not yet in the ansatz
                     res_sq.reverse()
-                    op_added = False
-                    for rmu_sq in res_sq[1:]:
-                        if(op_added):
+                    for rmu_sq, op_idx in res_sq[1:]:
+                        print(f"  {op_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}")
+                        if op_idx not in self._tops:
+                            print('Adding this operator to ansatz')
+                            self._tops.insert(0, op_idx)
+                            self._tamps.insert(0, 0.0)
+                            self.add_from_basis_idx(op_idx)
                             break
-                        print(f"  {rmu_sq[1]:10}                  {np.real(rmu_sq[0])/(self._dt * self._dt):14.12f}")
-                        if(rmu_sq[1] not in self._tops):
-                            print('op added!')
-                            self._tops.insert(0,rmu_sq[1])
-                            self._tamps.insert(0,0.0)
-                            self.add_from_basis_idx(rmu_sq[1])
-                            op_added = True
 
                 self._n_classical_params_lst.append(len(self._tops))
 
@@ -668,11 +652,11 @@ class SPQE(UCCPQE):
 
     def conv_status(self):
         if abs(self._curr_res_sq_norm) < abs(self._spqe_thresh * self._spqe_thresh):
-            self._converged = 1
+            self._converged = True
             self._final_energy = self._energies[-1]
             self._final_result = self._results[-1]
         else:
-            self._converged = 0
+            self._converged = False
 
     def get_final_energy(self, hit_max_spqe_iter=0):
         """

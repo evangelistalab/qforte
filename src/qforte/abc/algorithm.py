@@ -328,7 +328,7 @@ class AnsatzAlgorithm(Algorithm):
 
     def energy_feval(self, params):
         """
-        This funciton retruns the energy expectation value of the state
+        This function returns the energy expectation value of the state
         Uprep(params)|0>, where params are parameters that can be optimized
         for some purpouse such as energy minimizaiton.
 
