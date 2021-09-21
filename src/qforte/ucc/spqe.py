@@ -79,7 +79,6 @@ class SPQE(UCCPQE):
         self._grad_norms = []
         self._tops = []
         self._tamps = []
-        self._commutator_pool = []
         self._converged = False
         self._res_vec_evals = 0
         self._res_m_evals = 0
@@ -296,14 +295,7 @@ class SPQE(UCCPQE):
 
 
     def get_residual_vector(self, trial_amps):
-        temp_pool = qforte.SQOpPool()
-        for param, top in zip(trial_amps, self._tops):
-            temp_pool.add(param, self._pool[top][1])
-
-        A = temp_pool.get_qubit_operator('commuting_grp_lex')
-        U, U_phase = trotterize(A, trotter_number=self._trotter_number)
-        if U_phase != 1.0 + 0.0j:
-            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+        U = self.ansatz_circuit(trial_amps)
 
         qc_res = qforte.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
@@ -321,7 +313,7 @@ class SPQE(UCCPQE):
             # vir => a,b,c,...
             # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
             temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
+            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
                 sq_creators = sq_op.terms()[0][1]
                 sq_annihilators = sq_op.terms()[0][2]
             else:
@@ -383,14 +375,7 @@ class SPQE(UCCPQE):
         init_gues_energy = self.energy_feval(x0)
 
         # do U^dag e^iH U |Phi_o> = |Phi_res>
-        temp_pool = qf.SQOpPool()
-        for param, top in zip(self._tamps, self._tops):
-            temp_pool.add(param, self._pool[top][1])
-
-        A = temp_pool.get_qubit_operator('commuting_grp_lex')
-        U, U_phase = trotterize(A, trotter_number=self._trotter_number)
-        if U_phase != 1.0 + 0.0j:
-            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+        U = self.ansatz_circuit()
 
         qc_res = qf.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
