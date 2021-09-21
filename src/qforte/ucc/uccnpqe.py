@@ -163,7 +163,7 @@ class UCCNPQE(UCCPQE):
         self.diis_solve(self.get_residual_vector)
 
     def fill_excited_dets(self):
-        for _, sq_op in self._pool:
+        for _, sq_op in self._pool_obj:
             # 1. Identify the excitation operator
             # occ => i,j,k,...
             # vir => a,b,c,...
@@ -233,7 +233,7 @@ class UCCNPQE(UCCPQE):
 
         temp_pool = qforte.SQOpPool()
         for param, top in zip(trial_amps, self._tops):
-            temp_pool.add(param, self._pool[top][1])
+            temp_pool.add(param, self._pool_obj[top][1])
 
         A = temp_pool.get_qubit_operator('commuting_grp_lex')
         U, U_phase = trotterize(A, trotter_number=self._trotter_number)
