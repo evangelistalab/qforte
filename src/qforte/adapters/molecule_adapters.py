@@ -47,6 +47,10 @@ def create_psi_mol(**kwargs):
     if not use_psi4:
         raise ImportError("Psi4 was not imported correctely.")
 
+    # By default, the number of frozen orbitals is set to zero
+    kwargs.setdefault('num_frozen_docc', 0)
+    kwargs.setdefault('num_frozen_uocc', 0)
+
     # run_scf is not read, because we always run SCF to get a wavefunction object.
     kwargs.setdefault('run_mp2', 0)
     kwargs.setdefault('run_ccsd', 0)
@@ -76,28 +80,12 @@ def create_psi_mol(**kwargs):
               'reference' : scf_ref_type,
               'e_convergence': 1e-8,
               'd_convergence': 1e-8,
-              'ci_maxiter': 100})
+              'ci_maxiter': 100,
+              'num_frozen_docc' : kwargs['num_frozen_docc'],
+              'num_frozen_uocc' : kwargs['num_frozen_uocc']})
 
     # run psi4 caclulation
     p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
-
-    # Get symmetry information
-    orbitals = []
-    for irrep, block in enumerate(p4_wfn.epsilon_a().nph):
-        for orbital in block:
-            orbitals.append([orbital, irrep])
-
-    orbitals.sort()
-    hf_orbital_energies = []
-    orb_irreps_to_int = []
-    for row in orbitals:
-        hf_orbital_energies.append(row[0])
-        orb_irreps_to_int.append(row[1])
-    del orbitals
-
-    point_group = p4_mol.symmetry_from_input().lower()
-    irreps = p4_mol.irrep_labels()
-    orb_irreps = [irreps[i] for i in orb_irreps_to_int]
 
     # Run additional computations requested by the user
     if(kwargs['run_mp2']):
@@ -109,8 +97,11 @@ def create_psi_mol(**kwargs):
     if(kwargs['run_cisd']):
         qforte_mol.cisd_energy = psi4.energy('CISD')
 
-    if(kwargs['run_fci']):
-        qforte_mol.fci_energy = psi4.energy('FCI')
+    if kwargs['run_fci']:
+        if kwargs['num_frozen_uocc'] == 0:
+            qforte_mol.fci_energy = psi4.energy('FCI')
+        else:
+            print('\nWARNING: Skipping FCI computation due to a Psi4 bug related to FCI with frozen virtuals.\n')
 
     # Get integrals using MintsHelper.
     mints = psi4.core.MintsHelper(p4_wfn.basisset())
@@ -130,30 +121,70 @@ def create_psi_mol(**kwargs):
     nalpha = p4_wfn.nalpha()
     nbeta = p4_wfn.nbeta()
     nel = nalpha + nbeta
+    frozen_core = p4_wfn.frzcpi().sum()
+    frozen_virtual = p4_wfn.frzvpi().sum()
+
+    # Get symmetry information
+    orbitals = []
+    for irrep, block in enumerate(p4_wfn.epsilon_a_subset("MO", "ACTIVE").nph):
+        for orbital in block:
+            orbitals.append([orbital, irrep])
+
+    orbitals.sort()
+    hf_orbital_energies = []
+    orb_irreps_to_int = []
+    for row in orbitals:
+        hf_orbital_energies.append(row[0])
+        orb_irreps_to_int.append(row[1])
+    del orbitals
+
+    point_group = p4_mol.symmetry_from_input().lower()
+    irreps = p4_mol.irrep_labels()
+    orb_irreps = [irreps[i] for i in orb_irreps_to_int]
+
+    # If frozen_core > 0, compute the frozen core energy and transform one-electron integrals
+
+    frozen_core_energy = 0
+
+    if frozen_core > 0:
+        for i in range(frozen_core):
+            frozen_core_energy += 2 * mo_oeis[i, i]
+
+        # Note that the two-electron integrals out of Psi4 are in the Mulliken notation
+        for i in range(frozen_core):
+            for j in range(frozen_core):
+                frozen_core_energy += 2 * mo_teis[i, i, j, j] - mo_teis[i, j, j, i]
+
+        # Incorporate in the one-electron integrals the two-electron integrals involving both frozen and non-frozen orbitals.
+        # This also ensures that the correct orbital energies will be obtained.
+
+        for p in range(frozen_core, nmo - frozen_virtual):
+            for q in range(frozen_core, nmo - frozen_virtual):
+                for i in range(frozen_core):
+                    mo_oeis[p, q] += 2 * mo_teis[p, q, i, i] - mo_teis[p, i, i, q]
 
     # Make hf_reference
-    hf_reference = [1] * nel + [0] * (2 * nmo - nel)
+    hf_reference = [1] * (nel - 2 * frozen_core) + [0] * (2 * (nmo - frozen_virtual) - nel)
 
     # Build second quantized Hamiltonian
-    nmo = np.shape(mo_oeis)[0]
     Hsq = qforte.SQOperator()
-    Hsq.add(p4_Enuc_ref, [], [])
-    for i in range(nmo):
-        ia = i*2
-        ib = i*2 + 1
-        for j in range(nmo):
-            ja = j*2
-            jb = j*2 + 1
+    Hsq.add(p4_Enuc_ref + frozen_core_energy, [], [])
+    for i in range(frozen_core, nmo - frozen_virtual):
+        ia = (i - frozen_core)*2
+        ib = (i - frozen_core)*2 + 1
+        for j in range(frozen_core, nmo - frozen_virtual):
+            ja = (j - frozen_core)*2
+            jb = (j - frozen_core)*2 + 1
 
             Hsq.add(mo_oeis[i,j], [ia], [ja])
             Hsq.add(mo_oeis[i,j], [ib], [jb])
 
-            for k in range(nmo):
-                ka = k*2
-                kb = k*2 + 1
-                for l in range(nmo):
-                    la = l*2
-                    lb = l*2 + 1
+            for k in range(frozen_core, nmo - frozen_virtual):
+                ka = (k - frozen_core)*2
+                kb = (k - frozen_core)*2 + 1
+                for l in range(frozen_core, nmo - frozen_virtual):
+                    la = (l - frozen_core)*2
+                    lb = (l - frozen_core)*2 + 1
 
                     if(ia!=jb and kb != la):
                         Hsq.add( mo_teis[i,l,k,j]/2, [ia, jb], [kb, la] ) # abba
@@ -175,6 +206,9 @@ def create_psi_mol(**kwargs):
     qforte_mol.orb_irreps = orb_irreps
     qforte_mol.orb_irreps_to_int = orb_irreps_to_int
     qforte_mol.hf_orbital_energies = hf_orbital_energies
+    qforte_mol.frozen_core = frozen_core
+    qforte_mol.frozen_virtual = frozen_virtual
+    qforte_mol.frozen_core_energy = frozen_core_energy
 
     # Order Psi4 to delete its temporary files.
     psi4.core.clean()
