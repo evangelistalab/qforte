@@ -92,12 +92,11 @@ class SPQE(UCCPQE):
         self._n_pauli_trm_measures_lst = []
 
         self.print_options_banner()
-        # We have a certain order we want for elements of _pool. However, we don't want all of them.
-        # By defining _pool in this way, we can insert an element at the position it should have in the
-        # "complete" pool, but we've decoupled it from the _pool_obj.
-        self._pool = [0.0 for I in range(2**self._nqb)]
 
         self._pool_obj = qf.SQOpPool()
+        for I in range(2 ** self._nqb):
+            self._pool_obj.add_term(0.0, self.get_op_from_basis_idx(I))
+        self._pool = self._pool_obj.terms()
         self._Nm = []
         self._pool_type = 'full'
         self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
@@ -618,7 +617,7 @@ class SPQE(UCCPQE):
 
         if(pn==nel and na_I == na_el and nb_I == nb_el):
             if (nbody==0):
-                return "null_excitation"
+                return qf.SQOperator()
             if (nbody != 0 and nbody <= max_nbody ):
 
                 total_parity = 1
@@ -633,7 +632,7 @@ class SPQE(UCCPQE):
 
                     return K_temp
 
-        return "invalid_op"
+        return qf.SQOperator()
 
     def conv_status(self):
         if abs(self._curr_res_sq_norm) < abs(self._spqe_thresh * self._spqe_thresh):
