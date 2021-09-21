@@ -144,7 +144,7 @@ class TestPointGroupSymmetry():
             alg.run(**options)
 
             Egs = alg.get_gs_energy()
-            Efci = mol.fci_energy
+            Efci = -2.887594831090935 # FCI
 
             t_ops = [24, 12, 12, 16, 6, 8, 10, 6]
 
