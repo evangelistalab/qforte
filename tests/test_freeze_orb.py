@@ -8,7 +8,7 @@ class TestFreezingOrbitals():
         (UCCNVQE, {"pool_type" : 'SDTQ'}),
         (ADAPTVQE, {"pool_type" : 'SDTQ', "avqe_thresh" : 1.0e-3}),
         (UCCNPQE, {"pool_type" : 'SDTQ'}),
-        (SPQE, {})
+        (SPQE, {"spqe_thresh" : 1.0e-4, "dt" : 0.0001})
         ])
     def test_freeze_orb_ucc(self, method, options):
 
@@ -30,7 +30,4 @@ class TestFreezingOrbitals():
         #          correct when the number of frozen virtual orbitals is larger than zero.
         Efci = -28.747184707540754
 
-        if method is SPQE:
-            assert Egs == approx(Efci, abs=1.0e-4)
-        else:
-            assert Egs == approx(Efci, abs=1.0e-10)
+        assert Egs == approx(Efci, abs=1.0e-10)

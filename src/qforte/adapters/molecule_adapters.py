@@ -97,8 +97,11 @@ def create_psi_mol(**kwargs):
     if(kwargs['run_cisd']):
         qforte_mol.cisd_energy = psi4.energy('CISD')
 
-    if(kwargs['run_fci']):
-        qforte_mol.fci_energy = psi4.energy('FCI')
+    if kwargs['run_fci']:
+        if kwargs['num_frozen_uocc'] == 0:
+            qforte_mol.fci_energy = psi4.energy('FCI')
+        else:
+            print('\nWARNING: Skipping FCI computation due to a Psi4 bug related to FCI with frozen virtuals.\n')
 
     # Get integrals using MintsHelper.
     mints = psi4.core.MintsHelper(p4_wfn.basisset())
@@ -118,19 +121,19 @@ def create_psi_mol(**kwargs):
     nalpha = p4_wfn.nalpha()
     nbeta = p4_wfn.nbeta()
     nel = nalpha + nbeta
-    frozen_core = sum(p4_wfn.frzcpi().to_tuple())
-    frozen_virtual = sum(p4_wfn.frzvpi().to_tuple())
+    frozen_core = p4_wfn.frzcpi().sum()
+    frozen_virtual = p4_wfn.frzvpi().sum()
 
     # Get symmetry information
     orbitals = []
-    for irrep, block in enumerate(p4_wfn.epsilon_a().nph):
+    for irrep, block in enumerate(p4_wfn.epsilon_a_subset("MO", "ACTIVE").nph):
         for orbital in block:
             orbitals.append([orbital, irrep])
 
     orbitals.sort()
     hf_orbital_energies = []
     orb_irreps_to_int = []
-    for row in orbitals[frozen_core : nmo - frozen_virtual]:
+    for row in orbitals:
         hf_orbital_energies.append(row[0])
         orb_irreps_to_int.append(row[1])
     del orbitals
