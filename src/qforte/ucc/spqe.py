@@ -93,10 +93,6 @@ class SPQE(UCCPQE):
 
         self.print_options_banner()
 
-        self._pool_obj = qf.SQOpPool()
-        for I in range(2 ** self._nqb):
-            self._pool_obj.add_term(0.0, self.get_op_from_basis_idx(I))
-        self._pool = self._pool_obj.terms()
         self._Nm = []
         self._pool_type = 'full'
         self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
@@ -104,6 +100,11 @@ class SPQE(UCCPQE):
         for occupation in self._ref:
             if occupation:
                 self._nbody_counts.append(0)
+
+        self._pool_obj = qf.SQOpPool()
+        for I in range(2 ** self._nqb):
+            self._pool_obj.add_term(0.0, self.get_op_from_basis_idx(I))
+        self._pool = self._pool_obj.terms()
 
         self.build_orb_energies()
         spqe_iter = 0
@@ -208,9 +209,7 @@ class SPQE(UCCPQE):
         print('\n\n                ==> SPQE summary <==')
         print('-----------------------------------------------------------')
         print('Final SPQE Energy:                           ', round(self._Egs, 10))
-        # TODO: Change below to len(self._pool_obj) when the _pool object is synchronized
-        # with the _pool_obj object again.
-        print('Number of operators in pool:                 ', len(self._pool))
+        print('Number of operators in pool:                 ', len(self._pool_obj))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Number of classical parameters used:         ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
@@ -307,7 +306,7 @@ class SPQE(UCCPQE):
 
         # each operator needs a score, so loop over toperators
         for m in self._tops:
-            sq_op = self._pool[m][1]
+            sq_op = self._pool_obj[m][1]
             # occ => i,j,k,...
             # vir => a,b,c,...
             # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
@@ -561,7 +560,6 @@ class SPQE(UCCPQE):
                     K_temp.add(-1.0, holes[::-1], particles[::-1]);
                     K_temp.simplify();
                     # this is potentially slow
-                    self._pool[I] = [1.0, K_temp]
                     self._Nm.insert(0, len(K_temp.jw_transform().terms()))
                     self._nbody_counts[nbody-1] += 1
 
@@ -626,8 +624,8 @@ class SPQE(UCCPQE):
 
                 if(total_parity==1):
                     K_temp = qf.SQOperator()
-                    K_temp.add(+1.0, particles + holes);
-                    K_temp.add(-1.0, holes[::-1] + particles[::-1]);
+                    K_temp.add(+1.0, particles, holes);
+                    K_temp.add(-1.0, holes[::-1], particles[::-1]);
                     K_temp.simplify();
 
                     return K_temp
