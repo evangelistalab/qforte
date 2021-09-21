@@ -55,7 +55,7 @@ def create_psi_mol(**kwargs):
     kwargs.setdefault('run_mp2', 0)
     kwargs.setdefault('run_ccsd', 0)
     kwargs.setdefault('run_cisd', 0)
-    kwargs.setdefault('run_fci', 1)
+    kwargs.setdefault('run_fci', 0)
 
     # Setup psi4 calculation(s)
     psi4.set_memory('2 GB')
