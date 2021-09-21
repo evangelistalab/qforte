@@ -231,14 +231,7 @@ class UCCNPQE(UCCPQE):
         if(self._pool_type == 'sa_SD'):
             raise ValueError('Must use single term particle-hole nbody operators for residual calculation')
 
-        temp_pool = qforte.SQOpPool()
-        for param, top in zip(trial_amps, self._tops):
-            temp_pool.add(param, self._pool_obj[top][1])
-
-        A = temp_pool.get_qubit_operator('commuting_grp_lex')
-        U, U_phase = trotterize(A, trotter_number=self._trotter_number)
-        if U_phase != 1.0 + 0.0j:
-            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+        U = self.ansatz_circuit(trial_amps)
 
         qc_res = qforte.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
