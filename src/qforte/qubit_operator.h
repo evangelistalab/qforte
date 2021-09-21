@@ -10,8 +10,12 @@
 class SparseMatrix;
 
 class QubitOperator {
-    /* A QubitOperator is a linear combination (over C) of quantum circuits,
-     * and therefore a linear combination of products of quantum gates.
+    /* A QubitOperator is a list of quantum circuits, each of which has a complex scalar.
+     * While linear combinations of quantum circuits are QubitOperators, you cannot
+     * assume that a QubitOperator is a linear combination: some functions take in a
+     * QubitOperator and are well-defined on the list data structure, but not on a linear
+     * combination. Example: `trotterize` will give different results if you swap the order
+     * of two circuits in the list, even though the linear combination is unchanged.
      */
   public:
     /// default constructor: creates an empty quantum operator
