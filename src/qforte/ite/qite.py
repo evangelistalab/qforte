@@ -237,7 +237,7 @@ class QITE(Algorithm):
             # See section "Real Hamiltonians and states" in the SI of Motta for theoretical justification.
             # Briefly, this method solves Ax=b, but all b elements with an odd number of Y gates are imaginary and
             # thus vanish. This method will not be correct for non-real Hamiltonians or states.
-            for alph, rho in sig_temp.terms():
+            for _, rho in sig_temp.terms():
                 nygates = 0
                 temp_rho = qf.Circuit()
                 for gate in rho.gates():

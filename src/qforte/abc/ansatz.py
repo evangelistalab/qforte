@@ -18,7 +18,7 @@ class UCC:
 
     def ansatz_circuit(self, amplitudes=None):
         """ This function returns the Circuit object built
-        from the appropriate amplitudes (tops).
+        from the appropriate amplitudes.
 
         Parameters
         ----------
@@ -29,7 +29,7 @@ class UCC:
         temp_pool = qf.SQOpPool()
         tamps = self._tamps if amplitudes is None else amplitudes
         for tamp, top in zip(tamps, self._tops):
-            temp_pool.add(tamp, self._pool[top][1])
+            temp_pool.add(tamp, self._pool_obj[top][1])
 
         A = temp_pool.get_qubit_operator('commuting_grp_lex')
 
@@ -76,12 +76,12 @@ class UCC:
 
         resids_over_denoms = []
 
-        # each operator needs a score, so loop over toperators
+        # loop over toperators
         for mu, m in enumerate(self._tops):
-            sq_op = self._pool[m][1]
+            sq_op = self._pool_obj[m][1]
 
             temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupid idx
+            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
                 sq_creators = sq_op.terms()[0][1]
                 sq_annihilators = sq_op.terms()[0][2]
             else:
