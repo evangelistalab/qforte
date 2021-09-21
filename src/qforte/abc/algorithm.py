@@ -215,11 +215,6 @@ class AnsatzAlgorithm(Algorithm):
         optimization algorithm. Is usually the norm of the gradient, but
         is algorithm dependant, see scipy.minimize.optimize for details.
 
-    _pool : list of tuple(complex, SqOperator)
-        The linear combination of (optionally symmetrized) single and double
-        excitation operators to consider. This is represented as a list.
-        Each entry is a pair of a complex coefficient and an SqOperator object.
-
     _pool_obj : SQOpPool
         A pool of second quantized operators we use in the ansatz.
 
@@ -275,9 +270,7 @@ class AnsatzAlgorithm(Algorithm):
                     temp_sq_pool.add(sq_operator[0], sq_operator[1])
             self._pool_obj = temp_sq_pool
 
-        self._pool = self._pool_obj.terms()
-
-        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool]
+        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
 
     def measure_energy(self, Ucirc):
         """
@@ -307,7 +300,6 @@ class AnsatzAlgorithm(Algorithm):
         self._Nm = []
         self._tamps = []
         self._tops = []
-        self._pool = []
         self._pool_obj = qf.SQOpPool()
 
         kwargs.setdefault('irrep', None)

@@ -104,7 +104,6 @@ class SPQE(UCCPQE):
         self._pool_obj = qf.SQOpPool()
         for I in range(2 ** self._nqb):
             self._pool_obj.add_term(0.0, self.get_op_from_basis_idx(I))
-        self._pool = self._pool_obj.terms()
 
         self.build_orb_energies()
         spqe_iter = 0
