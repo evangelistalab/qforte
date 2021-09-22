@@ -18,12 +18,12 @@ import numpy as np
 from scipy.optimize import minimize
 
 class ADAPTVQE(UCCVQE):
-    """A class that encompases the three componants of using the variational
+    """A class that encompasses the three components of using the variational
     quantum eigensolver to optimize a parameterized unitary CC like wave function
     comprised of adaptively selected operators. Growing a circuit over many iterations
     the ADAPT-VQE: (1) prepares a quantum state on the quantum computer
     representing the wave function to be simulated, (2) evaluates the energy by
-    and gradients, and (3) optimizes the the wave funciton by minimizing the energy.
+    and gradients, and (3) optimizes the wave function by minimizing the energy.
 
     In ADAPT-VQE, the unitary ansatz at macro-iteration :math:`k` is defined as
 
@@ -60,13 +60,13 @@ class ADAPTVQE(UCCVQE):
         The gradient norm for the current iteration of ADAPT-VQE.
 
     _energies : list
-        The optemized energies from each iteration of ADAPT-VQE.
+        The optimized energies from each iteration of ADAPT-VQE.
 
     _final_energy : float
         The final ADAPT-VQE energy value.
 
     _final_result : Result
-        The last result object from the optemizer.
+        The last result object from the optimizer.
 
     _grad_norms : list
         The gradient norms from each iteration of ADAPT-VQE.
@@ -414,8 +414,7 @@ class ADAPTVQE(UCCVQE):
         Parameters
         ----------
         hit_max_avqe_iter : bool
-            Whether or not to use the ADAPT-VQE has already hit the maximum
-            number of iterations.
+            Whether ADAPT-VQE has already hit the maximum number of iterations.
         """
         if hit_max_avqe_iter:
             print("\nADAPT-VQE at maximum number of iterations!")
@@ -428,8 +427,7 @@ class ADAPTVQE(UCCVQE):
         Parameters
         ----------
         hit_max_avqe_iter : bool
-            Whether or not to use the ADAPT-VQE has already hit the maximum
-            number of iterations.
+            Whether ADAPT-VQE has already hit the maximum number of iterations.
         """
         if hit_max_avqe_iter:
             self._final_result = self._results[-1]
