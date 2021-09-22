@@ -19,13 +19,13 @@ from scipy.optimize import minimize
 
 class ADAPTVQE(UCCVQE):
     """A class that encompases the three componants of using the variational
-    quantum eigensolver to optemize a parameterized unitary CC like wave function
-    comprised of adaptivly selected operators. Growing a cirquit over many iterations
+    quantum eigensolver to optimize a parameterized unitary CC like wave function
+    comprised of adaptively selected operators. Growing a circuit over many iterations
     the ADAPT-VQE: (1) prepares a quantum state on the quantum computer
-    representing the wave function to be simulated, (2) evauates the energy by
+    representing the wave function to be simulated, (2) evaluates the energy by
     and gradients, and (3) optimizes the the wave funciton by minimizing the energy.
 
-    In ADAPT-VQE, the unitary ansatz at maco-iteration :math:`k` is defined as
+    In ADAPT-VQE, the unitary ansatz at macro-iteration :math:`k` is defined as
 
     .. math::
         \hat{U}_\mathrm{ADAPT}^{(k)}(\mathbf{t}) = \prod_\\nu^{k} e^{ t_\\nu^{(k)} \hat{\kappa}_\\nu^{(k)} },
@@ -49,21 +49,18 @@ class ADAPTVQE(UCCVQE):
         The gradient norm threshold to determine when the ADAPT-VQE
         algorithm has converged.
 
-    _results : list
-        The optemizer result objects from each iteration of ADAPT-VQE.
-
-    _energies : list
-        The optemized energies from each iteration of ADAPT-VQE.
-
-    _grad_norms : list
-        The gradient norms from each iteration of ADAPT-VQE.
-
-    _curr_grad_norm : float
-        The gradient norm for the current iteration of ADAPT-VQE.
+    _commutator_pool : [QubitOpPool]
+        The list of [H, X] to be measured
 
     _converged : bool
         Whether or not the ADAPT-VQE has converged according to the gradient-norm
         threshold.
+
+    _curr_grad_norm : float
+        The gradient norm for the current iteration of ADAPT-VQE.
+
+    _energies : list
+        The optemized energies from each iteration of ADAPT-VQE.
 
     _final_energy : float
         The final ADAPT-VQE energy value.
@@ -71,6 +68,14 @@ class ADAPTVQE(UCCVQE):
     _final_result : Result
         The last result object from the optemizer.
 
+    _grad_norms : list
+        The gradient norms from each iteration of ADAPT-VQE.
+
+    _results : list
+        The optimizer result objects from each iteration of ADAPT-VQE.
+
+    _use_commutator_grad_select : bool
+        If true, determine whether to add operator X by measuring [H, X]
     """
     def run(self,
             avqe_thresh=1.0e-2,
@@ -122,8 +127,6 @@ class ADAPTVQE(UCCVQE):
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
-
-        ######### ADAPT-VQE #########
 
         self.fill_pool()
 
@@ -190,7 +193,6 @@ class ADAPTVQE(UCCVQE):
         self._n_classical_params = len(self._tamps)
         self._n_cnot = self._n_cnot_lst[-1]
         self._n_pauli_trm_measures = sum(self._n_pauli_trm_measures_lst)
-        ######### ADAPT-VQE #########
 
         # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
@@ -317,8 +319,8 @@ class ADAPTVQE(UCCVQE):
 
     # Define ADAPT-VQE methods.
     def update_ansatz(self):
-        """Adds a paramater and operator to the ADAPT-VQE circuit based on the
-        magnigue of the gradeints of pool operators, checks for
+        """Adds a parameter and operator to the ADAPT-VQE circuit based on the
+        magnitude of the gradients of pool operators, checks for
         convergence.
         """
         self._n_pauli_measures_k = 0
@@ -331,6 +333,7 @@ class ADAPTVQE(UCCVQE):
             print('     op index (m)     N pauli terms              Gradient            Tmu  ')
             print('  ------------------------------------------------------------------------------')
 
+        # TODO: Determine which algorithm is faster. Is one guaranteed to always be faster?
         if self._use_commutator_grad_selection:
             grads = self.measure_operators(self._commutator_pool, Uvqc)
         else:
@@ -340,7 +343,7 @@ class ADAPTVQE(UCCVQE):
             if self._use_commutator_grad_selection:
                 self._n_pauli_measures_k += len(self._commutator_pool.terms()[m][1].terms())
             else:
-                # refers to number of times sigma_y must be measured in "stratagies for UCC" grad eval circuit
+                # refers to number of times sigma_y must be measured in "strategies for UCC" grad eval circuit
                 self._n_pauli_measures_k += self._Nl * self._Nm[m]
 
             curr_norm += grad_m ** 2
@@ -358,11 +361,11 @@ class ADAPTVQE(UCCVQE):
 
         curr_norm = np.sqrt(curr_norm)
         if self._use_commutator_grad_selection:
-            print("\n==> Measring gradients from pool:")
+            print("\n==> Measuring gradients from pool:")
             print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
             print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
         else:
-            print("\n==> Measring gradients:")
+            print("\n==> Measuring gradients:")
             print(" Norm of g_vec = %12.8f" %curr_norm)
             print(" Max  of g_vec = %12.8f" %lgrst_grad)
 
@@ -407,11 +410,11 @@ class ADAPTVQE(UCCVQE):
         """Sets the convergence states.
         """
         if abs(self._curr_grad_norm) < abs(self._avqe_thresh):
-            self._converged = 1
+            self._converged = True
             self._final_energy = self._energies[-1]
             self._final_result = self._results[-1]
         else:
-            self._converged = 0
+            self._converged = False
 
     def get_num_ham_measurements(self):
         for res in self._results:
@@ -427,12 +430,12 @@ class ADAPTVQE(UCCVQE):
 
         return self._n_commut_measurements
 
-    def get_final_energy(self, hit_max_avqe_iter=0):
+    def get_final_energy(self, hit_max_avqe_iter=False):
         """
         Parameters
         ----------
         hit_max_avqe_iter : bool
-            Wether or not to use the ADAPT-VQE has already hit the maximum
+            Whether or not to use the ADAPT-VQE has already hit the maximum
             number of iterations.
         """
         if hit_max_avqe_iter:
@@ -441,12 +444,12 @@ class ADAPTVQE(UCCVQE):
         else:
             return self._final_energy
 
-    def get_final_result(self, hit_max_avqe_iter=0):
+    def get_final_result(self, hit_max_avqe_iter=False):
         """
         Parameters
         ----------
         hit_max_avqe_iter : bool
-            Wether or not to use the ADAPT-VQE has already hit the maximum
+            Whether or not to use the ADAPT-VQE has already hit the maximum
             number of iterations.
         """
         if hit_max_avqe_iter:
