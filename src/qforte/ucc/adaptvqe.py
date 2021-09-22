@@ -73,9 +73,6 @@ class ADAPTVQE(UCCVQE):
 
     _results : list
         The optimizer result objects from each iteration of ADAPT-VQE.
-
-    _use_commutator_grad_select : bool
-        If true, determine whether to add operator X by measuring [H, X]
     """
     def run(self,
             avqe_thresh=1.0e-2,
@@ -85,7 +82,6 @@ class ADAPTVQE(UCCVQE):
             adapt_maxiter=20,
             optimizer='BFGS',
             use_analytic_grad = True,
-            use_commutator_grad_selection = False,
             use_cumulative_thresh = False,
             add_equiv_ops = False):
 
@@ -96,7 +92,6 @@ class ADAPTVQE(UCCVQE):
         self._use_analytic_grad = use_analytic_grad
         self._optimizer = optimizer
         self._pool_type = pool_type
-        self._use_commutator_grad_selection = use_commutator_grad_selection
         self._use_cumulative_thresh = use_cumulative_thresh
         self._add_equiv_ops = add_equiv_ops
 
@@ -135,9 +130,6 @@ class ADAPTVQE(UCCVQE):
             print('   Second Quantized Operator Pool')
             print('-------------------------------------')
             print(self._pool_obj.str())
-
-        if self._use_commutator_grad_selection:
-            self.fill_commutator_pool()
 
         avqe_iter = 0
         hit_maxiter = 0
@@ -333,18 +325,11 @@ class ADAPTVQE(UCCVQE):
             print('     op index (m)     N pauli terms              Gradient            Tmu  ')
             print('  ------------------------------------------------------------------------------')
 
-        # TODO: Determine which algorithm is faster. Is one guaranteed to always be faster?
-        if self._use_commutator_grad_selection:
-            grads = self.measure_operators(self._commutator_pool, Uvqc)
-        else:
-            grads = self.measure_gradient3()
+        grads = self.measure_gradient3()
 
         for m, grad_m in enumerate(grads):
-            if self._use_commutator_grad_selection:
-                self._n_pauli_measures_k += len(self._commutator_pool.terms()[m][1].terms())
-            else:
-                # refers to number of times sigma_y must be measured in "strategies for UCC" grad eval circuit
-                self._n_pauli_measures_k += self._Nl * self._Nm[m]
+            # refers to number of times sigma_y must be measured in "strategies for UCC" grad eval circuit
+            self._n_pauli_measures_k += self._Nl * self._Nm[m]
 
             curr_norm += grad_m ** 2
             if (self._verbose):
@@ -360,14 +345,9 @@ class ADAPTVQE(UCCVQE):
                 lgrst_grad_idx = m
 
         curr_norm = np.sqrt(curr_norm)
-        if self._use_commutator_grad_selection:
-            print("\n==> Measuring gradients from pool:")
-            print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
-            print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
-        else:
-            print("\n==> Measuring gradients:")
-            print(" Norm of g_vec = %12.8f" %curr_norm)
-            print(" Max  of g_vec = %12.8f" %lgrst_grad)
+        print("\n==> Measuring gradients from pool:")
+        print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
+        print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
 
         self._curr_grad_norm = curr_norm
         self._grad_norms.append(curr_norm)
@@ -388,7 +368,6 @@ class ADAPTVQE(UCCVQE):
                         temp_order_tops.insert(0,gm_sq[1])
 
                 self._tops.extend(copy.deepcopy(temp_order_tops))
-                self._n_classical_params_lst.append(len(self._tops))
             else:
                 print("  Adding operator m =", lgrst_grad_idx)
                 self._tops.append(lgrst_grad_idx)
@@ -400,7 +379,7 @@ class ADAPTVQE(UCCVQE):
                         self._tops.append(secnd_lgrst_grad_idx)
                         self._tamps.append(0.0)
 
-                self._n_classical_params_lst.append(len(self._tops))
+            self._n_classical_params_lst.append(len(self._tops))
 
         else:
             print("\n  ADAPT-VQE converged!")
