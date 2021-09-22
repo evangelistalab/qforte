@@ -82,7 +82,6 @@ class UCCVQE(VQE, UCC):
         self._commutator_pool.join_as_commutator(self._qb_ham)
         print('==> Commutator pool construction complete.')
 
-    #TODO: depricate this function
     def measure_operators(self, operators, Ucirc, idxs=[]):
         """
         Parameters
@@ -191,38 +190,30 @@ class UCCVQE(VQE, UCC):
         return grads
 
     def measure_gradient3(self):
-        """ Calcualtes the so-called residual gradient, defined by <[H, K_mu]>
-        which gives the gradient only with respect to operaotrs t_mu which would
-        be added to the end of Uprep. Primaraly used in ADAPT-VQE operator
-        selection.
+        """ Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._pool_obj.
+        For antihermitian K_mu, this is equal to <Psi|[H, K_mu]|Psi>.
+        In ADAPT-VQE, this is the 'residual gradient' used to determine
+        whether to append exp(t_mu K_mu) to the iterative ansatz.
         """
 
-        if self._fast==False:
+        if not self._fast:
             raise ValueError("self._fast must be True for gradient measurement.")
 
-        # Initialize amplitudes
-        M = len(self._pool_obj)
-        pool_amps = np.zeros(M)
-        for tamp, top in zip(self._tamps, self._tops):
-            pool_amps[top] = tamp
-
-        grads = np.zeros(M)
         Utot = self.build_Uvqc()
-
-        qc_psi = qforte.Computer(self._nqb) # build | sig_N > according to ADAPT-VQE analytical grad section
+        qc_psi = qforte.Computer(self._nqb)
         qc_psi.apply_circuit(Utot)
         psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
 
-        qc_sig = qforte.Computer(self._nqb) # build | psi_N > according to ADAPT-VQE analytical grad section
+        qc_sig = qforte.Computer(self._nqb)
         # TODO: Check if it's faster to recompute psi_i or copy it.
         qc_sig.set_coeff_vec(copy.deepcopy(psi_i))
         qc_sig.apply_operator(self._qb_ham)
 
-        mu = M-1
+        grads = np.zeros(len(self._pool_obj))
 
-        for mu in range(M):
-            Kmu = self._pool_obj[mu][1].jw_transform()
-            Kmu.mult_coeffs(self._pool_obj[mu][0])
+        for mu, (coeff, operator) in enumerate(self._pool_obj):
+            Kmu = operator.jw_transform()
+            Kmu.mult_coeffs(coeff)
             qc_psi.apply_operator(Kmu)
             grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
             qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
