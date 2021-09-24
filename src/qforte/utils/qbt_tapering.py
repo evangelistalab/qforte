@@ -210,7 +210,7 @@ def find_Z2_symmetries(hamiltonian, qiskit_order = False):
 
     reorder = np.argsort(sigma_x)
     sigma_x = sigma_x[reorder][::-1]
-    gnrtrs = [gnrtrs[i] for i in reorder]
+    gnrtrs = [gnrtrs[i] for i in reorder[::-1]]
 
     ## Construct individual unitary matrices
     untrs = []
