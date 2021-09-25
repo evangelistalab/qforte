@@ -55,7 +55,6 @@ class UCCNVQE(UCCVQE):
 
         self._tops = []
         self._tamps = []
-        self._conmutator_pool = []
         self._converged = 0
 
         self._n_classical_params = 0

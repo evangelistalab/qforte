@@ -49,9 +49,6 @@ class ADAPTVQE(UCCVQE):
         The gradient norm threshold to determine when the ADAPT-VQE
         algorithm has converged.
 
-    _commutator_pool : [QubitOpPool]
-        The list of [H, X] to be measured
-
     _converged : bool
         Whether or not the ADAPT-VQE has converged according to the gradient-norm
         threshold.
@@ -100,7 +97,6 @@ class ADAPTVQE(UCCVQE):
         self._grad_norms = []
         self._tops = []
         self._tamps = []
-        self._commutator_pool = []
         self._converged = 0
 
         self._n_ham_measurements = 0
