@@ -64,7 +64,7 @@ class UCC:
             self._orb_e.append(ei)
 
     def get_res_over_mpdenom(self, residuals):
-        """This function returns a vector given by the residuals dividied by the
+        """This function returns a vector given by the residuals divided by the
         respective Moller Plesset denominators.
 
         Parameters
