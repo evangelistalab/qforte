@@ -10,8 +10,9 @@
 #include <algorithm>
 #include <iostream>
 
-void QubitOpPool::add_term(std::complex<double> coeff, const QubitOperator& sq_op ){
+void QubitOpPool::add_term(std::complex<double> coeff, const QubitOperator& sq_op, const std::string& description ){
     terms_.push_back(std::make_pair(coeff, sq_op));
+    descriptions_.push_back(description);
 }
 
 void QubitOpPool::set_coeffs(const std::vector<std::complex<double>>& new_coeffs){
@@ -41,6 +42,36 @@ void QubitOpPool::set_terms(std::vector<std::pair<std::complex<double>, QubitOpe
 
 const std::vector<std::pair<std::complex<double>, QubitOperator>>& QubitOpPool::terms() const{
     return terms_;
+}
+
+// TODO: This is largely a copy-paste from get_qubit_operator.
+// Analyze whether these options are necessary. Their purpose in the SQOpPool case
+// isn't even clear.
+QubitOperator QubitOpPool::get_qubit_operator(const std::string& order_type, bool combine_like_terms) {
+    QubitOperator parent;
+
+    if(order_type=="unique_lex"){
+        for (auto& term : terms_) {
+            auto child = term.second;
+            child.mult_coeffs(term.first);
+            parent.add_op(child);
+        }
+        // TODO: analyze ordering here, eliminating simplify will place commuting
+        // terms closer together but may introduce redundancy.
+        parent.simplify();
+        parent.order_terms();
+    } else if (order_type=="commuting_grp_lex") {
+        for (auto& term : terms_) {
+            auto child = term.second;
+            child.mult_coeffs(term.first);
+            child.simplify(combine_like_terms=combine_like_terms);
+            child.order_terms();
+            parent.add_op(child);
+        }
+    } else {
+        throw std::invalid_argument( "Invalid order_type specified.");
+    }
+    return parent;
 }
 
 void QubitOpPool::square(bool upper_triangle_only){

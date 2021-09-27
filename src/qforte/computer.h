@@ -49,7 +49,7 @@ class Computer {
     void apply_gate(const Gate& qg);
 
     /// apply a constant to the quantum computer (WARNING, this operation
-    /// is not physical as it does not represent a unitary opperation). Only
+    /// is not physical as it does not represent a unitary operation). Only
     /// Exists for 'fast' version of the algorithm for efficiency reasons
     void apply_constant(const std::complex<double> a);
 
@@ -72,8 +72,8 @@ class Computer {
     /// measure expectation value for specific operators in an operator pool
     std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QubitOpPool& qopl, const std::vector<int>& idxs);
 
-    /// measure expectaion value of all operators in an operator pool, where the
-    /// operator coefficents have been multipild by mults
+    /// measure expectation value of all operators in an operator pool, where
+    /// the operator coefficents have been multipiled by mults
     std::vector<std::complex<double>> direct_oppl_exp_val_w_mults(
         const QubitOpPool& qopl,
         const std::vector<std::complex<double>>& mults);

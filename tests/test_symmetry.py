@@ -150,4 +150,4 @@ class TestPointGroupSymmetry():
 
             assert Egs == approx(Efci, abs=1.0e-10)
 
-            assert len(alg._pool_obj) == t_ops[count]
+            assert len(alg._qubit_pool) == t_ops[count]

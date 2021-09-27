@@ -18,6 +18,7 @@ from qforte.helper.printing import matprint
 
 import numpy as np
 from scipy.linalg import lstsq
+from collections import Counter
 
 class UCCNPQE(UCCPQE):
     """
@@ -76,12 +77,6 @@ class UCCNPQE(UCCPQE):
 
         self.print_options_banner()
         self.fill_pool()
-
-        if self._verbose:
-            print('\n\n-------------------------------------')
-            print('   Second Quantized Operator Pool')
-            print('-------------------------------------')
-            print(self._pool_obj.str())
 
         self.initialize_ansatz()
 
@@ -149,7 +144,7 @@ class UCCNPQE(UCCPQE):
         print('\n\n                   ==> UCC-PQE summary <==')
         print('-----------------------------------------------------------')
         print('Final UCCN-PQE Energy:                      ', round(self._Egs, 10))
-        print('Number of operators in pool:                 ', len(self._pool_obj))
+        print('Number of operators in pool:                 ', len(self._qubit_pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Number of classical parameters used:         ', len(self._tamps))
         print('Number of non-zero parameters used:          ', self._n_nonzero_params)
@@ -163,60 +158,12 @@ class UCCNPQE(UCCPQE):
         self.diis_solve(self.get_residual_vector)
 
     def fill_excited_dets(self):
-        for _, sq_op in self._pool_obj:
-            # 1. Identify the excitation operator
-            # occ => i,j,k,...
-            # vir => a,b,c,...
-            # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
 
-            temp_idx = sq_op.terms()[0][2][-1]
-            # TODO: This code assumes that the first N orbitals are occupied, and the others are virtual.
-            # Use some other mechanism to identify the occupied orbitals, so we can use use PQE on excited
-            # determinants.
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
-                sq_creators = sq_op.terms()[0][1]
-                sq_annihilators = sq_op.terms()[0][2]
-            else:
-                sq_creators = sq_op.terms()[0][2]
-                sq_annihilators = sq_op.terms()[0][1]
+        reference_state = qforte.QubitBasis(self._nqb)
+        for k, occ in enumerate(self._ref):
+            reference_state.set_bit(k, occ)
 
-            # 2. Get the bit representation of the sq_ex_op acting on the reference.
-            # We determine the projective condition for this amplitude by zero'ing this residual.
-
-            # `destroyed` exists solely for error catching.
-            destroyed = False
-
-            excited_det = qforte.QubitBasis(self._nqb)
-            for k, occ in enumerate(self._ref):
-                excited_det.set_bit(k, occ)
-
-            # loop over annihilators
-            for p in reversed(sq_annihilators):
-                if( excited_det.get_bit(p) == 0):
-                    destroyed=True
-                    break
-
-                excited_det.set_bit(p, 0)
-
-            # then over creators
-            for p in reversed(sq_creators):
-                if (excited_det.get_bit(p) == 1):
-                    destroyed=True
-                    break
-
-                excited_det.set_bit(p, 1)
-
-            if destroyed:
-                raise ValueError("no ops should destroy reference, something went wrong!!")
-
-            I = excited_det.add()
-
-            qc_temp = qforte.Computer(self._nqb)
-            qc_temp.apply_circuit(self._Uprep)
-            qc_temp.apply_operator(sq_op.jw_transform())
-            phase_factor = qc_temp.get_coeff_vec()[I]
-
-            self._excited_dets.append((I, phase_factor))
+        self._excited_dets = [operator_to_determinant(qubit_operator, reference_state) for _, qubit_operator in self._qubit_pool]
 
     def get_residual_vector(self, trial_amps):
         """Returns the residual vector with elements pertaining to all operators
@@ -263,7 +210,7 @@ class UCCNPQE(UCCPQE):
         """Adds all operators in the pool to the list of operators in the circuit,
         with amplitude 0.
         """
-        for l in range(len(self._pool_obj)):
+        for l in range(len(self._qubit_pool)):
             self._tops.append(l)
             self._tamps.append(0.0)
 

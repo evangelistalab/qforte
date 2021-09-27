@@ -139,8 +139,8 @@ class UCCVQE(VQE, UCC):
         mu = M-1
 
         # find <sing_N | K_N | psi_N>
-        Kmu_prev = self._pool_obj[self._tops[mu]][1].jw_transform()
-        Kmu_prev.mult_coeffs(self._pool_obj[self._tops[mu]][0])
+        weight, Kmu_prev = self._qubit_pool[self._tops[mu]]
+        Kmu_prev.mult_coeffs(weight)
 
         qc_psi.apply_operator(Kmu_prev)
         grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
@@ -160,8 +160,8 @@ class UCCVQE(VQE, UCC):
             else:
                 tamp = params[mu+1]
 
-            Kmu = self._pool_obj[self._tops[mu]][1].jw_transform()
-            Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
+            weight, Kmu = self._qubit_pool[self._tops[mu]]
+            Kmu.mult_coeffs(weight)
 
             Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
 
@@ -184,7 +184,7 @@ class UCCVQE(VQE, UCC):
         return grads
 
     def measure_gradient3(self):
-        """ Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._pool_obj.
+        """ Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._qubit_pool.
         For antihermitian K_mu, this is equal to <Psi|[H, K_mu]|Psi>.
         In ADAPT-VQE, this is the 'residual gradient' used to determine
         whether to append exp(t_mu K_mu) to the iterative ansatz.
@@ -203,10 +203,9 @@ class UCCVQE(VQE, UCC):
         qc_sig.set_coeff_vec(copy.deepcopy(psi_i))
         qc_sig.apply_operator(self._qb_ham)
 
-        grads = np.zeros(len(self._pool_obj))
+        grads = np.zeros(len(self._qubit_pool))
 
-        for mu, (coeff, operator) in enumerate(self._pool_obj):
-            Kmu = operator.jw_transform()
+        for mu, (coeff, Kmu) in enumerate(self._qubit_pool):
             Kmu.mult_coeffs(coeff)
             qc_psi.apply_operator(Kmu)
             grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
@@ -259,5 +258,5 @@ class UCCVQE(VQE, UCC):
         if self._pool_type is None:
             raise NotImplementedError('Concrete UCCVQE class must define self._pool_type attribute.')
 
-        if self._pool_obj is None:
-            raise NotImplementedError('Concrete UCCVQE class must define self._pool_obj attribute.')
+        if self._qubit_pool is None:
+            raise NotImplementedError('Concrete UCCVQE class must define self._qubit_pool attribute.')

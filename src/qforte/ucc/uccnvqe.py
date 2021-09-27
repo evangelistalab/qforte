@@ -73,9 +73,6 @@ class UCCNVQE(UCCVQE):
 
         self.fill_pool()
 
-        if self._verbose:
-            print(self._pool_obj.str())
-
         self.initialize_ansatz()
 
         if(self._verbose):
@@ -145,7 +142,7 @@ class UCCNVQE(UCCVQE):
         print('\n\n                ==> UCCN-VQE summary <==')
         print('-----------------------------------------------------------')
         print('Final UCCN-VQE Energy:                      ', round(self._Egs, 10))
-        print('Number of operators in pool:                 ', len(self._pool_obj))
+        print('Number of operators in pool:                 ', len(self._qubit_pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
         print('Total number of commutator measurements:     ', self.get_num_commut_measurements())
@@ -159,6 +156,7 @@ class UCCNVQE(UCCVQE):
 
     def solve(self):
         if self._optimizer.lower() == "diis_solve":
+            self.fill_excited_dets()
             self.build_orb_energies()
             return self.diis_solve(self.gradient_ary_feval)
         else:
@@ -240,8 +238,8 @@ class UCCNVQE(UCCVQE):
         """Adds all operators in the pool to the list of operators in the circuit,
         with amplitude 0.
         """
-        self._tops = list(range(len(self._pool_obj)))
-        self._tamps = [0.0] * len(self._pool_obj)
+        self._tops = list(range(len(self._qubit_pool)))
+        self._tamps = [0.0] * len(self._qubit_pool)
 
     # TODO: change to get_num_pt_evals
     def get_num_ham_measurements(self):
@@ -258,10 +256,17 @@ class UCCNVQE(UCCVQE):
     # TODO: depricate this function
     def get_num_commut_measurements(self):
         # if self._use_analytic_grad:
-        #     self._n_commut_measurements = self._final_result.njev * (len(self._pool_obj))
+        #     self._n_commut_measurements = self._final_result.njev * (len(self._qubit_pool))
         #     return self._n_commut_measurements
         # else:
         #     return 0
         return 0
+
+    def fill_excited_dets(self):
+        reference_state = qforte.QubitBasis(self._nqb)
+        for k, occ in enumerate(self._ref):
+            reference_state.set_bit(k, occ)
+
+        self._excited_dets = [operator_to_determinant(qubit_operator, reference_state) for _, qubit_operator in self._qubit_pool]
 
 UCCNVQE.diis_solve = optimizer.diis_solve

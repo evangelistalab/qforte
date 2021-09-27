@@ -215,8 +215,8 @@ class AnsatzAlgorithm(Algorithm):
         optimization algorithm. Is usually the norm of the gradient, but
         is algorithm dependant, see scipy.minimize.optimize for details.
 
-    _pool_obj : SQOpPool
-        A pool of second quantized operators we use in the ansatz.
+    _qubit_pool : QubitOpPool
+        A pool of qubit-space operators we use in the ansatz.
 
     _tops : list
         A list of indices representing selected operators in the pool.
@@ -251,11 +251,11 @@ class AnsatzAlgorithm(Algorithm):
         """
 
         if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
-            self._pool_obj = qf.SQOpPool()
-            self._pool_obj.set_orb_spaces(self._ref)
-            self._pool_obj.fill_pool(self._pool_type)
+            pool_obj = qf.SQOpPool()
+            pool_obj.set_orb_spaces(self._ref)
+            pool_obj.fill_pool(self._pool_type)
         elif isinstance(self._pool_type, qf.SQOpPool):
-            self._pool_obj = self._pool_type
+            pool_obj = self._pool_type
         else:
             raise ValueError('Invalid operator pool type specified.')
 
@@ -263,14 +263,22 @@ class AnsatzAlgorithm(Algorithm):
         # Currently, symmetry is supported for system_type='molecule' and build_type='psi4'
         if hasattr(self._sys, 'point_group'):
             temp_sq_pool = qf.SQOpPool()
-            for sq_operator in self._pool_obj.terms():
+            for sq_operator in pool_obj.terms():
                 create = sq_operator[1].terms()[0][1]
                 annihilate = sq_operator[1].terms()[0][2]
                 if sq_op_find_symmetry(self._sys.orb_irreps_to_int, create, annihilate) == self._irrep:
                     temp_sq_pool.add(sq_operator[0], sq_operator[1])
-            self._pool_obj = temp_sq_pool
+            pool_obj = temp_sq_pool
 
-        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
+        if self._verbose:
+            print('\n\n-------------------------------------')
+            print('   Second Quantized Operator Pool')
+            print('-------------------------------------')
+            print(pool_obj.str())
+
+        self._qubit_pool = pool_obj.get_qubit_op_pool()
+
+        self._Nm = [len(operator.terms()) for _, operator in self._qubit_pool]
 
     def measure_energy(self, Ucirc):
         """
@@ -300,7 +308,7 @@ class AnsatzAlgorithm(Algorithm):
         self._Nm = []
         self._tamps = []
         self._tops = []
-        self._pool_obj = qf.SQOpPool()
+        self._qubit_pool = qf.QubitOpPool()
 
         kwargs.setdefault('irrep', None)
         if hasattr(self._sys, 'point_group'):

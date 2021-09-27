@@ -55,7 +55,7 @@ QubitOpPool SQOpPool::get_qubit_op_pool(){
     for (auto& term : terms_) {
         // QubitOperator a = term.second.jw_transform();
         // a.mult_coeffs(term.first);
-        A.add_term(term.first, term.second.jw_transform());
+        A.add_term(term.first, term.second.jw_transform(), term.second.str());
     }
     return A;
 }
@@ -81,7 +81,6 @@ QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool c
             child.simplify(combine_like_terms=combine_like_terms);
             child.order_terms();
             parent.add_op(child);
-
         }
     } else {
         throw std::invalid_argument( "Invalid order_type specified.");

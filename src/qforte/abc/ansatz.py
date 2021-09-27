@@ -26,10 +26,10 @@ class UCC:
             A list of parameters that define the variational degrees of freedom in
             the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
-        temp_pool = qf.SQOpPool()
+        temp_pool = qf.QubitOpPool()
         tamps = self._tamps if amplitudes is None else amplitudes
         for tamp, top in zip(tamps, self._tops):
-            temp_pool.add(tamp, self._pool_obj[top][1])
+            temp_pool.add(tamp, self._qubit_pool[top][1])
 
         A = temp_pool.get_qubit_operator('commuting_grp_lex')
 
@@ -74,21 +74,25 @@ class UCC:
             residuals.
         """
 
+        reference_state = qf.QubitBasis(self._nqb)
+        for k, occ in enumerate(self._ref):
+            reference_state.set_bit(k, occ)
+
         resids_over_denoms = []
 
-        # loop over toperators
-        for mu, m in enumerate(self._tops):
-            sq_op = self._pool_obj[m][1]
+        for mu, (index, _) in enumerate(self._excited_dets):
+            excited = qf.QubitBasis(index)
 
-            temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
-                sq_creators = sq_op.terms()[0][1]
-                sq_annihilators = sq_op.terms()[0][2]
-            else:
-                sq_creators = sq_op.terms()[0][2]
-                sq_annihilators = sq_op.terms()[0][1]
+            denom = 0
 
-            denom = sum(self._orb_e[x] for x in sq_annihilators) - sum(self._orb_e[x] for x in sq_creators)
+            for qubit in range(self._nqb):
+                if reference_state.get_bit(qubit):
+                    if not excited.get_bit(qubit):
+                        # Annnihilated
+                        denom += self._orb_e[qubit]
+                elif excited.get_bit(qubit):
+                    # Created
+                    denom -= self._orb_e[qubit]
 
             res_mu = residuals[mu] / denom
 

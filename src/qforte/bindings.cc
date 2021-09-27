@@ -92,12 +92,13 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<QubitOpPool>(m, "QubitOpPool")
         .def(py::init<>())
-        .def("add", &QubitOpPool::add_term)
-        .def("add_term", &QubitOpPool::add_term)
+        .def("add", &QubitOpPool::add_term, "coeff"_a, "operator"_a, "description"_a = "")
+        .def("add_term", &QubitOpPool::add_term, "coeff"_a, "operator"_a, "description"_a = "")
         .def("set_coeffs", &QubitOpPool::set_coeffs)
         .def("set_op_coeffs", &QubitOpPool::set_op_coeffs)
         .def("set_terms", &QubitOpPool::set_terms)
         .def("terms", &QubitOpPool::terms)
+        .def("get_qubit_operator", &QubitOpPool::get_qubit_operator, "order_type"_a, "combine_like_terms"_a = true)
         .def("join_op_from_right_lazy", &QubitOpPool::join_op_from_right_lazy)
         .def("join_op_from_right", &QubitOpPool::join_op_from_right)
         .def("join_op_from_left", &QubitOpPool::join_op_from_left)
@@ -105,6 +106,10 @@ PYBIND11_MODULE(qforte, m) {
         .def("square", &QubitOpPool::square)
         .def("fill_pool", &QubitOpPool::fill_pool)
         .def("str", &QubitOpPool::str)
+        .def("__getitem__", [](const QubitOpPool &pool, size_t i) { return pool.terms()[i]; })
+        .def("__iter__", [](const QubitOpPool &pool) { return py::make_iterator(pool.terms()); },
+            py::keep_alive<0, 1>())
+        .def("__len__", [](const QubitOpPool &pool) { return pool.terms().size(); })
         .def("__str__", &QubitOpPool::str)
         .def("__repr__", &QubitOpPool::str);
 

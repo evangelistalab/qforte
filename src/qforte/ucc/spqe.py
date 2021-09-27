@@ -16,8 +16,8 @@ import numpy as np
 
 class SPQE(UCCPQE):
     """This class implements the selected projective quantum eigensolver (SPQE) for
-    disentagled UCC like ansatz.
-    In SPQE, a batch of imporant particle-hole operators
+    disentangled UCC like ansatz.
+    In SPQE, a batch of important particle-hole operators
     :math:`\{ e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger )} \}` are
     added at each macro-iteration :math:`n` to the SPQE unitary :math:`\hat{U}(\mathbf{t})`,
     wile all current parameters are optemized using the quasi-Newton PQE update
@@ -82,6 +82,8 @@ class SPQE(UCCPQE):
         self._converged = False
         self._res_vec_evals = 0
         self._res_m_evals = 0
+        # list: tuple(excited determinant, phase_factor)
+        self._excited_dets = []
 
         self._curr_energy = 0.0
 
@@ -101,9 +103,10 @@ class SPQE(UCCPQE):
             if occupation:
                 self._nbody_counts.append(0)
 
-        self._pool_obj = qf.SQOpPool()
+        pool_obj = qf.SQOpPool()
         for I in range(2 ** self._nqb):
-            self._pool_obj.add_term(0.0, self.get_op_from_basis_idx(I))
+            pool_obj.add_term(0.0, self.get_op_from_basis_idx(I))
+        self._qubit_pool = pool_obj.get_qubit_op_pool()
 
         self.build_orb_energies()
         spqe_iter = 0
@@ -208,7 +211,7 @@ class SPQE(UCCPQE):
         print('\n\n                ==> SPQE summary <==')
         print('-----------------------------------------------------------')
         print('Final SPQE Energy:                           ', round(self._Egs, 10))
-        print('Number of operators in pool:                 ', len(self._pool_obj))
+        print('Number of operators in pool:                 ', len(self._qubit_pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Number of classical parameters used:         ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
@@ -218,7 +221,6 @@ class SPQE(UCCPQE):
 
     def solve(self):
         self.diis_solve()
-
 
     def diis_solve(self):
         # draws heavy insiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
@@ -303,65 +305,13 @@ class SPQE(UCCPQE):
         coeffs = qc_res.get_coeff_vec()
         residuals = []
 
-        # each operator needs a score, so loop over toperators
-        for m in self._tops:
-            sq_op = self._pool_obj[m][1]
-            # occ => i,j,k,...
-            # vir => a,b,c,...
-            # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
-            temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
-                sq_creators = sq_op.terms()[0][1]
-                sq_annihilators = sq_op.terms()[0][2]
-            else:
-                sq_creators = sq_op.terms()[0][2]
-                sq_annihilators = sq_op.terms()[0][1]
+        for I, phase in self._excited_dets:
 
-            destroyed = False
-            denom = 1.0
+            res_m = coeffs[I] * phase
+            if(np.imag(res_m) > 0.0):
+                raise ValueError("residual has imaginary component, something went wrong!!")
 
-            basis_I = qforte.QubitBasis(self._nqb)
-            for k, occ in enumerate(self._ref):
-                basis_I.set_bit(k, occ)
-
-            # loop over anihilators
-            for p in reversed(sq_annihilators):
-                if( basis_I.get_bit(p) == 0):
-                    destroyed=True
-                    break
-
-                basis_I.set_bit(p, 0)
-
-            # then over creators
-            for p in reversed(sq_creators):
-                if (basis_I.get_bit(p) == 1):
-                    destroyed=True
-                    break
-
-                basis_I.set_bit(p, 1)
-
-            if not destroyed:
-
-                I = basis_I.add()
-
-                ## check for correct dets
-                det_I = integer_to_ref(I, self._nqb)
-                nel_I = sum(det_I)
-                cor_spin_I = correct_spin(det_I, 0)
-
-                qc_temp = qforte.Computer(self._nqb)
-                qc_temp.apply_circuit(self._Uprep)
-                qc_temp.apply_operator(sq_op.jw_transform())
-                sign_adjust = qc_temp.get_coeff_vec()[I]
-
-                res_m = coeffs[I] * sign_adjust
-                if(np.imag(res_m) > 0.0):
-                    raise ValueError("residual has imaginary component, someting went wrong!!")
-
-                residuals.append(res_m)
-
-            else:
-                raise ValueError("no ops should destroy reference, something went wrong!!")
+            residuals.append(res_m)
 
         return residuals
 
@@ -439,9 +389,7 @@ class SPQE(UCCPQE):
                     if(self._verbose):
                         print(f"  {Nmu_tup[1]:10}                  {np.real(Nmu_tup[0]):14}")
                     if(Nmu_tup[1] not in self._tops):
-                        self._tops.insert(0,Nmu_tup[1])
-                        self._tamps.insert(0,0.0)
-                        self.add_from_basis_idx(Nmu_tup[1])
+                        self.add_index_to_pool(Nmu_tup[1])
 
                 self._n_classical_params_lst.append(len(self._tops))
 
@@ -463,10 +411,14 @@ class SPQE(UCCPQE):
                     print('  -----------------------------------------------')
                 res_sq_sum = 0.0
 
+                reference_state = qforte.QubitBasis(self._nqb)
+                for k, occ in enumerate(self._ref):
+                    reference_state.set_bit(k, occ)
+
                 if(self._use_cumulative_thresh):
                     # Make a running list of operators. When the sum of res_sq exceeds the target, every operator
                     # from here out is getting added to the ansatz..
-                    temp_ops = []
+                    op_indices = []
                     for rmu_sq, op_idx in res_sq[:-1]:
                         res_sq_sum += rmu_sq / (self._dt * self._dt)
                         if res_sq_sum > (self._spqe_thresh * self._spqe_thresh):
@@ -474,12 +426,10 @@ class SPQE(UCCPQE):
                                 Ktemp = self.get_op_from_basis_idx(op_idx)
                                 print(f"  {op_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}   {Ktemp.str()}" )
                             if op_idx not in self._tops:
-                                temp_ops.append(op_idx)
-                                self.add_from_basis_idx(op_idx)
+                                op_indices.append(op_idx)
 
-                    for temp_op in temp_ops[::-1]:
-                        self._tops.insert(0, temp_op)
-                        self._tamps.insert(0, 0.0)
+                    for op_idx in op_indices[::-1]:
+                        self.add_index_to_pool(op_idx)
 
                 else:
                     # Add the single operator with greatest rmu_sq not yet in the ansatz
@@ -488,9 +438,7 @@ class SPQE(UCCPQE):
                         print(f"  {op_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}")
                         if op_idx not in self._tops:
                             print('Adding this operator to ansatz')
-                            self._tops.insert(0, op_idx)
-                            self._tamps.insert(0, 0.0)
-                            self.add_from_basis_idx(op_idx)
+                            self.add_index_to_pool(op_idx)
                             break
 
                 self._n_classical_params_lst.append(len(self._tops))
@@ -638,6 +586,16 @@ class SPQE(UCCPQE):
             self._final_result = self._results[-1]
         else:
             self._converged = False
+
+    def add_index_to_pool(self, index):
+        reference_state = qforte.QubitBasis(self._nqb)
+        for k, occ in enumerate(self._ref):
+            reference_state.set_bit(k, occ)
+
+        self._tops.insert(0, index)
+        self._tamps.insert(0, 0.0)
+        self.add_from_basis_idx(index)
+        self._excited_dets.insert(0, operator_to_determinant(self._qubit_pool[index][1], reference_state))
 
     def get_final_energy(self, hit_max_spqe_iter=0):
         """

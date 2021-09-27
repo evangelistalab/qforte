@@ -121,12 +121,6 @@ class ADAPTVQE(UCCVQE):
 
         self.fill_pool()
 
-        if self._verbose:
-            print('\n\n-------------------------------------')
-            print('   Second Quantized Operator Pool')
-            print('-------------------------------------')
-            print(self._pool_obj.str())
-
         avqe_iter = 0
         hit_maxiter = 0
 
@@ -239,7 +233,7 @@ class ADAPTVQE(UCCVQE):
         print('\n\n                ==> ADAPT-VQE summary <==')
         print('-----------------------------------------------------------')
         print('Final ADAPT-VQE Energy:                     ', round(self._Egs, 10))
-        print('Number of operators in pool:                 ', len(self._pool_obj))
+        print('Number of operators in pool:                 ', len(self._qubit_pool))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
         print('Total number of commutator measurements:      ', self.get_num_commut_measurements())
@@ -397,7 +391,7 @@ class ADAPTVQE(UCCVQE):
         return self._n_ham_measurements
 
     def get_num_commut_measurements(self):
-        self._n_commut_measurements += len(self._tamps) * len(self._pool_obj)
+        self._n_commut_measurements += len(self._tamps) * len(self._qubit_pool)
 
         if self._use_analytic_grad:
             for m, res in enumerate(self._results):

@@ -52,9 +52,9 @@ class Circuit {
     /// Return a vector of string representing this circuit.
     std::string str() const;
 
-    /// Return the number of qubits pertaining to this circuit. Note this is
-    /// not the numebr of unique qubits but the minimum number of qubits needed
-    /// to execute the circuit. For example the circut [X_0 Y_4 X_8] would requre
+    /// Return the number of qubits pertaining to this circuit. This is not
+    /// the number of unique qubits but the minimum number of qubits needed to
+    /// execute the circuit. For example the circuit [X_0 Y_4 X_8] requires
     /// nine qubits.    
     size_t num_qubits() const;
 

@@ -50,8 +50,8 @@ class UCCPQE(PQE, UCC):
         if not hasattr(self, '_pool_type'):
             raise NotImplementedError('Concrete UCCPQE class must define self._pool_type attribute.')
 
-        if not hasattr(self, '_pool_obj'):
-            raise NotImplementedError('Concrete UCCPQE class must define self._pool_obj attribute.')
+        if not hasattr(self, '_qubit_pool'):
+            raise NotImplementedError('Concrete UCCPQE class must define self._qubit_pool attribute.')
 
     #TODO: consider moving functions from uccnpqe or spqe into this class to
     #      to prevent duplication of code

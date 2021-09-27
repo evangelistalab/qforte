@@ -8,6 +8,7 @@ from second quantization -> qubit representation.
 import qforte
 import numpy as np
 import copy
+from collections import Counter
 
 def fermop_to_sq_excitation(fermop):
     # fermop => list of tuples [ ((idx, action), (idx, action), ...), coeff)  ]
@@ -327,3 +328,39 @@ def pauli_condense(pauli_op):
         condensed_op.append(condensed_word)
 
     return condensed_op
+
+def operator_to_determinant(operator: qforte.QubitOperator, reference: qforte.QubitBasis) -> tuple[int, complex]:
+
+    """
+    Maps an QubitOperator and a QubitBasis to the index of the basis state
+    that operator sends reference to, as well as the phase factor.
+
+    Will raise an error if operator does not send reference to a single basis state.
+    """
+    count = Counter()
+    for phase, circuit in operator.terms():
+        excited = qforte.QubitBasis(reference.add())
+        for gate in circuit.gates():
+            if gate.gate_id() == 'X':
+                excited.flip_bit(gate.target())
+            elif gate.gate_id() == 'Y':
+                phase *= -1j if excited.get_bit(gate.target()) else 1j
+                excited.flip_bit(gate.target())
+            elif gate.gate_id() == 'Z':
+                phase *= -1 if excited.get_bit(gate.target()) else 1
+            else:
+                raise Exception("PQE cannot currently work with non-Pauli gates in the qubit pool.")
+        count.update({excited.add(): phase})
+
+    found_one_det = False
+    for I, factor in count.items():
+        if factor != 0:
+            if found_one_det: break
+            det, phase = I, factor
+            found_one_det = True
+
+    if found_one_det:
+        return det, phase
+    else:
+        raise Exception(f"{operator} does not send the reference to a Pauli string.")
+
