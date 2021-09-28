@@ -190,7 +190,8 @@ class QPE(Algorithm):
         return Uhad
 
     def get_dynamics_circ(self):
-        """Generates a Trotter approximation to exp(-iHt).
+        """Generates controlled unitaries. Ancilla qubit n controls a Trotter
+        approximation to exp(-iHt*2^n).
 
         Returns
         -------
@@ -205,20 +206,21 @@ class QPE(Algorithm):
         scalar_terms = []
         for scalar, operator in self._qb_ham.terms():
             phase = -1.0j * scalar * self._t
-            temp_op.add(phase, operator)
             if operator.size() == 0:
                 scalar_terms.append(scalar * self._t)
+            else:
+                # Strangely, the code seems to work even if this line is outside the else clause.
+                # TODO: Figure out how.
+                temp_op.add(phase, operator)
 
         for n in range(self._n_ancilla):
             tn = 2 ** n
-            expn_op, _ = trotterize_w_cRz(temp_op,
-                                               ancilla_idx,
+            expn_op, _ = trotterize_w_cRz(temp_op, ancilla_idx,
                                                trotter_number=self._trotter_number)
 
             # Rotation for the scalar Hamiltonian term
             U.add(qforte.gate('R', ancilla_idx, ancilla_idx, -1.0 * np.sum(scalar_terms) * float(tn)))
 
-            # NOTE: Approach uses 2^ancilla_idx blocks of the time evolution circuit
             for i in range(tn):
                 U.add_circuit(expn_op)
 
