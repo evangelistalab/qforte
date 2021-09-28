@@ -190,49 +190,25 @@ class QPE(Algorithm):
         return Uhad
 
     def get_dynamics_circ(self):
-        """Generates a circuit for controlled dynamics operations used in phase
-        estimation. It approximates the exponentiated hermitian operator H as e^-iHt.
+        """Generates a Trotter approximation to exp(-iHt).
 
-            Arguments
-            ---------
+        Returns
+        -------
 
-            H : QubitOperator
-                The hermitian operator whose dynamics and eigenstates are of interest,
-                ussually the Hamiltonian.
-
-            trotter_num : int
-                The trotter number (m) to use for the decomposition. Exponentiation
-                is exact in the m --> infinity limit.
-
-            self._abegin : int
-                The index of the first ancilla qubit.
-
-            n_ancilla : int
-                The number of ancilla qubits used for the phase estimation.
-                Determines the total number of time steps.
-
-            t : float
-                The total evolution time.
-
-            Returns
-            -------
-
-            Udyn : Circuit
-                A circuit approximating controlled application of e^-iHt.
+        U : Circuit
+            A circuit approximating controlled application of e^-iHt.
         """
         U = qforte.Circuit()
         ancilla_idx = self._abegin
 
         temp_op = qforte.QubitOperator()
         scalar_terms = []
-        for h in self._qb_ham.terms():
-            c, op = h
-            phase = -1.0j * self._t * c #* tn
-            temp_op.add(phase, op)
-            if op.size() == 0:
-                scalar_terms.append(c * self._t)
+        for scalar, operator in self._qb_ham.terms():
+            phase = -1.0j * scalar * self._t
+            temp_op.add(phase, operator)
+            if operator.size() == 0:
+                scalar_terms.append(scalar * self._t)
 
-        total_phase = 1.0
         for n in range(self._n_ancilla):
             tn = 2 ** n
             expn_op, _ = trotterize_w_cRz(temp_op,
