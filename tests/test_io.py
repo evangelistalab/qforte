@@ -15,5 +15,5 @@ class TestIO:
         0.25, X_2 X_1; 0.0+0.25j, Y_2 X_1')
 
         #get direct expectatoin value
-        exp = trial_state.direct_op_exp_val(a1_dag_a2)
+        exp = trial_state.expectation(a1_dag_a2)
         assert exp == approx(0.25, abs=2.0e-16)

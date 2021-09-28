@@ -149,7 +149,7 @@ class QITE(Algorithm):
 
         qc_ref = qf.Computer(self._nqb)
         qc_ref.apply_circuit(self._Uprep)
-        self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
+        self._Ekb = [np.real(qc_ref.expectation(self._qb_ham))]
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -371,7 +371,7 @@ class QITE(Algorithm):
         self._total_phase *= phase1
         self._Uqite.add(eiA_kb)
         self._qc.apply_circuit(eiA_kb)
-        self._Ekb.append(np.real(self._qc.direct_op_exp_val(self._qb_ham)))
+        self._Ekb.append(np.real(self._qc.expectation(self._qb_ham)))
 
         self._n_cnot += eiA_kb.get_num_cnots()
 

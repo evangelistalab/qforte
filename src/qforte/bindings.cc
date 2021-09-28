@@ -135,7 +135,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("direct_oppl_exp_val", &Computer::direct_oppl_exp_val)
         .def("direct_idxd_oppl_exp_val", &Computer::direct_idxd_oppl_exp_val)
         .def("direct_oppl_exp_val_w_mults", &Computer::direct_oppl_exp_val_w_mults)
-        .def("direct_op_exp_val", &Computer::direct_op_exp_val)
+        .def("expectation", &Computer::expectation)
         .def("direct_circ_exp_val", &Computer::direct_circ_exp_val)
         .def("direct_pauli_circ_exp_val", &Computer::direct_pauli_circ_exp_val)
         .def("direct_gate_exp_val", &Computer::direct_gate_exp_val)

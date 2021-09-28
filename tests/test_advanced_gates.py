@@ -13,7 +13,7 @@ class TestAdvGate:
         print(T_circ.str())
         trial_state.apply_circuit(T_circ) # This should turn the state to 1110
         a1_dag_a2 = build_operator('1.0, Z_2')
-        exp = trial_state.direct_op_exp_val(a1_dag_a2)
+        exp = trial_state.expectation(a1_dag_a2)
         assert exp == approx(-1, abs=9e-16) # Measure qubit 2 should give -1
 
         # verify Fredkin gate
@@ -22,5 +22,5 @@ class TestAdvGate:
         trial_state.apply_circuit(F_circ) # This should turn the state to 1101
         # trial_state.apply_circuit_safe(F_circ) # This should turn the state to 1101
         a1_dag_a2 = build_operator('1.0, Z_2')
-        exp = trial_state.direct_op_exp_val(a1_dag_a2)
+        exp = trial_state.expectation(a1_dag_a2)
         assert exp == approx(1, abs=9e-16) # Measure qubit 2 should give +1

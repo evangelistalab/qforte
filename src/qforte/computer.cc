@@ -748,7 +748,7 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
 
 }
 
-std::complex<double> Computer::direct_op_exp_val(const QubitOperator& qo) {
+std::complex<double> Computer::expectation(const QubitOperator& qo) {
     // local_timer t;
     std::complex<double> result = 0.0;
     if(parallelism_enabled){
@@ -767,7 +767,7 @@ std::complex<double> Computer::direct_op_exp_val(const QubitOperator& qo) {
 
         coeff_ = old_coeff;
     }
-    // timings_.push_back(std::make_pair("direct_op_exp_val", t.get()));
+    // timings_.push_back(std::make_pair("expectation", t.get()));
     return result;
 }
 
@@ -777,7 +777,7 @@ std::vector<std::complex<double>> Computer::direct_oppl_exp_val(
     std::vector<std::complex<double>> results;
 
     for (const auto& pl_term : qopl.terms()) {
-        results.push_back(direct_op_exp_val(pl_term.second) * pl_term.first);
+        results.push_back(expectation(pl_term.second) * pl_term.first);
     }
 
     return results;
@@ -789,7 +789,7 @@ std::vector<std::complex<double>> Computer::direct_idxd_oppl_exp_val(
     std::vector<std::complex<double>> results;
     if(parallelism_enabled){
         for (const auto& idx : idxs){
-            std::complex<double> val = direct_op_exp_val(qopl.terms()[idx].second);
+            std::complex<double> val = expectation(qopl.terms()[idx].second);
             results.push_back(val*qopl.terms()[idx].first);
         }
     } else {

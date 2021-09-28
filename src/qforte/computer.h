@@ -80,7 +80,7 @@ class Computer {
 
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
-    std::complex<double> direct_op_exp_val(const QubitOperator& qo);
+    std::complex<double> expectation(const QubitOperator& qo);
 
     /// get the expectation value of many 1qubit gates directly
     /// (ie without simulated measurement)
