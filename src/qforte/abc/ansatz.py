@@ -47,13 +47,13 @@ class UCC:
         print('---------------------------------------', flush=True)
         qc = qf.Computer(self._nqb)
         qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
-        E0 = qc.direct_op_exp_val(self._qb_ham)
+        E0 = qc.expectation(self._qb_ham)
 
         for i in range(self._nqb):
             qc = qf.Computer(self._nqb)
             qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
             qc.apply_gate(qf.gate('X', i, i))
-            Ei = qc.direct_op_exp_val(self._qb_ham)
+            Ei = qc.expectation(self._qb_ham)
 
             if(i<sum(self._ref)):
                 ei = E0 - Ei

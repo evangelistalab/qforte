@@ -282,5 +282,5 @@ class TestGates:
         a1_dag_a2.add(0.0+0.25j, circ4)
 
         #get direct expectatoin value
-        exp = trial_state.direct_op_exp_val(a1_dag_a2)
+        exp = trial_state.expectation(a1_dag_a2)
         assert exp == approx(0.25, abs=2.0e-16)

@@ -285,7 +285,7 @@ class AnsatzAlgorithm(Algorithm):
         if self._fast:
             myQC = qforte.Computer(self._nqb)
             myQC.apply_circuit(Ucirc)
-            val = np.real(myQC.direct_op_exp_val(self._qb_ham))
+            val = np.real(myQC.expectation(self._qb_ham))
         else:
             Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
             val = Exp.perfect_experimental_avg([])

@@ -1,0 +1,25 @@
+package:
+  name: "qforte"
+  version: "1.0.0"
+
+source:
+  git_rev: "0f6d603da878535c057b4d2594e730551876b1ec"
+  git_url: "https://github.com/evangelistalab/qforte.git"
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - numpy
+    - scipy
+    - pytest
+
+test:
+  imports:
+    - qforte
+
+about:
+  home: "https://github.com/evangelistalab/qforte"
