@@ -69,7 +69,7 @@ QubitOperator QubitOpPool::get_qubit_operator(const std::string& order_type, boo
             parent.add_op(child);
         }
     } else {
-        throw std::invalid_argument( "Invalid order_type specified.");
+        throw std::invalid_argument( "Invalid order_type specified. Allowed values are unique_lex and commuting_grp_lex.");
     }
     return parent;
 }

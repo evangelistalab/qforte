@@ -20,7 +20,7 @@ class QubitOpPool {
     /// set all the terms of the QubitOperator from a vector of QubitOperators
     void set_terms(std::vector<std::pair<std::complex<double>, QubitOperator>>& new_terms);
 
-    /// add one set of anihilators and/or creators to the second quantized operator pool
+    /// Add a QubitOperator, and optionally a description
     void add_term(std::complex<double> coeff, const QubitOperator& q_op, const std::string& str = "");
 
     /// sets the operator pool coefficeints

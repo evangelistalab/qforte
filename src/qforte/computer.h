@@ -73,7 +73,7 @@ class Computer {
     std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QubitOpPool& qopl, const std::vector<int>& idxs);
 
     /// measure expectation value of all operators in an operator pool, where
-    /// the operator coefficents have been multipiled by mults
+    /// the operator coefficients have been multiplied by mults
     std::vector<std::complex<double>> direct_oppl_exp_val_w_mults(
         const QubitOpPool& qopl,
         const std::vector<std::complex<double>>& mults);
