@@ -18,18 +18,21 @@ class QPE(Algorithm):
             t = 1.0,
             nruns = 20,
             success_prob = 0.5,
-            num_precise_bits = 4,
-            return_phases=False):
+            num_precise_bits = 4):
 
+        # float: evolution times
         self._t = t
+        # int: number of times to sample the eigenvalue distribution
         self._nruns = nruns
         self._success_prob = success_prob
         self._num_precise_bits = num_precise_bits
-        self._return_phases = return_phases
         self._Uqpe = qforte.Circuit()
+        # int: The number of qubits needed to represent the state.
         self._n_state_qubits = self._nqb
         eps = 1 - success_prob
+        # int: The number of ancilla qubits used to hold eigenvalue information
         self._n_ancilla = num_precise_bits + int(np.log2(2 + (1.0/eps)))
+        # int: The total number of qubits needed in the circuit
         self._n_tot_qubits = self._n_state_qubits + self._n_ancilla
         self._abegin = self._n_state_qubits
         self._aend = self._n_tot_qubits - 1
@@ -42,10 +45,10 @@ class QPE(Algorithm):
 
         ######### QPE ########
 
-        # add hadamard circ to split ancilla register
+        # Apply Hadamard gates to all ancilla qubits
         self._Uqpe.add(self.get_Uhad())
 
-        # add initial state preparation circuit
+        # Prepare the trial state on the non-ancilla qubits
         self._Uqpe.add(self._Uprep)
 
         # add controll e^-iHt circuit
@@ -78,10 +81,7 @@ class QPE(Algorithm):
         final_readout = []
         final_readout_aves = []
         for i in range(self._n_ancilla):
-            iave = 0.0
-            for readout in z_readouts:
-                iave += readout[i]
-            iave /= nruns
+            iave = sum(readout[i] for readout in z_readouts) / nruns
             final_readout_aves.append(iave)
             if (iave > (1.0/2)):
                 final_readout.append(1)
@@ -185,31 +185,31 @@ class QPE(Algorithm):
         """
         Uhad = qforte.Circuit()
         for j in range(self._abegin, self._aend + 1):
-            Uhad.add(qforte.gate('H', j, j))
+            Uhad.add(qforte.gate('H', j))
 
         return Uhad
 
     def get_dynamics_circ(self):
         """Generates a circuit for controlled dynamics operations used in phase
-        estimation. It approximates the exponentiated hermetina operator H as e^-iHt.
+        estimation. It approximates the exponentiated hermitian operator H as e^-iHt.
 
             Arguments
             ---------
 
             H : QubitOperator
-                The hermetian operaotr whos dynamics and eigenstates are of interest,
-                ususally the Hamiltonian.
+                The hermitian operator whose dynamics and eigenstates are of interest,
+                ussually the Hamiltonian.
 
             trotter_num : int
-                The trotter number (m) to use for the decompostion. Exponentiation
+                The trotter number (m) to use for the decomposition. Exponentiation
                 is exact in the m --> infinity limit.
 
             self._abegin : int
-                The index of the begin qubit.
+                The index of the first ancilla qubit.
 
             n_ancilla : int
-                The number of anciall qubit used for the phase estimation.
-                Determintes the total number of time steps.
+                The number of ancilla qubits used for the phase estimation.
+                Determines the total number of time steps.
 
             t : float
                 The total evolution time.
@@ -220,41 +220,39 @@ class QPE(Algorithm):
             Udyn : Circuit
                 A circuit approximating controlled application of e^-iHt.
         """
-        Udyn = qforte.Circuit()
+        U = qforte.Circuit()
         ancilla_idx = self._abegin
+
+        temp_op = qforte.QubitOperator()
+        scalar_terms = []
+        for h in self._qb_ham.terms():
+            c, op = h
+            phase = -1.0j * self._t * c #* tn
+            temp_op.add(phase, op)
+            if op.size() == 0:
+                scalar_terms.append(c * self._t)
+
         total_phase = 1.0
         for n in range(self._n_ancilla):
             tn = 2 ** n
-            temp_op = qforte.QubitOperator()
-            scaler_terms = []
-            for h in self._qb_ham.terms():
-                c, op = h
-                phase = -1.0j * self._t * c #* tn
-                temp_op.add(phase, op)
-                gates = op.gates()
-                if op.size() == 0:
-                    scaler_terms.append(c * self._t)
-
-
-            expn_op, phase1 = trotterize_w_cRz(temp_op,
+            expn_op, _ = trotterize_w_cRz(temp_op,
                                                ancilla_idx,
                                                trotter_number=self._trotter_number)
 
-            # Rotation for the scaler Hamiltonian term
-            Udyn.add(qforte.gate('R', ancilla_idx, ancilla_idx,  -1.0 * np.sum(scaler_terms) * float(tn)))
+            # Rotation for the scalar Hamiltonian term
+            U.add(qforte.gate('R', ancilla_idx, ancilla_idx, -1.0 * np.sum(scalar_terms) * float(tn)))
 
             # NOTE: Approach uses 2^ancilla_idx blocks of the time evolution circuit
             for i in range(tn):
-                for gate in expn_op.gates():
-                    Udyn.add(gate)
+                U.add_circuit(expn_op)
 
             ancilla_idx += 1
 
-        return Udyn
+        return U
 
 
     def get_qft_circuit(self, direct):
-        """Generates a circuit for Quantum Fourier Transformation with no swaping
+        """Generates a circuit for Quantum Fourier Transformation with no swapping
         of bit positions.
 
             Arguments
@@ -279,7 +277,7 @@ class QPE(Algorithm):
         qft_circ = qforte.Circuit()
         lens = self._aend - self._abegin + 1
         for j in range(lens):
-            qft_circ.add(qforte.gate('H', j+self._abegin, j+self._abegin))
+            qft_circ.add(qforte.gate('H', j+self._abegin))
             for k in range(2, lens+1-j):
                 phase = 2.0*np.pi/(2**k)
                 qft_circ.add(qforte.gate('cR', j+self._abegin, j+k-1+self._abegin, phase))
@@ -291,7 +289,6 @@ class QPE(Algorithm):
         else:
             raise ValueError('QFT directions can only be "forward" or "reverse"')
 
-        return qft_circ
 
     def get_z_circuit(self):
         """Generates a circuit of Z gates for each quibit in the ancilla register.
@@ -314,6 +311,6 @@ class QPE(Algorithm):
 
         Z_circ = qforte.Circuit()
         for j in range(self._abegin, self._aend + 1):
-            Z_circ.add(qforte.gate('Z', j, j))
+            Z_circ.add(qforte.gate('Z', j))
 
         return Z_circ
