@@ -262,11 +262,6 @@ class UCCNVQE(UCCVQE):
         #     return 0
         return 0
 
-    def fill_excited_dets(self):
-        reference_state = qforte.QubitBasis(self._nqb)
-        for k, occ in enumerate(self._ref):
-            reference_state.set_bit(k, occ)
-
-        self._excited_dets = [operator_to_determinant(qubit_operator, reference_state) for _, qubit_operator in self._qubit_pool]
-
 UCCNVQE.diis_solve = optimizer.diis_solve
+UCCNVQE.fill_excited_dets = fill_excited_dets
+

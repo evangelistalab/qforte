@@ -20,7 +20,7 @@ class SPQE(UCCPQE):
     In SPQE, a batch of important particle-hole operators
     :math:`\{ e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger )} \}` are
     added at each macro-iteration :math:`n` to the SPQE unitary :math:`\hat{U}(\mathbf{t})`,
-    wile all current parameters are optemized using the quasi-Newton PQE update
+    while all current parameters are optimized using the quasi-Newton PQE update
     with micro-iterations :math:`k`.
 
     In our selection approach we consider a (normalized) quantum state of the form

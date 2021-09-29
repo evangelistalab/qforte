@@ -18,7 +18,6 @@ from qforte.helper.printing import matprint
 
 import numpy as np
 from scipy.linalg import lstsq
-from collections import Counter
 
 class UCCNPQE(UCCPQE):
     """
@@ -157,14 +156,6 @@ class UCCNPQE(UCCPQE):
     def solve(self):
         self.diis_solve(self.get_residual_vector)
 
-    def fill_excited_dets(self):
-
-        reference_state = qforte.QubitBasis(self._nqb)
-        for k, occ in enumerate(self._ref):
-            reference_state.set_bit(k, occ)
-
-        self._excited_dets = [operator_to_determinant(qubit_operator, reference_state) for _, qubit_operator in self._qubit_pool]
-
     def get_residual_vector(self, trial_amps):
         """Returns the residual vector with elements pertaining to all operators
         in the ansatz circuit.
@@ -215,3 +206,4 @@ class UCCNPQE(UCCPQE):
             self._tamps.append(0.0)
 
 UCCNPQE.diis_solve = optimizer.diis_solve
+UCCNPQE.fill_excited_dets = fill_excited_dets

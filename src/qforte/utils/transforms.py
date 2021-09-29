@@ -332,7 +332,7 @@ def pauli_condense(pauli_op):
 def operator_to_determinant(operator: qforte.QubitOperator, reference: qforte.QubitBasis) -> tuple[int, complex]:
 
     """
-    Maps an QubitOperator and a QubitBasis to the index of the basis state
+    Maps a QubitOperator and a QubitBasis to the index of the basis state
     that operator sends reference to, as well as the phase factor.
 
     Will raise an error if operator does not send reference to a single basis state.
@@ -364,3 +364,9 @@ def operator_to_determinant(operator: qforte.QubitOperator, reference: qforte.Qu
     else:
         raise Exception(f"{operator} does not send the reference to a Pauli string.")
 
+def fill_excited_dets(self):
+    reference_state = qforte.QubitBasis(self._nqb)
+    for k, occ in enumerate(self._ref):
+        reference_state.set_bit(k, occ)
+
+    self._excited_dets = [operator_to_determinant(qubit_operator, reference_state) for _, qubit_operator in self._qubit_pool]
