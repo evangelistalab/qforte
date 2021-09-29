@@ -15,6 +15,7 @@ from scipy import stats
 
 class QPE(Algorithm):
     def run(self,
+            guess_energy,
             t = 1.0,
             nruns = 20,
             success_prob = 0.5,
@@ -39,6 +40,9 @@ class QPE(Algorithm):
 
         self._n_classical_params = 0
         self._n_pauli_trm_measures = nruns
+
+        self._guess_energy = guess_energy
+        self._guess_periods = round(self._t * guess_energy / (-2 * np.pi))
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -70,11 +74,7 @@ class QPE(Algorithm):
 
         self._phases = []
         for readout in z_readouts:
-            val = 0.0
-            i = 1
-            for z in readout:
-                val += z / (2**i)
-                i += 1
+            val = sum(z / (2**i) for i, z in enumerate(readout, start=1))
             self._phases.append(val)
 
         # find final binary string of phase readouts:
@@ -83,20 +83,19 @@ class QPE(Algorithm):
         for i in range(self._n_ancilla):
             iave = sum(readout[i] for readout in z_readouts) / nruns
             final_readout_aves.append(iave)
-            if (iave > (1.0/2)):
-                final_readout.append(1)
-            else:
-                final_readout.append(0)
+            final_readout.append(1 if iave > 0.5 else 0)
 
-        self._final_phase = 0.0
-        counter = 0
-        for i, z in enumerate(final_readout):
-            self._final_phase += z / (2**(i+1))
+        self._final_phase = sum(z / (2**i) for i, z in enumerate(final_readout, start=1))
 
-        Eqpe = -2 * np.pi * self._final_phase / t
+        E_u = -2 * np.pi * (self._final_phase + self._guess_periods - 1) / t
+        E_l = -2 * np.pi * (self._final_phase + self._guess_periods - 0) / t
+        E_qpe = E_l if abs(E_l - guess_energy) < abs(E_u - guess_energy) else E_u
+
         res = stats.mode(np.asarray(self._phases))
         self._mode_phase = res.mode[0]
-        self._mode_energy = -2 * np.pi * self._mode_phase / t
+        E_u = -2 * np.pi * (self._mode_phase + self._guess_periods - 1) / t
+        E_l = -2 * np.pi * (self._mode_phase + self._guess_periods - 0) / t
+        self._mode_energy = E_l if abs(E_l - guess_energy) < abs(E_u - guess_energy) else E_u
 
         print('\n           ==> QPE readout averages <==')
         print('------------------------------------------------')
@@ -107,7 +106,7 @@ class QPE(Algorithm):
         ######### QPE ########
 
         # set Egs
-        self._Egs = Eqpe
+        self._Egs = E_qpe
 
         # set Umaxdepth
         self._Umaxdepth = self._Uqpe
@@ -138,10 +137,7 @@ class QPE(Algorithm):
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
         print('Use fast version of algorithm:           ',  str(self._fast))
-        if(self._fast):
-            print('Measurement varience thresh:             ',  'NA')
-        else:
-            print('Measurement varience thresh:             ',  0.01)
+        print('Measurement variance thresh:             ', 'NA' if self._fast else 0.01)
 
         # Specific QPE options.
         print('Target success probability:              ',  self._success_prob)
@@ -195,7 +191,6 @@ class QPE(Algorithm):
 
         Returns
         -------
-
         U : Circuit
             A circuit approximating controlled application of e^-iHt.
         """
