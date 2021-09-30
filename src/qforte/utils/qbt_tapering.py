@@ -7,7 +7,6 @@ import numpy as np
 from itertools import product
 
 def find_Z2_symmetries(hamiltonian, qiskit_order = False):
-
     """
     This function computes the Z2 symmetries of the Hamiltonian, identifies the ID numbers of the qubits to
     be tapered off, provides the corresponding sign structures, and constructs the necessary unitary operators.
@@ -37,21 +36,21 @@ def find_Z2_symmetries(hamiltonian, qiskit_order = False):
     n_qubits = hamiltonian.num_qubits()
     n_strings = len(hamiltonian.terms())
 
-    ## Construct parity check matrix
+    ## Construct parity check matrix.
+    ## The rows of the parity check matrix correspond to Pauli strings of the qubit Hamiltonian.
+    ## The columns of the parity check matrix correspond to the Z_(n_qubits - 1), ..., Z_0, X_(n_qubits - 1), ..., X_0 Pauli gates.
+    ## For example, prt_chck_mtrx[i, n_qubits - 1] == 1 (0) designates the presence (absence) of the Z_0 Pauli gate in the ith Pauli string of the Hamiltonian.
     prt_chck_mtrx = np.zeros((n_strings, 2 * n_qubits), dtype=np.uint8)
-    for i, string in enumerate(hamiltonian.terms()):
-        for pauli in string[1].gates():
+    for i, (_, string) in enumerate(hamiltonian.terms()):
+        for pauli in string.gates():
             XYZ_gate = pauli.gate_id()
             trgt = pauli.target()
-            if XYZ_gate == 'Z':
+            if XYZ_gate in ['Y', 'Z']:
                 prt_chck_mtrx[i, n_qubits - trgt - 1] = 1
-            elif XYZ_gate == 'X':
-                prt_chck_mtrx[i, 2 * n_qubits - trgt - 1] = 1
-            else:
-                prt_chck_mtrx[i, n_qubits - trgt - 1] = 1
+            if XYZ_gate in ['X', 'Y']:
                 prt_chck_mtrx[i, 2 * n_qubits - trgt - 1] = 1
 
-    # 2) Find the basis of the kernel of the parity check matrix, ker{E}
+    # 2) Find a basis of the kernel of the parity check matrix
     # See https://en.wikipedia.org/wiki/Kernel_(linear_algebra)#Computation_by_Gaussian_elimination
 
     ## Augment the (n_strings) × (2 * n_qubits) parity check matrix by the (2 * n_qubits) × (2 * n_qubits) identity matrix
@@ -60,18 +59,22 @@ def find_Z2_symmetries(hamiltonian, qiskit_order = False):
 
     ## Find column echelon form (CEF) of augmented matix.
 
+    ### To speed up the process, we only work with the part of the parity check matrix that has not been transformed yet to CEF.
+    ### This is controlled by the "idx" variable
     idx = 0
+
     for row in range(n_strings):
         ### Find a non-zero row
-        if np.any(prt_chck_mtrx_aug[row,idx:] == 1):
+        clmns_not_in_CEF = prt_chck_mtrx_aug[row,idx:]
+        if np.any(clmns_not_in_CEF):
             ### Find positions of non-zero elements
-            count = np.argwhere(prt_chck_mtrx_aug[row,idx:] == 1)
-            column = int(count[0]) + idx
+            nonzero_indices = np.argwhere(clmns_not_in_CEF)
+            column = int(nonzero_indices[0]) + idx
             ### Swap columns to bring first non-zero element in this row immediately to the right of that of the previous row
             prt_chck_mtrx_aug[:, [column , idx]] = prt_chck_mtrx_aug[:, [idx, column]]
             ### Eliminate remaining non-zero elements in the submatrix
-            for i in range(1,count.shape[0]):
-                column2 = int(count[i]) + idx
+            for i in range(1,nonzero_indices.shape[0]):
+                column2 = int(nonzero_indices[i]) + idx
                 prt_chck_mtrx_aug[:,column2] = np.bitwise_xor(prt_chck_mtrx_aug[:, idx], prt_chck_mtrx_aug[:,column2])
             ### decrease the number of columns that need to be checked
             idx += 1
@@ -136,8 +139,8 @@ def find_Z2_symmetries(hamiltonian, qiskit_order = False):
                 idx = row
 
         ### Identify basis vectors that do not commute with e and eliminate them.
-        count = np.argwhere(abln[idx,:] == 1)
-        basis_tmp = np.delete(basis_tmp, count, axis=0)
+        nonzero_indices = np.argwhere(abln[idx,:])
+        basis_tmp = np.delete(basis_tmp, nonzero_indices, axis=0)
 
         ### Construct abln matrix for the next iteration.
 
@@ -163,17 +166,17 @@ def find_Z2_symmetries(hamiltonian, qiskit_order = False):
     else:
         _range = list(range(n_qubits, 2 * n_qubits))
     for column in _range:
-        count = np.argwhere(tau[:, column] == 1)
-        if count.shape[0] == 1:
-            if count[0] not in lst:
-                lst.append(int(count[0]))
+        nonzero_indices = np.argwhere(tau[:, column])
+        if nonzero_indices.shape[0] == 1:
+            if nonzero_indices[0] not in lst:
+                lst.append(int(nonzero_indices[0]))
                 idx += 1
         else:
-            for i in range(count.shape[0]):
-                if count[i] not in lst:
-                    lst.append(int(count[i]))
-                    for el in filter(lambda el: el not in count[i], count):
-                        tau[int(el), :] = np.bitwise_xor(tau[int(el), :], tau[int(count[i]), :])
+            for i in range(nonzero_indices.shape[0]):
+                if nonzero_indices[i] not in lst:
+                    lst.append(int(nonzero_indices[i]))
+                    for el in filter(lambda el: el not in nonzero_indices[i], nonzero_indices):
+                        tau[int(el), :] = np.bitwise_xor(tau[int(el), :], tau[int(nonzero_indices[i]), :])
                     idx += 1
                     break
         if idx == tau.shape[0]:
@@ -187,24 +190,26 @@ def find_Z2_symmetries(hamiltonian, qiskit_order = False):
     for i in range(tau.shape[0]):
         pauli = qf.Circuit()
         for j in reversed(range(n_qubits)):
-            if tau[i, j] == 1 and tau[i, j + n_qubits] == 1:
-                pauli.add_gate(qf.gate('Y', n_qubits - j - 1))
-            elif tau[i, j] == 1:
-                pauli.add_gate(qf.gate('X', n_qubits - j - 1))
-            elif tau[i, j + n_qubits] == 1:
-                pauli.add_gate(qf.gate('Z', n_qubits - j - 1))
+            if tau[i, j] != 0 or tau[i, j + n_qubits] != 0:
+                if tau[i, j] == 1 and tau[i, j + n_qubits] == 1:
+                    gate_type = 'Y'
+                elif tau[i, j] == 1:
+                    gate_type = 'X'
+                elif tau[i, j + n_qubits] == 1:
+                    gate_type = 'Z'
+                pauli.add_gate(qf.gate(gate_type, n_qubits - j - 1))
         gnrtrs.append(pauli)
 
     ## Find which sigma_x gate will be paired with which generator
     sigma_x = np.zeros((tau.shape[0]), dtype=np.uint16)
 
     if qiskit_order:
-        _range = list(range(n_qubits))
+        _range = range(n_qubits)
     else:
-        _range = list(reversed(range(n_qubits)))
+        _range = reversed(range(n_qubits))
     for i in _range:
-        if np.argwhere(tau[:,n_qubits + i] == 1).shape[0] == 1:
-            sigma_x[np.argwhere(tau[:,n_qubits + i] == 1)] = n_qubits - i - 1
+        if np.argwhere(tau[:,n_qubits + i]).shape[0] == 1:
+            sigma_x[np.argwhere(tau[:,n_qubits + i])] = n_qubits - i - 1
 
     ## Reorder sigma_x operators in descending order of qubit identity. Do the same with the generators for consistency.
 
@@ -235,8 +240,7 @@ def find_Z2_symmetries(hamiltonian, qiskit_order = False):
 
     return gnrtrs, sigma_x, untrs, unitary, signs
 
-def qubit_tapering_oprtr(n_qubits, tapered_qubits, sign, operator, unitary):
-
+def qubit_tapering_oprtr(tapered_qubits, sign, operator, unitary):
     """
     This function uses the unitary matrix obtained using find_Z2_symmetries to transform a given operator.
     After the unitary transformation, the resulting operator acts on the qubits to be tapered off by at most
@@ -244,9 +248,6 @@ def qubit_tapering_oprtr(n_qubits, tapered_qubits, sign, operator, unitary):
     +/- 1 eigenvalues, which are provided by the user.
 
     Arguments
-
-    n_qubits: integer
-        Initial number of qubits.
 
     tapered_qubits: list of integers
         The ID numbers of the qubits to be tapered off.
@@ -262,7 +263,7 @@ def qubit_tapering_oprtr(n_qubits, tapered_qubits, sign, operator, unitary):
         The unitary operator that will perform the dersired transformation.
     """
 
-    # Transform the given operator using the fact that the unitary matrix is also Hermitian
+    # Similarity transform the given operator using the fact that the unitary matrix is also Hermitian
 
     unitary_tmp = qf.QubitOperator()
     unitary_tmp.add_op(unitary)
@@ -273,15 +274,13 @@ def qubit_tapering_oprtr(n_qubits, tapered_qubits, sign, operator, unitary):
     # Create a QForte QubitOperator object that will store the tapered operator
     operator_tapered = qf.QubitOperator()
 
-    coeff_tmp = []
-    for counter, term in enumerate(operator.terms()):
+    for i, (coeff, circuit) in enumerate(operator.terms()):
         # Create circuit that will store the pauli string with gates corresponding to qubits to be tapered off removed
         circ = qf.Circuit()
         # List that will store the coefficients modified according to the sign structure provided by the user
-        coeff_tmp.append(term[0])
-        for pauli in term[1].gates():
+        for pauli in circuit.gates():
             if any(qubit == pauli.target() for qubit in tapered_qubits):
-                coeff_tmp[counter] *= sign[int(np.argwhere(tapered_qubits == pauli.target()))]
+                coeff *= sign[int(np.argwhere(tapered_qubits == pauli.target()))]
             else:
                 # Adjust the qubit ID of a given gate based on the number of gates that were removed before it
                 idx = np.count_nonzero(pauli.target() > tapered_qubits)
@@ -289,17 +288,14 @@ def qubit_tapering_oprtr(n_qubits, tapered_qubits, sign, operator, unitary):
                 gate = pauli.gate_id()
                 circ.add_gate(qf.gate(gate, target))
 
-        operator_tapered.add_term(term[0], circ)
+        operator_tapered.add_term(coeff, circ)
 
-    # Replace the coefficients with the ones having the requested sign structure
-    operator_tapered.set_coeffs(coeff_tmp)
     # Simplify the entire operator
     operator_tapered.simplify(True)
 
     return operator_tapered
 
 def qubit_tapering_ref(tapered_qubits, ref):
-
     """
     This function removes the designated qubits from a given reference.
 
