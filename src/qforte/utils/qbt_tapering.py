@@ -265,16 +265,23 @@ def qubit_tapering_oprtr(tapered_qubits, sign, operator, unitary):
 
     # Similarity transform the given operator using the fact that the unitary matrix is also Hermitian
 
+    ## This is necessary; otherwise later on we would be modifying the "unitary" object directly, which we do not want to do
     unitary_tmp = qf.QubitOperator()
     unitary_tmp.add_op(unitary)
-    operator.operator_product(unitary_tmp, True, True)
-    unitary_tmp.operator_product(operator, True, True)
-    operator = unitary_tmp
+
+    ## This is necessary; if we do not do this, when transforming the Hamiltonian we would be changing the "hamiltonian"
+    ## attribute of the Molecule class to nonsense.
+    operator_tmp = qf.QubitOperator()
+    operator_tmp.add_op(operator)
+
+    operator_tmp.operator_product(unitary_tmp, True, True)
+    unitary_tmp.operator_product(operator_tmp, True, True)
+    operator_tmp = unitary_tmp
 
     # Create a QForte QubitOperator object that will store the tapered operator
     operator_tapered = qf.QubitOperator()
 
-    for i, (coeff, circuit) in enumerate(operator.terms()):
+    for i, (coeff, circuit) in enumerate(operator_tmp.terms()):
         # Create circuit that will store the pauli string with gates corresponding to qubits to be tapered off removed
         circ = qf.Circuit()
         # List that will store the coefficients modified according to the sign structure provided by the user
