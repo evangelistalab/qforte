@@ -15,11 +15,17 @@ from scipy import stats
 
 class QPE(Algorithm):
     def run(self,
-            guess_energy,
+            guess_energy: float,
             t = 1.0,
             nruns = 20,
             success_prob = 0.5,
             num_precise_bits = 4):
+        """
+        guess_energy : A guess for the eigenvalue of the eigenspace with which |0>^(n)
+            has greatest overlap. You should be confident the ground state is within
+        t : A scaling parameter that controls the precision of the computation. You should
+            confident that the eigenvalue of interest is within +/- t of the guess energy.
+        """
 
         # float: evolution times
         self._t = t
