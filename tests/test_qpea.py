@@ -54,10 +54,44 @@ class TestQPE:
         mol.hamiltonian = H2_qubit_hamiltonian
 
         alg = QPE(mol, reference=ref, trotter_number=2)
-        alg.run(t = 0.4,
+        alg.run(guess_energy = -1,
+                t = 0.4,
                 nruns = 100,
                 success_prob = 0.5,
                 num_precise_bits = 8)
 
         Egs = alg.get_gs_energy()
         assert Egs == approx(E_fci, abs=1.1e-3)
+
+    def test_large_eigenvalue(self):
+        E_fci = -20
+
+        coef_vec = [E_fci, 0]
+
+        circ_vec = [
+        Circuit( ), build_circuit('Z_1')
+        ]
+
+        H2_qubit_hamiltonian = QubitOperator()
+        for i in range(len(circ_vec)):
+            H2_qubit_hamiltonian.add(coef_vec[i], circ_vec[i])
+
+        ref = [1,0]
+
+        print('\nBegin QPE test')
+        print('----------------------')
+
+        # make test with algorithm class
+        mol = Molecule()
+        mol.hamiltonian = H2_qubit_hamiltonian
+
+        alg = QPE(mol, reference=ref, trotter_number=2)
+        alg.run(guess_energy = E_fci,
+                t = 1,
+                nruns = 50,
+                success_prob = 0.9,
+                num_precise_bits = 8)
+
+        Egs = alg.get_gs_energy()
+        assert Egs == approx(E_fci, abs=1.1e-3)
+
