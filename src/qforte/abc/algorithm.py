@@ -75,10 +75,6 @@ class Algorithm(ABC):
                  print_summary_file=False,
                  **kwargs):
 
-        if isinstance(self, qf.QPE) and hasattr(system, 'frozen_core'):
-            if system.frozen_core + system.frozen_virtual > 0:
-                raise ValueError("QPE with frozen orbitals is not currently supported.")
-
         self._sys = system
         self._state_prep_type = state_prep_type
 

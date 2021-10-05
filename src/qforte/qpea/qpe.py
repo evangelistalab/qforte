@@ -24,7 +24,9 @@ class QPE(Algorithm):
         guess_energy : A guess for the eigenvalue of the eigenspace with which |0>^(n)
             has greatest overlap. You should be confident the ground state is within
         t : A scaling parameter that controls the precision of the computation. You should
-            confident that the eigenvalue of interest is within +/- t of the guess energy.
+            confident that the eigenvalue of interest is within +/- 2pi/t of the guess energy.
+            Larger t's lead to fewer resources for the same amount of precision, but require
+            more confidence in the guess energy.
         """
 
         # float: evolution times
