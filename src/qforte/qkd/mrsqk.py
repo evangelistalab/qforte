@@ -175,60 +175,22 @@ class MRSQK(QSD):
 
             self._n_classical_params = self._srqk._n_classical_params
             self._n_cnot = self._srqk._n_cnot
-            self._n_pauli_trm_measures = self._srqk._n_pauli_trm_measures
 
             self.build_refs_from_srqk()
 
             print('\n  ==> SRQK reference selection complete.')
 
-        elif(reference_generator=='ACI'):
-            raise NotImplementedError('ACI reference generation not yet available in qforte.')
-            print('\n  ==> Beginning ACI for reference selction.')
-            print('\n  ==> ACI reference selction complete.')
-
         else:
-            raise ValueError("Incorrect value passed for reference_generator, can be 'SRQK' or 'ACI'.")
+            raise ValueError("Incorrect value passed for reference_generator, can be 'SRQK'.")
 
-        # 2. Build the S and H matrices.
-        # Build S and H matricies
-        if(self._fast):
-            if(self._use_spin_adapted_refs):
-                self._S, self._Hbar = self.build_sa_qk_mats()
-            else:
-                self._S, self._Hbar = self.build_qk_mats()
-        else:
-            self._S, self._Hbar = self.build_qk_mats_realistic()
+        self.common_run()
 
-        # Set the condition number of QSD overlap
-        self._Scond = np.linalg.cond(self._S)
-
-        # 3. Solve the generalized eigenproblem
-        # Get eigenvalues and eigenvectors
-        self._eigenvalues, self._eigenvectors \
-        = canonical_geig_solve(self._S,
-                               self._Hbar,
-                               print_mats=self._verbose,
-                               sort_ret_vals=True)
-
-        # 4. Report and set results.
-        print('\n       ==> MRSQK eigenvalues <==')
-        print('----------------------------------------')
-        for i, val in enumerate(self._eigenvalues):
-            print('  root  {}  {:.8f}    {:.8f}j'.format(i, np.real(val), np.imag(val)))
-
-        # Set ground state energy.
-        self._Egs = np.real(self._eigenvalues[0])
-
-        # Set target state energy.
-        if(self._target_root==0):
-            self._Ets = self._Egs
-        else:
-            self._Ets = np.real(self._eigenvalues[self._target_root])
-
+    # Define Algorithm abstract methods.
+    def set_circuit_variables(self):
         self._n_classical_params = self._nstates
 
         # diagonal terms of Hbar
-        if(reference_generator=='SRQK'):
+        if(self._reference_generator=='SRQK'):
             self._n_pauli_trm_measures  = self._nstates * self._Nl + self._srqk._n_pauli_trm_measures
         else:
             raise ValueError('Can only count number of paulit term measurements when using SRQK.')
@@ -237,16 +199,6 @@ class MRSQK(QSD):
         # off-diagonal of S (<X> and <Y> of Hadamard test)
         self._n_pauli_trm_measures += self._nstates*(self._nstates-1)
 
-        ######### MRSQK #########
-
-        # Print summary banner (should done for all algorithms).
-        self.print_summary_banner()
-
-        # verify that required attributes were defined
-        # (should be called for all algorithms!)
-        self.verify_run()
-
-    # Define Algorithm abstract methods.
     def run_realistic(self):
         raise NotImplementedError('run_realistic() is not fully implemented for MRSQK.')
 
@@ -303,8 +255,14 @@ class MRSQK(QSD):
         print('Number of CNOT gates in deepest circuit:   ', self._n_cnot)
         print('Number of Pauli term measurements:         ', self._n_pauli_trm_measures)
 
-    # Define QK abstract methods.
     def build_qk_mats(self):
+        if(self._use_spin_adapted_refs):
+            return self.build_sa_qk_mats()
+        else:
+            return self.build_qk_mats_fast()
+
+    # Define QK abstract methods.
+    def build_qk_mats_fast(self):
         num_tot_basis = len(self._single_det_refs) * self._nstates_per_ref
 
         h_mat = np.zeros((num_tot_basis,num_tot_basis), dtype=complex)
@@ -478,9 +436,6 @@ class MRSQK(QSD):
                 print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         return s_mat, h_mat
-
-    def build_qk_mats_realistic(self):
-        pass
 
     def build_refs_from_srqk(self):
         self.build_refs()

@@ -47,7 +47,7 @@ def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
         for trot_term in ho_op.terms():
             term_generator, phase = qforte.exponentiate_pauli_string(trot_term[0],trot_term[1])
             for gate in term_generator.gates():
-                troterized_operator.add(gate)
+                trotterized_operator.add(gate)
             total_phase *= phase
 
     return (trotterized_operator, total_phase)
