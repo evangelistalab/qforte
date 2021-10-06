@@ -11,7 +11,7 @@ from qforte.maths.eigsolve import canonical_geig_solve
 import numpy as np
 
 class QSD(Algorithm):
-    """The abstract base class inheritied by any algorithm that seeks to find
+    """The abstract base class inherited by any algorithm that seeks to find
     eigenstates of the Hamiltonian in a (generally) non-orthogonal basis of
     many-body states :math:`\{ | \Psi_n \\rangle \}`. The basis is generated
     by a corresponding family of unitary operators

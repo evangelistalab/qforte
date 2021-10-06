@@ -23,8 +23,7 @@ from qforte.utils.trotterization import (trotterize,
                                          trotterize_w_cRz)
 
 import numpy as np
-from scipy.linalg import (lstsq,
-                          eig)
+from scipy.linalg import eig
 
 class MRSQK(QSD):
     """A quantum subspace diagonalization algorithm that generates the many-body
