@@ -6,12 +6,15 @@ variant.
 """
 from abc import abstractmethod
 from qforte.abc.algorithm import Algorithm
+from qforte.maths.eigsolve import canonical_geig_solve
+
+import numpy as np
 
 class QSD(Algorithm):
-    """The abstract base class inheritied by any algorithm that seeks to find
+    """The abstract base class inherited by any algorithm that seeks to find
     eigenstates of the Hamiltonian in a (generally) non-orthogonal basis of
     many-body states :math:`\{ | \Psi_n \\rangle \}`. The basis is generated
-    by a corrspondig family of unitary operators
+    by a corresponding family of unitary operators
 
     .. math::
         | \Psi_n \\rangle = \hat{U}_n | \Phi_0 \\rangle
@@ -77,17 +80,40 @@ class QSD(Algorithm):
         """
         pass
 
-    @abstractmethod
-    def build_qk_mats_realistic(self):
-        """Constructs the effective Hamiltonian (:math:`\mathbf{H}`) and overlap
-        (:math:`\mathbf{S}`) matricies in a maner consistant with the restranits
-        present on a physical quantum devce (uses circuits for Hadamard test).
-        """
+    def set_circuit_variables(self):
         pass
 
-    # @abstractmethod
-    # def build_qk_mats_realistic(self):
-    #     pass
+    def common_run(self):
+        # Build S and H matrices
+        self._S, self._Hbar = self.build_qk_mats()
+        self._Scond = np.linalg.cond(self._S)
+
+        # Get eigenvalues and eigenvectors
+        self._eigenvalues, self._eigenvectors \
+        = canonical_geig_solve(self._S,
+                               self._Hbar,
+                               print_mats=self._verbose,
+                               sort_ret_vals=True)
+
+        print(f'\n       ==> {type(self).__name__} eigenvalues <==')
+        print('----------------------------------------')
+        for i, val in enumerate(self._eigenvalues):
+            print('  root  {}  {:.8f}    {:.8f}j'.format(i, np.real(val), np.imag(val)))
+
+        # Set ground state energy.
+        self._Egs = np.real(self._eigenvalues[0])
+
+        # Set target state energy.
+        self._Ets = np.real(self._eigenvalues[self._target_root])
+
+        self.set_circuit_variables()
+
+        # Print summary banner (should done for all algorithms).
+        self.print_summary_banner()
+
+        # verify that required attributes were defined
+        # (should be called for all algorithms!)
+        self.verify_run()
 
     def get_ts_energy(self):
         """Returns the energy of the target state.

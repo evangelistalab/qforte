@@ -17,7 +17,6 @@ from qforte.utils.trotterization import (trotterize,
                                          trotterize_w_cRz)
 
 import numpy as np
-from scipy.linalg import lstsq
 
 class SRQK(QSD):
     """A quantum subspace diagonalization algorithm that generates the many-body
@@ -62,46 +61,7 @@ class SRQK(QSD):
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
-        ######### SRQK #########
-
-        # Build S and H matricies
-        if(self._fast):
-            self._S, self._Hbar = self.build_qk_mats()
-        else:
-            self._S, self._Hbar = self.build_qk_mats_realistic()
-
-        # Set the condition number of QSD overlap
-        self._Scond = np.linalg.cond(self._S)
-
-        # Get eigenvalues and eigenvectors
-        self._eigenvalues, self._eigenvectors \
-        = canonical_geig_solve(self._S,
-                               self._Hbar,
-                               print_mats=self._verbose,
-                               sort_ret_vals=True)
-
-        print('\n       ==> QK eigenvalues <==')
-        print('----------------------------------------')
-        for i, val in enumerate(self._eigenvalues):
-            print('  root  {}  {:.8f}    {:.8f}j'.format(i, np.real(val), np.imag(val)))
-
-        # Set ground state energy.
-        self._Egs = np.real(self._eigenvalues[0])
-
-        # Set target state energy.
-        if(self._target_root==0):
-            self._Ets = self._Egs
-        else:
-            self._Ets = np.real(self._eigenvalues[self._target_root])
-
-        ######### SRQK #########
-
-        # Print summary banner (should done for all algorithms).
-        self.print_summary_banner()
-
-        # verify that required attributes were defined
-        # (should be called for all algorithms!)
-        self.verify_run()
+        self.common_run()
 
     # Define Algorithm abstract methods.
     def run_realistic(self):
@@ -149,6 +109,13 @@ class SRQK(QSD):
         print('Number of Pauli term measurements:         ', self._n_pauli_trm_measures)
 
     def build_qk_mats(self):
+        if (self._fast):
+            return self.build_qk_mats_fast()
+        else:
+            return self.build_qk_mats_realistic()
+
+
+    def build_qk_mats_fast(self):
         """Returns matrices S and H needed for the QK algorithm using the Trotterized
         form of the unitary operators U_n = exp(-i n dt H)
 

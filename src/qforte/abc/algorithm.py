@@ -149,8 +149,8 @@ class Algorithm(ABC):
 
     @abstractmethod
     def run_realistic(self):
-        """Executes the algorithm using only operations physically possable for
-        quantum hardware. Not implented for most algorithms.
+        """Executes the algorithm using only operations physically possible for
+        quantum hardware. Not implemented for most algorithms.
         """
         pass
 
