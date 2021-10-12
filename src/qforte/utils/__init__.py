@@ -5,4 +5,4 @@ from .qft import *
 from .state_prep import *
 from .exp_ops import *
 from .point_groups import *
-from .qbt_tapering import *
+from .qubit_tapering import *

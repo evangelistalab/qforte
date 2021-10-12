@@ -1,4 +1,4 @@
-from qforte import system_factory, QubitOperator, find_Z2_symmetries, qubit_tapering_oprtr
+from qforte import system_factory, QubitOperator, find_Z2_symmetries, qubit_tapering_operator
 
 class TestQubitTapering:
 
@@ -55,7 +55,7 @@ class TestQubitTapering:
 
         generators, sigmas, unitaries, unitary, sign = find_Z2_symmetries(mol.hamiltonian, True)
 
-        tapered_ham = qubit_tapering_oprtr(sigmas, sign[0], mol.hamiltonian, unitary)
+        tapered_ham = qubit_tapering_operator(sigmas, sign[0], mol.hamiltonian, unitary)
 
         assert str(generators) == generators_from_qiskit
         assert str(sigmas) == sigmas_from_qiskit
