@@ -1,4 +1,4 @@
-from qforte import system_factory, QubitOperator, find_Z2_symmetries, qubit_tapering_operator
+from qforte import system_factory, QubitOperator, find_Z2_symmetries, taper_operator
 
 class TestQubitTapering:
 
@@ -23,23 +23,6 @@ class TestQubitTapering:
                                   '+0.707107[Z13 Z11 Z9 Z7 Z5 Z3 Z1]\n+0.707107[X1], ' +
                                   '+0.707107[Z13 Z10 Z8 Z7 Z5 Z2 Z0]\n+0.707107[X0]]')
 
-        sign_from_qiskit = ('[(1, 1, 1, 1), ' +
-                             '(1, 1, 1, -1), ' +
-                             '(1, 1, -1, 1), ' +
-                             '(1, 1, -1, -1), ' +
-                             '(1, -1, 1, 1), ' +
-                             '(1, -1, 1, -1), ' +
-                             '(1, -1, -1, 1), ' +
-                             '(1, -1, -1, -1), ' +
-                             '(-1, 1, 1, 1), ' +
-                             '(-1, 1, 1, -1), ' +
-                             '(-1, 1, -1, 1), ' +
-                             '(-1, 1, -1, -1), ' +
-                             '(-1, -1, 1, 1), ' +
-                             '(-1, -1, 1, -1), ' +
-                             '(-1, -1, -1, 1), ' +
-                             '(-1, -1, -1, -1)]')
-
         to_angs = 0.529177210903
 
         mol = system_factory(system_type = 'molecule',
@@ -53,12 +36,12 @@ class TestQubitTapering:
         orig_ham = QubitOperator()
         orig_ham.add_op(mol.hamiltonian)
 
-        generators, sigmas, unitaries, unitary, sign = find_Z2_symmetries(mol.hamiltonian, True)
+        generators, sigmas, unitaries, unitary = find_Z2_symmetries(mol.hamiltonian, True, True)
 
-        tapered_ham = qubit_tapering_operator(sigmas, sign[0], mol.hamiltonian, unitary)
+        sign = [1, 1, 1, 1]
+        tapered_ham = taper_operator(sigmas, sign, mol.hamiltonian, unitary)
 
         assert str(generators) == generators_from_qiskit
         assert str(sigmas) == sigmas_from_qiskit
         assert str(unitaries) == unitaries_from_qiskit
-        assert str(sign) == sign_from_qiskit
         assert str(orig_ham) == str(mol.hamiltonian)

@@ -7,10 +7,10 @@ import numpy as np
 from itertools import product
 from copy import deepcopy
 
-def find_Z2_symmetries(hamiltonian, taper_from_least = False):
+def find_Z2_symmetries(hamiltonian, taper_from_least = False, debug = False):
     """
-    This function computes the Z2 symmetries of the Hamiltonian, identifies the ID numbers of the qubits to
-    be tapered off, provides the corresponding sign structures, and constructs the necessary unitary operators.
+    This function computes the Z2 symmetries of the qubit Hamiltonian, identifies the ID numbers of the qubits to
+    be tapered off, and constructs the necessary unitary operators.
     It is based on the qubit tapering approach reported in https://arxiv.org/abs/1701.08213.
 
     Arguments:
@@ -19,41 +19,112 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False):
         The qubit Hamiltonian whose Z2 symmetries we want to find.
 
     taper_from_least: bool
-        If True, the qubits to be tapered off will have the smallest id numbers possible, as is done in Qiskit.
-        If False, the qubits to be tapered off will have the largest id numbers possible. This is the default,
-        since it leads to less operations once the qubits are removed.
+        If True/False, the qubits to be tapered off will have the smallest/largest id numbers possible.
+
+    debug: bool
+        If True, the function returns the "generators" and "unitaries" lists described below, as well.
 
     Returns:
 
     generators: list of QubitOperator objects
-        Qubit representation of set of independent generators of the symmetry group of the Hamiltonian.
+        Qubit representation of set of independent generators of the symmetry group of the qubit Hamiltonian.
 
     sigma_x: list of integers
         The indices of the sigma_x Pauli gates that each generator will be transformed to.
         The indices coincide with the indices of the qubits to be tapered off.
 
     unitaries: list of QubitOperator objects
-        The Clifford gates that transform each generator to a given sigma_x Pauli gate.
+        The intermediate Clifford operators that transform each generator to a given sigma_x Pauli gate.
 
     unitary: QubitOperator
-        The final Clifford gate that performs the desired similarity transformation.
-
-    signs: list of +/- 1 tuples
-        Each tuple corresponds to a different symmetry subspace of the Hamiltonian.
-        For each qubit to be tapered off, we can either be in the +1 or -1 subspace.
+        The final Clifford operator that performs the desired similarity transformation.
     """
-
-    # The algorithm consists of the following steps:
-    # 1) Construct the parity check matrix E from a given qubit Hamiltonian
-    # 2) Find the basis of the kernel of the parity check matrix, ker{E}
-    # 3) Find maximal Abelian subgroup of the basis of ker{E}
-    # 4) Construct unitary matrices that will be used in the qubit_tapering algorithm
-    # 5) Compute the various signs corresponding to the eigenvalues of the sigma_x operators that will be removed
-
-    # 1) Construct the parity check matrix E from a given qubit Hamiltonian
 
     n_qubits = hamiltonian.num_qubits()
     n_strings = len(hamiltonian.terms())
+
+    prt_chck_mtrx = construct_parity_check_matrix(n_qubits, n_strings, hamiltonian)
+
+    basis = find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx)
+
+    generators_binary = find_maximal_Abelian_subgroup(n_qubits, basis, taper_from_least)
+
+    # Translate binary vectors back to Pauli strings to obtain the generators of the symmetry group
+    generators = []
+    for i in range(generators_binary.shape[0]):
+        pauli = qf.Circuit()
+        for j in reversed(range(n_qubits)):
+            if generators_binary[i, j] != 0 or generators_binary[i, j + n_qubits] != 0:
+                if generators_binary[i, j] == 1 and generators_binary[i, j + n_qubits] == 1:
+                    gate_type = 'Y'
+                elif generators_binary[i, j] == 1:
+                    gate_type = 'X'
+                elif generators_binary[i, j + n_qubits] == 1:
+                    gate_type = 'Z'
+                pauli.add_gate(qf.gate(gate_type, n_qubits - j - 1))
+        generators.append(pauli)
+
+    # Find which sigma_x gate will be paired with which generator
+    sigma_x = np.zeros((generators_binary.shape[0]), dtype=np.uint16)
+
+    if taper_from_least:
+        _range = range(n_qubits)
+    else:
+        _range = reversed(range(n_qubits))
+    for i in _range:
+        if np.argwhere(generators_binary[:,n_qubits + i]).shape[0] == 1:
+            sigma_x[np.argwhere(generators_binary[:,n_qubits + i])] = n_qubits - i - 1
+
+    # Reorder sigma_x operators in descending order of qubit identity. Do the same with the generators for consistency.
+
+    reorder = np.argsort(sigma_x)
+    sigma_x = sigma_x[reorder][::-1]
+    generators = [generators[i] for i in reorder[::-1]]
+
+    # Construct individual unitary matrices
+    unitaries = []
+
+    for idx, generator in enumerate(generators):
+        circ = qf.Circuit()
+        circ.add_gate(qf.gate('X', sigma_x[idx]))
+        oprtr = qf.QubitOperator()
+        oprtr.add_term(1/np.sqrt(2), generator)
+        oprtr.add_term(1/np.sqrt(2), circ)
+        unitaries.append(oprtr)
+
+    # Construct final unitary matrix
+    unitary = qf.QubitOperator()
+    unitary.add_op(unitaries[0])
+    for op in unitaries[1:]:
+        unitary.operator_product(op, True, True)
+
+    if debug:
+        return generators, sigma_x, unitaries, unitary
+    else:
+        return sigma_x, unitary
+
+def construct_parity_check_matrix(n_qubits, n_strings, hamiltonian):
+    """
+    This function constructs the parity check matrix corresponding to the given qubit Hamiltonian.
+    The rows of the parity check matrix correspond to Pauli strings of the qubit Hamiltonian.
+    The columns of the parity check matrix correspond to the Z_(n_qubits - 1), ..., Z_0, X_(n_qubits - 1), ..., X_0 Pauli gates.
+
+    Arguments:
+
+    n_qubits: int
+        The number of qubits of the system.
+
+    n_strings: int
+        The number of Pauli strings contained in the qubit Hamiltonian
+
+    hamiltonian: QubitOperator
+        The qubit Hamiltonian whose Z2 symmetries we want to find.
+
+    Returns:
+
+    prt_chck_mtrx: uint8 numpy array
+        The parity check matrix.
+    """
 
     ## The rows of the parity check matrix correspond to Pauli strings of the qubit Hamiltonian.
     ## The columns of the parity check matrix correspond to the Z_(n_qubits - 1), ..., Z_0, X_(n_qubits - 1), ..., X_0 Pauli gates.
@@ -67,8 +138,29 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False):
             if XYZ_gate in ['X', 'Y']:
                 prt_chck_mtrx[i, 2 * n_qubits - trgt - 1] = 1
 
-    # 2) Find a basis of the kernel of the parity check matrix
-    # See https://en.wikipedia.org/wiki/Kernel_(linear_algebra)#Computation_by_Gaussian_elimination
+    return prt_chck_mtrx
+
+def find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx):
+    """
+    This function finds a basis of the kernel of the parity check matrix (see
+    https://en.wikipedia.org/wiki/Kernel_(linear_algebra)#Computation_by_Gaussian_elimination).
+
+    Arguments:
+
+    n_qubits: int
+        The number of qubits of the system.
+
+    n_strings: int
+        The number of Pauli strings contained in the qubit Hamiltonian
+
+    prt_chck_mtrx: uint8 numpy array
+        The parity check matrix.
+
+    Returns:
+
+    basis: uint8 numpy array
+        The rows of this matrix constitute a basis of the kernel of the parity check matrix.
+    """
 
     ## Augment the (n_strings) × (2 * n_qubits) parity check matrix by the (2 * n_qubits) × (2 * n_qubits) identity matrix
 
@@ -77,7 +169,7 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False):
     ## Find column echelon form (CEF) of augmented matix.
 
     ### We only work with the columns of the parity check matrix that have not been transformed yet to CEF.
-    ### This is controlled by the "idx" variable
+    ## This is controlled by the "idx" variable
     idx = 0
 
     for row in range(n_strings):
@@ -85,7 +177,7 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False):
         nonzero_indices = np.argwhere(prt_chck_mtrx_aug[row,idx:])
         if nonzero_indices.shape[0] > 0:
             column_to_be_CEFed = int(nonzero_indices[0]) + idx
-            ### Bring first non-zero element in this row immediately to the right of that of the previous row
+            ### The first column that is non-zero in this row is the next column to "CEF" - swap positions accordingly
             prt_chck_mtrx_aug[:, [column_to_be_CEFed , idx]] = prt_chck_mtrx_aug[:, [idx, column_to_be_CEFed]]
             ### Eliminate remaining non-zero row elements in the part of the parity check matrix that is not in CEF
             for i in range(1,nonzero_indices.shape[0]):
@@ -96,26 +188,41 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False):
 
     ## Find basis vectors of kernel by checking for zero columns in the CEF of the parity check matrix
 
-    dim = False
-    basis = np.zeros((1, 2 * n_qubits), dtype=np.uint8)
+    basis = np.zeros((0, 2 * n_qubits), dtype=np.uint8)
     # The first idx columns are nonzero by construction
     for column in range(idx, 2 * n_qubits):
         row = n_strings
         if not np.any(prt_chck_mtrx_aug[:row, column]):
             new_basis_vector = prt_chck_mtrx_aug[row:, column].reshape((1,2 * n_qubits))
-            if dim is False:
-                basis = new_basis_vector
-                dim = True
-            else:
-                basis = np.concatenate((basis, new_basis_vector), axis=0)
+            basis = np.concatenate((basis, new_basis_vector), axis=0)
 
-    # 3) Find maximal Abelian subgroup of the basis of ker{E}
-    # This is done using the symplectic bilinear form B that the binary vector space is equipped with:
-    # B(v,w) = v * B * w.T,
-    # where v and w are binary vectors and B is the matrix of the bilinear form.
-    # B(v,w) = 0 means that v and w commute while B(v,w) = 1 means that they anticommute.
+    return basis
 
-    ## Construct matrix of bilinear form.
+def find_maximal_Abelian_subgroup(n_qubits, basis, taper_from_least):
+    """
+    This function finds the maximal Abelian subgroup of the kernel of the parity check matrix.
+    The generators of the maximal Abelian subgroup are the generators of the symmetry group
+    of the qiven qubit Hamiltonian.
+
+    Arguments:
+
+    n_qubits: int
+        The number of qubits of the system.
+
+    basis: uint8 numpy array
+        The rows of this matrix constitute a basis of the kernel of the parity check matrix.
+
+    taper_from_least: bool
+        If True/False, the qubits to be tapered off will have the smallest/largest id numbers possible.
+
+    Returns:
+
+    generators_binary: uint8 numpy array
+        The rows of this matrix are the generators, in binary representation, of the symmetry group of the qubit Hamiltonian.
+    """
+
+    ## Construct symplectic bilinear form matrix B, which acts on binary vectors.
+    ## v * B * w.T = 0/1 means v and w commute/anticommute.
 
     zero_matrix = np.zeros((n_qubits, n_qubits), dtype=np.uint8)
     identity_matrix = np.identity(n_qubits, dtype=np.uint8)
@@ -124,10 +231,7 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False):
         [identity_matrix, zero_matrix    ]
         ])
 
-    ## Construct abelian matrix.
-    ## abelian[i,j] contains the value of the bilinear form betweeen the ith and jth basis vectors of ker{E}
-    ## 0/1 in the ith row and jth column of abelian means that the Pauli strings
-    ## associated with the ith and jth binary vectors commute/anticommute.
+    ## For all pairs of ker(E) basis vectors, compute abelian[v, w] = v * B * w.T
 
     abelian = np.matmul(basis, np.matmul(blnr_frm_mtrx, basis.T))
     abelian %= 2
@@ -165,15 +269,16 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False):
 
     generators_binary = basis_tmp
 
-    ### This step is not necessary. It transforms the generators of the symmetry group in such a way that the
-    ### removed qubits have the smallest/largest possbile identity numbers. A similar modification is made
-    ### at the "sigma_x selection" part of the algorithm below.
+    ## Multiply the generators among themselves to create a new generating set that is
+    ## compatible with tapering off the qubits with smallest/largest indices possible.
+    ## Compatible here means "satisfy the (anti)commutation relations".
+
     idx = 0
     lst = []
     if taper_from_least:
-        _range = list(reversed(range(n_qubits, 2 * n_qubits)))
+        _range = reversed(range(n_qubits, 2 * n_qubits))
     else:
-        _range = list(range(n_qubits, 2 * n_qubits))
+        _range = range(n_qubits, 2 * n_qubits)
     for column in _range:
         nonzero_indices = np.argwhere(generators_binary[:, column])
         if nonzero_indices.shape[0] == 1:
@@ -190,73 +295,17 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False):
                     break
         if idx == generators_binary.shape[0]:
             break
-    ###
 
-    # 4) Construct unitary matrix that will transform Hamiltonian
+    return generators_binary
 
-    ## Translate binary vectors back to Pauli strings to obtain the generators of the symmetry group
-    generators = []
-    for i in range(generators_binary.shape[0]):
-        pauli = qf.Circuit()
-        for j in reversed(range(n_qubits)):
-            if generators_binary[i, j] != 0 or generators_binary[i, j + n_qubits] != 0:
-                if generators_binary[i, j] == 1 and generators_binary[i, j + n_qubits] == 1:
-                    gate_type = 'Y'
-                elif generators_binary[i, j] == 1:
-                    gate_type = 'X'
-                elif generators_binary[i, j + n_qubits] == 1:
-                    gate_type = 'Z'
-                pauli.add_gate(qf.gate(gate_type, n_qubits - j - 1))
-        generators.append(pauli)
-
-    ## Find which sigma_x gate will be paired with which generator
-    sigma_x = np.zeros((generators_binary.shape[0]), dtype=np.uint16)
-
-    if taper_from_least:
-        _range = range(n_qubits)
-    else:
-        _range = reversed(range(n_qubits))
-    for i in _range:
-        if np.argwhere(generators_binary[:,n_qubits + i]).shape[0] == 1:
-            sigma_x[np.argwhere(generators_binary[:,n_qubits + i])] = n_qubits - i - 1
-
-    ## Reorder sigma_x operators in descending order of qubit identity. Do the same with the generators for consistency.
-
-    reorder = np.argsort(sigma_x)
-    sigma_x = sigma_x[reorder][::-1]
-    generators = [generators[i] for i in reorder[::-1]]
-
-    ## Construct individual unitary matrices
-    unitaries = []
-
-    for idx, generator in enumerate(generators):
-        circ = qf.Circuit()
-        circ.add_gate(qf.gate('X', sigma_x[idx]))
-        oprtr = qf.QubitOperator()
-        oprtr.add_term(1/np.sqrt(2), generator)
-        oprtr.add_term(1/np.sqrt(2), circ)
-        unitaries.append(oprtr)
-
-    ## Construct final unitary matrix
-    unitary = qf.QubitOperator()
-    unitary.add_op(unitaries[0])
-    for op in unitaries[1:]:
-        unitary.operator_product(op, True, True)
-
-    # 5) Compute the various signs corresponding to the eigenvalues of the sigma_x operators that will be removed
-
-    signs = list(product([1, -1], repeat=len(sigma_x)))
-
-    return generators, sigma_x, unitaries, unitary, signs
-
-def qubit_tapering_operator(tapered_qubits, sign, operator, unitary):
+def taper_operator(tapered_qubits, sign, operator, unitary):
     """
     This function uses the unitary matrix obtained using find_Z2_symmetries to transform a given operator.
     After the unitary transformation, the resulting operator acts on the qubits to be tapered off by at most
     a single sigma_x operator. The sigma_x gates acting on qubits to be tapered off are replaced by their
     +/- 1 eigenvalues, which are provided by the user.
 
-    Arguments
+    Arguments:
 
     tapered_qubits: list of integers
         The indices of the qubits to be tapered off.
@@ -271,7 +320,7 @@ def qubit_tapering_operator(tapered_qubits, sign, operator, unitary):
     unitary: QubitOperator
         The unitary operator that will perform the dersired transformation.
 
-    Returns
+    Returns:
 
     operator_tapered: QubitOperator
         The tapered operator.
@@ -303,7 +352,7 @@ def qubit_tapering_operator(tapered_qubits, sign, operator, unitary):
         tapered_circuit = qf.Circuit()
         # List that will store the coefficients modified according to the sign structure provided by the user
         for pauli in circuit.gates():
-            if any(qubit == pauli.target() for qubit in tapered_qubits):
+            if pauli.target() in tapered_qubits:
                 coeff *= sign[int(np.argwhere(tapered_qubits == pauli.target()))]
             else:
                 # Adjust gate targets to account for tapered qubits
@@ -321,6 +370,7 @@ def qubit_tapering_operator(tapered_qubits, sign, operator, unitary):
 def taper_reference(tapered_qubits, ref):
     """
     This function removes the designated qubits from a given reference, ref.
+    WARNING: The code assumes that the tapered_qubits list is in descending order.
 
     Arguments:
 
@@ -338,7 +388,6 @@ def taper_reference(tapered_qubits, ref):
 
     ref_tapered = deepcopy(ref)
 
-    # WARNING: The code assumes that the tapered_qubits list is in descending order.
     for i in tapered_qubits:
         del ref_tapered[i]
 
