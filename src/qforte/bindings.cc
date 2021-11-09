@@ -8,6 +8,7 @@
 #include "circuit.h"
 #include "gate.h"
 #include "computer.h"
+#include "pauli_string.h"
 #include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
@@ -111,12 +112,26 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<QubitBasis>(m, "QubitBasis")
         .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
         .def("str", &QubitBasis::str)
-        .def("__str__", &QubitBasis::default_str)
-        .def("__repr__", &QubitBasis::default_str)
+        .def("__str__", [](const QubitBasis& qb) {
+            return qb.str(QubitBasis::max_qubits());
+        })
+        .def("__repr__", [](const QubitBasis& qb) {
+            return qb.str(QubitBasis::max_qubits());
+        })
         .def("flip_bit", &QubitBasis::flip_bit)
         .def("set_bit", &QubitBasis::set_bit)
-        .def("add", &QubitBasis::add)
+        .def("add", &QubitBasis::address)
+        .def("address", &QubitBasis::address)
         .def("get_bit", &QubitBasis::get_bit);
+
+    py::class_<PauliString>(m, "PauliString")
+        .def(py::init<size_t,size_t>(), "X"_a = 0,"Z"_a = 0, "Make a Pauli string")
+        .def("str", &PauliString::str)
+        .def("__str__", &PauliString::str)
+        .def("__repr__", &PauliString::str)
+        .def("__eq__", [](const PauliString& lhs, const PauliString& rhs){return rhs == lhs;})
+        .def("__mul__",[](const PauliString& lhs, const PauliString& rhs){return multiply(rhs,lhs);});
+
 
     py::class_<Computer>(m, "Computer")
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
