@@ -4,11 +4,14 @@
 
 #include "fmt/format.h"
 
+#include "helpers.h"
 #include "qubit_basis.h"
+#include "qubit_basis_vector.h"
 #include "circuit.h"
 #include "gate.h"
 #include "computer.h"
 #include "pauli_string.h"
+#include "pauli_string_vector.h"
 #include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
@@ -110,7 +113,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", &QubitOpPool::str);
 
     py::class_<QubitBasis>(m, "QubitBasis")
-        .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
+        .def(py::init<size_t, std::complex<double>>(), "n"_a = 0, "coeff"_a = 1.0, "Make a basis element")
         .def("str", &QubitBasis::str)
         .def("__str__", [](const QubitBasis& qb) {
             return qb.str(QubitBasis::max_qubits());
@@ -118,20 +121,74 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", [](const QubitBasis& qb) {
             return qb.str(QubitBasis::max_qubits());
         })
+        .def("__mul__",[](const QubitBasis& rhs, const std::complex<double> lhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const QubitBasis& rhs, const std::complex<double> lhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const QubitBasis& rhs, const PauliString& lhs){return apply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const QubitBasis& rhs, const PauliStringVector lhs){return apply(lhs,rhs);}, py::is_operator())
+        .def("__add__",[](const QubitBasis& lhs, const QubitBasis& rhs){return add(lhs,rhs);}, py::is_operator())
+        .def("__sub__",[](const QubitBasis& lhs, const QubitBasis& rhs){return subtract(lhs,rhs);}, py::is_operator())
         .def("flip_bit", &QubitBasis::flip_bit)
         .def("set_bit", &QubitBasis::set_bit)
         .def("add", &QubitBasis::address)
         .def("address", &QubitBasis::address)
         .def("get_bit", &QubitBasis::get_bit);
+        
+    py::class_<QubitBasisVector>(m, "QubitBasisVector")
+        .def(py::init<std::vector<QubitBasis>>(), "Make a vector of Pauli string")
+        .def("str", &QubitBasisVector::str)
+        .def("__str__", [](const QubitBasisVector& vec){return join(vec.str(), "\n");})
+        .def("__repr__", [](const QubitBasisVector& vec){return join(vec.str(), "\n");})
+        .def("__getitem__", [](const QubitBasisVector& vec, unsigned int i){return vec[i];})
+        .def("__len__", [](const QubitBasisVector& vec){return vec.get_vec().size();})
+        .def("__iter__", [](const QubitBasisVector& QBasisVector){
+                std::vector<QubitBasis> vec(QBasisVector.get_vec());
+                return py::make_iterator(vec.begin(), vec.end());})
+        .def("__mul__",[](const QubitBasisVector& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const QubitBasisVector& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const QubitBasisVector& lhs, const PauliString& rhs){return apply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const QubitBasisVector& lhs, const PauliStringVector& rhs){return apply(lhs,rhs);}, py::is_operator())
+        .def("__add__",[](const QubitBasisVector& lhs, const QubitBasis& rhs){return add(lhs,rhs);}, py::is_operator())
+        .def("__radd__",[](const QubitBasisVector& lhs, const QubitBasis& rhs){return add(lhs,rhs);}, py::is_operator())
+        .def("__add__",[](const QubitBasisVector& lhs, const QubitBasisVector& rhs){return add(lhs,rhs);}, py::is_operator())
+        .def("__sub__",[](const QubitBasisVector& lhs, const QubitBasis& rhs){return subtract(lhs,rhs);}, py::is_operator())
+        .def("__rsub__",[](const QubitBasisVector& lhs, const QubitBasis& rhs){return subtract(rhs,lhs);}, py::is_operator())
+        .def("__sub__",[](const QubitBasisVector& lhs, const QubitBasisVector& rhs){return subtract(lhs,rhs);}, py::is_operator())
+        .def("get_vec", &QubitBasisVector::get_vec);
 
     py::class_<PauliString>(m, "PauliString")
-        .def(py::init<size_t,size_t>(), "X"_a = 0,"Z"_a = 0, "Make a Pauli string")
+        .def(py::init<size_t,size_t, std::complex<double>>(), "X"_a = 0,"Z"_a = 0, "coeff"_a = 1.0, "Make a Pauli string")
         .def("str", &PauliString::str)
         .def("__str__", &PauliString::str)
         .def("__repr__", &PauliString::str)
         .def("__eq__", [](const PauliString& lhs, const PauliString& rhs){return rhs == lhs;})
-        .def("__mul__",[](const PauliString& lhs, const PauliString& rhs){return multiply(rhs,lhs);});
+        .def("__mul__",[](const PauliString& lhs, const PauliString& rhs){return multiply(rhs,lhs);}, py::is_operator())
+        .def("__mul__",[](const PauliString& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const PauliString& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__add__",[](const PauliString& lhs, const PauliString& rhs){return add(lhs,rhs);}, py::is_operator())
+        .def("__sub__",[](const PauliString& lhs, const PauliString& rhs){return subtract(lhs,rhs);}, py::is_operator());
 
+   py::class_<PauliStringVector>(m, "PauliStringVector")
+        .def(py::init<std::vector<PauliString>>(), "Make a vector of Pauli string")
+        .def("str", &PauliStringVector::str)
+        .def("__str__", [](const PauliStringVector& vec){return join(vec.str(), "\n");})
+        .def("__repr__", [](const PauliStringVector& vec){return join(vec.str(), "\n");})
+        .def("__getitem__", [](const PauliStringVector& vec, unsigned int i){return vec[i];})
+        .def("__len__", [](const PauliStringVector& vec){return vec.get_vec().size();})
+        .def("__iter__", [](const PauliStringVector& PauliVector){
+                std::vector<PauliString> vec(PauliVector.get_vec());
+                return py::make_iterator(vec.begin(), vec.end());})
+        .def("__mul__",[](const PauliStringVector& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const PauliStringVector& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__mul__",[](const PauliStringVector& lhs, const PauliString& rhs){return multiply(lhs,rhs);}, py::is_operator())
+        .def("__rmul__",[](const PauliStringVector& lhs, const PauliString& rhs){return multiply(rhs,lhs);}, py::is_operator())
+        .def("__mul__",[](const PauliStringVector& lhs, const PauliStringVector& rhs){return multiply(rhs,lhs);}, py::is_operator())
+        .def("__add__",[](const PauliStringVector& lhs, const PauliString& rhs){return add(lhs,rhs);}, py::is_operator())
+        .def("__radd__",[](const PauliStringVector& lhs, const PauliString& rhs){return add(lhs,rhs);}, py::is_operator())
+        .def("__add__",[](const PauliStringVector& lhs, const PauliStringVector& rhs){return add(lhs,rhs);}, py::is_operator())
+        .def("__sub__",[](const PauliStringVector& lhs, const PauliString& rhs){return subtract(lhs,rhs);}, py::is_operator())
+        .def("__rsub__",[](const PauliStringVector& lhs, const PauliString& rhs){return subtract(rhs,lhs);}, py::is_operator())
+        .def("__sub__",[](const PauliStringVector& lhs, const PauliStringVector& rhs){return subtract(lhs,rhs);}, py::is_operator())
+        .def("get_vec", &PauliStringVector::get_vec);
 
     py::class_<Computer>(m, "Computer")
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")

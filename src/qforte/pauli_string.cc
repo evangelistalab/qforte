@@ -1,6 +1,9 @@
+#include "fmt/format.h"
+
 #include "bitwise_operations.h"
 #include "helpers.h"
 #include "pauli_string.h"
+#include "pauli_string_vector.h"
 
 std::string PauliString::str() const {
     std::vector<std::string> s;
@@ -16,15 +19,15 @@ std::string PauliString::str() const {
             }
         }
     }
-    return "[" + join(s, " ") + "]";
+    return fmt::format("({:+f} {:+f} i) {}", std::real(coeff_), std::imag(coeff_), "[" + join(s, " ") + "]");
 }
 
 // A equivalence comparison for Circuit class
 bool operator==(const PauliString& lhs, const PauliString& rhs){
-    return (lhs.X() == rhs.X()) and (lhs.Z() == rhs.Z());
+    return (lhs.X() == rhs.X()) and (lhs.Z() == rhs.Z()) and (lhs.coeff() == rhs.coeff());
 }
 
-std::pair<std::complex<double>,PauliString>
+PauliString
 multiply(const PauliString& lhs, const PauliString& rhs){
     constexpr std::complex<double> i_powers[] = {{1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}, {0.0, -1.0}};
     std::complex<double> phase = 1.0;
@@ -37,7 +40,6 @@ multiply(const PauliString& lhs, const PauliString& rhs){
     const uint64_t rhsX_rhsZ_lhsX      =           ui64_bit_count((rhs.X() & rhs.Z() & lhs.X()).get_bits());
     const uint64_t rhsZ_lhsX_lhsZ      =           ui64_bit_count((rhs.Z() & lhs.X() & lhs.Z()).get_bits());
     const uint64_t rhsX_rhsZ_lhsX_lhsZ = ui64_bit_count((rhs.X() & rhs.Z() & lhs.X() & lhs.Z()).get_bits());
-    PauliString ps(lhs.X() ^ rhs.X(),lhs.Z() ^ rhs.Z());
     imaginary_phase += (        rhsX_lhsZ
                         +       rhsZ_lhsX
                         - 2.0 * rhsX_rhsZ_lhsX_lhsZ);
@@ -48,5 +50,26 @@ multiply(const PauliString& lhs, const PauliString& rhs){
                         +       rhsZ_lhsX_lhsZ
                         -       rhsX_rhsZ_lhsX_lhsZ);
     phase *= (1.0 - 2.0*(minus_one_phase & 1)) * i_powers[imaginary_phase & 3];
-    return std::make_pair(phase,ps);
+    PauliString ps(lhs.X() ^ rhs.X(),lhs.Z() ^ rhs.Z(), lhs.coeff() * rhs.coeff() * phase);
+    return ps;
+}
+
+PauliString
+multiply(const PauliString& lhs, const std::complex<double> rhs){
+    PauliString ps(lhs.X(), lhs.Z(), lhs.coeff() * rhs);
+    return ps;
+}
+
+PauliStringVector add(const PauliString& lhs, const PauliString& rhs){
+    std::vector<PauliString> vec{lhs, rhs};
+    PauliStringVector PauliVector(vec);
+    return PauliVector;
+}
+
+PauliStringVector subtract(const PauliString& lhs, const PauliString& rhs){
+    std::vector<PauliString> vec{lhs};
+    PauliString rhs_minus(rhs.X(), rhs.Z(), -rhs.coeff());
+    vec.push_back(rhs_minus);
+    PauliStringVector PauliVector(vec);
+    return PauliVector;
 }

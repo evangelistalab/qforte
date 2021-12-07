@@ -1,7 +1,15 @@
+#ifndef _qubit_basis_h_
+#define _qubit_basis_h_
+
+#include <complex>
 #include <numeric>
 #include <string>
 
 #include "bitstring.h"
+#include "pauli_string.h"
+#include "pauli_string_vector.h"
+
+class QubitBasisVector;
 
 /**
  * @brief The QubitBasis class
@@ -16,13 +24,16 @@
 class QubitBasis {
   public:
     /// constructor
-    QubitBasis(size_t n = 0) : state_(n) {}
+    QubitBasis(size_t n = 0, std::complex<double> coeff = 1.0) : state_(n), coeff_(coeff) {}
 
     /// the maximum number of qubits
     static size_t max_qubits() {return BitString::max_bits_;}
 
     /// return the bitstring representation
     const BitString& get_bits() const {return state_;}
+
+    /// return the coefficient of the state
+    const std::complex<double> coeff() const {return coeff_;}
 
     /// get the value of bit pos
     bool get_bit(size_t pos) const { return state_.get_bit(pos); }
@@ -45,4 +56,16 @@ class QubitBasis {
   private:
     /// the state
     BitString state_;
+    std::complex<double> coeff_;
 };
+
+QubitBasis multiply(const std::complex<double> lhs, const QubitBasis& rhs);
+
+QubitBasisVector add(const QubitBasis& lhs, const QubitBasis& rhs);
+
+QubitBasisVector subtract(const QubitBasis& lhs, const QubitBasis& rhs);
+
+QubitBasis apply(const PauliString& pauli, const QubitBasis& ket);
+QubitBasisVector apply(const PauliStringVector& PauliVector, const QubitBasis& ket);
+
+#endif // _qubit_basis_h_
