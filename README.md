@@ -5,12 +5,42 @@ Qforte
 ![Travis Build Status](https://travis-ci.org/evangelistalab/qforte.svg?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/qforte/badge/?version=latest)](https://qforte.readthedocs.io/en/latest/?badge=latest)
 
-<!-- Qforte is an open-source quantum computer simulator and algorithms library for molecular simulation. It includes implementations of the following algorithms: quantum phase estimation (QPE), multireference selected quantum Krylov (MRSQK), quantum imaginary time evolution (QITE), ADAPT variational quantum eigensolver (VQE), and unitary coupled cluster singles and doubles VQE (UCCSD-VQE). -->
 
 QForte is comprehensive development tool for new quantum simulation algorithms and also contains black-box implementations of a wide variety of existing algorithms. 
 It incorporates functionality for handling molecular Hamiltonians, fermionic
 encoding, automated ansatz construction, time evolution, state-vector simulation, operator averaging, and computational resource estimates.
 QForte requires only a classical electronic structure package as a dependency.
+
+Black Box Algorithm Implementations
+-----------------------------------
+- Disentangled (Trotterized) unitary coupled cluster variational quantum eigensolver (dUCCVQE)
+  - QForte will treat up to hex-tuple particle-hole excitations (SDTQPH) or generalized singled and doubles (GSD).
+
+
+- Adaptive derivative-assembled pseudo Trotterized VQE (ADAPT-VQE).
+  
+  
+- Disentangled (factorized) unitary coupled cluster projective quantum eigensolver (dUCCPQE)
+  - QForte will treat up to hex-tuple particle-hole excitations (SDTQPH).
+  
+  
+- Selected projective quantum eigensolver (SPQE)
+
+
+- Single reference Quantum Krylov diagonalization (SRQK)
+
+
+- Multireference selected quantum Krylov diagonalization (MRSQK)
+
+
+- Quantum imaginary time evolution (QITE)
+
+
+- Quantum Lanczos (QL)
+
+
+- Pilot implementation of Quantum phase estimation (QPE)
+
 
 Install Dependencies (Recommended)
 ----------------------------------
@@ -46,6 +76,9 @@ pytest
 
 Getting Started
 ---------------
+
+QForte's state-vector simulator can be used for simple tasks, such as the construction of Bell states, and is the backbone for implementation of all the black-box algorithms. Below are a few examples, more detailed descriptions of QForte's features and algorithms can be found in the release article (https://arxiv.org/abs/2108.04413) and in the Tutorial notebooks.  
+
 ```python
 import qforte
 
@@ -54,22 +87,27 @@ computer = qforte.Computer(2)
 computer.apply_gate(qforte.gate('H',0))
 computer.apply_gate(qforte.gate('cX',1,0))
 
-# Run quantum phase estimation on H2.
-from qforte.qpea.qpe import QPE
-from qforte.system import system_factory
+## Run black-box algorithms for LiH molecule. ##
+from qforte import *
 
-H2geom = [('H', (0., 0., 0.)), ('H', (0., 0., 1.50))]
-H2ref = [1,1,0,0]
+# Define the geometry list.
+geom = [('Li', (0., 0., 0.0)), ('H', (0., 0., 1.50))]
 
-H2mol = system_factory(mol_geometry=H2geom)
+# Get the molecule object that now contains the fermionic and qubit Hamiltonians.
+LiHmol = system_factory(build_type='psi4', mol_geometry=geom, basis='STO-3g', run_fci=1)
 
-alg = QPE(H2mol, H2ref, trotter_number=2)
-alg.run(t = 0.4,
-        nruns = 100,
-        success_prob = 0.5,
-        num_precise_bits = 8)
+# Run the dUCCSD-VQE algorithm for LiH.
+vqe_alg = UCCNVQE(LiHmol)
+vqe_alg.run(opt_thresh=1.0e-2, pool_type='SD')
 
-Egs = alg.get_gs_energy()
+# Run the single reference QK algorithm for LiH.
+srqk_alg = SRQK(LiHmol)
+srqk_alg.run()
+
+# Get ground state energies predicted by the algorithms, compare to FCI. 
+vqe_gs_energy = vqe_alg.get_gs_energy()
+srqk_gs_energy = srqk_alg.get_gs_energy()
+fci_energy = LiHmol.fci_energy
 ```
 
 ### Copyright
