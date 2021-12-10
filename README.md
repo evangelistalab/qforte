@@ -6,22 +6,22 @@ Qforte
 [![Documentation Status](https://readthedocs.org/projects/qforte/badge/?version=latest)](https://qforte.readthedocs.io/en/latest/?badge=latest)
 
 
-QForte is comprehensive development tool for new quantum simulation algorithms and also contains black-box implementations of a wide variety of existing algorithms. 
+QForte is comprehensive development tool for new quantum simulation algorithms that also contains black-box implementations of a wide variety of existing algorithms. 
 It incorporates functionality for handling molecular Hamiltonians, fermionic
-encoding, automated ansatz construction, time evolution, state-vector simulation, operator averaging, and computational resource estimates.
+encoding, automated ansatz construction, time evolution, state-vector simulation, operator averaging, and computational resource estimation.
 QForte requires only a classical electronic structure package as a dependency.
 
 Black Box Algorithm Implementations
 -----------------------------------
 - Disentangled (Trotterized) unitary coupled cluster variational quantum eigensolver (dUCCVQE)
-  - QForte will treat up to hex-tuple particle-hole excitations (SDTQPH) or generalized singled and doubles (GSD).
+  - QForte will treat up to hex-tuple particle-hole excitations (SDTQPH) or generalized singled and doubles (GSD)
 
 
-- Adaptive derivative-assembled pseudo Trotterized VQE (ADAPT-VQE).
+- Adaptive derivative-assembled pseudo Trotterized VQE (ADAPT-VQE)
   
   
 - Disentangled (factorized) unitary coupled cluster projective quantum eigensolver (dUCCPQE)
-  - QForte will treat up to hex-tuple particle-hole excitations (SDTQPH).
+  - QForte will treat up to hex-tuple particle-hole excitations (SDTQPH)
   
   
 - Selected projective quantum eigensolver (SPQE)
@@ -109,6 +109,18 @@ vqe_gs_energy = vqe_alg.get_gs_energy()
 srqk_gs_energy = srqk_alg.get_gs_energy()
 fci_energy = LiHmol.fci_energy
 ```
+
+Publications
+------------
+QForte has been used to implement the novel algorithms presented in the following publications:
+
+> 1. Stair, Nicholas H., and Francesco A. Evangelista. *Simulating Many-Body Systems with a Projective Quantum Eigensolver.* PRX Quantum 2.3 (2021): 030301. https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.030301
+
+> 2. Stair, Nicholas H., Renke Huang, and Francesco A. Evangelista. *A Multireference Quantum Krylov Algorithm for Strongly Correlated Electrons.* Journal of chemical theory and computation 16.4 (2020): 2236-2245. https://pubs.acs.org/doi/10.1021/acs.jctc.9b01125
+
+QForte's release article:
+
+> 3. Stair, Nicholas H., and Francesco A. Evangelista. *Qforte: an efficient state simulator and quantum algorithms library for molecular electronic structure.* arXiv preprint arXiv:2108.04413 (2021). https://arxiv.org/abs/2108.04413
 
 ### Copyright
 
