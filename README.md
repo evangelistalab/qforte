@@ -5,7 +5,12 @@ Qforte
 ![Travis Build Status](https://travis-ci.org/evangelistalab/qforte.svg?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/qforte/badge/?version=latest)](https://qforte.readthedocs.io/en/latest/?badge=latest)
 
-Qforte is an open-source quantum computer simulator and algorithms library for molecular simulation. It includes implementations of the following algorithms: quantum phase estimation (QPE), multireference selected quantum Krylov (MRSQK), quantum imaginary time evolution (QITE), ADAPT variational quantum eigensolver (VQE), and unitary coupled cluster singles and doubles VQE (UCCSD-VQE).
+<!-- Qforte is an open-source quantum computer simulator and algorithms library for molecular simulation. It includes implementations of the following algorithms: quantum phase estimation (QPE), multireference selected quantum Krylov (MRSQK), quantum imaginary time evolution (QITE), ADAPT variational quantum eigensolver (VQE), and unitary coupled cluster singles and doubles VQE (UCCSD-VQE). -->
+
+QForte is comprehensive development tool for new quantum simulation algorithms and also contains black-box implementations of a wide variety of existing algorithms. 
+It incorporates functionality for handling molecular Hamiltonians, fermionic
+encoding, automated ansatz construction, time evolution, state-vector simulation, operator averaging, and computational resource estimates.
+QForte requires only a classical electronic structure package as a dependency.
 
 Install Dependencies (Recommended)
 ----------------------------------
