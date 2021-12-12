@@ -47,7 +47,11 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = False, debug = False):
 
     basis = find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx)
 
-    generators_binary = find_maximal_Abelian_subgroup(n_qubits, basis, taper_from_least)
+    commute = find_commutation_matrix(basis)
+
+    SGSO_basis, SGSO_commute = Symplectic_Gram_Schmidt_Orthogonalization(basis, commute)
+
+    generators_binary = find_maximal_Abelian_subgroup(n_qubits, SGSO_basis, SGSO_commute, taper_from_least)
 
     # Translate binary vectors back to Pauli strings to obtain the generators of the symmetry group
     generators = []
@@ -198,7 +202,91 @@ def find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx):
 
     return basis
 
-def find_maximal_Abelian_subgroup(n_qubits, basis, taper_from_least):
+def find_commutation_matrix(basis):
+    """
+    This function constructs the "commute" binary matrix from a given set of binary basis vectors.
+
+    Arguments:
+
+    basis: uint8 numpy array
+        The rows of this matrix constitute a basis of the kernel of the parity check matrix.
+
+    Returns:
+
+    commute: uint8 numpy array
+        commute[i,j] = 0 (1) means that the ith and jth basis vectors commute (anticommute).
+    """
+
+    ## Construct symplectic bilinear form matrix B, which acts on binary vectors.
+    ## v * B * w.T = 0/1 means v and w commute/anticommute.
+
+    zero_matrix = np.zeros((int(basis.shape[1]/2), int(basis.shape[1]/2)), dtype=np.uint8)
+    identity_matrix = np.identity(int(basis.shape[1]/2), dtype=np.uint8)
+    blnr_frm_mtrx = np.block([
+        [zero_matrix    , identity_matrix],
+        [identity_matrix, zero_matrix    ]
+        ])
+
+    ## For all pairs of ker(E) basis vectors, compute commute[v, w] = v * B * w.T
+
+    commute = np.matmul(basis, np.matmul(blnr_frm_mtrx, basis.T))
+    commute %= 2
+
+    return commute
+
+def Symplectic_Gram_Schmidt_Orthogonalization(basis, commute):
+    """
+    This function performs a symplectic Gram-Schmidt orthogonalization on a given
+    set of binary basis vectors.
+
+    Arguments:
+
+    basis: uint8 numpy array
+        The rows of this matrix constitute a basis of the kernel of the parity check matrix.
+
+    commute: uint8 numpy array
+        commute[i,j] = 0 (1) means that the ith and jth basis vectors commute (anticommute).
+
+    Returns:
+
+    SGSO_basis: uint8 numpy array
+        The rows of this matrix constitute the Gram-Schmidt orthogonalized basis of the
+        kernel of the parity check matrix.
+
+    SGSO_commute: uint8 numpy array
+        SGSO_commute[i,j] = 0 (1) means that the ith and jth Gram-Schmidt orthogonalized basis
+        vectors commute (anticommute).
+
+    """
+
+    SGSO_basis = basis.copy()
+    SGSO_commute = commute.copy()
+
+    processed = []
+    for pauli_1 in range(SGSO_basis.shape[0]):
+        if pauli_1 not in processed:
+            processed.append(pauli_1)
+            anticommute = np.argwhere(SGSO_commute[pauli_1,:])
+            if anticommute.shape[0] != 0:
+                for i in anticommute:
+                    pauli_2 = int(i)
+                    if pauli_2 not in processed:
+                        processed.append(pauli_2)
+                        for pauli in range(SGSO_basis.shape[0]):
+                            if pauli not in processed:
+                                if SGSO_commute[pauli, pauli_1] and SGSO_commute[pauli, pauli_2]:
+                                    SGSO_basis[pauli] ^= SGSO_basis[pauli_1] ^ SGSO_basis[pauli_2]
+                                elif SGSO_commute[pauli, pauli_1] and not SGSO_commute[pauli, pauli_2]:
+                                    SGSO_basis[pauli] ^= SGSO_basis[pauli_2]
+                                elif not SGSO_commute[pauli, pauli_1] and SGSO_commute[pauli, pauli_2]:
+                                    SGSO_basis[pauli] ^= SGSO_basis[pauli_1]
+                        break
+
+                SGSO_commute = find_commutation_matrix(SGSO_basis)
+
+    return SGSO_basis, SGSO_commute
+
+def find_maximal_Abelian_subgroup(n_qubits, basis, commute, taper_from_least):
     """
     This function finds the maximal Abelian subgroup of the kernel of the parity check matrix.
     The generators of the maximal Abelian subgroup are the generators of the symmetry group
@@ -212,6 +300,10 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, taper_from_least):
     basis: uint8 numpy array
         The rows of this matrix constitute a basis of the kernel of the parity check matrix.
 
+    commute: uint8 numpy array
+        commute[i,j] = 0 (1) means that the ith and jth basis vectors commute (anticommute).
+
+
     taper_from_least: bool
         If True/False, the qubits to be tapered off will have the smallest/largest id numbers possible.
 
@@ -220,21 +312,6 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, taper_from_least):
     generators_binary: uint8 numpy array
         The rows of this matrix are the generators, in binary representation, of the symmetry group of the qubit Hamiltonian.
     """
-
-    ## Construct symplectic bilinear form matrix B, which acts on binary vectors.
-    ## v * B * w.T = 0/1 means v and w commute/anticommute.
-
-    zero_matrix = np.zeros((n_qubits, n_qubits), dtype=np.uint8)
-    identity_matrix = np.identity(n_qubits, dtype=np.uint8)
-    blnr_frm_mtrx = np.block([
-        [zero_matrix    , identity_matrix],
-        [identity_matrix, zero_matrix    ]
-        ])
-
-    ## For all pairs of ker(E) basis vectors, compute abelian[v, w] = v * B * w.T
-
-    abelian = np.matmul(basis, np.matmul(blnr_frm_mtrx, basis.T))
-    abelian %= 2
 
     ## Find the maximal abelian subgroup iteratively. This is done as follows:
     ## 1) Find non-zero row of abelian with smallest Hamming weight.
@@ -245,27 +322,26 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, taper_from_least):
 
     basis_tmp = basis
 
-    while not np.all(abelian == 0):
+    while not np.all(commute == 0):
 
         ### Maximum possible Hamming weight of a given binary vector
         hmng = 2 * n_qubits
 
         idx = 0
-        for row in range(abelian.shape[0]):
+        for row in range(commute.shape[0]):
             ### Find the basis vector e that commutes with most of the remaining basis vectors
-            hmng_tmp = np.sum(abelian[row, :])
+            hmng_tmp = np.sum(commute[row, :])
             if hmng_tmp > 0 and hmng > hmng_tmp:
                 hmng = hmng_tmp
                 idx = row
 
         ### Identify basis vectors that do not commute with e and eliminate them.
-        nonzero_indices = np.argwhere(abelian[idx,:])
+        nonzero_indices = np.argwhere(commute[idx,:])
         basis_tmp = np.delete(basis_tmp, nonzero_indices, axis=0)
 
-        ### Construct abelian matrix for the next iteration.
+        ### Construct commute matrix for the next iteration.
 
-        abelian = np.matmul(basis_tmp, np.matmul(blnr_frm_mtrx, basis_tmp.T))
-        abelian %= 2
+        commute = find_commutation_matrix(basis_tmp)
 
     generators_binary = basis_tmp
 
