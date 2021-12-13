@@ -7,7 +7,7 @@ import numpy as np
 from itertools import product
 from copy import deepcopy
 
-def find_Z2_symmetries(hamiltonian, taper_from_least = False, debug = False):
+def find_Z2_symmetries(hamiltonian, taper_from_least = True, debug = False):
     """
     This function computes the Z2 symmetries of the qubit Hamiltonian, identifies the ID numbers of the qubits to
     be tapered off, and constructs the necessary unitary operators.
@@ -236,8 +236,8 @@ def find_commutation_matrix(basis):
 
 def Symplectic_Gram_Schmidt_Orthogonalization(basis, commute):
     """
-    This function performs a symplectic Gram-Schmidt orthogonalization on a given
-    set of binary basis vectors.
+    This function performs a symplectic Gram-Schmidt orthogonalization over GF(2) on a given
+    set of binary basis vectors (see https://doi.org/10.1103/PhysRevA.79.062322).
 
     Arguments:
 
@@ -262,16 +262,18 @@ def Symplectic_Gram_Schmidt_Orthogonalization(basis, commute):
     SGSO_basis = basis.copy()
     SGSO_commute = commute.copy()
 
-    processed = []
+    # List of indices of basis vectors that have already been Gram-Schmidt orthogonalized
+    processed = set()
+
     for pauli_1 in range(SGSO_basis.shape[0]):
         if pauli_1 not in processed:
-            processed.append(pauli_1)
+            processed.add(pauli_1)
             anticommute = np.argwhere(SGSO_commute[pauli_1,:])
             if anticommute.shape[0] != 0:
                 for i in anticommute:
                     pauli_2 = int(i)
                     if pauli_2 not in processed:
-                        processed.append(pauli_2)
+                        processed.add(pauli_2)
                         for pauli in range(SGSO_basis.shape[0]):
                             if pauli not in processed:
                                 if SGSO_commute[pauli, pauli_1] and SGSO_commute[pauli, pauli_2]:
@@ -303,7 +305,6 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, commute, taper_from_least):
     commute: uint8 numpy array
         commute[i,j] = 0 (1) means that the ith and jth basis vectors commute (anticommute).
 
-
     taper_from_least: bool
         If True/False, the qubits to be tapered off will have the smallest/largest id numbers possible.
 
@@ -314,11 +315,11 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, commute, taper_from_least):
     """
 
     ## Find the maximal abelian subgroup iteratively. This is done as follows:
-    ## 1) Find non-zero row of abelian with smallest Hamming weight.
+    ## 1) Find non-zero row of commute with smallest Hamming weight.
     ##    The corresponding basis vector e commutes with most other basis vectors.
     ## 2) Find basis vectors that do not commute with e and remove them.
-    ## 3) Reconstruct abelian matrix with remaining basis vectors.
-    ## 4) If abelian == 0 exit otherwise go to step 1) and repeat.
+    ## 3) Reconstruct commute matrix with remaining basis vectors.
+    ## 4) If commute == 0 exit otherwise go to step 1) and repeat.
 
     basis_tmp = basis
 
