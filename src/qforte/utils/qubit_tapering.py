@@ -276,12 +276,10 @@ def Symplectic_Gram_Schmidt_Orthogonalization(basis, commute):
                         processed.add(pauli_2)
                         for pauli in range(SGSO_basis.shape[0]):
                             if pauli not in processed:
-                                if SGSO_commute[pauli, pauli_1] and SGSO_commute[pauli, pauli_2]:
-                                    SGSO_basis[pauli] ^= SGSO_basis[pauli_1] ^ SGSO_basis[pauli_2]
-                                elif SGSO_commute[pauli, pauli_1] and not SGSO_commute[pauli, pauli_2]:
-                                    SGSO_basis[pauli] ^= SGSO_basis[pauli_2]
-                                elif not SGSO_commute[pauli, pauli_1] and SGSO_commute[pauli, pauli_2]:
+                                if SGSO_commute[pauli, pauli_2]:
                                     SGSO_basis[pauli] ^= SGSO_basis[pauli_1]
+                                if SGSO_commute[pauli, pauli_1]:
+                                    SGSO_basis[pauli] ^= SGSO_basis[pauli_2]
                         break
 
                 SGSO_commute = find_commutation_matrix(SGSO_basis)
