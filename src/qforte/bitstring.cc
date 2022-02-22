@@ -18,6 +18,14 @@ bool operator==(const BitString& lhs, const BitString& rhs){
     return lhs.get_bits() == rhs.get_bits();
 }
 
+bool operator<(const BitString& lhs, const BitString& rhs){
+    return lhs.get_bits() < rhs.get_bits();
+}
+
+bool operator>(const BitString& lhs, const BitString& rhs){
+    return lhs.get_bits() > rhs.get_bits();
+}
+
 BitString operator^(const BitString& lhs, const BitString& rhs)
 {
     return BitString(lhs.get_bits() ^ rhs.get_bits());
@@ -26,4 +34,9 @@ BitString operator^(const BitString& lhs, const BitString& rhs)
 BitString operator&(const BitString& lhs, const BitString& rhs)
 {
     return BitString(lhs.get_bits() & rhs.get_bits());
+}
+
+BitString operator|(const BitString& lhs, const BitString& rhs)
+{
+    return BitString(lhs.get_bits() | rhs.get_bits());
 }

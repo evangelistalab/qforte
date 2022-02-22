@@ -50,23 +50,23 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref){
     nvir_ = static_cast<int>(norb - nocc_);
 }
 
-QubitOpPool SQOpPool::get_qubit_op_pool(){
+QubitOpPool SQOpPool::get_qubit_op_pool(bool fast_Pauli){
     QubitOpPool A;
     for (auto& term : terms_) {
         // QubitOperator a = term.second.jw_transform();
         // a.mult_coeffs(term.first);
-        A.add_term(term.first, term.second.jw_transform());
+        A.add_term(term.first, term.second.jw_transform(fast_Pauli));
     }
     return A;
 }
 
 
-QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool combine_like_terms){
+QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool combine_like_terms, bool fast_Pauli){
     QubitOperator parent;
 
     if(order_type=="unique_lex"){
         for (auto& term : terms_) {
-            auto child = term.second.jw_transform();
+            auto child = term.second.jw_transform(fast_Pauli);
             child.mult_coeffs(term.first);
             parent.add_op(child);
         }
@@ -76,7 +76,7 @@ QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool c
         parent.order_terms();
     } else if (order_type=="commuting_grp_lex") {
         for (auto& term : terms_) {
-            auto child = term.second.jw_transform();
+            auto child = term.second.jw_transform(fast_Pauli);
             child.mult_coeffs(term.first);
             child.simplify(combine_like_terms=combine_like_terms);
             child.order_terms();

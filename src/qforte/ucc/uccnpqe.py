@@ -213,7 +213,7 @@ class UCCNPQE(UCCPQE):
 
             qc_temp = qforte.Computer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
-            qc_temp.apply_operator(sq_op.jw_transform())
+            qc_temp.apply_operator(sq_op.jw_transform(self._fast_Pauli))
             phase_factor = qc_temp.get_coeff_vec()[I]
 
             self._excited_dets.append((I, phase_factor))

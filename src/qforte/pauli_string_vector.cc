@@ -11,10 +11,100 @@ std::vector<std::string> PauliStringVector::str() const {
 
 std::vector<PauliString> PauliStringVector::get_vec() const {return PauliVector_;}
 
-//unsigned int PauliStringVector::size() const {return PauliVector_.size();}
+void PauliStringVector::order_terms(){
+    std::sort(PauliVector_.begin(), PauliVector_.end());
+}
+
+size_t PauliStringVector::num_qubits() const{
+    size_t max = 0;
+    for (const PauliString& ps: PauliVector_) {
+        uint64_t i = 1;
+        uint64_t bits = (ps.X() | ps.Z()).get_bits();
+        //bits |= bits >> 1;
+        //bits |= bits >> 2;
+        //bits |= bits >> 4;
+        //bits |= bits >> 8;
+        //bits |= bits >> 16;
+        //bits |= bits >> 32;
+        //bits ^= bits >> 1;
+        while (bits >> 1 != 0) {
+            i++;
+            bits >>= 1;
+        }
+        max = std::max(max, i);
+    }
+    return max;
+}
+
+
+void PauliStringVector::simplify(){
+    order_terms();
+    std::vector<PauliString> vec;
+    std::complex<double> temp_coeff = PauliVector_[0].coeff();
+    for (unsigned int i = 0; i < PauliVector_.size() - 1; i++){
+        if (PauliVector_[i].X() == PauliVector_[i+1].X() and PauliVector_[i].Z() == PauliVector_[i+1].Z()){
+            temp_coeff += PauliVector_[i+1].coeff();
+            if (i == PauliVector_.size() - 2 and std::abs(temp_coeff) > 1.0e-12){
+                PauliString unique(PauliVector_[i].X(), PauliVector_[i].Z(), temp_coeff);
+                vec.push_back(unique);
+            }
+        }
+        else {
+            if (std::abs(temp_coeff) > 1.0e-12) {
+                PauliString unique(PauliVector_[i].X(), PauliVector_[i].Z(), temp_coeff);
+                vec.push_back(unique);
+            }
+            temp_coeff = PauliVector_[i+1].coeff();
+            if (i == PauliVector_.size() - 2 and std::abs(temp_coeff) > 1.0e-12){
+                vec.push_back(PauliVector_[i+1]);
+            }
+        }
+    }
+    PauliVector_ = std::move(vec);
+}
+
+void PauliStringVector::add_PauliString(const PauliString& ps){
+    PauliVector_.push_back(ps);
+}
+
+void PauliStringVector::add_PauliStringVector(const PauliStringVector& psv){
+    std::vector<PauliString> vec(psv.get_vec());
+    PauliVector_.insert(PauliVector_.end(), vec.begin(), vec.end());
+    //PauliVector_.insert(PauliVector_.end(), psv.get_vec().begin(), psv.get_vec().end());
+}
+
+QubitOperator PauliStringVector::get_QubitOperator(){
+    QubitOperator q_op;
+    for(PauliString& ps : PauliVector_){
+        Circuit temp_circ;
+        uint64_t Y_gates = (ps.X() & ps.Z()).get_bits();
+        uint64_t X_gates = ps.X().get_bits() ^ Y_gates;
+        uint64_t Z_gates = ps.Z().get_bits() ^ Y_gates;
+        for (int i = 0; i < 64; i++){
+            if (X_gates & 1ULL << i){temp_circ.add_gate(make_gate("X", i, i));}
+            else {
+                if (Y_gates & 1ULL << i){temp_circ.add_gate(make_gate("Y", i, i));}
+                else {
+                    if (Z_gates & 1ULL << i){temp_circ.add_gate(make_gate("Z", i, i));}
+                }
+            }
+        }
+        q_op.add_term(ps.coeff(), temp_circ);
+    }
+    return q_op;
+}
+
+//void PauliStringVector::right_multiply(const PauliStringVector& rhs){
+//    PauliStringVector temp;
+//    for(PauliString& ps1 : PauliVector_){
+//        for(PauliString& ps2 : rhs.get_vec()){
+//            temp.add_PauliString(multiply(ps2,ps1));
+//        }
+//    }
 //
-//unsigned int PauliStringVector::begin() const {return PauliVector_.begin();}
-//unsigned int PauliStringVector::end() const {return PauliVector_.end();}
+//    PauliVector_ = std::move(temp.get_vec());
+//    simplify();
+//}
 
 PauliStringVector multiply(const PauliStringVector& lhs, const std::complex<double> rhs){
     std::vector<PauliString> vec;

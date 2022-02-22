@@ -58,7 +58,10 @@ class BitString {
 };
 
 bool operator==(const BitString& lhs, const BitString& rhs);
+bool operator<(const BitString& lhs, const BitString& rhs);
+bool operator>(const BitString& lhs, const BitString& rhs);
 BitString operator^(const BitString& lhs, const BitString& rhs);
 BitString operator&(const BitString& lhs, const BitString& rhs);
+BitString operator|(const BitString& lhs, const BitString& rhs);
 
 #endif // _bitstring_h_

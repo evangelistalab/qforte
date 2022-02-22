@@ -6,7 +6,6 @@
 
 #include "helpers.h"
 #include "qubit_basis.h"
-#include "qubit_basis_vector.h"
 #include "circuit.h"
 #include "gate.h"
 #include "computer.h"
@@ -50,7 +49,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &SQOperator::terms)
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
-        .def("jw_transform", &SQOperator::jw_transform)
+        .def("jw_transform", &SQOperator::jw_transform, py::arg("fast_Pauli") = true)
+        .def("fast_jw_transform", &SQOperator::fast_jw_transform)
         .def("str", &SQOperator::str)
         .def("__str__", &SQOperator::str)
         .def("__repr__", &SQOperator::str);
@@ -62,9 +62,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_coeffs", &SQOpPool::set_coeffs)
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
-        .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool)
+        .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool, py::arg("fast_Pauli") = true)
         .def("get_qubit_operator", &SQOpPool::get_qubit_operator, py::arg("order_type"),
-             py::arg("combine_like_terms") = true)
+             py::arg("combine_like_terms") = true, py::arg("fast_Pauli") = true)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str)
         .def("__getitem__", [](const SQOpPool &pool, size_t i) { return pool.terms()[i]; })
@@ -90,6 +90,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("check_op_equivalence", &QubitOperator::check_op_equivalence)
         .def("num_qubits", &QubitOperator::num_qubits)
         .def("sparse_matrix", &QubitOperator::sparse_matrix)
+        .def("get_PauliStringVector", &QubitOperator::get_PauliStringVector)
         .def("str", &QubitOperator::str)
         .def("__str__", &QubitOperator::str)
         .def("__repr__", &QubitOperator::str);
@@ -113,7 +114,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", &QubitOpPool::str);
 
     py::class_<QubitBasis>(m, "QubitBasis")
-        .def(py::init<size_t, std::complex<double>>(), "n"_a = 0, "coeff"_a = 1.0, "Make a basis element")
+        .def(py::init<size_t>(), "n"_a = 0, "Make a basis element")
         .def("str", &QubitBasis::str)
         .def("__str__", [](const QubitBasis& qb) {
             return qb.str(QubitBasis::max_qubits());
@@ -121,39 +122,11 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", [](const QubitBasis& qb) {
             return qb.str(QubitBasis::max_qubits());
         })
-        .def("__mul__",[](const QubitBasis& rhs, const std::complex<double> lhs){return multiply(lhs,rhs);}, py::is_operator())
-        .def("__rmul__",[](const QubitBasis& rhs, const std::complex<double> lhs){return multiply(lhs,rhs);}, py::is_operator())
-        .def("__rmul__",[](const QubitBasis& rhs, const PauliString& lhs){return apply(lhs,rhs);}, py::is_operator())
-        .def("__rmul__",[](const QubitBasis& rhs, const PauliStringVector lhs){return apply(lhs,rhs);}, py::is_operator())
-        .def("__add__",[](const QubitBasis& lhs, const QubitBasis& rhs){return add(lhs,rhs);}, py::is_operator())
-        .def("__sub__",[](const QubitBasis& lhs, const QubitBasis& rhs){return subtract(lhs,rhs);}, py::is_operator())
         .def("flip_bit", &QubitBasis::flip_bit)
         .def("set_bit", &QubitBasis::set_bit)
         .def("add", &QubitBasis::address)
         .def("address", &QubitBasis::address)
         .def("get_bit", &QubitBasis::get_bit);
-        
-    py::class_<QubitBasisVector>(m, "QubitBasisVector")
-        .def(py::init<std::vector<QubitBasis>>(), "Make a vector of Pauli string")
-        .def("str", &QubitBasisVector::str)
-        .def("__str__", [](const QubitBasisVector& vec){return join(vec.str(), "\n");})
-        .def("__repr__", [](const QubitBasisVector& vec){return join(vec.str(), "\n");})
-        .def("__getitem__", [](const QubitBasisVector& vec, unsigned int i){return vec[i];})
-        .def("__len__", [](const QubitBasisVector& vec){return vec.get_vec().size();})
-        .def("__iter__", [](const QubitBasisVector& QBasisVector){
-                std::vector<QubitBasis> vec(QBasisVector.get_vec());
-                return py::make_iterator(vec.begin(), vec.end());})
-        .def("__mul__",[](const QubitBasisVector& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
-        .def("__rmul__",[](const QubitBasisVector& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
-        .def("__rmul__",[](const QubitBasisVector& lhs, const PauliString& rhs){return apply(lhs,rhs);}, py::is_operator())
-        .def("__rmul__",[](const QubitBasisVector& lhs, const PauliStringVector& rhs){return apply(lhs,rhs);}, py::is_operator())
-        .def("__add__",[](const QubitBasisVector& lhs, const QubitBasis& rhs){return add(lhs,rhs);}, py::is_operator())
-        .def("__radd__",[](const QubitBasisVector& lhs, const QubitBasis& rhs){return add(lhs,rhs);}, py::is_operator())
-        .def("__add__",[](const QubitBasisVector& lhs, const QubitBasisVector& rhs){return add(lhs,rhs);}, py::is_operator())
-        .def("__sub__",[](const QubitBasisVector& lhs, const QubitBasis& rhs){return subtract(lhs,rhs);}, py::is_operator())
-        .def("__rsub__",[](const QubitBasisVector& lhs, const QubitBasis& rhs){return subtract(rhs,lhs);}, py::is_operator())
-        .def("__sub__",[](const QubitBasisVector& lhs, const QubitBasisVector& rhs){return subtract(lhs,rhs);}, py::is_operator())
-        .def("get_vec", &QubitBasisVector::get_vec);
 
     py::class_<PauliString>(m, "PauliString")
         .def(py::init<size_t,size_t, std::complex<double>>(), "X"_a = 0,"Z"_a = 0, "coeff"_a = 1.0, "Make a Pauli string")
@@ -161,6 +134,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("__str__", &PauliString::str)
         .def("__repr__", &PauliString::str)
         .def("__eq__", [](const PauliString& lhs, const PauliString& rhs){return rhs == lhs;})
+        .def("__lt__", [](const PauliString& lhs, const PauliString& rhs){return lhs < rhs;})
         .def("__mul__",[](const PauliString& lhs, const PauliString& rhs){return multiply(rhs,lhs);}, py::is_operator())
         .def("__mul__",[](const PauliString& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
         .def("__rmul__",[](const PauliString& lhs, const std::complex<double> rhs){return multiply(lhs,rhs);}, py::is_operator())
@@ -169,7 +143,12 @@ PYBIND11_MODULE(qforte, m) {
 
    py::class_<PauliStringVector>(m, "PauliStringVector")
         .def(py::init<std::vector<PauliString>>(), "Make a vector of Pauli string")
+        .def(py::init<>())
         .def("str", &PauliStringVector::str)
+        .def("add_PauliString", &PauliStringVector::add_PauliString)
+        .def("add_PauliStringVector", &PauliStringVector::add_PauliStringVector)
+        .def("get_QubitOperator", &PauliStringVector::get_QubitOperator)
+        .def("num_qubits", &PauliStringVector::num_qubits)
         .def("__str__", [](const PauliStringVector& vec){return join(vec.str(), "\n");})
         .def("__repr__", [](const PauliStringVector& vec){return join(vec.str(), "\n");})
         .def("__getitem__", [](const PauliStringVector& vec, unsigned int i){return vec[i];})
@@ -188,7 +167,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("__sub__",[](const PauliStringVector& lhs, const PauliString& rhs){return subtract(lhs,rhs);}, py::is_operator())
         .def("__rsub__",[](const PauliStringVector& lhs, const PauliString& rhs){return subtract(rhs,lhs);}, py::is_operator())
         .def("__sub__",[](const PauliStringVector& lhs, const PauliStringVector& rhs){return subtract(lhs,rhs);}, py::is_operator())
-        .def("get_vec", &PauliStringVector::get_vec);
+        .def("get_vec", &PauliStringVector::get_vec)
+        .def("order_terms", &PauliStringVector::order_terms)
+        .def("simplify", &PauliStringVector::simplify);
 
     py::class_<Computer>(m, "Computer")
         .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
@@ -256,6 +237,43 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<>())
         .def("reset", &local_timer::reset)
         .def("get", &local_timer::get);
+
+    m.def(
+        "exponentiate_fastpauli",
+        [](const PauliString& ps) {
+            if (std::abs(std::real(ps.coeff())) < 1.0e-14 and std::abs(std::imag(ps.coeff())) > 1.0e-14) {
+                PauliString ps1(0, 0, std::cos(std::imag(ps.coeff())));
+                PauliString ps2(ps.X(), ps.Z(), std::complex<double>{0,1} * std::sin(std::imag(ps.coeff())));
+                return add(ps1, ps2);}
+            std::string msg =
+                fmt::format("This function requires a pure imaginary coefficient. \n Invoked with ({:+f} {:+f} i)",
+                        std::real(ps.coeff()), std::imag(ps.coeff()));
+            throw std::invalid_argument(msg);
+        });
+
+    m.def(
+        "exponentiate_fastpauli",
+        [](const PauliStringVector& PauliVector) {
+            PauliString identity(0, 0, 1);
+            std::vector<PauliString> vec{identity};
+            PauliStringVector result(vec);
+            for(const PauliString& ps: PauliVector.get_vec()){
+                if (std::abs(std::real(ps.coeff())) > 1.0e-14 or std::abs(std::imag(ps.coeff())) < 1.0e-14) {
+                    std::string msg =
+                        fmt::format("This function requires a pure imaginary coefficient. \n Invoked with ({:+f} {:+f} i)",
+                            std::real(ps.coeff()), std::imag(ps.coeff()));
+                    throw std::invalid_argument(msg);
+                    }
+                else {
+                    PauliString ps1(0, 0, std::cos(std::imag(ps.coeff())));
+                    PauliString ps2(ps.X(), ps.Z(), std::complex<double>{0,1} * std::sin(std::imag(ps.coeff())));
+                    PauliStringVector ps_vector = add(ps1, ps2);
+                    result = multiply(ps_vector, result);
+                        }
+                    }
+            return result;
+                }
+        );
 
     m.def(
         "gate",

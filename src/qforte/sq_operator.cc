@@ -129,34 +129,71 @@ void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& ope
     }
 }
 
-QubitOperator SQOperator::jw_transform() {
+QubitOperator SQOperator::jw_transform(bool fast_Pauli) {
     simplify();
     QubitOperator qo;
 
-    for (const auto& fermion_operator : terms_) {
-        auto cre_length = std::get<1>(fermion_operator).size();
-        auto ann_length = std::get<2>(fermion_operator).size();
+    if (fast_Pauli) {
+        qo = fast_jw_transform().get_QubitOperator();
+    }
+    else {
+        for (const auto& fermion_operator : terms_) {
+            auto cre_length = std::get<1>(fermion_operator).size();
+            auto ann_length = std::get<2>(fermion_operator).size();
 
-        if (cre_length == 0 && ann_length == 0) {
-            // Scalars need special logic.
-            Circuit scalar_circ;
-            QubitOperator scalar_op;
-            scalar_op.add_term(std::get<0>(fermion_operator), scalar_circ);
-            qo.add_op(scalar_op);
-            continue;
+            if (cre_length == 0 && ann_length == 0) {
+                // Scalars need special logic.
+                Circuit scalar_circ;
+                QubitOperator scalar_op;
+                scalar_op.add_term(std::get<0>(fermion_operator), scalar_circ);
+                qo.add_op(scalar_op);
+                continue;
+            }
+
+            QubitOperator temp1;
+            jw_helper(temp1, std::get<1>(fermion_operator), true);
+            jw_helper(temp1, std::get<2>(fermion_operator), false);
+
+            temp1.mult_coeffs(std::get<0>(fermion_operator));
+            qo.add_op(temp1);
         }
-
-        QubitOperator temp1;
-        jw_helper(temp1, std::get<1>(fermion_operator), true);
-        jw_helper(temp1, std::get<2>(fermion_operator), false);
-
-        temp1.mult_coeffs(std::get<0>(fermion_operator));
-        qo.add_op(temp1);
+        qo.simplify();
     }
 
-    qo.simplify();
 
     return qo;
+}
+
+PauliStringVector SQOperator::fast_jw_transform() {
+    std::complex<double> halfi(0.0, 0.5);
+    //simplify();
+    PauliStringVector qubit_operator;
+    for (const auto& fermion_operator : terms_) {
+        
+        PauliString scalar(0, 0, std::get<0>(fermion_operator));
+        PauliStringVector product;
+        product.add_PauliString(scalar);
+
+        for (const auto& sq_op : std::get<1>(fermion_operator)) {
+            uint64_t j = 1ULL<<sq_op;
+            PauliString X_string(j, j-1, 0.5);
+            PauliString Y_string(j, (j<<1ULL) - 1, -halfi);
+            product = multiply(add(X_string, Y_string), product);
+        }
+
+        for (const auto& sq_op : std::get<2>(fermion_operator)) {
+            uint64_t j = 1ULL<<sq_op;
+            PauliString X_string(j, j-1, 0.5);
+            PauliString Y_string(j, (j<<1ULL) - 1, halfi);
+            product = multiply(add(X_string, Y_string), product);
+        }
+
+        qubit_operator.add_PauliStringVector(product);
+    }
+
+    qubit_operator.simplify();
+
+    return qubit_operator;
 }
 
 std::string SQOperator::str() const {

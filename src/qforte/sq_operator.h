@@ -7,6 +7,9 @@
 #include <numeric>
 #include <map>
 
+#include "pauli_string.h"
+#include "pauli_string_vector.h"
+
 class Gate;
 
 class QubitOperator;
@@ -57,7 +60,11 @@ class SQOperator {
 
     /// Return the QubitOperator object corresponding the the Jordan-Wigner
     /// transform of this sq operator. Calls simplify as a side-effect.
-    QubitOperator jw_transform();
+    QubitOperator jw_transform(bool fast_Pauli);
+
+    /// Return the PauliStringVector object corresponding to the Jordan-Wigner
+    /// transform of this sq operator.
+    PauliStringVector fast_jw_transform();
 
     /// return a vector of string representing this quantum operator
     std::string str() const;

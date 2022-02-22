@@ -31,10 +31,10 @@ class SQOpPool {
     void set_orb_spaces(const std::vector<int>& ref);
 
     /// returns a QubitOpPool object with one term for each term in terms_
-    QubitOpPool get_qubit_op_pool();
+    QubitOpPool get_qubit_op_pool(bool fast_Pauli);
 
     /// returns a single QubitOperator of the JW transformed sq ops
-    QubitOperator get_qubit_operator(const std::string& order_type, bool combine_like_terms=true);
+    QubitOperator get_qubit_operator(const std::string& order_type, bool fast_Pauli, bool combine_like_terms=true);
 
     /// builds the sq operator pool
     void fill_pool(std::string pool_type);

@@ -22,13 +22,21 @@ std::string PauliString::str() const {
     return fmt::format("({:+f} {:+f} i) {}", std::real(coeff_), std::imag(coeff_), "[" + join(s, " ") + "]");
 }
 
-// A equivalence comparison for Circuit class
 bool operator==(const PauliString& lhs, const PauliString& rhs){
     return (lhs.X() == rhs.X()) and (lhs.Z() == rhs.Z()) and (lhs.coeff() == rhs.coeff());
 }
 
-PauliString
-multiply(const PauliString& lhs, const PauliString& rhs){
+bool operator<(const PauliString& lhs, const PauliString& rhs){
+    if (ui64_bit_count((lhs.X() | lhs.Z()).get_bits()) < ui64_bit_count((rhs.X() | rhs.Z()).get_bits())) return true;
+    if (ui64_bit_count((lhs.X() | lhs.Z()).get_bits()) > ui64_bit_count((rhs.X() | rhs.Z()).get_bits())) return false;
+    if (lhs.Z() < rhs.Z()) return true;
+    if (lhs.Z() > rhs.Z()) return false;
+    if (lhs.X() < rhs.X()) return true;
+    return false;
+}
+
+
+PauliString multiply(const PauliString& lhs, const PauliString& rhs){
     constexpr std::complex<double> i_powers[] = {{1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}, {0.0, -1.0}};
     std::complex<double> phase = 1.0;
     uint8_t imaginary_phase = 0;
@@ -54,8 +62,7 @@ multiply(const PauliString& lhs, const PauliString& rhs){
     return ps;
 }
 
-PauliString
-multiply(const PauliString& lhs, const std::complex<double> rhs){
+PauliString multiply(const PauliString& lhs, const std::complex<double> rhs){
     PauliString ps(lhs.X(), lhs.Z(), lhs.coeff() * rhs);
     return ps;
 }

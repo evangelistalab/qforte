@@ -30,6 +30,11 @@ class Algorithm(ABC):
         measurment (unphysical for quantum computer). Most algorithms only
         have a fast implentation.
 
+    _fast_Pauli : bool
+        If true, the code uses the bitstring representation of Pauli strings
+        and qubit basis states in the computationally demanding parts of the
+        algorithm.
+
     _trotter_order : int
         The Trotter order to use for exponentiated operators.
         (exact in the infinite limit).
@@ -71,6 +76,7 @@ class Algorithm(ABC):
                  trotter_order=1,
                  trotter_number=1,
                  fast=True,
+                 fast_Pauli=True,
                  verbose=False,
                  print_summary_file=False,
                  **kwargs):
@@ -116,6 +122,7 @@ class Algorithm(ABC):
         self._trotter_order = trotter_order
         self._trotter_number = trotter_number
         self._fast = fast
+        self._fast_Pauli = fast_Pauli
         self._verbose = verbose
         self._print_summary_file = print_summary_file
 
@@ -270,7 +277,7 @@ class AnsatzAlgorithm(Algorithm):
                     temp_sq_pool.add(sq_operator[0], sq_operator[1])
             self._pool_obj = temp_sq_pool
 
-        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
+        self._Nm = [len(operator.jw_transform(self._fast_Pauli).terms()) for _, operator in self._pool_obj]
 
     def measure_energy(self, Ucirc):
         """
