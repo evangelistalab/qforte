@@ -52,10 +52,10 @@ def create_psi_mol(**kwargs):
     kwargs.setdefault('num_frozen_uocc', 0)
 
     # run_scf is not read, because we always run SCF to get a wavefunction object.
-    kwargs.setdefault('run_mp2', 0)
-    kwargs.setdefault('run_ccsd', 0)
-    kwargs.setdefault('run_cisd', 0)
-    kwargs.setdefault('run_fci', 0)
+    kwargs.setdefault('run_mp2', False)
+    kwargs.setdefault('run_ccsd', False)
+    kwargs.setdefault('run_cisd', False)
+    kwargs.setdefault('run_fci', False)
 
     # Setup psi4 calculation(s)
     psi4.set_memory('2 GB')
@@ -82,19 +82,20 @@ def create_psi_mol(**kwargs):
               'd_convergence': 1e-8,
               'ci_maxiter': 100,
               'num_frozen_docc' : kwargs['num_frozen_docc'],
-              'num_frozen_uocc' : kwargs['num_frozen_uocc']})
+              'num_frozen_uocc' : kwargs['num_frozen_uocc'],
+              'mp2_type': "conv"})
 
     # run psi4 caclulation
     p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
 
     # Run additional computations requested by the user
-    if(kwargs['run_mp2']):
+    if kwargs['run_mp2']:
         qforte_mol.mp2_energy = psi4.energy('MP2')
 
-    if(kwargs['run_ccsd']):
+    if kwargs['run_ccsd']:
         qforte_mol.ccsd_energy = psi4.energy('CCSD')
 
-    if(kwargs['run_cisd']):
+    if kwargs['run_cisd']:
         qforte_mol.cisd_energy = psi4.energy('CISD')
 
     if kwargs['run_fci']:
