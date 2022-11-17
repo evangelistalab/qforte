@@ -128,16 +128,6 @@ class Molecule(System):
         self.filename = filename
 
     @property
-    def ccsd_amps(self):
-        return self._ccsd_singles, self._ccsd_doubles
-
-    @ccsd_amps.setter
-    def ccsd_amps(self, ccsd_amps):
-        ccsd_singles, ccsd_doubles = ccsd_amps
-        self._ccsd_singles = ccsd_singles
-        self._ccsd_doubles = ccsd_doubles
-
-    @property
     def hf_energy(self):
         return self._hf_energy
 
