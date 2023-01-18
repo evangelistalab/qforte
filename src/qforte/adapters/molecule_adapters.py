@@ -38,6 +38,7 @@ def create_psi_mol(**kwargs):
     basis = kwargs['basis']
     multiplicity = kwargs['multiplicity']
     charge = kwargs['charge']
+    fast_Pauli = kwargs['fast_Pauli']
 
     qforte_mol = Molecule(mol_geometry = mol_geometry,
                                basis = basis,
@@ -165,6 +166,9 @@ def create_psi_mol(**kwargs):
                     mo_oeis[p, q] += 2 * mo_teis[p, q, i, i] - mo_teis[p, i, i, q]
 
     # Make hf_reference
+    #if fast_Pauli:
+    #    hf_reference = qforte.QubitBasis((1 << nel) - 1)
+    #else :
     hf_reference = [1] * (nel - 2 * frozen_core) + [0] * (2 * (nmo - frozen_virtual) - nel)
 
     # Build second quantized Hamiltonian
@@ -202,7 +206,7 @@ def create_psi_mol(**kwargs):
     qforte_mol.hf_energy = p4_Escf
     qforte_mol.hf_reference = hf_reference
     qforte_mol.sq_hamiltonian = Hsq
-    qforte_mol.hamiltonian = Hsq.jw_transform()
+    qforte_mol.hamiltonian = Hsq.jw_transform(fast_Pauli)
     qforte_mol.point_group = [point_group, irreps]
     qforte_mol.orb_irreps = orb_irreps
     qforte_mol.orb_irreps_to_int = orb_irreps_to_int
@@ -227,6 +231,8 @@ def create_external_mol(**kwargs):
         The qforte Molecule object which holds the molecular information.
     """
 
+    fast_Pauli = kwargs['fast_Pauli']
+
     qforte_mol = Molecule(multiplicity = kwargs['multiplicity'],
                                 charge = kwargs['charge'],
                                 filename = kwargs['filename'])
@@ -245,6 +251,9 @@ def create_external_mol(**kwargs):
     for p, q, r, s, h_pqrs in external_data['tei']['data']:
         qforte_sq_hamiltonian.add(h_pqrs/4.0, [p,q], [s,r]) # only works in C1 symmetry
 
+    #if fast_Pauli:
+    #    hf_reference = qforte.QubitBasis((1 << (external_data['na']['data'] + external_data['nb']['data'])) - 1)
+    #else:
     hf_reference = [0 for i in range(external_data['nso']['data'])]
     for n in range(external_data['na']['data'] + external_data['nb']['data']):
         hf_reference[n] = 1
@@ -253,6 +262,6 @@ def create_external_mol(**kwargs):
 
     qforte_mol.sq_hamiltonian = qforte_sq_hamiltonian
 
-    qforte_mol.hamiltonian = qforte_sq_hamiltonian.jw_transform()
+    qforte_mol.hamiltonian = qforte_sq_hamiltonian.jw_transform(fast_Pauli)
 
     return qforte_mol

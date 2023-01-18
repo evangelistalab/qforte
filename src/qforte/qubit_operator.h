@@ -7,6 +7,9 @@
 #include <map>
 #include <unordered_map>
 
+#include "pauli_string.h"
+
+class PauliStringVector;
 class SparseMatrix;
 
 class QubitOperator {
@@ -63,6 +66,9 @@ class QubitOperator {
     std::string str() const;
 
     size_t num_qubits() const;
+
+    /// Convert QubitOperator to PauliStringVector
+    PauliStringVector get_PauliStringVector();
 
   private:
     /// the linear combination of circuits

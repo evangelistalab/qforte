@@ -13,5 +13,3 @@ std::string QubitBasis::str(size_t nqubit) const {
     s += ">";
     return s;
 }
-
-void QubitBasis::set(basis_t state) { state_ = state; }

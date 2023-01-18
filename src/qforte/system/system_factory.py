@@ -32,6 +32,9 @@ def system_factory(system_type = 'molecule', build_type = 'psi4', **kwargs):
         "TFIM": mod.create_TFIM
     }
 
+
+    kwargs.setdefault('fast_Pauli', True)
+
     if (system_type=='molecule'):
         kwargs.setdefault('basis', 'sto-3g')
         kwargs.setdefault('multiplicity', 1)

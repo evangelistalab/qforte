@@ -351,7 +351,7 @@ class SPQE(UCCPQE):
 
                 qc_temp = qforte.Computer(self._nqb)
                 qc_temp.apply_circuit(self._Uprep)
-                qc_temp.apply_operator(sq_op.jw_transform())
+                qc_temp.apply_operator(sq_op.jw_transform(self._fast_Pauli))
                 sign_adjust = qc_temp.get_coeff_vec()[I]
 
                 res_m = coeffs[I] * sign_adjust
@@ -559,7 +559,7 @@ class SPQE(UCCPQE):
                     K_temp.add(-1.0, holes[::-1], particles[::-1]);
                     K_temp.simplify();
                     # this is potentially slow
-                    self._Nm.insert(0, len(K_temp.jw_transform().terms()))
+                    self._Nm.insert(0, len(K_temp.jw_transform(self._fast_Pauli).terms()))
                     self._nbody_counts[nbody-1] += 1
 
     def get_op_from_basis_idx(self, I):

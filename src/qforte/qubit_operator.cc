@@ -3,6 +3,7 @@
 #include "circuit.h"
 #include "qubit_operator.h"
 #include "sparse_tensor.h"
+#include "pauli_string_vector.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -178,4 +179,20 @@ size_t QubitOperator::num_qubits() const {
         max = std::max(max, summand.second.num_qubits());
     }
     return max;
+}
+
+PauliStringVector QubitOperator::get_PauliStringVector() {
+    std::vector<PauliString> vec;
+    for (const auto& term : terms_) {
+        size_t X = 0;
+        size_t Z = 0;
+        for (const auto& pauli : term.second.gates()){
+            if (pauli.gate_id() == "X" or pauli.gate_id() == "Y") {X ^= 1ULL << pauli.target();}
+            if (pauli.gate_id() == "Y" or pauli.gate_id() == "Z") {Z ^= 1ULL << pauli.target();}
+        }
+        PauliString ps(X, Z, term.first);
+        vec.push_back(ps);
+    }
+    PauliStringVector psv(vec);
+    return psv;
 }
