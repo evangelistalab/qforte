@@ -170,10 +170,10 @@ class ADAPTVQE(UCCVQE):
 
         # Set final ground state energy.
         if hit_maxiter:
-            self._Egs = self.get_final_energy(hit_max_avqe_iter=1)
+            self.set_final_energy()
             self._final_result = self._results[-1]
 
-        self._Egs = self.get_final_energy()
+        self._Egs = self._final_energy
 
         print('\n\n')
         print(f"{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
@@ -409,18 +409,9 @@ class ADAPTVQE(UCCVQE):
 
         return self._n_commut_measurements
 
-    def get_final_energy(self, hit_max_avqe_iter=False):
-        """
-        Parameters
-        ----------
-        hit_max_avqe_iter : bool
-            Whether ADAPT-VQE has already hit the maximum number of iterations.
-        """
-        if hit_max_avqe_iter:
-            print("\nADAPT-VQE at maximum number of iterations!")
-            self._final_energy = self._energies[-1]
-        else:
-            return self._final_energy
+    def set_final_energy(self):
+        print("\nADAPT-VQE at maximum number of iterations!")
+        self._final_energy = self._energies[-1]
 
     def get_final_result(self, hit_max_avqe_iter=False):
         """

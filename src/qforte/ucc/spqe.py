@@ -143,9 +143,9 @@ class SPQE(UCCPQE):
             f.close()
 
         if hit_maxiter:
-            self._Egs = self.get_final_energy(hit_max_spqe_iter=1)
+            self.set_final_energy()
 
-        self._Egs = self.get_final_energy()
+        self._Egs = self._final_energy
 
         print("\n\n")
         print("---> Final n-body excitation counts in SPQE ansatz <---")
@@ -639,16 +639,6 @@ class SPQE(UCCPQE):
         else:
             self._converged = False
 
-    def get_final_energy(self, hit_max_spqe_iter=0):
-        """
-        Parameters
-        ----------
-        hit_max_spqe_iter : bool
-            Wether or not to use the SPQE has already hit the maximum
-            number of iterations.
-        """
-        if hit_max_spqe_iter:
-            print("\nSPQE at maximum number of iterations!")
-            self._final_energy = self._energies[-1]
-        else:
-            return self._final_energy
+    def set_final_energy(self):
+        print("\nSPQE at maximum number of iterations!")
+        self._final_energy = self._energies[-1]
