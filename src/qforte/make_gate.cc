@@ -153,6 +153,15 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
             };
             return Gate(type, target, control, gate);
         }
+        if ((type == "acX") or (type == "aCNOT")) {
+            std::complex<double> gate[4][4]{
+                {0.0, 1.0, 0.0, 0.0},
+                {1.0, 0.0, 0.0, 0.0},
+                {0.0, 0.0, 1.0, 0.0},
+                {0.0, 0.0, 0.0, 1.0},
+            };
+            return Gate(type, target, control, gate);
+        }
         if (type == "cY") {
             std::complex<double> gate[4][4]{
                 {1.0, 0.0, 0.0, 0.0},

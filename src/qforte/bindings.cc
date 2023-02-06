@@ -206,7 +206,7 @@ PYBIND11_MODULE(qforte, m) {
         "gate",
         [](std::string type, size_t target, size_t control) {
             // test for two-qubit gates that require no parameters
-            auto vec = {"SWAP", "cV", "CNOT", "cX", "cY", "cZ"};
+            auto vec = {"SWAP", "cV", "CNOT", "cX", "aCNOT", "acX","cY", "cZ"};
             if (std::find(vec.begin(), vec.end(), type) != vec.end()) {
                 return make_gate(type, target, control, 0.0);
             }
