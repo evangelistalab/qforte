@@ -79,6 +79,7 @@ class SPQE(UCCPQE):
         self._grad_norms = []
         self._tops = []
         self._tamps = []
+        self._stop_macro = False
         self._converged = False
         self._res_vec_evals = 0
         self._res_m_evals = 0
@@ -114,7 +115,7 @@ class SPQE(UCCPQE):
             f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
             f.write('#-------------------------------------------------------------------------------\n')
 
-        while not self._converged:
+        while not self._stop_macro:
 
             self.update_ansatz()
 
@@ -629,6 +630,7 @@ class SPQE(UCCPQE):
     def conv_status(self):
         if abs(self._curr_res_sq_norm) < abs(self._spqe_thresh * self._spqe_thresh):
             self._converged = True
+            self._stop_macro = True
             print("\n\n\n------------------------------------------------")
             print("SPQE macro-iterations converged!")
             print(f'||r|| = {np.sqrt(self._curr_res_sq_norm):8.6f}')
@@ -638,12 +640,12 @@ class SPQE(UCCPQE):
             print("Maximum number of SPQE macro-iterations reached!")
             print(f'Current value of ||r||: {np.sqrt(self._curr_res_sq_norm):8.6f}')
             print("------------------------------------------------")
-            self._converged = True
+            self._converged = False
+            self._stop_macro = True
         elif len(self._tops) == len(self._pool_obj):
             print("\n\n\n------------------------------------------------")
             print("Operator pool has been drained!")
             print(f'Current value of ||r||: {np.sqrt(self._curr_res_sq_norm):8.6f}')
             print("------------------------------------------------")
             self._converged = True
-        else:
-            self._converged = False
+            self._stop_macro = True
