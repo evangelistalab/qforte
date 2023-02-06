@@ -39,29 +39,41 @@ class UCC:
         return U
 
     def build_orb_energies(self):
-        """Calculates single qubit energies. Used in quasi-Newton updates.
+        """
+        This code provides the spin-orbital energies used in
+        Jacobi iterations. If the orbital energies have not
+        been provided by an external software (Psi4), they
+        are computed internally.
         """
         self._orb_e = []
-
-        print('\nBuilding single particle energies list:')
-        print('---------------------------------------', flush=True)
-        qc = qf.Computer(self._nqb)
-        qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
-        E0 = qc.direct_op_exp_val(self._qb_ham)
-
-        for i in range(self._nqb):
+        ### WARNING: Assuming RHF orbital energies ###
+        if hasattr(self._sys, 'hf_orbital_energies'):
+            print('\nSingle-particle energies from Psi4')
+            print('----------------------------------', flush=True)
+            for i, j in enumerate(self._sys.hf_orbital_energies):
+                self._orb_e += [j]*2
+                print(f' {2*i:3} {j:+16.12f}', flush=True)
+                print(f' {2*i+1:3} {j:+16.12f}', flush=True)
+        else:
+            print('\nBuilding single-particle energies:')
+            print('---------------------------------------', flush=True)
             qc = qf.Computer(self._nqb)
             qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
-            qc.apply_gate(qf.gate('X', i, i))
-            Ei = qc.direct_op_exp_val(self._qb_ham)
+            E0 = qc.direct_op_exp_val(self._qb_ham)
 
-            if(i<sum(self._ref)):
-                ei = E0 - Ei
-            else:
-                ei = Ei - E0
+            for i in range(self._nqb):
+                qc = qf.Computer(self._nqb)
+                qc.apply_circuit(build_Uprep(self._ref, 'occupation_list'))
+                qc.apply_gate(qf.gate('X', i, i))
+                Ei = qc.direct_op_exp_val(self._qb_ham)
 
-            print(f'  {i:3}     {ei:+16.12f}', flush=True)
-            self._orb_e.append(ei)
+                if(i<sum(self._ref)):
+                    ei = E0 - Ei
+                else:
+                    ei = Ei - E0
+
+                print(f'  {i:3}     {ei:+16.12f}', flush=True)
+                self._orb_e.append(ei)
 
     def get_res_over_mpdenom(self, residuals):
         """This function returns a vector given by the residuals dividied by the
