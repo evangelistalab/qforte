@@ -48,8 +48,8 @@ class UCC:
         self._orb_e = []
         ### WARNING: Assuming RHF orbital energies ###
         if hasattr(self._sys, 'hf_orbital_energies'):
-            print('\nSingle-particle energies from Psi4')
-            print('----------------------------------', flush=True)
+            print('\nSingle-particle energies')
+            print('------------------------', flush=True)
             for i, j in enumerate(self._sys.hf_orbital_energies):
                 self._orb_e += [j]*2
                 print(f' {2*i:3} {j:+16.12f}', flush=True)
