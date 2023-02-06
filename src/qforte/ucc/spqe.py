@@ -79,6 +79,7 @@ class SPQE(UCCPQE):
         self._grad_norms = []
         self._tops = []
         self._tamps = []
+        self._stop_macro = False
         self._converged = False
         self._res_vec_evals = 0
         self._res_m_evals = 0
@@ -106,17 +107,16 @@ class SPQE(UCCPQE):
             self._pool_obj.add_term(0.0, self.get_op_from_basis_idx(I))
 
         self.build_orb_energies()
-        spqe_iter = 0
-        hit_maxiter = 0
+
+        self._spqe_iter = 1
 
         if(self._print_summary_file):
             f = open("summary.dat", "w+", buffering=1)
             f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
             f.write('#-------------------------------------------------------------------------------\n')
 
-        while not self._converged:
+        while not self._stop_macro:
 
-            print('\n\n -----> SPQE iteration ', spqe_iter, ' <-----\n')
             self.update_ansatz()
 
             if self._converged:
@@ -132,20 +132,13 @@ class SPQE(UCCPQE):
                 print('\ntamplitudes for tops post solve: \n', np.real(self._tamps))
 
             if(self._print_summary_file):
-                f.write(f'  {spqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
-            spqe_iter += 1
-
-            if spqe_iter > self._spqe_maxiter-1:
-                hit_maxiter = 1
-                break
+                f.write(f'  {self._spqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
+            self._spqe_iter += 1
 
         if(self._print_summary_file):
             f.close()
 
-        if hit_maxiter:
-            self._Egs = self.get_final_energy(hit_max_spqe_iter=1)
-
-        self._Egs = self.get_final_energy()
+        self._Egs = self._energies[-1]
 
         print("\n\n")
         print("---> Final n-body excitation counts in SPQE ansatz <---")
@@ -450,13 +443,16 @@ class SPQE(UCCPQE):
             res_sq.sort()
             self._curr_res_sq_norm = sum(rmu_sq[0] for rmu_sq in res_sq[:-1]) / (self._dt * self._dt)
 
-            print('  \n--> Begin selection opt with residual magnitudes |r_mu|:')
-            print('  Initial guess energy: ', round(init_gues_energy,10))
-            print(f'  Norm of res vec:      {np.sqrt(self._curr_res_sq_norm):14.12f}')
 
             self.conv_status()
 
             if not self._converged:
+
+                print('\n\n -----> SPQE iteration ',self._spqe_iter, ' <-----\n')
+                print('  \n--> Begin selection opt with residual magnitudes |r_mu|:')
+                print('  Initial guess energy: ', round(init_gues_energy,10))
+                print(f'  Norm of res vec:      {np.sqrt(self._curr_res_sq_norm):14.12f}')
+
                 if self._verbose:
                     print('\n')
                     print('     op index (Imu)           Residual Factor')
@@ -634,21 +630,22 @@ class SPQE(UCCPQE):
     def conv_status(self):
         if abs(self._curr_res_sq_norm) < abs(self._spqe_thresh * self._spqe_thresh):
             self._converged = True
-            self._final_energy = self._energies[-1]
-            self._final_result = self._results[-1]
-        else:
+            self._stop_macro = True
+            print("\n\n\n------------------------------------------------")
+            print("SPQE macro-iterations converged!")
+            print(f'||r|| = {np.sqrt(self._curr_res_sq_norm):8.6f}')
+            print("------------------------------------------------")
+        elif self._spqe_iter > self._spqe_maxiter:
+            print("\n\n\n------------------------------------------------")
+            print("Maximum number of SPQE macro-iterations reached!")
+            print(f'Current value of ||r||: {np.sqrt(self._curr_res_sq_norm):8.6f}')
+            print("------------------------------------------------")
             self._converged = False
-
-    def get_final_energy(self, hit_max_spqe_iter=0):
-        """
-        Parameters
-        ----------
-        hit_max_spqe_iter : bool
-            Wether or not to use the SPQE has already hit the maximum
-            number of iterations.
-        """
-        if hit_max_spqe_iter:
-            print("\nSPQE at maximum number of iterations!")
-            self._final_energy = self._energies[-1]
-        else:
-            return self._final_energy
+            self._stop_macro = True
+        elif len(self._tops) == len(self._pool_obj):
+            print("\n\n\n------------------------------------------------")
+            print("Operator pool has been drained!")
+            print(f'Current value of ||r||: {np.sqrt(self._curr_res_sq_norm):8.6f}')
+            print("------------------------------------------------")
+            self._converged = True
+            self._stop_macro = True
