@@ -63,6 +63,8 @@ class SPQE(UCCPQE):
         self._spqe_thresh = spqe_thresh
         self._spqe_maxiter = spqe_maxiter
         self._dt = dt
+        # M_omega: total number of measurements for determining the residuals [Eq. (16) of original PQE/SPQE paper].
+        #          Setting "M_omega = inf" results in a perfect measurement of residuals.
         if(M_omega != 'inf'):
             self._M_omega = int(M_omega)
         else:
@@ -72,6 +74,7 @@ class SPQE(UCCPQE):
         self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
 
+        # _nbody_counts: list that contains the numbers of singles, doubles, etc. incorporated in the final ansatz
         self._nbody_counts = []
         self._n_classical_params_lst = []
 
@@ -120,7 +123,9 @@ class SPQE(UCCPQE):
         for I in range(1 << self._nqb):
             alphas = [int(j) for j in bin(I & mask_alpha)[2:]]
             betas = [int(j) for j in bin(I & mask_beta)[2:]]
+            # Enforce particle number and Sz symmetry
             if sum(alphas) == nalpha and sum(betas) == nbeta:
+                # Enforce point group symmetry
                 if sq_op_find_symmetry(self._sys.orb_irreps_to_int,
                                        [len(alphas) - i - 1 for i, x in enumerate(alphas) if x],
                                        [len(betas) -i - 1 for i, x in enumerate(betas) if x]) == self._irrep:
@@ -350,6 +355,7 @@ class SPQE(UCCPQE):
             qc_temp = qforte.Computer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
             qc_temp.apply_operator(sq_op.jw_transform())
+            # Computing the sign associated with the projection on K |Phi> = (-1)^p |Phi_K>
             sign_adjust = qc_temp.get_coeff_vec()[self._reversed_excitation_dictionary[m]]
 
             res_m = coeffs[self._reversed_excitation_dictionary[m]] * sign_adjust
