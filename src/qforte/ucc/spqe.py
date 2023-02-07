@@ -436,13 +436,15 @@ class SPQE(UCCPQE):
                     print('     op index (Imu)     Number of times measured')
                     print('  -----------------------------------------------')
 
-                for Nmu_tup in Nmu_lst[:-1]:
+                for rmu_sq, global_op_idx in Nmu_lst[:-1]:
                     if(self._verbose):
-                        print(f"  {Nmu_tup[1]:10}                  {np.real(Nmu_tup[0]):14}")
-                    if(Nmu_tup[1] not in self._tops):
-                        self._tops.insert(0,self._excitation_dictionary[Nmu_tup[1]])
+                        print(f"  {global_op_idx:10}                  {np.real(rmu_sq):14}")
+                    if(global_op_idx not in self._tops):
+                        pool_idx = self._excitation_dictionary[global_op_idx]
+                        self._tops.insert(0,pool_idx)
                         self._tamps.insert(0,0.0)
-                        self._nbody_counts[len(self._pool_obj[self._excitation_dictionary[Nmu_tup[1]]][1].terms()[0][1]) - 1] += 1
+                        operator_rank = len(self._pool_obj[pool_idx][1].terms()[0][1])
+                        self._nbody_counts[operator_rank - 1] += 1
 
                 self._n_classical_params_lst.append(len(self._tops))
 
@@ -468,15 +470,17 @@ class SPQE(UCCPQE):
                     # Make a running list of operators. When the sum of res_sq exceeds the target, every operator
                     # from here out is getting added to the ansatz..
                     temp_ops = []
-                    for rmu_sq, op_idx in res_sq:
+                    for rmu_sq, global_op_idx in res_sq:
                         res_sq_sum += rmu_sq / (self._dt * self._dt)
                         if res_sq_sum > (self._spqe_thresh * self._spqe_thresh):
+                            pool_idx = self._excitation_dictionary[global_op_idx]
                             if(self._verbose):
-                                print(f"  {self._excitation_dictionary[op_idx]:10}                  {np.real(rmu_sq):14.12f}"
-                                      f"   {self._pool_obj[self._excitation_dictionary[op_idx]][1].str()}" )
-                            if self._excitation_dictionary[op_idx] not in self._tops:
-                                temp_ops.append(self._excitation_dictionary[op_idx])
-                                self._nbody_counts[len(self._pool_obj[self._excitation_dictionary[op_idx]][1].terms()[0][1]) - 1] += 1
+                                print(f"  {pool_idx:10}                  {np.real(rmu_sq):14.12f}"
+                                      f"   {self._pool_obj[pool_idx][1].str()}" )
+                            if pool_idx not in self._tops:
+                                temp_ops.append(pool_idx)
+                                operator_rank = len(self._pool_obj[pool_idx][1].terms()[0][1])
+                                self._nbody_counts[operator_rank - 1] += 1
 
                     for temp_op in temp_ops[::-1]:
                         self._tops.insert(0, temp_op)
@@ -485,13 +489,15 @@ class SPQE(UCCPQE):
                 else:
                     # Add the single operator with greatest rmu_sq not yet in the ansatz
                     res_sq.reverse()
-                    for rmu_sq, op_idx in res_sq[1:]:
-                        print(f"  {self._excitation_dictionary[op_idx]:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}")
-                        if self._excitation_dictionary[op_idx] not in self._tops:
+                    for rmu_sq, global_op_idx in res_sq:
+                        pool_idx = self._excitation_dictionary[global_op_idx]
+                        print(f"  {pool_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}")
+                        if pool_idx not in self._tops:
                             print('Adding this operator to ansatz')
-                            self._tops.insert(0, self._excitation_dictionary[op_idx])
+                            self._tops.insert(0, pool_idx)
                             self._tamps.insert(0, 0.0)
-                            self._nbody_counts[len(self._pool_obj[self._excitation_dictionary[op_idx]][1].terms()[0][1]) - 1] += 1
+                            operator_rank = len(self._pool_obj[pool_idx][1].terms()[0][1])
+                            self._nbody_counts[operator_rank - 1] += 1
                             break
 
                 self._n_classical_params_lst.append(len(self._tops))
