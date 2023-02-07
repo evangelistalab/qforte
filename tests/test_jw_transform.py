@@ -129,3 +129,33 @@ class TestJordanWigner:
         a.add(1.00, [1], [3, 4])
         aop = a.jw_transform()
         assert aop.check_op_equivalence(correct_op, True) is True
+
+        def test_jw_qubit(self):
+            # In this test we check the JW transform for fermionic and qubit excitations.
+            # We test the action of the a_3, a^3, Q_3, Q^3 on the |1110> and |1111>
+            # qubit basis states
+            fermion_create_3 = qf.SQOperator()
+            fermion_annihilate_3 = qf.SQOperator()
+            fermion_create_3.add(1, [3], [])
+            fermion_annihilate_3.add(1, [], [3])
+            expected = [[0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, (-1+0j)],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, (1+0j)],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, (-1+0j), 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, (1+0j), 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j]]
+            results = []
+            for sq_operator in [fermion_create_3, fermion_annihilate_3]:
+                for n_occupied in [3,4]:
+                    for qubit_excitations in [False, True]:
+                        # create desired qubit state
+                        comp = qf.Computer(4)
+                        for occupied in range(n_occupied):
+                            comp.apply_gate(qf.gate('X', occupied))
+                        # transform second-quanitzed operators using JW
+                        q_operator = sq_operator.jw_transform(qubit_excitations)
+                        comp.apply_operator(q_operator)
+                        results.append(comp.get_coeff_vec())
+            assert results == expected
