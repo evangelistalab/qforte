@@ -103,7 +103,9 @@ class SPQE(UCCPQE):
                 self._nbody_counts.append(0)
 
         # create a pool of particle number, Sz, and spatial symmetry adapted second quantized operators
+        # Encode the occupation list into a bitstring
         ref = sum([b << i for i, b in enumerate(self._ref)])
+       # `& mask_alpha` gives the alpha component of a bitstring. `& mask_beta` does likewise.
         mask_alpha = 0x5555555555555555
         mask_beta = mask_alpha << 1
         nalpha = sum(self._ref[0::2])
@@ -122,7 +124,9 @@ class SPQE(UCCPQE):
                 if sq_op_find_symmetry(self._sys.orb_irreps_to_int,
                                        [len(alphas) - i - 1 for i, x in enumerate(alphas) if x],
                                        [len(betas) -i - 1 for i, x in enumerate(betas) if x]) == self._irrep:
+                   # Create the bitstring of created/annihilated orbitals
                     excit = bin(ref ^ I).replace("0b", "")
+                    # Confirm excitation number is non-zero
                     if excit != "0":
                         occ_idx = [int(i) for i,j in enumerate(reversed(excit)) if int(j) == 1 and self._ref[i] == 1]
                         unocc_idx = [int(i) for i,j in enumerate(reversed(excit)) if int(j) == 1 and self._ref[i] == 0]
