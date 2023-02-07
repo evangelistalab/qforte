@@ -112,7 +112,8 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
 int Circuit::get_num_cnots() const {
     int n_cnots = 0;
     for (const auto& gate : gates_) {
-        if(gate.gate_id() == "CNOT" || gate.gate_id() == "cX"){
+        if(gate.gate_id() == "CNOT" || gate.gate_id() == "cX" ||
+                gate.gate_id() == "aCNOT" || gate.gate_id() == "acX"){
             n_cnots++;
         } else if (gate.gate_id() == "A"){
             n_cnots += 3;
