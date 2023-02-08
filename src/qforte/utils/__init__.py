@@ -6,3 +6,4 @@ from .state_prep import *
 from .exp_ops import *
 from .point_groups import *
 from .qubit_tapering import *
+from .spin_operators import *
