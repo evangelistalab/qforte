@@ -249,6 +249,10 @@ def create_external_mol(**kwargs):
     for n in range(external_data['na']['data'] + external_data['nb']['data']):
         hf_reference[n] = 1
 
+    qforte_mol.point_group = ['C1', 'A']
+    qforte_mol.orb_irreps = ['A'] * external_data['nso']['data']
+    qforte_mol.orb_irreps_to_int = [0] * external_data['nso']['data']
+
     qforte_mol.hf_reference = hf_reference
 
     qforte_mol.sq_hamiltonian = qforte_sq_hamiltonian
