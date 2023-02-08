@@ -59,6 +59,10 @@ class SQOperator {
     /// transform of this sq operator. Calls simplify as a side-effect.
     /// If qubit_excitation = true, replace fermionic creation/annihilation
     /// operators by qubit ones.
+    /// WARNING: In the current implementation of qubit excitations,
+    /// the 1-to-1 mapping between second-quantized operators and their
+    /// qubit excitation counterparts is ensured by the normal ordering of
+    /// second-quantized operators
     QubitOperator jw_transform(bool qubit_excitation = false);
 
     /// return a vector of string representing this quantum operator

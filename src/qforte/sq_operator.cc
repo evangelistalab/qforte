@@ -132,6 +132,9 @@ void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& ope
 }
 
 QubitOperator SQOperator::jw_transform(bool qubit_excitation) {
+    /// The simplify() function also brings second-quantized operators
+    /// to normal order. This also ensures the 1-to-1 mapping between
+    /// second-quantized and qubit operators when qubit_excitation=True
     simplify();
     QubitOperator qo;
 

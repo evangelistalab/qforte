@@ -159,3 +159,16 @@ class TestJordanWigner:
                         comp.apply_operator(q_operator)
                         results.append(comp.get_coeff_vec())
             assert results == expected
+
+        def test_jw_qubit_2(self):
+            # In this test we confirm that the there exists a 1-to-1 mapping between
+            # second-quantized fermionic operators and qubit excitation operators.
+            # The uniqueness is guarantedd by the normal ordering of second-quantized
+            # operators
+            sq_op1 = qf.SQOperator()
+            sq_op1.add(1,[1,0],[])
+            q_op1 = sq_op1.jw_transform(True)
+            sq_op2 = qf.SQOperator()
+            sq_op2.add(-1,[0,1],[])
+            q_op2 = sq_op2.jw_transform(True)
+            assert q_op1 == q_op2
