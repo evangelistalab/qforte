@@ -55,7 +55,8 @@ class SPQE(UCCPQE):
             M_omega = 'inf',
             opt_thresh = 1.0e-5,
             opt_maxiter = 30,
-            use_cumulative_thresh=True):
+            use_cumulative_thresh=True,
+            max_excit_rank = None):
 
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("SPQE implementation can only handle occupation_list Hartree-Fock reference.")
@@ -96,10 +97,7 @@ class SPQE(UCCPQE):
         self._n_pauli_trm_measures = 0
         self._n_pauli_trm_measures_lst = []
 
-        self.print_options_banner()
-
         self._Nm = []
-        self._pool_type = 'full'
         self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
         for occupation in self._ref:
@@ -114,6 +112,16 @@ class SPQE(UCCPQE):
         mask_beta = mask_alpha << 1
         nalpha = sum(self._ref[0::2])
         nbeta = sum(self._ref[1::2])
+
+        if max_excit_rank is None:
+            max_excit_rank = nalpha + nbeta
+        elif not isinstance(max_excit_rank, int) or max_excit_rank <= 0:
+            raise TypeError("The maximum excitation rank max_excit_rank must be a positive integer!")
+        elif max_excit_rank > nalpha + nbeta:
+            max_excit_rank = nalpha + nbeta
+            print("\nWARNING: The entered maximum excitation rank exceeds the number of particles.\n"
+                    "         Proceeding with max_excit_rank = {0}.\n".format(max_excit_rank))
+        self._pool_type = max_excit_rank
 
         idx = 0
         # determinant id : excitation operator index
@@ -134,19 +142,23 @@ class SPQE(UCCPQE):
                     excit = bin(ref ^ I).replace("0b", "")
                     # Confirm excitation number is non-zero
                     if excit != "0":
-                        occ_idx = [int(i) for i,j in enumerate(reversed(excit)) if int(j) == 1 and self._ref[i] == 1]
-                        unocc_idx = [int(i) for i,j in enumerate(reversed(excit)) if int(j) == 1 and self._ref[i] == 0]
-                        sq_op = qf.SQOperator()
-                        sq_op.add(+1.0, unocc_idx, occ_idx)
-                        sq_op.add(-1.0, occ_idx[::-1], unocc_idx[::-1])
-                        sq_op.simplify()
-                        self._pool_obj.add_term(0.0, sq_op)
-                        self._excitation_dictionary[I] = idx
-                        self._excitation_indices.append(I)
-                        idx += 1
+                        # Consider operators with rank <= max_excit_rank
+                        if int(excit.count('1')/2) <= self._pool_type:
+                            occ_idx = [int(i) for i,j in enumerate(reversed(excit)) if int(j) == 1 and self._ref[i] == 1]
+                            unocc_idx = [int(i) for i,j in enumerate(reversed(excit)) if int(j) == 1 and self._ref[i] == 0]
+                            sq_op = qf.SQOperator()
+                            sq_op.add(+1.0, unocc_idx, occ_idx)
+                            sq_op.add(-1.0, occ_idx[::-1], unocc_idx[::-1])
+                            sq_op.simplify()
+                            self._pool_obj.add_term(0.0, sq_op)
+                            self._excitation_dictionary[I] = idx
+                            self._excitation_indices.append(I)
+                            idx += 1
 
         # excitation operator index : determinant id
         self._reversed_excitation_dictionary = {value: key for key, value in self._excitation_dictionary.items()}
+
+        self.print_options_banner()
 
         self.build_orb_energies()
 
@@ -236,7 +248,8 @@ class SPQE(UCCPQE):
         spqe_thrsh_str = '{:.2e}'.format(self._spqe_thresh)
         print('DIIS maxiter:                            ',  self._opt_maxiter)
         print('DIIS residual-norm threshold (omega_r):  ',  opt_thrsh_str)
-        print('Operator pool type:                      ',  'full')
+        print('Maximum excitation rank in operator pool:',  self._pool_type)
+        print('Number of operators in pool:             ',  len(self._pool_obj))
         print('SPQE residual-norm threshold (Omega):    ',  spqe_thrsh_str)
         print('SPQE maxiter:                            ',  self._spqe_maxiter)
 
