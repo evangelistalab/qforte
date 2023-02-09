@@ -13,7 +13,8 @@ def compact_excitation_circuit(theta, creation, annihilation, qubit_excitations)
     where κ_μ is a second quantized (κ_μ = t_μ - t_μ^\dagger) or
     qubit (κ_μ = Q_μ - Q_μ^\dagger) excitation operator.
     The resulting quantum circuits have the minimum (so far) number
-    of CNOTs. The original idea is reported in DOI: 10.1103/PhysRevA.102.062612.
+    of CNOTs. The original idea is reported in DOI: 10.1103/PhysRevA.102.062612
+    and the extension to arbitrary excitations in DOI: 10.1021/acs.jctc.2c01016
     Arguments
     =========
     theta: float
@@ -41,11 +42,12 @@ def compact_excitation_circuit(theta, creation, annihilation, qubit_excitations)
     gsd_control = list(set(creation) & set(annihilation))
 
     if len(gsd_control) > 1:
+        # Excitations of the form p^ q^ p q are not included in the GSD pool of QForte
         raise ValueError("A GSD excitation of the form p^ q^ p q was encountered!")
 
     gsd_sign = 1
     gsd_unique = False
-    if gsd_control != []:
+    if gsd_control:
         gsd_sign = -1
         # check if a CNOT staircase involving unique indicies is required
         duplicate = []
@@ -172,24 +174,7 @@ def qubit_excitation(theta, creation, annihilation, gsd_control, gsd_sign, qubit
 
     CNOT_circ_adjoint = circ.adjoint()
 
-    if len(annihilation) < 1000:
-        circ.add(multi_qubit_controlled_Ry(theta, creation[0], creation[1:], annihilation, gsd_control, gsd_sign, qubit_excitations))
-    else:
-        sign = 1
-        if not qubit_excitations:
-            # In the case of fermionic excitations, there exists a sign factor that
-            # multiplies the angle theta of the multi-qubit-controlled Ry gate. The
-            # sign factor depends on the many-body rank of the excitation operator.
-            prefactor = -1
-            rank = len(annihilation)
-            if rank == 1:
-                prefactor = 1
-            if not rank%2 and not rank%4:
-                prefactor = 1
-            elif not (rank - 1)%2 and not (rank - 1)%4:
-                prefactor = 1
-            sign *= prefactor * gsd_sign
-        circ.add(qf.gate('Ry', creation[0], creation[0], sign * 2 * theta))
+    circ.add(multi_qubit_controlled_Ry(theta, creation[0], creation[1:], annihilation, gsd_control, gsd_sign, qubit_excitations))
 
     circ.add(CNOT_circ_adjoint)
 
@@ -231,12 +216,7 @@ def multi_qubit_controlled_Ry(theta, target, control_creation, control_annihilat
 
     # using an ordering similar to Yordanov
     control_creation.reverse()
-    if len(control_annihilation) < 1000:
-        control_qubits = control_annihilation + control_creation + gsd_control
-        flag_control_creation = False
-    else:
-        control_qubits = control_annihilation
-        flag_control_creation = False
+    control_qubits = control_annihilation + control_creation + gsd_control
 
     num_Ry_gates = 1 << len(control_qubits)
 
@@ -266,10 +246,7 @@ def multi_qubit_controlled_Ry(theta, target, control_creation, control_annihilat
         for j, control in enumerate(control_qubits):
             if not (i+1)%(num_Ry_gates/(1<<j+1)):
                 if not (i+1)%(num_Ry_gates/2) or i == num_Ry_gates - 1:
-                    if flag_control_creation:
-                        circ.add(qf.gate('aCNOT', target, control))
-                    else:
-                        circ.add(qf.gate('CNOT', target, control))
+                    circ.add(qf.gate('CNOT', target, control))
                 elif gsd_control != []:
                     circ.add(qf.gate('CNOT', target, control))
                 else:
