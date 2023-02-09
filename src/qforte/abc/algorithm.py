@@ -224,6 +224,9 @@ class AnsatzAlgorithm(Algorithm):
     _tamps : list
         A list of amplitudes (to be optimized) representing selected
         operators in the pool.
+
+    _qubit_excitations: bool
+        Controls the use of qubit/fermionic excitations.
     """
 
     # TODO (opt major): write a C function that prepares this super efficiently
@@ -294,13 +297,15 @@ class AnsatzAlgorithm(Algorithm):
 
         return val
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, qubit_excitations=False,
+            **kwargs):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
         self._Nm = []
         self._tamps = []
         self._tops = []
         self._pool_obj = qf.SQOpPool()
+        self._qubit_excitations = qubit_excitations
 
         kwargs.setdefault('irrep', None)
         if hasattr(self._sys, 'point_group'):

@@ -34,7 +34,7 @@ class SQOpPool {
     QubitOpPool get_qubit_op_pool();
 
     /// returns a single QubitOperator of the JW transformed sq ops
-    QubitOperator get_qubit_operator(const std::string& order_type, bool combine_like_terms=true);
+    QubitOperator get_qubit_operator(const std::string& order_type, bool combine_like_terms=true, bool qubit_excitations=false);
 
     /// builds the sq operator pool
     void fill_pool(std::string pool_type);

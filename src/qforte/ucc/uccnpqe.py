@@ -137,6 +137,8 @@ class UCCNPQE(UCCPQE):
         else:
             print('Measurement varience thresh:             ',  0.01)
 
+        print('Use qubit excitations: ', self._qubit_excitations)
+
         res_thrsh_str = '{:.2e}'.format(self._opt_thresh)
         print('DIIS maxiter:                            ',  self._opt_maxiter)
         print('DIIS res-norm threshold:                 ',  res_thrsh_str)
@@ -213,7 +215,7 @@ class UCCNPQE(UCCPQE):
 
             qc_temp = qforte.Computer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
-            qc_temp.apply_operator(sq_op.jw_transform())
+            qc_temp.apply_operator(sq_op.jw_transform(self._qubit_excitations))
             phase_factor = qc_temp.get_coeff_vec()[I]
 
             self._excited_dets.append((I, phase_factor))

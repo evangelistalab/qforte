@@ -129,3 +129,46 @@ class TestJordanWigner:
         a.add(1.00, [1], [3, 4])
         aop = a.jw_transform()
         assert aop.check_op_equivalence(correct_op, True) is True
+
+        def test_jw_qubit(self):
+            # In this test we check the JW transform for fermionic and qubit excitations.
+            # We test the action of the a_3, a^3, Q_3, Q^3 on the |1110> and |1111>
+            # qubit basis states
+            fermion_create_3 = qf.SQOperator()
+            fermion_annihilate_3 = qf.SQOperator()
+            fermion_create_3.add(1, [3], [])
+            fermion_annihilate_3.add(1, [], [3])
+            expected = [[0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, (-1+0j)],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, (1+0j)],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, (-1+0j), 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j],
+                        [0j, 0j, 0j, 0j, 0j, 0j, 0j, (1+0j), 0j, 0j, 0j, 0j, 0j, 0j, 0j, 0j]]
+            results = []
+            for sq_operator in [fermion_create_3, fermion_annihilate_3]:
+                for n_occupied in [3,4]:
+                    for qubit_excitations in [False, True]:
+                        # create desired qubit state
+                        comp = qf.Computer(4)
+                        for occupied in range(n_occupied):
+                            comp.apply_gate(qf.gate('X', occupied))
+                        # transform second-quanitzed operators using JW
+                        q_operator = sq_operator.jw_transform(qubit_excitations)
+                        comp.apply_operator(q_operator)
+                        results.append(comp.get_coeff_vec())
+            assert results == expected
+
+        def test_jw_qubit_2(self):
+            # In this test we confirm that the there exists a 1-to-1 mapping between
+            # second-quantized fermionic operators and qubit excitation operators.
+            # The uniqueness is guaranteed by the normal ordering of second-quantized
+            # operators
+            sq_op1 = qf.SQOperator()
+            sq_op1.add(1,[1,0],[])
+            q_op1 = sq_op1.jw_transform(True)
+            sq_op2 = qf.SQOperator()
+            sq_op2.add(-1,[0,1],[])
+            q_op2 = sq_op2.jw_transform(True)
+            assert q_op1 == q_op2

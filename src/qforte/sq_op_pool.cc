@@ -61,12 +61,12 @@ QubitOpPool SQOpPool::get_qubit_op_pool(){
 }
 
 
-QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool combine_like_terms){
+QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool combine_like_terms, bool qubit_excitations){
     QubitOperator parent;
 
     if(order_type=="unique_lex"){
         for (auto& term : terms_) {
-            auto child = term.second.jw_transform();
+            auto child = term.second.jw_transform(qubit_excitations);
             child.mult_coeffs(term.first);
             parent.add_op(child);
         }
@@ -76,7 +76,7 @@ QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool c
         parent.order_terms();
     } else if (order_type=="commuting_grp_lex") {
         for (auto& term : terms_) {
-            auto child = term.second.jw_transform();
+            auto child = term.second.jw_transform(qubit_excitations);
             child.mult_coeffs(term.first);
             child.simplify(combine_like_terms=combine_like_terms);
             child.order_terms();

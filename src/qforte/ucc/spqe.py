@@ -230,6 +230,8 @@ class SPQE(UCCPQE):
         else:
             print('Measurement varience thresh:             ',  0.01)
 
+        print('Use qubit excitations: ', self._qubit_excitations)
+
         opt_thrsh_str = '{:.2e}'.format(self._opt_thresh)
         spqe_thrsh_str = '{:.2e}'.format(self._spqe_thresh)
         print('DIIS maxiter:                            ',  self._opt_maxiter)
@@ -347,7 +349,7 @@ class SPQE(UCCPQE):
 
             qc_temp = qforte.Computer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
-            qc_temp.apply_operator(sq_op.jw_transform())
+            qc_temp.apply_operator(sq_op.jw_transform(self._qubit_excitations))
             # Computing the sign associated with the projection on K |Phi> = (-1)^p |Phi_K>
             sign_adjust = qc_temp.get_coeff_vec()[self._reversed_excitation_dictionary[m]]
 

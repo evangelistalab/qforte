@@ -46,7 +46,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("terms", &SQOperator::terms)
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
-        .def("jw_transform", &SQOperator::jw_transform)
+        .def("jw_transform", &SQOperator::jw_transform, py::arg("qubit_excitation") = false)
         .def("str", &SQOperator::str)
         .def("__str__", &SQOperator::str)
         .def("__repr__", &SQOperator::str);
@@ -60,7 +60,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool)
         .def("get_qubit_operator", &SQOpPool::get_qubit_operator, py::arg("order_type"),
-             py::arg("combine_like_terms") = true)
+             py::arg("combine_like_terms") = true, py::arg("qubit_excitations") = false)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str)
         .def("__getitem__", [](const SQOpPool &pool, size_t i) { return pool.terms()[i]; })
