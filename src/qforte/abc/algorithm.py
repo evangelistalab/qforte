@@ -227,6 +227,10 @@ class AnsatzAlgorithm(Algorithm):
 
     _qubit_excitations: bool
         Controls the use of qubit/fermionic excitations.
+
+    _compact_excitations: bool
+        Controls the use of compact quantum circuits for fermion/qubit
+        excitations.
     """
 
     # TODO (opt major): write a C function that prepares this super efficiently
@@ -297,7 +301,7 @@ class AnsatzAlgorithm(Algorithm):
 
         return val
 
-    def __init__(self, *args, qubit_excitations=False,
+    def __init__(self, *args, qubit_excitations=False, compact_excitations=False,
             **kwargs):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
@@ -306,6 +310,7 @@ class AnsatzAlgorithm(Algorithm):
         self._tops = []
         self._pool_obj = qf.SQOpPool()
         self._qubit_excitations = qubit_excitations
+        self._compact_excitations = compact_excitations
 
         kwargs.setdefault('irrep', None)
         if hasattr(self._sys, 'point_group'):

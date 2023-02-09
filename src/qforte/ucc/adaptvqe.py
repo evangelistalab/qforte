@@ -221,7 +221,8 @@ class ADAPTVQE(UCCVQE):
         else:
             print('Measurement varience thresh:             ',  0.01)
 
-        print('Use qubit excitations: ', self._qubit_excitations)
+        print('Use qubit excitations:                   ', self._qubit_excitations)
+        print('Use compact excitation circuits:         ', self._compact_excitations)
 
         # VQE options.
         opt_thrsh_str = '{:.2e}'.format(self._opt_thresh)

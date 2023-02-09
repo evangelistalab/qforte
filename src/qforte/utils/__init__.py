@@ -7,3 +7,4 @@ from .exp_ops import *
 from .point_groups import *
 from .qubit_tapering import *
 from .spin_operators import *
+from .compact_excitation_circuits import *

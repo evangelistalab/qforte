@@ -14,6 +14,7 @@ from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import ref_to_basis_idx
 from qforte.utils.trotterization import trotterize
+from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
 
 import numpy as np
 
@@ -169,10 +170,17 @@ class UCCVQE(VQE, UCC):
             Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
             Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
-            Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
+            if self._compact_excitations:
+                Umu = qf.Circuit()
+                Umu.add(compact_excitation_circuit(-tamp * self._pool_obj[self._tops[mu + 1]][1].terms()[1][0],
+                                                           self._pool_obj[self._tops[mu + 1]][1].terms()[1][1],
+                                                           self._pool_obj[self._tops[mu + 1]][1].terms()[1][2],
+                                                           self._qubit_excitations))
+            else:
+                Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
 
-            if (pmu != 1.0 + 0.0j):
-                raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+                if (pmu != 1.0 + 0.0j):
+                    raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
 
             qc_sig.apply_circuit(Umu)
             qc_psi.apply_circuit(Umu)

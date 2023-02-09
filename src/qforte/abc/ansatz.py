@@ -10,6 +10,7 @@ import qforte as qf
 
 from qforte.utils.state_prep import build_Uprep
 from qforte.utils.trotterization import trotterize
+from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
 
 class UCC:
     """A mixin class for implementing the UCC circuit ansatz, to be inherited by a
@@ -28,10 +29,20 @@ class UCC:
         """
         temp_pool = qf.SQOpPool()
         tamps = self._tamps if amplitudes is None else amplitudes
+
+        if self._compact_excitations:
+            U = qf.Circuit()
+            for tamp, top in zip(tamps, self._tops):
+                U.add(compact_excitation_circuit(tamp * self._pool_obj[top][1].terms()[1][0],
+                                                        self._pool_obj[top][1].terms()[1][1],
+                                                        self._pool_obj[top][1].terms()[1][2],
+                                                        self._qubit_excitations))
+            return U
+
         for tamp, top in zip(tamps, self._tops):
             temp_pool.add(tamp, self._pool_obj[top][1])
 
-        A = temp_pool.get_qubit_operator('commuting_grp_lex')
+        A = temp_pool.get_qubit_operator('commuting_grp_lex', qubit_excitations = self._qubit_excitations)
 
         U, phase1 = trotterize(A, trotter_number=self._trotter_number)
         if phase1 != 1.0 + 0.0j:
