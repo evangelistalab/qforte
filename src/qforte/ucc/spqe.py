@@ -275,14 +275,6 @@ class SPQE(UCCPQE):
         print('Number of residual vector evaluations:       ', self._res_vec_evals)
         print('Number of individual residual evaluations:   ', self._res_m_evals)
 
-    def solve(self, ):
-        if self._optimizer.lower() == 'jacobi':
-            self.jacobi_solver()
-        elif self._optimizer.lower() in ['nelder-mead', 'powell', 'bfgs', 'l-bfgs-b', 'cg', 'slsqp']:
-            self.scipy_solver(self.get_sum_residual_square)
-        else:
-            raise NotImplementedError('Currently only Jacobi, Nelder-Mead, Powell, BFGS, L-BFGS-B, CG, and SLSQP solvers are implemented')
-
     def get_residual_vector(self, trial_amps):
         U = self.ansatz_circuit(trial_amps)
 
@@ -328,12 +320,6 @@ class SPQE(UCCPQE):
             self._res_m_evals += len(trial_amps)
 
         return residuals
-
-    def get_sum_residual_square(self, tamps):
-        # This function is passed to scipy minimize for residual minimization
-        residual_vector = self.get_residual_vector(tamps)
-        sum_residual_vector_square = np.sum(np.square(residual_vector))
-        return sum_residual_vector_square
 
     def update_ansatz(self):
         self._n_pauli_measures_k = 0
