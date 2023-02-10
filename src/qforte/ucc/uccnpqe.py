@@ -169,14 +169,6 @@ class UCCNPQE(UCCPQE):
         print('Number of residual element evaluations*:     ', self._res_m_evals)
         print('Number of non-zero res element evaluations:  ', int(self._res_vec_evals)*self._n_nonzero_params)
 
-    def solve(self):
-        if self._optimizer.lower() == 'jacobi':
-            self.jacobi_solver()
-        elif self._optimizer.lower() in ['nelder-mead', 'powell', 'bfgs', 'l-bfgs-b', 'cg', 'slsqp']:
-            self.scipy_solver(self.get_sum_residual_square)
-        else:
-            raise NotImplementedError('Currently only Jacobi, Nelder-Mead, Powell, BFGS, L-BFGS-B, CG, and SLSQP solvers are implemented')
-
     def fill_excited_dets(self):
         for _, sq_op in self._pool_obj:
             # 1. Identify the excitation operator
@@ -274,13 +266,6 @@ class UCCNPQE(UCCPQE):
         self._res_m_evals += len(self._tamps)
 
         return residuals
-
-    def get_sum_residual_square(self, tamps):
-        # This function is passed to scipy minimize for residual minimization
-        residual_vector = self.get_residual_vector(tamps)
-        sum_residual_vector_square = np.sum(np.square(residual_vector))
-        return sum_residual_vector_square
-
 
     def initialize_ansatz(self):
         """Adds all operators in the pool to the list of operators in the circuit,
