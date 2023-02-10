@@ -56,3 +56,43 @@ class UCCPQE(PQE, UCC):
     #TODO: consider moving functions from uccnpqe or spqe into this class to
     #      to prevent duplication of code
 
+    def report_iteration(self, x):
+        # Printing function for residual minimization. This function is passed to scipy minimize
+        # as a callback
+
+        self._k_counter += 1
+
+        if(self._k_counter == 1):
+            print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
+            print('--------------------------------------------------------------------------------------------------')
+            if (self._print_summary_file):
+                f = open("summary.dat", "w+", buffering=1)
+                f.write('\n#    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
+                f.write('\n#--------------------------------------------------------------------------------------------------')
+                f.close()
+
+        self._curr_energy = self.energy_feval(x)
+        dE = self._curr_energy - self._prev_energy
+        print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._res_vec_norm:+12.10f}')
+
+        if (self._print_summary_file):
+            f = open("summary.dat", "a", buffering=1)
+            f.write(f'\n       {self._k_counter:7}        {self._curr_energy:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._res_vec_norm:+12.12f}')
+            f.close()
+
+        self._prev_energy = self._curr_energy
+
+    def get_sum_residual_square(self, tamps):
+        # This function is passed to scipy minimize for residual minimization
+        residual_vector = self.get_residual_vector(tamps)
+        sum_residual_vector_square = np.sum(np.square(residual_vector))
+        return sum_residual_vector_square
+
+    def solve(self):
+        if self._optimizer.lower() == 'jacobi':
+            self.jacobi_solver()
+        elif self._optimizer.lower() in ['nelder-mead', 'powell', 'bfgs', 'l-bfgs-b', 'cg', 'slsqp']:
+            self.scipy_solver(self.get_sum_residual_square)
+        else:
+            raise NotImplementedError('Currently only Jacobi, Nelder-Mead, Powell, BFGS, L-BFGS-B, CG, and SLSQP solvers are implemented')
+

@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+from scipy.optimize import minimize
 
 def diis(diis_max_dim, t_diis, e_diis):
     """This function implements the direct inversion of iterative subspace
@@ -95,6 +96,55 @@ def jacobi_solver(self):
         self._n_pauli_measures_k += self._Nl*k * (2*len(self._tamps) + 1)
     if hasattr(self, '_n_pauli_trm_measures'):
         self._n_pauli_trm_measures += 2*self._Nl*k*len(self._tamps) + self._Nl*k
+    if hasattr(self, '_n_pauli_trm_measures_lst'):
+        self._n_pauli_trm_measures_lst.append(self._n_pauli_measures_k)
+    if hasattr(self, '_n_cnot'):
+        self._n_cnot = self.build_Uvqc().get_num_cnots()
+    if hasattr(self, '_n_cnot_lst'):
+        self._n_cnot_lst.append(self.build_Uvqc().get_num_cnots())
+
+def scipy_solver(self, function_to_minimize):
+
+    # Construct arguments to hand to the minimizer.
+    opts = {}
+
+    # Options common to all minimization algorithms
+    opts['disp'] = True
+    opts['maxiter'] = self._opt_maxiter
+
+    # Optimizer-specific options
+    if self._optimizer.lower() in ['bfgs', 'cg', 'l-bfgs-b']:
+        opts['gtol'] = self._opt_thresh
+    if self._optimizer.lower() == 'nelder-mead':
+        opts['fatol'] = self._opt_thresh
+        opts['adaptive'] = True
+    if self._optimizer.lower() in ['powell', 'l-bfgs-b', 'slsqp']:
+        opts['ftol'] = self._opt_thresh
+
+    x0 = copy.deepcopy(self._tamps)
+    self._prev_energy = self.energy_feval(x0)
+    self._k_counter = 0
+
+    res = minimize(function_to_minimize, x0,
+            method=self._optimizer,
+            options=opts,
+            callback=self.report_iteration)
+
+    if(res.success):
+        print('  => Minimization successful!')
+    else:
+        print('  => WARNING: minimization result may not be tightly converged.')
+
+    self._tamps = list(res.x)
+    self._Egs = self.energy_feval(self._tamps)
+    if hasattr(self, '_energies'):
+        self._energies.append(self._Egs)
+    if hasattr(self, '_n_classical_params'):
+        self._n_classical_params = len(self._tamps)
+    if hasattr(self, '_n_pauli_measures_k'):
+        self._n_pauli_measures_k += self._Nl*self._k_counter * (2*len(self._tamps) + 1)
+    if hasattr(self, '_n_pauli_trm_measures'):
+        self._n_pauli_trm_measures += 2*self._Nl*self._k_counter*len(self._tamps) + self._Nl*self._k_counter
     if hasattr(self, '_n_pauli_trm_measures_lst'):
         self._n_pauli_trm_measures_lst.append(self._n_pauli_measures_k)
     if hasattr(self, '_n_cnot'):

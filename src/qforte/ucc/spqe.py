@@ -57,7 +57,8 @@ class SPQE(UCCPQE):
             opt_thresh = 1.0e-5,
             opt_maxiter = 30,
             use_cumulative_thresh=True,
-            max_excit_rank = None):
+            max_excit_rank = None,
+            optimizer = 'Jacobi'):
 
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("SPQE implementation can only handle occupation_list Hartree-Fock reference.")
@@ -73,6 +74,7 @@ class SPQE(UCCPQE):
             self._M_omega = M_omega
 
         self._use_cumulative_thresh = use_cumulative_thresh
+        self._optimizer = optimizer
         self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
 
@@ -248,10 +250,11 @@ class SPQE(UCCPQE):
 
         opt_thrsh_str = '{:.2e}'.format(self._opt_thresh)
         spqe_thrsh_str = '{:.2e}'.format(self._spqe_thresh)
-        if self._diis_max_dim >=2:
+        print('Optimizer:                               ', self._optimizer)
+        if self._diis_max_dim >=2 and self._optimizer.lower() == 'jacobi':
             print('DIIS dimension:                          ', self._diis_max_dim)
         else:
-            print('DIIS dimension:                          Disabled')
+            print('DIIS dimension:                           Disabled')
         print('Maximum number of micro-iterations:      ',  self._opt_maxiter)
         print('Micro-iteration residual-norm threshold: ',  opt_thrsh_str)
         print('Maximum excitation rank in operator pool:',  self._pool_type)
@@ -272,9 +275,6 @@ class SPQE(UCCPQE):
         print('Number of residual vector evaluations:       ', self._res_vec_evals)
         print('Number of individual residual evaluations:   ', self._res_m_evals)
 
-    def solve(self):
-        self.jacobi_solver()
-
     def get_residual_vector(self, trial_amps):
         U = self.ansatz_circuit(trial_amps)
 
@@ -289,22 +289,31 @@ class SPQE(UCCPQE):
 
         # each operator needs a score, so loop over toperators
         for m in self._tops:
-            sq_op = self._pool_obj[m][1]
-            # occ => i,j,k,...
-            # vir => a,b,c,...
-            # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
+            if self._optimizer.lower() == 'jacobi':
+                # In this case, the sign associated with the projection on K |Phi> = (-1)^p |Phi_K>
+                # needs to be taken into consideration
+                sq_op = self._pool_obj[m][1]
+                # occ => i,j,k,...
+                # vir => a,b,c,...
+                # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
 
-            qc_temp = qforte.Computer(self._nqb)
-            qc_temp.apply_circuit(self._Uprep)
-            qc_temp.apply_operator(sq_op.jw_transform(self._qubit_excitations))
-            # Computing the sign associated with the projection on K |Phi> = (-1)^p |Phi_K>
-            sign_adjust = qc_temp.get_coeff_vec()[self._reversed_excitation_dictionary[m]]
+                qc_temp = qforte.Computer(self._nqb)
+                qc_temp.apply_circuit(self._Uprep)
+                qc_temp.apply_operator(sq_op.jw_transform(self._qubit_excitations))
+                sign_adjust = qc_temp.get_coeff_vec()[self._reversed_excitation_dictionary[m]]
 
-            res_m = coeffs[self._reversed_excitation_dictionary[m]] * sign_adjust
-            if(np.imag(res_m) > 0.0):
-                raise ValueError("residual has imaginary component, someting went wrong!!")
+                res_m = coeffs[self._reversed_excitation_dictionary[m]] * sign_adjust
+                if(np.imag(res_m) > 0.0):
+                    raise ValueError("Residual has imaginary component, something went wrong!!")
 
-            residuals.append(res_m)
+                residuals.append(res_m)
+            else:
+                # In residual minimization, we compute the function sum_k |r_k|^2
+                # and thus the sign of the projection is immaterial
+                res_m = coeffs[self._reversed_excitation_dictionary[m]]
+                if(np.imag(res_m) > 0.0):
+                    raise ValueError("Residual has imaginary component, something went wrong!!")
+                residuals.append(coeffs[self._reversed_excitation_dictionary[m]].real)
 
             self._res_vec_norm = np.linalg.norm(residuals)
             self._res_vec_evals += 1
@@ -475,3 +484,4 @@ class SPQE(UCCPQE):
             self._stop_macro = True
 
 SPQE.jacobi_solver = optimizer.jacobi_solver
+SPQE.scipy_solver = optimizer.scipy_solver

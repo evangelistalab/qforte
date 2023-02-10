@@ -71,3 +71,34 @@ class TestSPQE:
         # their ordering is different. Thus the UCCSD energies resulting from the
         # SPQE and UCCNPQE algorithms will not be identical
         assert spqe_sd._Egs == approx(uccnpqe_sd._Egs, abs = 1.0e-5)
+
+    def test_spqe_scipy_solver(self):
+         # In this test, we confirm that the SPQE algorithm produces
+         # identical results when using the Jacobi and BFGS solvers
+
+        Rhh = 2
+
+        mol = system_factory(system_type = 'molecule',
+                build_type = 'psi4',
+                basis = 'sto-6g',
+                mol_geometry = [('H', (0, -Rhh/2, -Rhh/2)),
+                                ('H', (0, -Rhh/2, Rhh/2)),
+                                ('H', (0, Rhh/2, -Rhh/2)),
+                                ('H', (0, Rhh/2, Rhh/2))],
+                symmetry = 'd2h',
+                multiplicity = 1, # Only singlets will work with QForte
+                charge = 0,
+                num_frozen_docc = 0,
+                num_frozen_uocc = 0,
+                run_mp2=1,
+                run_ccsd=0,
+                run_cisd=0,
+                run_fci=1)
+
+        jacobi = SPQE(mol, compact_excitations=True, qubit_excitations=False, diis_max_dim=8)
+        jacobi.run(optimizer='jacobi', opt_maxiter=50)
+
+        bfgs = SPQE(mol, compact_excitations=True, qubit_excitations=False)
+        bfgs.run(optimizer='BFGS', opt_maxiter=50)
+
+        assert jacobi.get_gs_energy() == approx(bfgs.get_gs_energy(), abs=1.0e-8)
