@@ -141,8 +141,12 @@ class UCCNPQE(UCCPQE):
         print('Use compact excitation circuits:         ', self._compact_excitations)
 
         res_thrsh_str = '{:.2e}'.format(self._opt_thresh)
-        print('DIIS maxiter:                            ',  self._opt_maxiter)
-        print('DIIS res-norm threshold:                 ',  res_thrsh_str)
+        if self._diis_max_dim >= 2:
+            print('DIIS dimension:                          ', self._diis_max_dim)
+        else:
+            print('DIIS dimension:                          Disabled')
+        print('Maximum number of iterations:            ',  self._opt_maxiter)
+        print('Residual-norm threshold:                 ',  res_thrsh_str)
 
         print('Operator pool type:                      ',  str(self._pool_type))
 
@@ -163,7 +167,7 @@ class UCCNPQE(UCCPQE):
         print('Number of non-zero res element evaluations:  ', int(self._res_vec_evals)*self._n_nonzero_params)
 
     def solve(self):
-        self.diis_solve(self.get_residual_vector)
+        self.jacobi_solver()
 
     def fill_excited_dets(self):
         for _, sq_op in self._pool_obj:
@@ -257,6 +261,7 @@ class UCCNPQE(UCCPQE):
 
             residuals.append(res_m)
 
+        self._res_vec_norm = np.linalg.norm(residuals)
         self._res_vec_evals += 1
         self._res_m_evals += len(self._tamps)
 
@@ -270,4 +275,4 @@ class UCCNPQE(UCCPQE):
             self._tops.append(l)
             self._tamps.append(0.0)
 
-UCCNPQE.diis_solve = optimizer.diis_solve
+UCCNPQE.jacobi_solver = optimizer.jacobi_solver

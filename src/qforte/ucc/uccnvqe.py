@@ -161,9 +161,9 @@ class UCCNVQE(UCCVQE):
         print('Number of individual grad evaluations:       ', self._res_m_evals)
 
     def solve(self):
-        if self._optimizer.lower() == "diis_solve":
+        if self._optimizer.lower() == "jacobi":
             self.build_orb_energies()
-            return self.diis_solve(self.gradient_ary_feval)
+            return self.jacobi_solver()
         else:
             return self.scipy_solve()
 
@@ -267,4 +267,4 @@ class UCCNVQE(UCCVQE):
         #     return 0
         return 0
 
-UCCNVQE.diis_solve = optimizer.diis_solve
+UCCNVQE.jacobi_solver = optimizer.jacobi_solver

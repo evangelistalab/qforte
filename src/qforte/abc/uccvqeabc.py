@@ -172,11 +172,15 @@ class UCCVQE(VQE, UCC):
 
             if self._compact_excitations:
                 Umu = qf.Circuit()
+                # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                # (see original ADAPT-VQE paper)
                 Umu.add(compact_excitation_circuit(-tamp * self._pool_obj[self._tops[mu + 1]][1].terms()[1][0],
                                                            self._pool_obj[self._tops[mu + 1]][1].terms()[1][1],
                                                            self._pool_obj[self._tops[mu + 1]][1].terms()[1][2],
                                                            self._qubit_excitations))
             else:
+                # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                # (see original ADAPT-VQE paper)
                 Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
 
                 if (pmu != 1.0 + 0.0j):

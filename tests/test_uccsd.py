@@ -27,7 +27,7 @@ class TestUcc:
         Egs_elec = alg.get_gs_energy()
         assert Egs_elec == approx(Efci, abs=1.0e-10)
 
-    def test_He_uccsd_vqe_exact_diis(self):
+    def test_He_uccsd_vqe_exact_jacobi(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
@@ -41,7 +41,7 @@ class TestUcc:
         alg = UCCNVQE(mol)
         alg.run(pool_type = 'SD',
                 use_analytic_grad = True,
-                optimizer = "diis_solve")
+                optimizer = "jacobi")
 
         Egs_elec = alg.get_gs_energy()
         assert Egs_elec == approx(Efci, abs=1.0e-11)

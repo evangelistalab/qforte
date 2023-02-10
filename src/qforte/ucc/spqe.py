@@ -12,6 +12,7 @@ from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
 from qforte.utils.point_groups import sq_op_find_symmetry
+from qforte.maths import optimizer
 
 import numpy as np
 
@@ -247,12 +248,16 @@ class SPQE(UCCPQE):
 
         opt_thrsh_str = '{:.2e}'.format(self._opt_thresh)
         spqe_thrsh_str = '{:.2e}'.format(self._spqe_thresh)
-        print('DIIS maxiter:                            ',  self._opt_maxiter)
-        print('DIIS residual-norm threshold (omega_r):  ',  opt_thrsh_str)
+        if self._diis_max_dim >=2:
+            print('DIIS dimension:                          ', self._diis_max_dim)
+        else:
+            print('DIIS dimension:                          Disabled')
+        print('Maximum number of micro-iterations:      ',  self._opt_maxiter)
+        print('Micro-iteration residual-norm threshold: ',  opt_thrsh_str)
         print('Maximum excitation rank in operator pool:',  self._pool_type)
         print('Number of operators in pool:             ',  len(self._pool_obj))
-        print('SPQE residual-norm threshold (Omega):    ',  spqe_thrsh_str)
-        print('SPQE maxiter:                            ',  self._spqe_maxiter)
+        print('Macro-iteration residual-norm threshold: ',  spqe_thrsh_str)
+        print('Maximum number of macro-iterations:      ',  self._spqe_maxiter)
 
 
     def print_summary_banner(self):
@@ -268,79 +273,7 @@ class SPQE(UCCPQE):
         print('Number of individual residual evaluations:   ', self._res_m_evals)
 
     def solve(self):
-        self.diis_solve()
-
-
-    def diis_solve(self):
-        # draws heavy insiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
-        diis_dim = 0
-        t_diis = [copy.deepcopy(self._tamps)]
-        e_diis = []
-        rk_norm = 1.0
-        Ek0 = self.energy_feval(self._tamps)
-
-        print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
-        print('---------------------------------------------------------------------------------------------------')
-
-        for k in range(1, self._opt_maxiter+1):
-            t_old = copy.deepcopy(self._tamps)
-
-            #do regular update
-            r_k = self.get_residual_vector(self._tamps)
-            rk_norm = np.linalg.norm(r_k)
-            r_k = self.get_res_over_mpdenom(r_k)
-
-            self._tamps = list(np.add(self._tamps, r_k))
-
-            Ek = self.energy_feval(self._tamps)
-            dE = Ek - Ek0
-            Ek0 = Ek
-            # self._num_res_evals += 1
-            self._res_vec_evals += 1
-            self._res_m_evals += len(self._tamps)
-
-            print(f'     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}')
-
-            if(rk_norm < self._opt_thresh):
-                self._results.append('Fake result string')
-                self._final_result = 'nothing'
-                self._Egs = Ek
-                break
-
-            t_diis.append(copy.deepcopy(self._tamps))
-            e_diis.append(np.subtract(copy.deepcopy(self._tamps), t_old))
-
-            if(k >= 1):
-                diis_dim = len(t_diis) - 1
-
-                #consturct diis B matrix (following Crawford Group github tutorial)
-                B = np.ones((diis_dim+1, diis_dim+1)) * -1
-                bsol = np.zeros(diis_dim+1)
-                B[-1, -1] = 0.0
-                bsol[-1] = -1.0
-
-                for i in range(len(e_diis)):
-                    for j in range(i, len(e_diis)):
-                        B[i,j] = np.dot(np.real(e_diis[i]), np.real(e_diis[j]))
-                        if(i!=j):
-                            B[j,i] = B[i,j]
-
-                B[:-1, :-1] /= np.abs(B[:-1, :-1]).max()
-                x = np.linalg.solve(B, bsol)
-
-                t_new = np.zeros(( len(self._tamps) ))
-                for l in range(diis_dim):
-                    temp_ary = x[l] * np.asarray(t_diis[l+1])
-                    t_new = np.add(t_new, temp_ary)
-
-                self._tamps = copy.deepcopy(list(np.real(t_new)))
-
-        self._Egs = Ek
-        self._energies.append(Ek)
-        self._n_pauli_measures_k += self._Nl*k * (2*len(self._tamps) + 1)
-        self._n_pauli_trm_measures_lst.append(self._n_pauli_measures_k)
-        self._n_cnot_lst.append(self.build_Uvqc().get_num_cnots())
-
+        self.jacobi_solver()
 
     def get_residual_vector(self, trial_amps):
         U = self.ansatz_circuit(trial_amps)
@@ -372,6 +305,10 @@ class SPQE(UCCPQE):
                 raise ValueError("residual has imaginary component, someting went wrong!!")
 
             residuals.append(res_m)
+
+            self._res_vec_norm = np.linalg.norm(residuals)
+            self._res_vec_evals += 1
+            self._res_m_evals += len(trial_amps)
 
         return residuals
 
@@ -536,3 +473,5 @@ class SPQE(UCCPQE):
             print("------------------------------------------------")
             self._converged = True
             self._stop_macro = True
+
+SPQE.jacobi_solver = optimizer.jacobi_solver
