@@ -13,6 +13,7 @@ from qforte.maths import optimizer
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
+from qforte.utils import moment_energy_corrections
 
 import numpy as np
 from scipy.optimize import minimize
@@ -73,6 +74,9 @@ class UCCNVQE(UCCVQE):
         ######### UCCN-VQE #########
 
         self.fill_pool()
+
+        if self._mmcc:
+            self.construct_moment_space()
 
         if self._verbose:
             print(self._pool_obj.str())
@@ -268,3 +272,5 @@ class UCCNVQE(UCCVQE):
         return 0
 
 UCCNVQE.jacobi_solver = optimizer.jacobi_solver
+UCCNVQE.construct_moment_space = moment_energy_corrections.construct_moment_space
+UCCNVQE.compute_moment_energies = moment_energy_corrections.compute_moment_energies

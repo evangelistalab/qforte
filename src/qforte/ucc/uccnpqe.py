@@ -13,6 +13,7 @@ from qforte.maths import optimizer
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
+from qforte.utils import moment_energy_corrections
 
 from qforte.helper.printing import matprint
 
@@ -78,6 +79,9 @@ class UCCNPQE(UCCPQE):
 
         self.print_options_banner()
         self.fill_pool()
+
+        if self._mmcc:
+            self.construct_moment_space()
 
         if self._verbose:
             print('\n\n-------------------------------------')
@@ -277,3 +281,5 @@ class UCCNPQE(UCCPQE):
 
 UCCNPQE.jacobi_solver = optimizer.jacobi_solver
 UCCNPQE.scipy_solver = optimizer.scipy_solver
+UCCNPQE.construct_moment_space = moment_energy_corrections.construct_moment_space
+UCCNPQE.compute_moment_energies = moment_energy_corrections.compute_moment_energies

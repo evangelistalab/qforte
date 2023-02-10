@@ -13,6 +13,7 @@ from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
+from qforte.utils import moment_energy_corrections
 from qforte.maths import optimizer
 
 import numpy as np
@@ -125,6 +126,9 @@ class ADAPTVQE(UCCVQE):
         self.print_options_banner()
 
         self.fill_pool()
+
+        if self._mmcc:
+            self.construct_moment_space()
 
         if self._verbose:
             print('\n\n-------------------------------------')
@@ -447,3 +451,5 @@ class ADAPTVQE(UCCVQE):
             return self._final_result
 
 ADAPTVQE.jacobi_solver = optimizer.jacobi_solver
+ADAPTVQE.construct_moment_space = moment_energy_corrections.construct_moment_space
+ADAPTVQE.compute_moment_energies = moment_energy_corrections.compute_moment_energies

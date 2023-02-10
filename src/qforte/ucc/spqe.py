@@ -12,6 +12,7 @@ from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
 from qforte.utils.point_groups import sq_op_find_symmetry
+from qforte.utils import moment_energy_corrections
 from qforte.maths import optimizer
 
 import numpy as np
@@ -161,6 +162,9 @@ class SPQE(UCCPQE):
         # excitation operator index : determinant id
         self._reversed_excitation_dictionary = {value: key for key, value in self._excitation_dictionary.items()}
 
+        if self._mmcc:
+           self.construct_moment_space()
+
         self.print_options_banner()
 
         self.build_orb_energies()
@@ -185,6 +189,9 @@ class SPQE(UCCPQE):
 
             self.solve()
 
+            if self._mmcc:
+                self.compute_moment_energies()
+
             if(self._verbose):
                 print('\ntamplitudes for tops post solve: \n', np.real(self._tamps))
 
@@ -206,11 +213,19 @@ class SPQE(UCCPQE):
             print(f"{l+1:12}              {nl:14}")
 
         print('\n\n')
-        print(f"{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
-        print('-------------------------------------------------------------------------------')
+        if not self._mmcc:
+            print(f"{'Iter(k)':>8}{'E':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
+            print('-------------------------------------------------------------------------------')
 
-        for k, Ek in enumerate(self._energies):
-            print(f' {k:7}    {Ek:+15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
+            for k, Ek in enumerate(self._energies):
+                print(f' {k:7}    {Ek:+15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
+
+        else:
+            print(f"{'Iter':>8}{'E':>14}{'E_MMCC(MP)':>24}{'E_MMCC(EN)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
+            print('-------------------------------------------------------------------------------')
+
+            for k, Ek in enumerate(self._energies):
+                print(f' {k+1:7}    {Ek:+15.9f}    {self._E_mmcc_mp[k]:15.9f}    {self._E_mmcc_en[k]:15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
 
         self._n_classical_params = len(self._tamps)
         self._n_cnot = self._n_cnot_lst[-1]
@@ -485,3 +500,5 @@ class SPQE(UCCPQE):
 
 SPQE.jacobi_solver = optimizer.jacobi_solver
 SPQE.scipy_solver = optimizer.scipy_solver
+SPQE.construct_moment_space = moment_energy_corrections.construct_moment_space
+SPQE.compute_moment_energies = moment_energy_corrections.compute_moment_energies
