@@ -50,12 +50,14 @@ class UCCNPQE(UCCPQE):
             pool_type='SD',
             opt_thresh = 1.0e-5,
             opt_maxiter = 40,
-            noise_factor = 0.0):
+            noise_factor = 0.0,
+            optimizer = 'jacobi'):
 
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("PQE implementation can only handle occupation_list Hartree-Fock reference.")
 
         self._pool_type = pool_type
+        self._optimizer = optimizer
         self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
         self._noise_factor = noise_factor
@@ -141,10 +143,11 @@ class UCCNPQE(UCCPQE):
         print('Use compact excitation circuits:         ', self._compact_excitations)
 
         res_thrsh_str = '{:.2e}'.format(self._opt_thresh)
-        if self._diis_max_dim >= 2:
+        print('Optimizer:                               ', self._optimizer)
+        if self._diis_max_dim >= 2 and self._optimizer.lower() == 'jacobi':
             print('DIIS dimension:                          ', self._diis_max_dim)
         else:
-            print('DIIS dimension:                          Disabled')
+            print('DIIS dimension:                           Disabled')
         print('Maximum number of iterations:            ',  self._opt_maxiter)
         print('Residual-norm threshold:                 ',  res_thrsh_str)
 
@@ -167,7 +170,12 @@ class UCCNPQE(UCCPQE):
         print('Number of non-zero res element evaluations:  ', int(self._res_vec_evals)*self._n_nonzero_params)
 
     def solve(self):
-        self.jacobi_solver()
+        if self._optimizer.lower() == 'jacobi':
+            self.jacobi_solver()
+        elif self._optimizer.lower() in ['nelder-mead', 'powell', 'bfgs', 'l-bfgs-b', 'cg', 'slsqp']:
+            self.scipy_solver(self.get_sum_residual_square)
+        else:
+            raise NotImplementedError('Currently only Jacobi, Nelder-Mead, Powell, BFGS, L-BFGS-B, CG, and SLSQP solvers are implemented')
 
     def fill_excited_dets(self):
         for _, sq_op in self._pool_obj:
@@ -267,6 +275,13 @@ class UCCNPQE(UCCPQE):
 
         return residuals
 
+    def get_sum_residual_square(self, tamps):
+        # This function is passed to scipy minimize for residual minimization
+        residual_vector = self.get_residual_vector(tamps)
+        sum_residual_vector_square = np.sum(np.square(residual_vector))
+        return sum_residual_vector_square
+
+
     def initialize_ansatz(self):
         """Adds all operators in the pool to the list of operators in the circuit,
         with amplitude 0.
@@ -276,3 +291,4 @@ class UCCNPQE(UCCPQE):
             self._tamps.append(0.0)
 
 UCCNPQE.jacobi_solver = optimizer.jacobi_solver
+UCCNPQE.scipy_solver = optimizer.scipy_solver
