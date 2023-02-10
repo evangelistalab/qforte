@@ -33,3 +33,34 @@ class TestADAPTVQE:
         # Egs = Egs_elec + Enuc
         Egs = Egs_elec
         assert Egs == approx(Efci, abs=5.0e-11)
+
+    def test_adapt_vqe_jacobi_solver(self):
+        # In this test, we confirm that the ADAPT-VQE algorithm produces
+        # identical results when using the Jacobi and BFGS solvers
+
+        Rhh = 1.5
+
+        mol = system_factory(system_type = 'molecule',
+                build_type = 'psi4',
+                basis = 'sto-6g',
+                mol_geometry = [('H', (0, 0, -3*Rhh/2)),
+                                ('H', (0, 0, -Rhh/2)),
+                                ('H', (0, 0, Rhh/2)),
+                                ('H', (0, 0, 3*Rhh/2))],
+                symmetry = 'd2h',
+                multiplicity = 1, # Only singlets will work with QForte
+                charge = 0,
+                num_frozen_docc = 0,
+                num_frozen_uocc = 0,
+                run_mp2=1,
+                run_ccsd=0,
+                run_cisd=0,
+                run_fci=1)
+
+        jacobi = ADAPTVQE(mol, compact_excitations=True, qubit_excitations=True, diis_max_dim=8)
+        jacobi.run(optimizer='jacobi', pool_type='GSD', avqe_thresh=0.001)
+
+        bfgs = ADAPTVQE(mol, compact_excitations=True, qubit_excitations=True)
+        bfgs.run(optimizer='BFGS', pool_type='GSD', avqe_thresh=0.001)
+
+        assert jacobi.get_gs_energy() == approx(bfgs.get_gs_energy(), abs=1.0e-8)

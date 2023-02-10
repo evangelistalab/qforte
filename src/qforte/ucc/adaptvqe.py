@@ -13,6 +13,7 @@ from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
+from qforte.maths import optimizer
 
 import numpy as np
 from scipy.optimize import minimize
@@ -171,7 +172,8 @@ class ADAPTVQE(UCCVQE):
         # Set final ground state energy.
         if hit_maxiter:
             self._Egs = self.get_final_energy(hit_max_avqe_iter=1)
-            self._final_result = self._results[-1]
+            if self._optimizer.lower() != 'jacobi':
+                self._final_result = self._results[-1]
 
         self._Egs = self.get_final_energy()
 
@@ -259,6 +261,13 @@ class ADAPTVQE(UCCVQE):
 
     # Define VQE abstract methods.
     def solve(self):
+        if self._optimizer.lower() == "jacobi":
+            self.build_orb_energies()
+            return self.jacobi_solver()
+        else:
+            return self.scipy_solve()
+
+    def scipy_solve(self):
 
         self._k_counter = 0
 
@@ -393,7 +402,8 @@ class ADAPTVQE(UCCVQE):
         if abs(self._curr_grad_norm) < abs(self._avqe_thresh):
             self._converged = True
             self._final_energy = self._energies[-1]
-            self._final_result = self._results[-1]
+            if self._optimizer.lower() != 'jacobi':
+                self._final_result = self._results[-1]
         else:
             self._converged = False
 
@@ -435,3 +445,5 @@ class ADAPTVQE(UCCVQE):
             self._final_result = self._results[-1]
         else:
             return self._final_result
+
+ADAPTVQE.jacobi_solver = optimizer.jacobi_solver
