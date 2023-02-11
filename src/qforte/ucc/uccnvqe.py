@@ -75,9 +75,6 @@ class UCCNVQE(UCCVQE):
 
         self.fill_pool()
 
-        if self._mmcc:
-            self.construct_moment_space()
-
         if self._verbose:
             print(self._pool_obj.str())
 
@@ -88,6 +85,12 @@ class UCCNVQE(UCCVQE):
             print('\nInitial tamplitudes for tops: \n', self._tamps)
 
         self.solve()
+
+        if self._mmcc:
+            print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
+            self.construct_moment_space()
+            print('\nComputing non-iterative energy corrections')
+            self.compute_moment_energies()
 
         if(self._verbose):
             print('\nt operators included from pool: \n', self._tops)
@@ -152,6 +155,9 @@ class UCCNVQE(UCCVQE):
         print('\n\n                ==> UCCN-VQE summary <==')
         print('-----------------------------------------------------------')
         print('Final UCCN-VQE Energy:                      ', round(self._Egs, 10))
+        if self._mmcc:
+            print('Moment-corrected (MP) UCCN-VQE Energy:      ', round(self._E_mmcc_mp[0], 10))
+            print('Moment-corrected (EN) UCCN-VQE Energy:      ', round(self._E_mmcc_en[0], 10))
         print('Number of operators in pool:                 ', len(self._pool_obj))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())

@@ -17,7 +17,8 @@ def construct_moment_space(self):
     self._mmcc_excitation_indices = []
     self._mmcc_pool = qf.SQOpPool()
 
-    self.build_orb_energies()
+    if not hasattr(self, '_orb_e'):
+        self.build_orb_energies()
 
     # create a pool of particle number, Sz, and spatial symmetry adapted second quantized operators
     # Encode the occupation list into a bitstring
@@ -30,7 +31,7 @@ def construct_moment_space(self):
 
     if self._max_moment_rank is None:
         self._max_moment_rank = nalpha + nbeta
-    elif not isinstance(self._max_moment_rank, int) or max_momnet_rank <= 0:
+    elif not isinstance(self._max_moment_rank, int) or self._max_moment_rank <= 0:
         raise TypeError("The maximum moment rank must be a positive integer!")
     elif self._max_moment_rank > nalpha + nbeta:
         # WARNING: This step could be potetnially removed, if QForte gets methods
@@ -73,7 +74,14 @@ def construct_moment_space(self):
 def compute_moment_energies(self):
 
     # The moments, i.e., residuals, are estimated by measuring the "residual" state a la SPQE
-    self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
+
+    if hasattr(self, '_dt'):
+        dt = self._dt
+    else:
+        # not sure about this
+        dt = 0.001
+
+    self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
     # do U^dag e^iH U |Phi_o> = |Phi_res>
     U = self.ansatz_circuit()
@@ -84,11 +92,10 @@ def compute_moment_energies(self):
     qc_res.apply_circuit(self._eiH)
     qc_res.apply_circuit(U.adjoint())
 
-    res_coeffs = [i / self._dt for i in qc_res.get_coeff_vec()]
+    res_coeffs = [i / dt for i in qc_res.get_coeff_vec()]
 
     mmcc_res = [res_coeffs[I] for I in self._mmcc_excitation_indices]
     mmcc_res_sq_over_mpdenom = [np.real(np.conj(mmcc_res[I]) * mmcc_res[I] / self._mpdenom[I]) for I in range(len(mmcc_res))]
-    if self._energies != []:
-        self._E_mmcc_mp.append(self._curr_energy + sum(mmcc_res_sq_over_mpdenom))
-        mmcc_res_sq_over_epstein_nesbet_denom = [np.real(np.conj(mmcc_res[I]) * mmcc_res[I] / (self._curr_energy - self._epstein_nesbet[I])) for I in range(len(mmcc_res))]
-        self._E_mmcc_en.append(self._curr_energy + sum(mmcc_res_sq_over_epstein_nesbet_denom))
+    self._E_mmcc_mp.append(self._curr_energy + sum(mmcc_res_sq_over_mpdenom))
+    mmcc_res_sq_over_epstein_nesbet_denom = [np.real(np.conj(mmcc_res[I]) * mmcc_res[I] / (self._curr_energy - self._epstein_nesbet[I])) for I in range(len(mmcc_res))]
+    self._E_mmcc_en.append(self._curr_energy + sum(mmcc_res_sq_over_epstein_nesbet_denom))
