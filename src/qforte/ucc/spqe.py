@@ -335,9 +335,9 @@ class SPQE(UCCPQE):
                     raise ValueError("Residual has imaginary component, something went wrong!!")
                 residuals.append(coeffs[self._reversed_excitation_dictionary[m]].real)
 
-            self._res_vec_norm = np.linalg.norm(residuals)
-            self._res_vec_evals += 1
-            self._res_m_evals += len(trial_amps)
+        self._res_vec_norm = np.linalg.norm(residuals)
+        self._res_vec_evals += 1
+        self._res_m_evals += len(trial_amps)
 
         return residuals
 
