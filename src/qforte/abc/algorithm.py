@@ -302,7 +302,7 @@ class AnsatzAlgorithm(Algorithm):
         return val
 
     def __init__(self, *args, qubit_excitations=False, compact_excitations=False, diis_max_dim=8,
-            max_moment_rank = 0,
+            max_moment_rank = 0, moment_dt=None,
             **kwargs):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
@@ -318,6 +318,8 @@ class AnsatzAlgorithm(Algorithm):
         # max_moment_rank = 0: non-iterative correction skipped
         # max_moment_rank = n: projections up to n-tuply excited Slater determinants are considered
         self._max_moment_rank = max_moment_rank
+        # The moment_dt variable defines the 'residual' state used to measure the residuals for the moment corrections
+        self._moment_dt = moment_dt
 
         kwargs.setdefault('irrep', None)
         if hasattr(self._sys, 'point_group'):

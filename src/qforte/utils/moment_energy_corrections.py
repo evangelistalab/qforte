@@ -85,13 +85,12 @@ def compute_moment_energies(self):
 
     # The moments, i.e., residuals, are estimated by measuring the "residual" state a la SPQE
 
-    if hasattr(self, '_dt'):
-        dt = self._dt
-    else:
-        # not sure about this
-        dt = 0.001
+    if self._moment_dt is None:
+        print("WARNING: No value has been provided for the moment_dt variable required by the moment correction code!"
+              "\nProceeding with the default value of 0.001")
+        self._moment_dt = 0.001
 
-    self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
+    self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._moment_dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
     # do U^dag e^iH U |Phi_o> = |Phi_res>
     U = self.ansatz_circuit()
@@ -102,7 +101,7 @@ def compute_moment_energies(self):
     qc_res.apply_circuit(self._eiH)
     qc_res.apply_circuit(U.adjoint())
 
-    res_coeffs = [i / dt for i in qc_res.get_coeff_vec()]
+    res_coeffs = [i / self._moment_dt for i in qc_res.get_coeff_vec()]
 
     mmcc_res = [res_coeffs[I] for I in self._mmcc_excitation_indices]
     mmcc_res_sq_over_mpdenom = [np.real(np.conj(mmcc_res[I]) * mmcc_res[I] / self._mpdenom[I]) for I in range(len(mmcc_res))]
