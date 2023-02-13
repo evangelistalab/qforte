@@ -113,7 +113,7 @@ class UCC:
 
             denom = sum(self._orb_e[x] for x in sq_annihilators) - sum(self._orb_e[x] for x in sq_creators)
 
-            res_mu = residuals[mu] / denom
+            res_mu = residuals[mu] / (denom + self._shift)
 
             resids_over_denoms.append(res_mu)
 

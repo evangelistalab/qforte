@@ -302,7 +302,7 @@ class AnsatzAlgorithm(Algorithm):
         return val
 
     def __init__(self, *args, qubit_excitations=False, compact_excitations=False, diis_max_dim=8,
-            max_moment_rank = 0, moment_dt=None,
+            max_moment_rank = 0, moment_dt=None, shift = 0,
             **kwargs):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
@@ -320,6 +320,8 @@ class AnsatzAlgorithm(Algorithm):
         self._max_moment_rank = max_moment_rank
         # The moment_dt variable defines the 'residual' state used to measure the residuals for the moment corrections
         self._moment_dt = moment_dt
+        # Energy shift for MP2 denominators in Jacobi iterations
+        self._shift = shift
 
         kwargs.setdefault('irrep', None)
         if hasattr(self._sys, 'point_group'):
