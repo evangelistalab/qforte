@@ -1,3 +1,15 @@
+"""
+Functions for computing non-iterative energy corrections based on the
+method of moments of coupled-cluster (MMCC) theory. The orginal ideas
+for traditional coupled-cluster approaches can be found in:
+    DOI: 10.1007/BF01117411
+    DOI: 10.1142/9789812792501_0001
+    DOI: 10.1063/1.481769
+    DOI: 10.1063/1.2137318
+The use of such moment corrections in the UCC case is experimental
+and a publication will appear in the future.
+"""
+
 import qforte as qf
 from qforte.utils.trotterization import trotterize
 from qforte.utils.point_groups import sq_op_find_symmetry
