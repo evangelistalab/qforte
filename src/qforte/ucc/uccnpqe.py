@@ -13,6 +13,7 @@ from qforte.maths import optimizer
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
+from qforte.utils import moment_energy_corrections
 
 from qforte.helper.printing import matprint
 
@@ -95,6 +96,12 @@ class UCCNPQE(UCCPQE):
         self.build_orb_energies()
         self.solve()
 
+        if self._max_moment_rank:
+            print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
+            self.construct_moment_space()
+            print('\nComputing non-iterative energy corrections')
+            self.compute_moment_energies()
+
         if(self._verbose):
             print('\nt operators included from pool: \n', self._tops)
 
@@ -159,6 +166,9 @@ class UCCNPQE(UCCPQE):
         print('\n\n                   ==> UCC-PQE summary <==')
         print('-----------------------------------------------------------')
         print('Final UCCN-PQE Energy:                      ', round(self._Egs, 10))
+        if self._max_moment_rank:
+            print('Moment-corrected (MP) UCCN-PQE Energy:      ', round(self._E_mmcc_mp[0], 10))
+            print('Moment-corrected (EN) UCCN-PQE Energy:      ', round(self._E_mmcc_en[0], 10))
         print('Number of operators in pool:                 ', len(self._pool_obj))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Number of classical parameters used:         ', len(self._tamps))
@@ -277,3 +287,5 @@ class UCCNPQE(UCCPQE):
 
 UCCNPQE.jacobi_solver = optimizer.jacobi_solver
 UCCNPQE.scipy_solver = optimizer.scipy_solver
+UCCNPQE.construct_moment_space = moment_energy_corrections.construct_moment_space
+UCCNPQE.compute_moment_energies = moment_energy_corrections.compute_moment_energies
