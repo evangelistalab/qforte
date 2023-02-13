@@ -29,12 +29,10 @@ def construct_moment_space(self):
     nalpha = sum(self._ref[0::2])
     nbeta = sum(self._ref[1::2])
 
-    if self._max_moment_rank is None:
-        self._max_moment_rank = nalpha + nbeta
-    elif not isinstance(self._max_moment_rank, int) or self._max_moment_rank <= 0:
-        raise TypeError("The maximum moment rank must be a positive integer!")
+    if not isinstance(self._max_moment_rank, int) or self._max_moment_rank < 0:
+        raise TypeError("The maximum moment rank must be a non-negative integer!")
     elif self._max_moment_rank > nalpha + nbeta:
-        # WARNING: This step could be potetnially removed, if QForte gets methods
+        # WARNING: This step could be potetnially removed, if QForte allows for methods
         #          that violate particle number symmetry
         self._max_moment_rank = nalpha + nbeta
 

@@ -127,7 +127,7 @@ class ADAPTVQE(UCCVQE):
 
         self.fill_pool()
 
-        if self._mmcc:
+        if self._max_moment_rank:
             print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
             self.construct_moment_space()
 
@@ -159,7 +159,7 @@ class ADAPTVQE(UCCVQE):
 
             self.solve()
 
-            if self._mmcc:
+            if self._max_moment_rank:
                 print('\nComputing non-iterative energy corrections')
                 self.compute_moment_energies()
 
@@ -187,7 +187,7 @@ class ADAPTVQE(UCCVQE):
         self._Egs = self.get_final_energy()
 
         print('\n\n')
-        if not self._mmcc:
+        if not self._max_moment_rank:
             print(f"{'Iter':>8}{'E':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
             print('-------------------------------------------------------------------------------')
 
@@ -265,7 +265,7 @@ class ADAPTVQE(UCCVQE):
         print('\n\n                ==> ADAPT-VQE summary <==')
         print('-----------------------------------------------------------')
         print('Final ADAPT-VQE Energy:                     ', round(self._Egs, 10))
-        if self._mmcc:
+        if self._max_moment_rank:
             print('Moment-corrected (MP) ADAPT-VQE Energy:     ', round(self._E_mmcc_mp[-1], 10))
             print('Moment-corrected (EN) ADAPT-VQE Energy:     ', round(self._E_mmcc_en[-1], 10))
         print('Number of operators in pool:                 ', len(self._pool_obj))

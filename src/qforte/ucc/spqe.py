@@ -166,7 +166,7 @@ class SPQE(UCCPQE):
 
         self.build_orb_energies()
 
-        if self._mmcc:
+        if self._max_moment_rank:
             print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
             self.construct_moment_space()
 
@@ -190,7 +190,7 @@ class SPQE(UCCPQE):
 
             self.solve()
 
-            if self._mmcc:
+            if self._max_moment_rank:
                 print('\nComputing non-iterative energy corrections')
                 self.compute_moment_energies()
 
@@ -215,7 +215,7 @@ class SPQE(UCCPQE):
             print(f"{l+1:12}              {nl:14}")
 
         print('\n\n')
-        if not self._mmcc:
+        if not self._max_moment_rank:
             print(f"{'Iter(k)':>8}{'E':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
             print('-------------------------------------------------------------------------------')
 
@@ -284,7 +284,7 @@ class SPQE(UCCPQE):
         print('\n\n                ==> SPQE summary <==')
         print('-----------------------------------------------------------')
         print('Final SPQE Energy:                           ', round(self._Egs, 10))
-        if self._mmcc:
+        if self._max_moment_rank:
             print('Moment-corrected (MP) SPQE Energy:           ', round(self._E_mmcc_mp[-1], 10))
             print('Moment-corrected (EN) SPQE Energy:           ', round(self._E_mmcc_en[-1], 10))
         print('Number of operators in pool:                 ', len(self._pool_obj))
