@@ -319,8 +319,20 @@ class SPQE(UCCPQE):
         print('Number of individual residual evaluations:   ', self._res_m_evals)
 
     def get_residual_vector(self, trial_amps):
-        U = self.ansatz_circuit(trial_amps)
+        """
+        Input
+        -----
+        trial_amps list[float]
+         The trial value of the parameters, in order corresponding to the ansatz parameters.
 
+        Output
+
+        list[float]
+         The residuals, in order corresponding to the ansatz parameters.
+        """
+
+        assert len(trial_amps) == len(self._tops)
+        U = self.ansatz_circuit(trial_amps)
         qc_res = qforte.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
         qc_res.apply_circuit(U)
@@ -346,17 +358,13 @@ class SPQE(UCCPQE):
                 sign_adjust = qc_temp.get_coeff_vec()[self._reversed_excitation_dictionary[m]]
 
                 res_m = coeffs[self._reversed_excitation_dictionary[m]] * sign_adjust
-                if(np.imag(res_m) > 0.0):
-                    raise ValueError("Residual has imaginary component, something went wrong!!")
-
-                residuals.append(res_m)
             else:
                 # In residual minimization, we compute the function sum_k |r_k|^2
                 # and thus the sign of the projection is immaterial
                 res_m = coeffs[self._reversed_excitation_dictionary[m]]
-                if(np.imag(res_m) > 0.0):
-                    raise ValueError("Residual has imaginary component, something went wrong!!")
-                residuals.append(coeffs[self._reversed_excitation_dictionary[m]].real)
+            if abs(np.imag(res_m)) > 0.0:
+                raise ValueError("Residual has imaginary component, something went wrong!!")
+            residuals.append(coeffs[self._reversed_excitation_dictionary[m]].real)
 
         self._res_vec_norm = np.linalg.norm(residuals)
         self._res_vec_evals += 1
