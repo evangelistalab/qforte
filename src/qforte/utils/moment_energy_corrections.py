@@ -90,7 +90,7 @@ def compute_moment_energies(self):
               "\nProceeding with the default value of 0.001")
         self._moment_dt = 0.001
 
-    self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._moment_dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
+    self._eiH, _ = trotterize(self._qb_ham, factor= self._moment_dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
     # do U^dag e^iH U |Phi_o> = |Phi_res>
     U = self.ansatz_circuit()

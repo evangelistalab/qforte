@@ -93,8 +93,6 @@ class SPQE(UCCPQE):
         self._spqe_thresh = spqe_thresh
         self._spqe_maxiter = spqe_maxiter
         self._dt = dt
-        # M_omega: total number of measurements for determining the residuals [Eq. (16) of original PQE/SPQE paper].
-        #          Setting "M_omega = inf" results in a perfect measurement of residuals.
         if(M_omega != 'inf'):
             self._M_omega = int(M_omega)
         else:
@@ -128,7 +126,7 @@ class SPQE(UCCPQE):
         self._n_pauli_trm_measures_lst = []
 
         self._Nm = []
-        self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
+        self._eiH, _ = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
         for occupation in self._ref:
             if occupation:
@@ -220,10 +218,9 @@ class SPQE(UCCPQE):
                 print('\nComputing non-iterative energy corrections')
                 self.compute_moment_energies()
 
-            if(self._verbose):
+            if self._verbose:
                 print('\ntamplitudes for tops post solve: \n', np.real(self._tamps))
-
-            if(self._print_summary_file):
+            if self._print_summary_file:
                 f.write(f'  {self._spqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
             self._spqe_iter += 1
 
