@@ -63,13 +63,15 @@ class SPQE(UCCPQE):
         """
         spqe_thresh: float
             The convergence threshold against which the norm of the residual is compared
-            (in L2 norm) to determine convergence.
+            (in L2 norm) to determine macroiteration convergence.
         spqe_maxiter: int
             The maximum number of macroiterations
         dt: float
-            The numerical. Use as small a value as possible to get numerically stable results.
+            The coefficient of an "imaginary time" step used for estimating the residual,
+            eq. 15/16 of 10.1103/PRXQuantum.2.030301. Smaller values are more accurate
+            in the infinite measurement limit, but approach their limit more slowly.
         M_omega: Union['inf', float]
-            The number of measurements to use when constructing the estimated residual, eq. 15
+            The number of measurements to use when constructing the estimated residual, eq. 15/16
             of 10.1103/PRXQuantum.2.030301.
         opt_thresh: float
             The convergence threshold used during microiterations.
