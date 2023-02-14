@@ -60,6 +60,32 @@ class SPQE(UCCPQE):
             use_cumulative_thresh=True,
             max_excit_rank = None,
             optimizer = 'Jacobi'):
+        """
+        spqe_thresh: float
+            The convergence threshold against which the norm of the residual is compared
+            (in L2 norm) to determine macroiteration convergence.
+        spqe_maxiter: int
+            The maximum number of macroiterations
+        dt: float
+            The coefficient of an "imaginary time" step used for estimating the residual,
+            eq. 15/16 of 10.1103/PRXQuantum.2.030301. Smaller values are more accurate
+            in the infinite measurement limit, but approach their limit more slowly.
+        M_omega: Union['inf', float]
+            The number of measurements to use when constructing the estimated residual, eq. 15/16
+            of 10.1103/PRXQuantum.2.030301.
+        opt_thresh: float
+            The convergence threshold used during microiterations.
+        opt_maxiter: int
+            The maximum number of microiterations
+        use_cumulative_thresh: bool
+            In brief, use True to add multiple operators per macroiteration, and False for one
+            operator per macroiteration. When True, operators are added using the cumulative
+            threshold as described in 10.1103/PRXQuantum.2.030301 Section 2E.
+        max_excit_rank: Union[int, None]
+            The maximum rank of excitations considered. Select None for no restrictions.
+        optimizer: {'jacobi', 'nelder-mead', 'powell', 'bfgs', 'l-bfgs-b', 'cg', 'slsqp'}
+            The optimizer to solve the residual equations.
+        """
 
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("SPQE implementation can only handle occupation_list Hartree-Fock reference.")
