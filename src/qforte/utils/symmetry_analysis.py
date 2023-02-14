@@ -1,0 +1,170 @@
+import qforte as qf
+import numpy as np
+
+def symmetry_check(n_qubits, Uprep, pool, tops, tamps, compact, qubit, trotter_number, irreps, orb_irreps_to_int):
+    """
+    This function performs a symmetry analysis of the provided quantum state.
+    In particular, it computes the expectation values and variances of the
+    particle number N, projection of total spin on z axis Sz, and total spin
+    squared S^2 operators. In addition, it computes the weight contribution
+    to the wavefunction of the various N, Sz, and spatial symmetry sectors.
+
+    Arguments
+    =========
+
+    n_qubits: int
+              The number of qubits of the system.
+
+    Uprep: Circuit
+           The circuit that transforms the |0..0> state to the reference one.
+
+    pool: SQOpPool
+        Pool of second-quantized operators used in constructing the ansatz.
+
+    tops: list of int
+        List of indices denoting the operators from the pool that have been selected for the ansatz.
+
+    tamps: list of float
+        Amplitudes corresponding to the second-quantized operators in tops.
+
+    compact: boolean
+        Controls the use of standard vs compact excitation circuits.
+
+    qubit: boolean
+        Controls the use of fermionic vs qubit anti-Hermitian excitations.
+
+    trotter_number: int
+        The number of Trotter steps used to approximate the ansatz. Currently implemented only for compact = False.
+
+    irreps: list of str
+        List that holds the irreps of the group in the Cotton ordering.
+
+    orb_irreps_to_int: list of int
+        Integer n indexes the irrep of spatial orbital n.
+    """
+
+    # Generate the quantum state defined by the Uprep, tops, tamps, compact, qubit and trotter_number
+    qc = qf.Computer(n_qubits)
+    qc.apply_circuit(Uprep)
+    if compact:
+        U = qf.Circuit()
+        for tamp, top in zip(tamps, tops):
+            U.add(qf.compact_excitation_circuit(tamp * pool[top][1].terms()[1][0],
+                                                       pool[top][1].terms()[1][1],
+                                                       pool[top][1].terms()[1][2],
+                                                       qubit))
+    else:
+        temp_pool = qf.SQOpPool()
+        for tamp, top in zip(tamps, tops):
+            temp_pool.add(tamp, pool[top][1])
+
+        A = temp_pool.get_qubit_operator('commuting_grp_lex', qubit_excitations = qubit)
+
+        U, phase1 = qf.trotterize(A, trotter_number=trotter_number)
+
+    qc.apply_circuit(U)
+
+    # Compute <N> and <N^2> - <N>^2, where N is the total number operator
+    N = qf.QubitOperator()
+    circ_const = qf.Circuit()
+    N.add_term(n_qubits / 2, circ_const)
+    for qubit in range(n_qubits):
+        circ_Z = qf.Circuit()
+        circ_Z.add_gate(qf.gate('Z', qubit))
+        N.add_term(-0.5, circ_Z)
+    N_sqrd = qf.QubitOperator()
+    N_sqrd.add_op(N)
+    N_sqrd.operator_product(N, True, True)
+    N_exp_val = qc.direct_op_exp_val(N)
+    N_var = qc.direct_op_exp_val(N_sqrd) - N_exp_val**2
+    if np.imag(N_exp_val) != 0 or np.imag(N_var) != 0:
+        raise ValueError('The expectation value and variance of the particle number should be real!')
+    N_exp_val = np.real(N_exp_val)
+    N_var = np.real(N_var)
+
+    # Compute <Sz> and <Sz^2> - <Sz>^2, where Sz is the projection of the total spin on the z axis
+    Sz = qf.total_spin_z(n_qubits)
+    Sz_sqrd = qf.QubitOperator()
+    Sz_sqrd.add_op(Sz)
+    Sz_sqrd.operator_product(Sz, True, True)
+    Sz_exp_val = qc.direct_op_exp_val(Sz)
+    Sz_var = qc.direct_op_exp_val(Sz_sqrd) - Sz_exp_val**2
+    if np.imag(Sz_exp_val) != 0 or np.imag(Sz_var) != 0:
+        raise ValueError('The expectation value and variance of Sz should be real!')
+    Sz_exp_val = np.real(Sz_exp_val)
+    Sz_var = np.real(Sz_var)
+
+    # Compute <S^2> and <S^4> - <S^2>^2, where S is the total spin
+    S_sqrd = qf.total_spin_squared(n_qubits)
+    S_sqrd_sqrd = qf.QubitOperator()
+    S_sqrd_sqrd.add_op(S_sqrd)
+    S_sqrd_sqrd.operator_product(S_sqrd, True, True)
+    S_sqrd_exp_val = qc.direct_op_exp_val(S_sqrd)
+    S_sqrd_var = qc.direct_op_exp_val(S_sqrd_sqrd) - S_sqrd_exp_val**2
+    if np.imag(S_sqrd_exp_val) !=0 or np.imag(S_sqrd_var) !=0:
+        raise ValueError('The expectation value and variance of S^2 should be real!')
+    S_sqrd_exp_val = np.real(S_sqrd_exp_val)
+    S_sqrd_var = np.real(S_sqrd_var)
+
+    # Compute the contributions of various symmetry spaces to the wavefunction
+    weight_particle_number = [0] * (n_qubits + 1)
+    weight_Sz = [0] * (n_qubits + 1)
+    Sz_values = []
+    Sz_values_dictionary = {}
+    for i in range(n_qubits + 1):
+        Sz_values.append(-n_qubits * 0.25 + 0.5 * i)
+        Sz_values_dictionary[Sz_values[i]] = i
+    weight_irreps = [0] * len(irreps)
+    for det in range(1<<n_qubits):
+        occ_alpha = []
+        occ_beta = []
+        for i in range(0, n_qubits, 2):
+            if (1<<i)&det != 0:
+                occ_alpha.append(i)
+            if (1<<(i+1))&det != 0:
+                occ_beta.append(i+1)
+        weight = qc.get_coeff_vec()[det]
+        weight = weight * np.conjugate(weight)
+        particle_number = len(occ_alpha + occ_beta)
+        Sz_value = (len(occ_alpha) - len(occ_beta)) * 0.5
+        irrep = qf.sq_op_find_symmetry(orb_irreps_to_int, occ_alpha + occ_beta, [])
+        weight_particle_number[particle_number] += weight
+        weight_Sz[Sz_values_dictionary[Sz_value]] += weight
+        weight_irreps[irrep] += weight
+    for i in range(n_qubits + 1):
+        weight_particle_number[i] = np.real(weight_particle_number[i])
+        weight_Sz[i] = np.real(weight_Sz[i])
+    for i in range(len(irreps)):
+        weight_irreps[i] = np.real(weight_irreps[i])
+
+    print('\n\n*******************')
+    print('*Symmetry Analysis*')
+    print('*******************')
+
+    print('\nParticle number symmetry analysis')
+    print('=================================')
+
+    for i in range(n_qubits + 1):
+        print('N =', str(i).rjust(2, ' '), 'weight:', f'{weight_particle_number[i]:.10f}')
+
+    print('<N>:                      ', f'{N_exp_val:+.10f}')
+    print('<N^2> - <N>^2:            ', f'{N_var:+.10f}')
+
+    print('\nSz symmetry analysis')
+    print('====================')
+
+    for i in range(n_qubits + 1):
+        print('Sz =', str(Sz_values[i]).rjust(4, ' '), 'weight:', f'{weight_Sz[i]:.10f}')
+    print('<Sz>:                     ', f'{Sz_exp_val:+.10f}')
+    print('<Sz^2> - <Sz>^2:          ', f'{Sz_var:+.10f}')
+
+    print('\nS^2 symmetry analysis')
+    print('=====================')
+
+    print('<S^2>:                    ', f'{S_sqrd_exp_val:+.10f}')
+    print('<S^4> - <S^2>^2:          ', f'{S_sqrd_var:+.10f}')
+
+    print('\nSpatial symmetry analysis')
+    print('=========================')
+    for i, j in enumerate(irreps):
+        print(j.ljust(3,' '), 'weight:', f'{weight_irreps[i]:.10f}')
