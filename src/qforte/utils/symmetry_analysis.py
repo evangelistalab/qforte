@@ -1,7 +1,7 @@
 import qforte as qf
 import numpy as np
 
-def symmetry_check(n_qubits, Uprep, pool, tops, tamps, compact, qubit, trotter_number, irreps, orb_irreps_to_int):
+def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
     """
     This function performs a symmetry analysis of the provided quantum state.
     In particular, it computes the expectation values and variances of the
@@ -13,28 +13,10 @@ def symmetry_check(n_qubits, Uprep, pool, tops, tamps, compact, qubit, trotter_n
     =========
 
     n_qubits: int
-              The number of qubits of the system.
+        The number of qubits of the system.
 
-    Uprep: Circuit
-           The circuit that transforms the |0..0> state to the reference one.
-
-    pool: SQOpPool
-        Pool of second-quantized operators used in constructing the ansatz.
-
-    tops: list of int
-        List of indices denoting the operators from the pool that have been selected for the ansatz.
-
-    tamps: list of float
-        Amplitudes corresponding to the second-quantized operators in tops.
-
-    compact: boolean
-        Controls the use of standard vs compact excitation circuits.
-
-    qubit: boolean
-        Controls the use of fermionic vs qubit anti-Hermitian excitations.
-
-    trotter_number: int
-        The number of Trotter steps used to approximate the ansatz. Currently implemented only for compact = False.
+    qc: Computer
+        The quantum computer prepared in the derised state.
 
     irreps: list of str
         List that holds the irreps of the group in the Cotton ordering.
@@ -42,27 +24,6 @@ def symmetry_check(n_qubits, Uprep, pool, tops, tamps, compact, qubit, trotter_n
     orb_irreps_to_int: list of int
         Integer n indexes the irrep of spatial orbital n.
     """
-
-    # Generate the quantum state defined by the Uprep, tops, tamps, compact, qubit and trotter_number
-    qc = qf.Computer(n_qubits)
-    qc.apply_circuit(Uprep)
-    if compact:
-        U = qf.Circuit()
-        for tamp, top in zip(tamps, tops):
-            U.add(qf.compact_excitation_circuit(tamp * pool[top][1].terms()[1][0],
-                                                       pool[top][1].terms()[1][1],
-                                                       pool[top][1].terms()[1][2],
-                                                       qubit))
-    else:
-        temp_pool = qf.SQOpPool()
-        for tamp, top in zip(tamps, tops):
-            temp_pool.add(tamp, pool[top][1])
-
-        A = temp_pool.get_qubit_operator('commuting_grp_lex', qubit_excitations = qubit)
-
-        U, phase1 = qf.trotterize(A, trotter_number=trotter_number)
-
-    qc.apply_circuit(U)
 
     # Compute <N> and <N^2> - <N>^2, where N is the total number operator
     N = qf.QubitOperator()
