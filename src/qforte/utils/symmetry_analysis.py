@@ -1,7 +1,7 @@
 import qforte as qf
 import numpy as np
 
-def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
+def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int, target_N, target_Sz, target_irrep):
     """
     This function performs a symmetry analysis of the provided quantum state.
     In particular, it computes the expectation values and variances of the
@@ -23,6 +23,15 @@ def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
 
     orb_irreps_to_int: list of int
         Integer n indexes the irrep of spatial orbital n.
+
+    target_N: int
+        The number of particles in the target quantum state.
+
+    target_Sz: float
+        The Sz eigenvalue of the target quantum state.
+
+    target_irrep: int
+        Integer representing the irrep of the target state
     """
 
     # Compute <N> and <N^2> - <N>^2, where N is the total number operator
@@ -68,14 +77,15 @@ def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
     S_sqrd_var = np.real(S_sqrd_var)
 
     # Compute the weight of various symmetry subspaces in the wavefunction
-    weight_particle_number = [0] * (n_qubits + 1)
-    weight_Sz = [0] * (n_qubits + 1)
+    weight_target = 0
+    weight_per_particle_number = [0] * (n_qubits + 1)
+    weight_per_Sz = [0] * (n_qubits + 1)
     Sz_values = []
     Sz_values_dictionary = {}
     for i in range(n_qubits + 1):
         Sz_values.append(-n_qubits * 0.25 + 0.5 * i)
         Sz_values_dictionary[Sz_values[i]] = i
-    weight_irreps = [0] * len(irreps)
+    weight_per_irrep = [0] * len(irreps)
     for det in range(1<<n_qubits):
         occ_alpha = []
         occ_beta = []
@@ -85,18 +95,15 @@ def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
             if (1<<(i+1))&det != 0:
                 occ_beta.append(i+1)
         weight = qc.get_coeff_vec()[det]
-        weight = weight * np.conjugate(weight)
+        weight = np.real(weight * np.conjugate(weight))
         particle_number = len(occ_alpha + occ_beta)
         Sz_value = (len(occ_alpha) - len(occ_beta)) * 0.5
         irrep = qf.sq_op_find_symmetry(orb_irreps_to_int, occ_alpha + occ_beta, [])
-        weight_particle_number[particle_number] += weight
-        weight_Sz[Sz_values_dictionary[Sz_value]] += weight
-        weight_irreps[irrep] += weight
-    for i in range(n_qubits + 1):
-        weight_particle_number[i] = np.real(weight_particle_number[i])
-        weight_Sz[i] = np.real(weight_Sz[i])
-    for i in range(len(irreps)):
-        weight_irreps[i] = np.real(weight_irreps[i])
+        if particle_number == target_N and Sz_value == target_Sz and irrep == target_irrep:
+            weight_target += weight
+        weight_per_particle_number[particle_number] += weight
+        weight_per_Sz[Sz_values_dictionary[Sz_value]] += weight
+        weight_per_irrep[irrep] += weight
 
     print('\n\n*******************')
     print('*Symmetry Analysis*')
@@ -106,7 +113,7 @@ def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
     print('=================================')
 
     for i in range(n_qubits + 1):
-        print('N =', str(i).rjust(2, ' '), 'weight:', f'{weight_particle_number[i]:.10f}')
+        print('N =', str(i).rjust(2, ' '), 'weight:', f'{weight_per_particle_number[i]:.10f}')
 
     print('<N>:                      ', f'{N_exp_val:+.10f}')
     print('<N^2> - <N>^2:            ', f'{N_var:+.10f}')
@@ -115,7 +122,7 @@ def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
     print('====================')
 
     for i in range(n_qubits + 1):
-        print('Sz =', str(Sz_values[i]).rjust(4, ' '), 'weight:', f'{weight_Sz[i]:.10f}')
+        print('Sz =', str(Sz_values[i]).rjust(4, ' '), 'weight:', f'{weight_per_Sz[i]:.10f}')
     print('<Sz>:                     ', f'{Sz_exp_val:+.10f}')
     print('<Sz^2> - <Sz>^2:          ', f'{Sz_var:+.10f}')
 
@@ -128,4 +135,9 @@ def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
     print('\nSpatial symmetry analysis')
     print('=========================')
     for i, j in enumerate(irreps):
-        print(j.ljust(3,' '), 'weight:', f'{weight_irreps[i]:.10f}')
+        print(j.ljust(3,' '), 'weight:', f'{weight_per_irrep[i]:.10f}')
+
+    print('\nWeight of target symmetry subspace')
+    print('==================================')
+    print('N = ' + str(target_N) + ', Sz = ' + str(target_Sz) + ', ' + irreps[target_irrep] + ' weight:',
+            f'{weight_target:.10f}')
