@@ -190,3 +190,7 @@ bool operator==(const Circuit& qc1, const Circuit& qc2)  {
         return false;
     }
 }
+
+bool operator < (const Circuit& qc1, const Circuit& qc2)  {
+    return qc1.str() < qc2.str();
+}
