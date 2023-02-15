@@ -30,5 +30,5 @@ class TestNonIterativeEnergyCorrections:
     alg.run(pool_type='SD', opt_maxiter=60)
 
     assert alg._Egs == approx(-108.48042111794851, abs=1.0e-12)
-    assert alg._E_mmcc_mp[0] == approx(-108.49099118292136, abs=1.0e-12)
-    assert alg._E_mmcc_en[0] == approx(-108.49255922885332, abs=1.0e-12)
+    assert alg._E_mmcc_mp[0] == approx(-108.49099104714385, abs=1.0e-12)
+    assert alg._E_mmcc_en[0] == approx(-108.49255913211523, abs=1.0e-12)

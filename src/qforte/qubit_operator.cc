@@ -81,9 +81,9 @@ void QubitOperator::canonical_order() {
 
 void QubitOperator::simplify(bool combine_like_terms) {
     canonical_order();
-    std::unordered_map<Circuit, std::complex<double>> uniqe_trms;
+    std::map<Circuit, std::complex<double>> uniqe_trms;
     for (const auto& term : terms_) {
-        if ( uniqe_trms.find(term.second) == uniqe_trms.end() ) {
+        if (uniqe_trms.count(term.second) == 0) {
             uniqe_trms.insert(std::make_pair(term.second, term.first));
         } else {
             uniqe_trms[term.second] += term.first;
@@ -93,12 +93,12 @@ void QubitOperator::simplify(bool combine_like_terms) {
     if(combine_like_terms){
         for (const auto &uniqe_trm : uniqe_trms){
             if (std::abs(uniqe_trm.second) > 1.0e-12) {
-                terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
+                terms_.emplace_back(uniqe_trm.second, uniqe_trm.first);
             }
         }
     } else {
         for (const auto &uniqe_trm : uniqe_trms){
-            terms_.push_back(std::make_pair(uniqe_trm.second, uniqe_trm.first));
+            terms_.emplace_back(uniqe_trm.second, uniqe_trm.first);
         }
     }
 }
