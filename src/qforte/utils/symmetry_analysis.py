@@ -67,7 +67,7 @@ def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int):
     S_sqrd_exp_val = np.real(S_sqrd_exp_val)
     S_sqrd_var = np.real(S_sqrd_var)
 
-    # Compute the contributions of various symmetry spaces to the wavefunction
+    # Compute the weight of various symmetry subspaces in the wavefunction
     weight_particle_number = [0] * (n_qubits + 1)
     weight_Sz = [0] * (n_qubits + 1)
     Sz_values = []
