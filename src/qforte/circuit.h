@@ -63,7 +63,6 @@ class Circuit {
     std::vector<Gate> gates_;
 };
 
-// A equivalence comparitor for Circuit class
 bool operator==(const Circuit& qc1, const Circuit& qc2);
 bool operator < (const Circuit& qc1, const Circuit& qc2);
 
