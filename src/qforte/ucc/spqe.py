@@ -23,7 +23,7 @@ class SPQE(UCCPQE):
     In SPQE, a batch of imporant particle-hole operators
     :math:`\{ e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger )} \}` are
     added at each macro-iteration :math:`n` to the SPQE unitary :math:`\hat{U}(\mathbf{t})`,
-    wile all current parameters are optemized using the quasi-Newton PQE update
+    wile all current parameters are optimized using the quasi-Newton PQE update
     with micro-iterations :math:`k`.
 
     In our selection approach we consider a (normalized) quantum state of the form
@@ -119,13 +119,16 @@ class SPQE(UCCPQE):
 
         self._curr_energy = 0.0
 
+        # Resource estimates.
         self._n_classical_params = 0
         self._n_cnot = 0
         self._n_cnot_lst = []
         self._n_pauli_trm_measures = 0
         self._n_pauli_trm_measures_lst = []
-
         self._Nm = []
+
+        # self._eiH: QuantumCircuit
+        #     Used to estimate the residuals outside the zero'd set when selecting new residuals to zero.
         self._eiH, _ = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
         for occupation in self._ref:
@@ -152,8 +155,8 @@ class SPQE(UCCPQE):
         self._pool_type = max_excit_rank
 
         idx = 0
-        # determinant id : excitation operator index
-        self._excitation_dictionary = {}
+        # Given a coefficient index, what is the index of the "corresponding" pool element? Used to compute the operator to add to the ansatz in macroiterations.
+        self._coeff_idx_to_pool_idx = {}
         self._indices_of_zeroable_residuals_for_pool = set()
         self._pool_obj = qf.SQOpPool()
         for I in range(1 << self._nqb):
@@ -178,12 +181,13 @@ class SPQE(UCCPQE):
                             sq_op.add(-1.0, occ_idx[::-1], unocc_idx[::-1])
                             sq_op.simplify()
                             self._pool_obj.add_term(0.0, sq_op)
-                            self._excitation_dictionary[I] = idx
+                            self._coeff_idx_to_pool_idx[I] = idx
                             self._indices_of_zeroable_residuals_for_pool.add(I)
                             idx += 1
 
-        # excitation operator index : determinant id
-        self._reversed_excitation_dictionary = {value: key for key, value in self._excitation_dictionary.items()}
+        # Given a pool index, what is the coefficient of the "corresponding" coefficient vector element? Used to extract significant residuals in microiterations.
+        # WARNING! This variable will likely need to be replaced to support generalized pools.
+        self._pool_idx_to_coeff_idx = {value: key for key, value in self._coeff_idx_to_pool_idx.items()}
 
         self.print_options_banner()
 
@@ -354,13 +358,13 @@ class SPQE(UCCPQE):
                 qc_temp = qforte.Computer(self._nqb)
                 qc_temp.apply_circuit(self._Uprep)
                 qc_temp.apply_operator(sq_op.jw_transform(self._qubit_excitations))
-                sign_adjust = qc_temp.get_coeff_vec()[self._reversed_excitation_dictionary[m]]
+                sign_adjust = qc_temp.get_coeff_vec()[self._pool_idx_to_coeff_idx[m]]
 
-                res_m = coeffs[self._reversed_excitation_dictionary[m]] * sign_adjust
+                res_m = coeffs[self._pool_idx_to_coeff_idx[m]] * sign_adjust
             else:
                 # In residual minimization, we compute the function sum_k |r_k|^2
                 # and thus the sign of the projection is immaterial
-                res_m = coeffs[self._reversed_excitation_dictionary[m]]
+                res_m = coeffs[self._pool_idx_to_coeff_idx[m]]
             if abs(np.imag(res_m)) > 0.0:
                 raise ValueError("Residual has imaginary component, something went wrong!!")
             residuals.append(res_m)
@@ -442,19 +446,19 @@ class SPQE(UCCPQE):
                     print('  -----------------------------------------------')
 
                 for rmu_sq, global_op_idx in Nmu_lst[:-1]:
-                    if(self._verbose):
+                    if self._verbose:
                         print(f"  {global_op_idx:10}                  {np.real(rmu_sq):14}")
-                    if(global_op_idx not in self._tops):
-                        pool_idx = self._excitation_dictionary[global_op_idx]
-                        self._tops.insert(0,pool_idx)
-                        self._tamps.insert(0,0.0)
+                    if global_op_idx not in self._tops:
+                        pool_idx = self._coeff_idx_to_pool_idx[global_op_idx]
+                        self._tops.insert(0, pool_idx)
+                        self._tamps.insert(0, 0.0)
                         operator_rank = len(self._pool_obj[pool_idx][1].terms()[0][1])
                         self._nbody_counts[operator_rank - 1] += 1
 
                 self._n_classical_params_lst.append(len(self._tops))
 
         else: # when M_omega == 'inf', proceed with standard SPQE
-            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in self._indices_of_zeroable_residuals_for_pool - {self._reversed_excitation_dictionary[i] for i in self._tops}]
+            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in self._indices_of_zeroable_residuals_for_pool - {self._pool_idx_to_coeff_idx[i] for i in self._tops}]
             res_sq.sort()
             self._curr_res_sq_norm = sum(rmu_sq[0] for rmu_sq in res_sq) / (self._dt * self._dt)
 
@@ -481,7 +485,7 @@ class SPQE(UCCPQE):
                     for rmu_sq, global_op_idx in res_sq:
                         res_sq_sum += rmu_sq / (self._dt * self._dt)
                         if res_sq_sum > (self._spqe_thresh * self._spqe_thresh):
-                            pool_idx = self._excitation_dictionary[global_op_idx]
+                            pool_idx = self._coeff_idx_to_pool_idx[global_op_idx]
                             if(self._verbose):
                                 print(f"  {pool_idx:10}                  {np.real(rmu_sq):14.12f}"
                                       f"   {self._pool_obj[pool_idx][1].str()}" )
@@ -498,7 +502,7 @@ class SPQE(UCCPQE):
                     # Add the single operator with greatest rmu_sq not yet in the ansatz
                     res_sq.reverse()
                     for rmu_sq, global_op_idx in res_sq:
-                        pool_idx = self._excitation_dictionary[global_op_idx]
+                        pool_idx = self._coeff_idx_to_pool_idx[global_op_idx]
                         print(f"  {pool_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}")
                         if pool_idx not in self._tops:
                             print('Adding this operator to ansatz')
