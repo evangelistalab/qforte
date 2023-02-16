@@ -154,8 +154,7 @@ class SPQE(UCCPQE):
         idx = 0
         # determinant id : excitation operator index
         self._excitation_dictionary = {}
-        # list that holds the ids of determinants corresponding to operators in the pool
-        self._excitation_indices = []
+        self._indices_of_zeroable_residuals_for_pool = set()
         self._pool_obj = qf.SQOpPool()
         for I in range(1 << self._nqb):
             alphas = [int(j) for j in bin(I & mask_alpha)[2:]]
@@ -180,7 +179,7 @@ class SPQE(UCCPQE):
                             sq_op.simplify()
                             self._pool_obj.add_term(0.0, sq_op)
                             self._excitation_dictionary[I] = idx
-                            self._excitation_indices.append(I)
+                            self._indices_of_zeroable_residuals_for_pool.add(I)
                             idx += 1
 
         # excitation operator index : determinant id
@@ -319,8 +318,20 @@ class SPQE(UCCPQE):
         print('Number of individual residual evaluations:   ', self._res_m_evals)
 
     def get_residual_vector(self, trial_amps):
-        U = self.ansatz_circuit(trial_amps)
+        """
+        Input
+        -----
+        trial_amps list[float]
+         The trial value of the parameters, in order corresponding to the ansatz parameters.
 
+        Output
+
+        list[float]
+         The residuals, in order corresponding to the ansatz parameters.
+        """
+
+        assert len(trial_amps) == len(self._tops)
+        U = self.ansatz_circuit(trial_amps)
         qc_res = qforte.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
         qc_res.apply_circuit(U)
@@ -346,17 +357,13 @@ class SPQE(UCCPQE):
                 sign_adjust = qc_temp.get_coeff_vec()[self._reversed_excitation_dictionary[m]]
 
                 res_m = coeffs[self._reversed_excitation_dictionary[m]] * sign_adjust
-                if(np.imag(res_m) > 0.0):
-                    raise ValueError("Residual has imaginary component, something went wrong!!")
-
-                residuals.append(res_m)
             else:
                 # In residual minimization, we compute the function sum_k |r_k|^2
                 # and thus the sign of the projection is immaterial
                 res_m = coeffs[self._reversed_excitation_dictionary[m]]
-                if(np.imag(res_m) > 0.0):
-                    raise ValueError("Residual has imaginary component, something went wrong!!")
-                residuals.append(coeffs[self._reversed_excitation_dictionary[m]].real)
+            if abs(np.imag(res_m)) > 0.0:
+                raise ValueError("Residual has imaginary component, something went wrong!!")
+            residuals.append(res_m)
 
         self._res_vec_norm = np.linalg.norm(residuals)
         self._res_vec_evals += 1
@@ -447,7 +454,7 @@ class SPQE(UCCPQE):
                 self._n_classical_params_lst.append(len(self._tops))
 
         else: # when M_omega == 'inf', proceed with standard SPQE
-            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in set(self._excitation_indices) - {self._reversed_excitation_dictionary[i] for i in self._tops}]
+            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in self._indices_of_zeroable_residuals_for_pool - {self._reversed_excitation_dictionary[i] for i in self._tops}]
             res_sq.sort()
             self._curr_res_sq_norm = sum(rmu_sq[0] for rmu_sq in res_sq) / (self._dt * self._dt)
 
