@@ -154,7 +154,7 @@ class SPQE(UCCPQE):
         idx = 0
         # determinant id : excitation operator index
         self._excitation_dictionary = {}
-        self._indices_of_zeroable_residuals = set()
+        self._indices_of_zeroable_residuals_for_pool = set()
         self._pool_obj = qf.SQOpPool()
         for I in range(1 << self._nqb):
             alphas = [int(j) for j in bin(I & mask_alpha)[2:]]
@@ -179,7 +179,7 @@ class SPQE(UCCPQE):
                             sq_op.simplify()
                             self._pool_obj.add_term(0.0, sq_op)
                             self._excitation_dictionary[I] = idx
-                            self._indices_of_zeroable_residuals.add(I)
+                            self._indices_of_zeroable_residuals_for_pool.add(I)
                             idx += 1
 
         # excitation operator index : determinant id
@@ -454,7 +454,7 @@ class SPQE(UCCPQE):
                 self._n_classical_params_lst.append(len(self._tops))
 
         else: # when M_omega == 'inf', proceed with standard SPQE
-            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in self._indices_of_zeroable_residuals - {self._reversed_excitation_dictionary[i] for i in self._tops}]
+            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in self._indices_of_zeroable_residuals_for_pool - {self._reversed_excitation_dictionary[i] for i in self._tops}]
             res_sq.sort()
             self._curr_res_sq_norm = sum(rmu_sq[0] for rmu_sq in res_sq) / (self._dt * self._dt)
 
