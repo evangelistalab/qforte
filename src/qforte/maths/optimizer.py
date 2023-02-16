@@ -26,7 +26,7 @@ def diis(diis_max_dim, t_diis, e_diis):
 
     B[:-1, :-1] /= np.abs(B[:-1, :-1]).max()
 
-    x = np.linalg.solve(B, bsol)
+    x = np.linalg.lstsq(B, bsol, rcond=None)[0][:-1]
 
     t_new = np.zeros(( len(t_diis[0]) ))
     for l in range(diis_dim):
