@@ -85,7 +85,7 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
         if (first_gate_for_qubit) {
             s = gates_[i].gate_id();
         }
-        if(gates_[i].target() == gates_[i+1].target() && i + 1 != n_gates) {
+        if(i + 1 != n_gates && gates_[i].target() == gates_[i+1].target()) {
             // The upcoming gate also acts on this qubit, and it exists. Time to update s.
             const auto& qubit_update = m[std::make_pair(s, gates_[i+1].gate_id())];
             coeff *= qubit_update.first;
