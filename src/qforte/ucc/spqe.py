@@ -186,7 +186,7 @@ class SPQE(UCCPQE):
                             idx += 1
 
         # Given a pool index, what is the coefficient of the "corresponding" coefficient vector element? Used to extract significant residuals in microiterations.
-        # WARNING! This variable will likely need to be replaced to support generalized pools.
+        # WARNING! To support repeated operators, either replace this variable or have repeated operators in the pool (which seems an awful hack).
         self._pool_idx_to_coeff_idx = {value: key for key, value in self._coeff_idx_to_pool_idx.items()}
 
         self.print_options_banner()
