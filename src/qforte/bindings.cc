@@ -87,6 +87,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("num_qubits", &QubitOperator::num_qubits)
         .def("sparse_matrix", &QubitOperator::sparse_matrix)
         .def("str", &QubitOperator::str)
+        .def("__iter__", [](const QubitOperator &op) { return py::make_iterator(op.terms()); },
+            py::keep_alive<0, 1>())
         .def("__str__", &QubitOperator::str)
         .def("__repr__", &QubitOperator::str);
 
@@ -105,6 +107,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("square", &QubitOpPool::square)
         .def("fill_pool", &QubitOpPool::fill_pool)
         .def("str", &QubitOpPool::str)
+        .def("__iter__", [](const QubitOpPool &pool) { return py::make_iterator(pool.terms()); },
+            py::keep_alive<0, 1>())
         .def("__str__", &QubitOpPool::str)
         .def("__repr__", &QubitOpPool::str);
 
