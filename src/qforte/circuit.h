@@ -58,6 +58,8 @@ class Circuit {
     /// nine qubits.    
     size_t num_qubits() const;
 
+    bool is_pauli() const;
+
   private:
     /// the list of gates
     std::vector<Gate> gates_;

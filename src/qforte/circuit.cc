@@ -157,6 +157,15 @@ const SparseMatrix Circuit::sparse_matrix(size_t nqubit) const {
     return Rmat;
 }
 
+bool Circuit::is_pauli() const {
+    for (const auto& gate: gates_) {
+        if (gate.gate_id() != "X" && gate.gate_id() != "Y" && gate.gate_id() != "Z") {
+            return false;
+        }
+    }
+    return true;
+}
+
 // std::vector<double> Circuit::get_parameters() {
 //     // need a loop over only gates in state preparation circuit that
 //     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
