@@ -186,7 +186,7 @@ def build_eq_dets(open_shell_ref):
     return eq_ref_lst2
 
 def ref_to_basis_idx(ref):
-    """Turns a reference list into a intager representing its binary value.
+    """Turns a reference list into a integer representing its binary value.
 
         Arguments
         ---------
