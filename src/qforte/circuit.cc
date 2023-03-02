@@ -42,11 +42,8 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
         // If there are no gates, there's nothing to order.
         return 1.0;
     }
-    for (const auto& gate: gates_) {
-        const auto& id = gate.gate_id();
-        if (id != "X" && id != "Y" && id != "Z") {
-            throw ("Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other than X, Y, or Z");
-        }
+    if (!is_pauli()) {
+        throw ("Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other than X, Y, or Z");
     }
     //using namespace std::complex_literals;
     std::complex<double> onei(0.0, 1.0);
@@ -159,7 +156,8 @@ const SparseMatrix Circuit::sparse_matrix(size_t nqubit) const {
 
 bool Circuit::is_pauli() const {
     for (const auto& gate: gates_) {
-        if (gate.gate_id() != "X" && gate.gate_id() != "Y" && gate.gate_id() != "Z") {
+        const auto& id = gate.gate_id();
+        if (id != "X" && id != "Y" && id != "Z") {
             return false;
         }
     }
