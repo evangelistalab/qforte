@@ -199,5 +199,19 @@ bool operator==(const Circuit& qc1, const Circuit& qc2)  {
 }
 
 bool operator < (const Circuit& qc1, const Circuit& qc2)  {
-    return qc1.str() < qc2.str();
+    if (qc1.size() != qc2.size()) {
+        return qc1.size() < qc2.size();
+    }
+    for (int k=0; k < qc1.size(); k++) {
+        if (qc1.gates()[k].target() != qc2.gates()[k].target()) {
+            return qc1.gates()[k].target() < qc2.gates()[k].target();
+        }
+        if (qc1.gates()[k].gate_id() != qc2.gates()[k].gate_id()) {
+            return qc1.gates()[k].gate_id() < qc2.gates()[k].gate_id();
+        }
+        if (qc1.gates()[k].control() != qc2.gates()[k].control()) {
+            return qc1.gates()[k].control() < qc2.gates()[k].control();
+        }
+    }
+    return false;
 }

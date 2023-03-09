@@ -83,10 +83,11 @@ void QubitOperator::simplify(bool combine_like_terms) {
     canonical_order();
     std::map<Circuit, std::complex<double>> uniqe_trms;
     for (const auto& term : terms_) {
-        if (uniqe_trms.count(term.second) == 0) {
-            uniqe_trms.insert(std::make_pair(term.second, term.first));
+        auto it = uniqe_trms.find(term.second);
+        if (it == uniqe_trms.end()) {
+            uniqe_trms.insert(std::make_pair(std::move(term.second), term.first));
         } else {
-            uniqe_trms[term.second] += term.first;
+            it->second += term.first;
         }
     }
     terms_.clear();
