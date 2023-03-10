@@ -90,7 +90,7 @@ def compute_moment_energies(self):
               "\nProceeding with the default value of 0.001")
         self._moment_dt = 0.001
 
-    self._eiH, _ = trotterize(self._qb_ham, factor= self._moment_dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
+    _eiH, _ = trotterize(self._qb_ham, factor= self._moment_dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
     # do U^dag e^iH U |Phi_o> = |Phi_res>
     U = self.ansatz_circuit()
@@ -98,7 +98,7 @@ def compute_moment_energies(self):
     qc_res = qf.Computer(self._nqb)
     qc_res.apply_circuit(self._Uprep)
     qc_res.apply_circuit(U)
-    qc_res.apply_circuit(self._eiH)
+    qc_res.apply_circuit(_eiH)
     qc_res.apply_circuit(U.adjoint())
 
     res_coeffs = [i / self._moment_dt for i in qc_res.get_coeff_vec()]
