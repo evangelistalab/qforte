@@ -9,6 +9,7 @@
 #include "qubit_basis.h"
 #include "circuit.h"
 #include "gate.h"
+#include "helpers.h"
 #include "qubit_operator.h"
 #include "qubit_op_pool.h"
 #include "timer.h"
@@ -961,13 +962,14 @@ std::complex<double> Computer::direct_gate_exp_val(const Gate& qg) {
     return result;
 }
 
-std::vector<std::string> Computer::str() const {
+std::string Computer::str() const {
     std::vector<std::string> terms;
+    terms.push_back("Computer(");
     for (size_t i = 0; i < nbasis_; i++) {
         if (std::abs(coeff_[i]) >= print_threshold_) {
-            terms.push_back(fmt::format("({:f} {:+f} i) {}", std::real(coeff_[i]),
-                                        std::imag(coeff_[i]), basis_[i].str(nqubit_)));
+            terms.push_back(to_string(coeff_[i]) + " " + basis_[i].str(nqubit_));
         }
     }
-    return terms;
+    terms.push_back(")");
+    return join(terms, "\n");
 }
