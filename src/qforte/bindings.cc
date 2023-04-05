@@ -123,7 +123,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_bit", &QubitBasis::get_bit);
 
     py::class_<Computer>(m, "Computer")
-        .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
+        .def(py::init<size_t,double>(), "nqubits"_a, "print_threshold"_a = 1.0e-6, "Make a quantum computer with 'nqubits' qubits")
         .def("apply_circuit_safe", &Computer::apply_circuit_safe)
         .def("apply_matrix", &Computer::apply_matrix)
         .def("apply_sparse_matrix", &Computer::apply_sparse_matrix)
