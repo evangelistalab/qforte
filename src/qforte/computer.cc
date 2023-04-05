@@ -25,7 +25,7 @@ extern const bool parallelism_enabled = false;
 #endif
 
 
-Computer::Computer(int nqubit) : nqubit_(nqubit) {
+Computer::Computer(int nqubit, double print_threshold) : nqubit_(nqubit), print_threshold_(print_threshold) {
     nbasis_ = std::pow(2, nqubit_);
     basis_.assign(nbasis_, QubitBasis());
     coeff_.assign(nbasis_, 0.0);

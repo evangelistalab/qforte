@@ -22,7 +22,7 @@ class SparseMatrix;
 class Computer {
   public:
     /// default constructor: create a quantum computer with nqubit qubits
-    Computer(int nqubit);
+    Computer(int nqubit, double print_threshold = 1.0e-6);
 
     /// applies a matrix representation of a Gate, Gircuit, or QubitOoperator
     /// to the quantum state.
@@ -157,7 +157,7 @@ class Computer {
     /// the number of two-qubit operations
     size_t ntwo_ops_ = 0;
     /// the threshold for priting a determinant
-    double print_threshold_ = 0.0;
+    double print_threshold_;
     /// the threshold for doing operations with elements of gate matricies
     double compute_threshold_ = 1.0e-16;
 
