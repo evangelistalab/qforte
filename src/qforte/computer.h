@@ -102,8 +102,8 @@ class Computer {
     /// (without simulated measurement)
     std::complex<double> direct_gate_exp_val(const Gate& qg);
 
-    /// return a vector of strings representing the state of the computer
-    std::vector<std::string> str() const;
+    /// return a string representing the state of the computer
+    std::string str() const;
 
     /// return a vector of the coeficients
     std::vector<std::complex<double>> get_coeff_vec() const { return coeff_; };
