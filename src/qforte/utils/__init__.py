@@ -10,3 +10,4 @@ from .spin_operators import *
 from .compact_excitation_circuits import *
 from .symmetry_analysis import *
 from .compute_matrix_element import *
+from .circuit_to_latex import *
