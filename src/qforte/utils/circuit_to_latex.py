@@ -142,7 +142,7 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
                 wires[gate.target()] += " & \\ctrl{}"
             else:
                 wires[gate.target()] += " & \\targ{}"
-            if gate.gate_id() == 'aCNOT':
+            if gate.gate_id() in {'aCNOT', 'acX'}:
                 wires[gate.control()] += " & \\octrl{"+str(diff)+"}"
             else:
                 wires[gate.control()] += " & \\ctrl{"+str(diff)+"}"
