@@ -1,0 +1,21 @@
+\documentclass[tikz]{standalone}
+
+\usepackage{quantikz}
+
+\begin{document}
+
+\begin{tikzpicture}
+    \node {
+        \begin{quantikz}
+            \lstick{$\ket{q_{6}}$} & \gate{X} & \qw & \qw & \qw & \qw & \qw & \ctrl{5} \\ 
+            \lstick{$\ket{q_{5}}$} & \gate{Rx} & \qw & \targ{} & \qw & \qw & \qw & \qw \\ 
+            \lstick{$\ket{q_{4}}$} & \gate{Rz} & \qw & \qw & \targ{} & \qw & \qw & \qw \\ 
+            \lstick{$\ket{q_{3}}$} & \gate{Z} & \gate{T} & \qw & \qw & \qw & \qw & \qw \\ 
+            \lstick{$\ket{q_{2}}$} & \gate{Ry} & \gate{S} & \qw & \qw & \targ{} & \targ{} & \qw \\ 
+            \lstick{$\ket{q_{1}}$} & \gate{Y} & \qw & \ctrl{-4} & \qw & \qw & \octrl{-1} & \ctrl{} \\ 
+            \lstick{$\ket{q_{0}}$} & \gate{H} & \qw & \qw & \ctrl{-4} & \octrl{-2} & \qw & \qw
+        \end{quantikz}
+    };
+\end{tikzpicture}
+
+\end{document}
