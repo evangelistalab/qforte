@@ -1,9 +1,9 @@
 import qforte
 
-def circuit_to_latex(circ):
+def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20):
     """
-    This function constructs a latex file with
-    the graphical representation of the given
+    This function constructs the filename.tex latex
+    file with the graphical representation of the given
     quantum circuit.
 
     Depending on how large the circuit is,
@@ -18,13 +18,37 @@ def circuit_to_latex(circ):
     circ: Circuit object
         The quantum circuit that we want to plot.
 
+    filename: string
+        The name of the latex file. The ".tex"
+        file extension is not necessary.
+
+    max_circuit_depth_per_tikz: int
+        The maximum circuit dpeth for a given tikz
+        drawing. To improve compilation efficiency,
+        instead of generating a single, potentially
+        large, tikz drawing, the circuit is split into
+        multiple tikz figures, each containing at most
+        max_circuit_depth_per_tikz layers.
+        WARNING: Setting this parameter to a large
+        number can significantly increase the latex
+        compilation time.
+
     Returns
     =======
 
-    circ.tex: latex file
+    filename.tex: latex file
         The latex file containing the plot of the
         given quantum circuit.
     """
+
+    if not isinstance(filename, str):
+        raise TypeError("The filename needs to be a string!")
+
+    if not isinstance(max_circuit_depth_per_tikz, int) or max_circuit_depth_per_tikz <= 0:
+        raise ValueError("The maximum circuit depth per tikz figure needs to be a positive integer!")
+
+    print('WARNING 1: The quantikz package is required for compiling the generated tex file!')
+    print('WARNING 2: For large quantum circuits, compiling with lualatex is advised!')
 
     preamble = r"""\documentclass[tikz]{standalone}
 
@@ -47,13 +71,12 @@ def circuit_to_latex(circ):
     epilogue = r"""
 \end{document}"""
 
-    texfile = open("circuit.tex", "w")
+    if filename.endswith('.tex'):
+        texfile = open(filename, "w")
+    else:
+        texfile = open(filename + ".tex", "w")
     texfile.write(preamble)
     texfile.write(tikz_start)
-
-    # The maximum gate count for a given tikz drawing.
-    # This makes compilation easier
-    max_gate_count_per_tikz = 20
 
     # set that contains the indices of the qubits appearing in circ
     qubit_ids = set()
@@ -78,12 +101,12 @@ def circuit_to_latex(circ):
         # into smaller ones. If the maximum number of allowed gates in a
         # given wire has been reached and a new gate will be added to that
         # wire, create a new tikz picture
-        current_max_gate_count = max(gate_count.values())
-        if current_max_gate_count == max_gate_count_per_tikz:
-            wires_with_max_gate_count_per_tikz = [wire for wire in gate_count if gate_count[wire] == max_gate_count_per_tikz]
-            if gate.target() in wires_with_max_gate_count_per_tikz or gate.control() in wires_with_max_gate_count_per_tikz:
+        current_max_circuit_depth = max(gate_count.values())
+        if current_max_circuit_depth == max_circuit_depth_per_tikz:
+            wires_with_max_circuit_depth_per_tikz = [wire for wire in gate_count if gate_count[wire] == max_circuit_depth_per_tikz]
+            if gate.target() in wires_with_max_circuit_depth_per_tikz or gate.control() in wires_with_max_circuit_depth_per_tikz:
                 for wire in wires:
-                    for i in range(max_gate_count_per_tikz - gate_count[wire]):
+                    for i in range(max_circuit_depth_per_tikz - gate_count[wire]):
                         wires[wire] += " & \qw"
                 for wire in reversed(list(qubit_ids)[1:]):
                     texfile.write(wires[wire]+" \\\ \n")
