@@ -123,18 +123,23 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
             gate_count[gate.target()] += 1
         else:
             # currently QForte supports up to two-qubit gates
-            count_target = gate_count[gate.target()]
-            count_control = gate_count[gate.control()]
-            # if the target and control wires contain a different
-            # number of gates, we need to add "\qw" to equalize them
-            if count_target < count_control:
-                for i in range(count_control - count_target):
-                    wires[gate.target()] += " & \qw"
-                    gate_count[gate.target()] += 1
-            elif count_target > count_control:
-                for i in range(count_target - count_control):
-                    wires[gate.control()] += " & \qw"
-                    gate_count[gate.control()] += 1
+            # To avoid overlapping gates, the gate count of
+            # the target and control qubits as well as all
+            # qubits inbetween are shifted accordingly.
+            if gate.target() > gate.control():
+                max_qubit_id = gate.target()
+                min_qubit_id = gate.control()
+            else:
+                max_qubit_id = gate.control()
+                min_qubit_id = gate.target()
+            max_depth = 0
+            for wire in range(min_qubit_id, max_qubit_id + 1):
+                if max_depth < gate_count[wire]:
+                    max_depth = gate_count[wire]
+            for wire in range(min_qubit_id, max_qubit_id + 1):
+                for i in range(max_depth - gate_count[wire]):
+                    wires[wire] += " & \qw"
+                    gate_count[wire] += 1
             diff = int(gate.control() - gate.target())
             if gate.gate_id() not in ["cZ", "aCNOT", "acX", "CNOT", "cX"]:
                 raise ValueError("The only two-qubit gates that are currently supported are: CNOT, aCNOT, and cZ!")
@@ -148,6 +153,11 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
                 wires[gate.control()] += " & \\ctrl{"+str(diff)+"}"
             gate_count[gate.target()] += 1
             gate_count[gate.control()] += 1
+            # To avoid overlapping gates, the "void" between the
+            # control and target qubits is filled with "\qw"
+            for wire in range(min_qubit_id + 1, max_qubit_id):
+                wires[wire] += " & \qw"
+                gate_count[wire] += 1
 
     # All wires in the latex file need to have the same length. This is accomplished
     # by appending \qw to the shorter wires
