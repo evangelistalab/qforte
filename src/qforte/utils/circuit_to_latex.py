@@ -108,7 +108,7 @@ def circuit_to_latex(circ):
                 for i in range(count_control - count_target):
                     wires[gate.target()] += " & \qw"
                     gate_count[gate.target()] += 1
-            if count_target > count_control:
+            elif count_target > count_control:
                 for i in range(count_target - count_control):
                     wires[gate.control()] += " & \qw"
                     gate_count[gate.control()] += 1
