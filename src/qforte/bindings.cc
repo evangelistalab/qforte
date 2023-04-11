@@ -43,6 +43,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_term", &SQOperator::add_term)
         .def("add_op", &SQOperator::add_op)
         .def("set_coeffs", &SQOperator::set_coeffs)
+        .def("mult_coeffs", &SQOperator::mult_coeffs)
         .def("terms", &SQOperator::terms)
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
