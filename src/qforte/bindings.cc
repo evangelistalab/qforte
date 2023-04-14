@@ -233,4 +233,29 @@ PYBIND11_MODULE(qforte, m) {
         "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0, "Make a gate.");
 
     m.def("control_gate", &make_control_gate, "control"_a, "Gate"_a);
+
+    m.def(
+        "find_irrep",
+        [](const std::vector<int>& orb_irrep_to_int, const std::vector<int>& spinorb_indices) -> int {
+            /*
+             * Find the irrep of a given set of spinorbitals.
+             *
+             * @param orb_irrep_to_int: List of integers where the i-th element is the irrep of spatial orbital i.
+             * @param spinorb_indices: List of spinorbital indices.
+             * @return Integer representing the irrep (in Cotton ordering) of the given set of spinorbitals.
+             */
+            int sym = 0;
+            for (int index : spinorb_indices) {
+                sym ^= orb_irrep_to_int[index/2];
+            }
+            return sym;
+        }, R"pbdoc(
+               Function that finds the irreducible representation of a given set of spinorbitals.
+               
+               :param orb_irrep_to_int: List of integers where the i-th element is the irrep of spatial orbital i.
+               :param spinorb_indices: List of spinorbital indices.
+               :return: Integer representing the irrep (in Cotton ordering) of the given set of spinorbitals.
+           )pbdoc",
+        py::arg("orb_irrep_to_int"), py::arg("spinorb_indices")
+    );
 }

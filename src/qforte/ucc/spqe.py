@@ -11,7 +11,7 @@ from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
-from qforte.utils.point_groups import sq_op_find_symmetry
+from qforte import find_irrep
 from qforte.utils import moment_energy_corrections
 from qforte.maths import optimizer
 
@@ -165,9 +165,9 @@ class SPQE(UCCPQE):
             # Enforce particle number and Sz symmetry
             if sum(alphas) == nalpha and sum(betas) == nbeta:
                 # Enforce point group symmetry
-                if sq_op_find_symmetry(self._sys.orb_irreps_to_int,
-                                       [len(alphas) - i - 1 for i, x in enumerate(alphas) if x],
-                                       [len(betas) -i - 1 for i, x in enumerate(betas) if x]) == self._irrep:
+                if find_irrep(self._sys.orb_irreps_to_int,
+                        [len(alphas) - i - 1 for i, x in enumerate(alphas) if x] +
+                        [len(betas) -i - 1 for i, x in enumerate(betas) if x]) == self._irrep:
                    # Create the bitstring of created/annihilated orbitals
                     excit = bin(ref ^ I).replace("0b", "")
                     # Confirm excitation number is non-zero
