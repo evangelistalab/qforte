@@ -8,6 +8,28 @@ Currently, this module pertains only to molecular
 objects with "build_type = 'psi4'".
 """
 
+def irreps_of_point_groups(point_group):
+    """
+    Function that returns the irreps of a given point group,
+    using the Cotton ordering.
+    """
+
+    point_group = point_group.lower()
+    groups = ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']
+    if point_group not in groups:
+        raise ValueError('The given point group is not supported. Choose one of:\n{0}'.format(groups))
+
+    point_group_to_irreps = {'c1'  : ['A'],
+                             'c2'  : ['A', 'B'],
+                             'ci'  : ['Ag', 'Au'],
+                             'cs'  : ['Ap', 'App'],
+                             'd2'  : ['A', 'B1', 'B2', 'B3'],
+                             'c2h' : ['Ag', 'Bg', 'Au', 'Bu'],
+                             'c2v' : ['A1', 'A2', 'B1', 'B2'],
+                             'd2h' : ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']}
+
+    return point_group_to_irreps[point_group]
+
 def char_table(point_group):
     """
     Function that prints the character table of a chosen point group.
