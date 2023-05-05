@@ -2,7 +2,7 @@ import pytest
 from pytest import approx
 from unittest.mock import patch
 from io import StringIO
-from qforte import system_factory, char_table, UCCNVQE, ADAPTVQE, UCCNPQE
+from qforte import system_factory, char_table, irreps_of_point_groups, UCCNVQE, ADAPTVQE, UCCNPQE
 
 class TestPointGroupSymmetry():
 
@@ -151,3 +151,21 @@ class TestPointGroupSymmetry():
             assert Egs == approx(Efci, abs=1.0e-10)
 
             assert len(alg._pool_obj) == t_ops[count]
+
+    def test_point_group_to_irreps(self):
+
+        groups = ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']
+        irreps = [['A'],
+                  ['A', 'B'],
+                  ['Ag', 'Au'],
+                  ['Ap', 'App'],
+                  ['A', 'B1', 'B2', 'B3'],
+                  ['Ag', 'Bg', 'Au', 'Bu'],
+                  ['A1', 'A2', 'B1', 'B2'],
+                  ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']]
+
+        for idx, group in enumerate(groups):
+            assert irreps_of_point_groups(group) == irreps[idx]
+
+        with pytest.raises(ValueError, match='The given point group is not supported. Choose one of:\nc1, c2, ci, cs, d2, c2h, c2v, d2h'):
+            irreps_of_point_groups('d3h')

@@ -140,7 +140,7 @@ def create_psi_mol(**kwargs):
     del orbitals
 
     point_group = p4_mol.symmetry_from_input().lower()
-    irreps = p4_mol.irrep_labels()
+    irreps = qforte.irreps_of_point_groups(point_group)
     orb_irreps = [irreps[i] for i in orb_irreps_to_int]
 
     # If frozen_core > 0, compute the frozen core energy and transform one-electron integrals
