@@ -15,10 +15,6 @@ def irreps_of_point_groups(point_group):
     """
 
     point_group = point_group.lower()
-    groups = ['c1', 'c2', 'ci', 'cs', 'd2', 'c2h', 'c2v', 'd2h']
-    if point_group not in groups:
-        raise ValueError('The given point group is not supported. Choose one of:\n{0}'.format(groups))
-
     point_group_to_irreps = {'c1'  : ['A'],
                              'c2'  : ['A', 'B'],
                              'ci'  : ['Ag', 'Au'],
@@ -28,7 +24,10 @@ def irreps_of_point_groups(point_group):
                              'c2v' : ['A1', 'A2', 'B1', 'B2'],
                              'd2h' : ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']}
 
-    return point_group_to_irreps[point_group]
+    try:
+        return point_group_to_irreps[point_group]
+    except KeyError:
+        raise ValueError(f'The given point group is not supported. Choose one of:\n{", ".join(point_group_to_irreps.keys())}')
 
 def char_table(point_group):
     """
