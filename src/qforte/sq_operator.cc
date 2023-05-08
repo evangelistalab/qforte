@@ -26,7 +26,7 @@ void SQOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs)
 }
 
 void SQOperator::mult_coeffs(const std::complex<double>& multiplier) {
-    for (auto term : terms_){
+    for (auto& term : terms_){
         std::get<0>(term) *= multiplier;
     }
 }
