@@ -1,3 +1,5 @@
+#import numpy as np
+from pytest import approx
 from qforte import SQOpPool, SQOperator
 
 class TestSqPool:
@@ -16,3 +18,14 @@ class TestSqPool:
         for coefficient, operator in pool:
             assert isinstance(coefficient, complex)
             assert isinstance(operator, SQOperator)
+
+    def test_sa_sd_pool(self):
+        pool = SQOpPool()
+        pool.set_orb_spaces([1, 1, 0, 0, 0, 0])
+        pool.fill_pool("sa_SD")
+
+        for pool_term in pool.terms():
+            coeff_norm = 0
+            for sq_op_term in pool_term[1].terms():
+                coeff_norm += sq_op_term[0] ** 2
+            assert coeff_norm == approx(2, abs=1.0e-15)
