@@ -1,0 +1,14 @@
+jobs:
+- job: 'linux_build'
+  displayName: 'Linux Builds'
+  steps:
+  - bash: |
+    conda create -n qforte_env python
+    conda activate qforte_env
+    conda install psi4 -c psi4
+    conda install scipy
+    git clone --recurse-submodules https://github.com/evangelistalab/qforte.git
+    cd qforte
+    python setup.py develop
+    cd tests
+    pytest
