@@ -45,7 +45,8 @@ class SRQK(QSD):
             s=3,
             dt=0.5,
             target_root=0,
-            diagonalize_each_step=True
+            diagonalize_each_step=True,
+            save_final_qk_matrice=False,
             ):
 
         self._s = s
@@ -57,6 +58,8 @@ class SRQK(QSD):
         self._n_classical_params = 0
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
+
+        self._save_final_qk_matrice = save_final_qk_matrice
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
