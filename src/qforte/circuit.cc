@@ -22,10 +22,45 @@ void Circuit::set_parameters(const std::vector<double>& params) {
     }
 }
 
+void Circuit::insert_gate(size_t pos, const Gate& gate) {
+    if (pos > gates_.size()) {
+        throw("Circuit::insert_gate: position out of range");
+    }
+    gates_.insert(gates_.begin() + pos, gate);
+}
+
+void Circuit::remove_gate(size_t pos) {
+    if (pos >= gates_.size()) {
+        throw("Circuit::remove_gate: position out of range");
+    }
+    gates_.erase(gates_.begin() + pos);
+}
+
+void Circuit::swap_gates(size_t pos1, size_t pos2) {
+    if (pos1 >= gates_.size() || pos2 >= gates_.size()) {
+        throw("Circuit::swap_gates: position out of range");
+    }
+    std::swap(gates_[pos1], gates_[pos2]);
+}
+
 void Circuit::add_circuit(const Circuit& circ) {
     for (const auto gate : circ.gates()) {
         gates_.push_back(gate);
     }
+}
+
+void Circuit::insert_circuit(size_t pos, const Circuit& circ) {
+    if (pos > gates_.size()) {
+        throw("Circuit::insert_circuit: position out of range");
+    }
+    gates_.insert(gates_.begin() + pos, circ.gates().begin(), circ.gates().end());
+}
+
+void Circuit::remove_gates(size_t pos1, size_t pos2) {
+    if (pos1 >= gates_.size() || pos2 >= gates_.size()) {
+        throw("Circuit::remove_gates: position out of range");
+    }
+    gates_.erase(gates_.begin() + pos1, gates_.begin() + pos2);
 }
 
 Circuit Circuit::adjoint() {
@@ -38,39 +73,35 @@ Circuit Circuit::adjoint() {
 }
 
 std::complex<double> Circuit::canonicalize_pauli_circuit() {
-    if (gates_.size()==0){
+    if (gates_.size() == 0) {
         // If there are no gates, there's nothing to order.
         return 1.0;
     }
     if (!is_pauli()) {
-        throw ("Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other than X, Y, or Z");
+        throw("Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other "
+              "than "
+              "X, Y, or Z");
     }
-    //using namespace std::complex_literals;
+    // using namespace std::complex_literals;
     std::complex<double> onei(0.0, 1.0);
-    std::map<
-        std::pair<std::string,std::string> ,
-        std::pair<std::complex<double>,std::string>
-        > m = {
-        {std::make_pair("X", "Y"), std::make_pair( onei, "Z")},
-        {std::make_pair("X", "Z"), std::make_pair(-onei, "Y")},
-        {std::make_pair("Y", "X"), std::make_pair(-onei, "Z")},
-        {std::make_pair("Y", "Z"), std::make_pair( onei, "X")},
-        {std::make_pair("Z", "X"), std::make_pair( onei, "Y")},
-        {std::make_pair("Z", "Y"), std::make_pair(-onei, "X")},
-        {std::make_pair("X", "X"), std::make_pair( 1.0,  "I")},
-        {std::make_pair("Y", "Y"), std::make_pair( 1.0,  "I")},
-        {std::make_pair("Z", "Z"), std::make_pair( 1.0,  "I")},
-        {std::make_pair("I", "X"), std::make_pair( 1.0,  "X")},
-        {std::make_pair("I", "Y"), std::make_pair( 1.0,  "Y")},
-        {std::make_pair("I", "Z"), std::make_pair( 1.0,  "Z")}
-    };
+    std::map<std::pair<std::string, std::string>, std::pair<std::complex<double>, std::string>> m =
+        {{std::make_pair("X", "Y"), std::make_pair(onei, "Z")},
+         {std::make_pair("X", "Z"), std::make_pair(-onei, "Y")},
+         {std::make_pair("Y", "X"), std::make_pair(-onei, "Z")},
+         {std::make_pair("Y", "Z"), std::make_pair(onei, "X")},
+         {std::make_pair("Z", "X"), std::make_pair(onei, "Y")},
+         {std::make_pair("Z", "Y"), std::make_pair(-onei, "X")},
+         {std::make_pair("X", "X"), std::make_pair(1.0, "I")},
+         {std::make_pair("Y", "Y"), std::make_pair(1.0, "I")},
+         {std::make_pair("Z", "Z"), std::make_pair(1.0, "I")},
+         {std::make_pair("I", "X"), std::make_pair(1.0, "X")},
+         {std::make_pair("I", "Y"), std::make_pair(1.0, "Y")},
+         {std::make_pair("I", "Z"), std::make_pair(1.0, "Z")}};
 
-    // Apply gate commutation to sort gates from those acting on smallest-index qubit to largest.
+    // Apply gate commutation to sort gates from those acting on smallest-index qubit to
+    // largest.
     std::stable_sort(gates_.begin(), gates_.end(),
-        [&](const Gate& a, const Gate& b) {
-            return (a.target() < b.target());
-        }
-    );
+                     [&](const Gate& a, const Gate& b) { return (a.target() < b.target()); });
 
     int n_gates = gates_.size();
     Circuit simplified_circ;
@@ -78,13 +109,13 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
     std::string s;
     bool first_gate_for_qubit = true;
 
-    for (int i=0; i < n_gates; i++) {
+    for (int i = 0; i < n_gates; i++) {
         if (first_gate_for_qubit) {
             s = gates_[i].gate_id();
         }
-        if(i + 1 != n_gates && gates_[i].target() == gates_[i+1].target()) {
+        if (i + 1 != n_gates && gates_[i].target() == gates_[i + 1].target()) {
             // The upcoming gate also acts on this qubit, and it exists. Time to update s.
-            const auto& qubit_update = m[std::make_pair(s, gates_[i+1].gate_id())];
+            const auto& qubit_update = m[std::make_pair(s, gates_[i + 1].gate_id())];
             coeff *= qubit_update.first;
             s = qubit_update.second;
             first_gate_for_qubit = false;
@@ -92,9 +123,7 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
             // The upcoming gate does not act on this qubit or doesn't exist.
             // Let's add the current qubit, if it's non-trivial.
             if (s != "I") {
-                simplified_circ.add_gate(
-                    make_gate(s, gates_[i].target(), gates_[i].target())
-                );
+                simplified_circ.add_gate(make_gate(s, gates_[i].target(), gates_[i].target()));
             }
             first_gate_for_qubit = true;
         }
@@ -109,10 +138,10 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
 int Circuit::get_num_cnots() const {
     int n_cnots = 0;
     for (const auto& gate : gates_) {
-        if(gate.gate_id() == "CNOT" || gate.gate_id() == "cX" ||
-                gate.gate_id() == "aCNOT" || gate.gate_id() == "acX"){
+        if (gate.gate_id() == "CNOT" || gate.gate_id() == "cX" || gate.gate_id() == "aCNOT" ||
+            gate.gate_id() == "acX") {
             n_cnots++;
-        } else if (gate.gate_id() == "A"){
+        } else if (gate.gate_id() == "A") {
             n_cnots += 3;
         }
     }
@@ -130,7 +159,7 @@ std::string Circuit::str() const {
 
 size_t Circuit::num_qubits() const {
     size_t max = 0;
-    for (const auto& gate: gates_) {
+    for (const auto& gate : gates_) {
         max = std::max({max, gate.target() + 1, gate.control() + 1});
     }
     return max;
@@ -138,7 +167,7 @@ size_t Circuit::num_qubits() const {
 
 const SparseMatrix Circuit::sparse_matrix(size_t nqubit) const {
     size_t ngates = gates_.size();
-    if (ngates==0){
+    if (ngates == 0) {
         SparseMatrix Rmat = SparseMatrix();
         size_t nbasis = std::pow(2, nqubit);
         Rmat.make_identity(nbasis);
@@ -147,7 +176,7 @@ const SparseMatrix Circuit::sparse_matrix(size_t nqubit) const {
 
     SparseMatrix Rmat = gates_[0].sparse_matrix(nqubit);
 
-    for(size_t i=1; i < ngates ;i++){
+    for (size_t i = 1; i < ngates; i++) {
         SparseMatrix Lmat = gates_[i].sparse_matrix(nqubit);
         Rmat.left_multiply(Lmat);
     }
@@ -155,7 +184,7 @@ const SparseMatrix Circuit::sparse_matrix(size_t nqubit) const {
 }
 
 bool Circuit::is_pauli() const {
-    for (const auto& gate: gates_) {
+    for (const auto& gate : gates_) {
         const auto& id = gate.gate_id();
         if (id != "X" && id != "Y" && id != "Z") {
             return false;
@@ -181,10 +210,10 @@ bool Circuit::is_pauli() const {
 //     }
 // }
 
-bool operator==(const Circuit& qc1, const Circuit& qc2)  {
-    if(qc1.gates().size() == qc2.gates().size()){
-        for (int k=0; k<qc1.gates().size(); k++){
-            if (qc1.gates()[k].gate_id() != qc2.gates()[k].gate_id()){
+bool operator==(const Circuit& qc1, const Circuit& qc2) {
+    if (qc1.gates().size() == qc2.gates().size()) {
+        for (int k = 0; k < qc1.gates().size(); k++) {
+            if (qc1.gates()[k].gate_id() != qc2.gates()[k].gate_id()) {
                 return false;
             } else if (qc1.gates()[k].target() != qc2.gates()[k].target()) {
                 return false;
@@ -198,11 +227,11 @@ bool operator==(const Circuit& qc1, const Circuit& qc2)  {
     }
 }
 
-bool operator < (const Circuit& qc1, const Circuit& qc2)  {
+bool operator<(const Circuit& qc1, const Circuit& qc2) {
     if (qc1.size() != qc2.size()) {
         return qc1.size() < qc2.size();
     }
-    for (int k=0; k < qc1.size(); k++) {
+    for (int k = 0; k < qc1.size(); k++) {
         if (qc1.gates()[k].target() != qc2.gates()[k].target()) {
             return qc1.gates()[k].target() < qc2.gates()[k].target();
         }

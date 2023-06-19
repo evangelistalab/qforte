@@ -19,11 +19,26 @@ class Circuit {
     /// default constructor: creates an empty circuit
     Circuit() {}
 
-    /// add a gate
+    /// append a gate at the end of this circuit
     void add_gate(const Gate& gate) { gates_.push_back(gate); }
 
-    /// add a circuit
+    /// insert a gate at a given position in the circuit
+    void insert_gate(size_t pos, const Gate& gate);
+
+    /// remove a gate at a given position in the circuit
+    void remove_gate(size_t pos);
+
+    /// swap two gates in the circuit
+    void swap_gates(size_t pos1, size_t pos2);
+
+    /// append a circuit at the end of this circuit
     void add_circuit(const Circuit& circ);
+
+    /// insert a circuit at a given position in the circuit
+    void insert_circuit(size_t pos, const Circuit& circ);
+
+    /// remove gates in a given range
+    void remove_gates(size_t pos1, size_t pos2);
 
     /// return a vector of gates
     const std::vector<Gate>& gates() const { return gates_; }
@@ -55,7 +70,7 @@ class Circuit {
     /// Return the number of qubits pertaining to this circuit. Note this is
     /// not the numebr of unique qubits but the minimum number of qubits needed
     /// to execute the circuit. For example the circut [X_0 Y_4 X_8] would requre
-    /// nine qubits.    
+    /// nine qubits.
     size_t num_qubits() const;
 
     bool is_pauli() const;
@@ -66,8 +81,6 @@ class Circuit {
 };
 
 bool operator==(const Circuit& qc1, const Circuit& qc2);
-bool operator < (const Circuit& qc1, const Circuit& qc2);
-
-
+bool operator<(const Circuit& qc1, const Circuit& qc2);
 
 #endif // _circuit_h_
