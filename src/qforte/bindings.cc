@@ -4,6 +4,7 @@
 
 #include "fmt/format.h"
 
+#include "find_irrep.h"
 #include "qubit_basis.h"
 #include "circuit.h"
 #include "gate.h"
@@ -244,11 +245,7 @@ PYBIND11_MODULE(qforte, m) {
              * @param spinorb_indices: List of spinorbital indices.
              * @return Integer representing the irrep (in Cotton ordering) of the given set of spinorbitals.
              */
-            int sym = 0;
-            for (int index : spinorb_indices) {
-                sym ^= orb_irrep_to_int[index/2];
-            }
-            return sym;
+            return find_irrep(orb_irrep_to_int, spinorb_indices);
         }, R"pbdoc(
                Function that finds the irreducible representation of a given set of spinorbitals.
                
