@@ -14,6 +14,7 @@ from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import ref_to_basis_idx
 from qforte.utils.trotterization import trotterize
+from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
 
 import numpy as np
 
@@ -145,7 +146,7 @@ class UCCVQE(VQE, UCC):
         mu = M-1
 
         # find <sing_N | K_N | psi_N>
-        Kmu_prev = self._pool_obj[self._tops[mu]][1].jw_transform()
+        Kmu_prev = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
         Kmu_prev.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
         qc_psi.apply_operator(Kmu_prev)
@@ -166,13 +167,24 @@ class UCCVQE(VQE, UCC):
             else:
                 tamp = params[mu+1]
 
-            Kmu = self._pool_obj[self._tops[mu]][1].jw_transform()
+            Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
             Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
-            Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
+            if self._compact_excitations:
+                Umu = qf.Circuit()
+                # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                # (see original ADAPT-VQE paper)
+                Umu.add(compact_excitation_circuit(-tamp * self._pool_obj[self._tops[mu + 1]][1].terms()[1][0],
+                                                           self._pool_obj[self._tops[mu + 1]][1].terms()[1][1],
+                                                           self._pool_obj[self._tops[mu + 1]][1].terms()[1][2],
+                                                           self._qubit_excitations))
+            else:
+                # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                # (see original ADAPT-VQE paper)
+                Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
 
-            if (pmu != 1.0 + 0.0j):
-                raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+                if (pmu != 1.0 + 0.0j):
+                    raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
 
             qc_sig.apply_circuit(Umu)
             qc_psi.apply_circuit(Umu)
@@ -212,7 +224,7 @@ class UCCVQE(VQE, UCC):
         grads = np.zeros(len(self._pool_obj))
 
         for mu, (coeff, operator) in enumerate(self._pool_obj):
-            Kmu = operator.jw_transform()
+            Kmu = operator.jw_transform(self._qubit_excitations)
             Kmu.mult_coeffs(coeff)
             qc_psi.apply_operator(Kmu)
             grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))

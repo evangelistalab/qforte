@@ -27,7 +27,7 @@ class TestUcc:
         Egs_elec = alg.get_gs_energy()
         assert Egs_elec == approx(Efci, abs=1.0e-10)
 
-    def test_He_uccsd_vqe_exact_diis(self):
+    def test_He_uccsd_vqe_exact_jacobi(self):
         print('\n')
         # The FCI energy for He atom in a cc-pvdz basis
         Efci = -2.887594831090938
@@ -41,7 +41,7 @@ class TestUcc:
         alg = UCCNVQE(mol)
         alg.run(pool_type = 'SD',
                 use_analytic_grad = True,
-                optimizer = "diis_solve")
+                optimizer = "jacobi")
 
         Egs_elec = alg.get_gs_energy()
         assert Egs_elec == approx(Efci, abs=1.0e-11)
@@ -80,3 +80,34 @@ class TestUcc:
 
         Egs_elec = alg.get_gs_energy()
         assert Egs_elec == approx(Efci, abs=1.0e-11)
+
+    def test_uccsd_scipy_solver(self):
+         # In this test, we confirm that the UCCNPQE algorithm produces
+         # identical results when using the Jacobi and BFGS solvers
+
+        Rhh = 2
+
+        mol = system_factory(system_type = 'molecule',
+                build_type = 'psi4',
+                basis = 'sto-6g',
+                mol_geometry = [('H', (0, -Rhh/2, -Rhh/2)),
+                                ('H', (0, -Rhh/2, Rhh/2)),
+                                ('H', (0, Rhh/2, -Rhh/2)),
+                                ('H', (0, Rhh/2, Rhh/2))],
+                symmetry = 'd2h',
+                multiplicity = 1, # Only singlets will work with QForte
+                charge = 0,
+                num_frozen_docc = 0,
+                num_frozen_uocc = 0,
+                run_mp2=1,
+                run_ccsd=0,
+                run_cisd=0,
+                run_fci=1)
+
+        jacobi = UCCNPQE(mol, compact_excitations=True, qubit_excitations=False, diis_max_dim=8)
+        jacobi.run(optimizer='jacobi', pool_type='SD')
+
+        bfgs = UCCNPQE(mol, compact_excitations=True, qubit_excitations=False)
+        bfgs.run(optimizer='BFGS', pool_type='SD')
+
+        assert jacobi.get_gs_energy() == approx(bfgs.get_gs_energy(), abs=1.0e-8)

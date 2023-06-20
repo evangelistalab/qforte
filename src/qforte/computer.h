@@ -22,7 +22,7 @@ class SparseMatrix;
 class Computer {
   public:
     /// default constructor: create a quantum computer with nqubit qubits
-    Computer(int nqubit);
+    Computer(int nqubit, double print_threshold = 1.0e-6);
 
     /// applies a matrix representation of a Gate, Gircuit, or QubitOoperator
     /// to the quantum state.
@@ -102,8 +102,8 @@ class Computer {
     /// (without simulated measurement)
     std::complex<double> direct_gate_exp_val(const Gate& qg);
 
-    /// return a vector of strings representing the state of the computer
-    std::vector<std::string> str() const;
+    /// return a string representing the state of the computer
+    std::string str() const;
 
     /// return a vector of the coeficients
     std::vector<std::complex<double>> get_coeff_vec() const { return coeff_; };
@@ -157,7 +157,7 @@ class Computer {
     /// the number of two-qubit operations
     size_t ntwo_ops_ = 0;
     /// the threshold for priting a determinant
-    double print_threshold_ = 0.0;
+    double print_threshold_;
     /// the threshold for doing operations with elements of gate matricies
     double compute_threshold_ = 1.0e-16;
 

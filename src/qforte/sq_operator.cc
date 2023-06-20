@@ -26,7 +26,7 @@ void SQOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs)
 }
 
 void SQOperator::mult_coeffs(const std::complex<double>& multiplier) {
-    for (auto term : terms_){
+    for (auto& term : terms_){
         std::get<0>(term) *= multiplier;
     }
 }
@@ -102,7 +102,7 @@ bool SQOperator::permutation_phase(std::vector<int> p) const {
     }
 }
 
-void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& operators, bool creator) const {
+void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& operators, bool creator, bool qubit_excitation) const {
     std::complex<double> halfi(0.0, 0.5);
     if (creator) { halfi *= -1; };
 
@@ -111,9 +111,11 @@ void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& ope
         Circuit Xcirc;
         Circuit Ycirc;
 
-        for (int k = 0; k < sq_op; k++) {
-            Xcirc.add_gate(make_gate("Z", k, k));
-            Ycirc.add_gate(make_gate("Z", k, k));
+        if (not qubit_excitation) {
+            for (int k = 0; k < sq_op; k++) {
+                Xcirc.add_gate(make_gate("Z", k, k));
+                Ycirc.add_gate(make_gate("Z", k, k));
+            }
         }
 
         Xcirc.add_gate(make_gate("X", sq_op, sq_op));
@@ -129,7 +131,10 @@ void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& ope
     }
 }
 
-QubitOperator SQOperator::jw_transform() {
+QubitOperator SQOperator::jw_transform(bool qubit_excitation) {
+    /// The simplify() function also brings second-quantized operators
+    /// to normal order. This also ensures the 1-to-1 mapping between
+    /// second-quantized and qubit operators when qubit_excitation=True
     simplify();
     QubitOperator qo;
 
@@ -147,8 +152,8 @@ QubitOperator SQOperator::jw_transform() {
         }
 
         QubitOperator temp1;
-        jw_helper(temp1, std::get<1>(fermion_operator), true);
-        jw_helper(temp1, std::get<2>(fermion_operator), false);
+        jw_helper(temp1, std::get<1>(fermion_operator), true, qubit_excitation);
+        jw_helper(temp1, std::get<2>(fermion_operator), false, qubit_excitation);
 
         temp1.mult_coeffs(std::get<0>(fermion_operator));
         qo.add_op(temp1);

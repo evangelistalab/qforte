@@ -11,6 +11,9 @@ from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
+from qforte.utils.point_groups import sq_op_find_symmetry
+from qforte.utils import moment_energy_corrections
+from qforte.maths import optimizer
 
 import numpy as np
 
@@ -20,7 +23,7 @@ class SPQE(UCCPQE):
     In SPQE, a batch of imporant particle-hole operators
     :math:`\{ e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger )} \}` are
     added at each macro-iteration :math:`n` to the SPQE unitary :math:`\hat{U}(\mathbf{t})`,
-    wile all current parameters are optemized using the quasi-Newton PQE update
+    wile all current parameters are optimized using the quasi-Newton PQE update
     with micro-iterations :math:`k`.
 
     In our selection approach we consider a (normalized) quantum state of the form
@@ -54,7 +57,35 @@ class SPQE(UCCPQE):
             M_omega = 'inf',
             opt_thresh = 1.0e-5,
             opt_maxiter = 30,
-            use_cumulative_thresh=True):
+            use_cumulative_thresh=True,
+            max_excit_rank = None,
+            optimizer = 'Jacobi'):
+        """
+        spqe_thresh: float
+            The convergence threshold against which the norm of the residual is compared
+            (in L2 norm) to determine macroiteration convergence.
+        spqe_maxiter: int
+            The maximum number of macroiterations
+        dt: float
+            The coefficient of an "imaginary time" step used for estimating the residual,
+            eq. 15/16 of 10.1103/PRXQuantum.2.030301. Smaller values are more accurate
+            in the infinite measurement limit, but approach their limit more slowly.
+        M_omega: Union['inf', float]
+            The number of measurements to use when constructing the estimated residual, eq. 15/16
+            of 10.1103/PRXQuantum.2.030301.
+        opt_thresh: float
+            The convergence threshold used during microiterations.
+        opt_maxiter: int
+            The maximum number of microiterations
+        use_cumulative_thresh: bool
+            In brief, use True to add multiple operators per macroiteration, and False for one
+            operator per macroiteration. When True, operators are added using the cumulative
+            threshold as described in 10.1103/PRXQuantum.2.030301 Section 2E.
+        max_excit_rank: Union[int, None]
+            The maximum rank of excitations considered. Select None for no restrictions.
+        optimizer: {'jacobi', 'nelder-mead', 'powell', 'bfgs', 'l-bfgs-b', 'cg', 'slsqp'}
+            The optimizer to solve the residual equations.
+        """
 
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("SPQE implementation can only handle occupation_list Hartree-Fock reference.")
@@ -68,9 +99,11 @@ class SPQE(UCCPQE):
             self._M_omega = M_omega
 
         self._use_cumulative_thresh = use_cumulative_thresh
+        self._optimizer = optimizer
         self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
 
+        # _nbody_counts: list that contains the numbers of singles, doubles, etc. incorporated in the final ansatz
         self._nbody_counts = []
         self._n_classical_params_lst = []
 
@@ -79,44 +112,100 @@ class SPQE(UCCPQE):
         self._grad_norms = []
         self._tops = []
         self._tamps = []
+        self._stop_macro = False
         self._converged = False
         self._res_vec_evals = 0
         self._res_m_evals = 0
 
         self._curr_energy = 0.0
 
+        # Resource estimates.
         self._n_classical_params = 0
         self._n_cnot = 0
         self._n_cnot_lst = []
         self._n_pauli_trm_measures = 0
         self._n_pauli_trm_measures_lst = []
-
-        self.print_options_banner()
-
         self._Nm = []
-        self._pool_type = 'full'
-        self._eiH, self._eiH_phase = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
+
+        # self._eiH: QuantumCircuit
+        #     Used to estimate the residuals outside the zero'd set when selecting new residuals to zero.
+        self._eiH, _ = trotterize(self._qb_ham, factor= self._dt*(0.0 + 1.0j), trotter_number=self._trotter_number)
 
         for occupation in self._ref:
             if occupation:
                 self._nbody_counts.append(0)
 
+        # create a pool of particle number, Sz, and spatial symmetry adapted second quantized operators
+        # Encode the occupation list into a bitstring
+        ref = sum([b << i for i, b in enumerate(self._ref)])
+       # `& mask_alpha` gives the alpha component of a bitstring. `& mask_beta` does likewise.
+        mask_alpha = 0x5555555555555555
+        mask_beta = mask_alpha << 1
+        nalpha = sum(self._ref[0::2])
+        nbeta = sum(self._ref[1::2])
+
+        if max_excit_rank is None:
+            max_excit_rank = nalpha + nbeta
+        elif not isinstance(max_excit_rank, int) or max_excit_rank <= 0:
+            raise TypeError("The maximum excitation rank max_excit_rank must be a positive integer!")
+        elif max_excit_rank > nalpha + nbeta:
+            max_excit_rank = nalpha + nbeta
+            print("\nWARNING: The entered maximum excitation rank exceeds the number of particles.\n"
+                    "         Proceeding with max_excit_rank = {0}.\n".format(max_excit_rank))
+        self._pool_type = max_excit_rank
+
+        idx = 0
+        # Given a coefficient index, what is the index of the "corresponding" pool element? Used to compute the operator to add to the ansatz in macroiterations.
+        self._coeff_idx_to_pool_idx = {}
+        self._indices_of_zeroable_residuals_for_pool = set()
         self._pool_obj = qf.SQOpPool()
-        for I in range(2 ** self._nqb):
-            self._pool_obj.add_term(0.0, self.get_op_from_basis_idx(I))
+        for I in range(1 << self._nqb):
+            alphas = [int(j) for j in bin(I & mask_alpha)[2:]]
+            betas = [int(j) for j in bin(I & mask_beta)[2:]]
+            # Enforce particle number and Sz symmetry
+            if sum(alphas) == nalpha and sum(betas) == nbeta:
+                # Enforce point group symmetry
+                if sq_op_find_symmetry(self._sys.orb_irreps_to_int,
+                                       [len(alphas) - i - 1 for i, x in enumerate(alphas) if x],
+                                       [len(betas) -i - 1 for i, x in enumerate(betas) if x]) == self._irrep:
+                   # Create the bitstring of created/annihilated orbitals
+                    excit = bin(ref ^ I).replace("0b", "")
+                    # Confirm excitation number is non-zero
+                    if excit != "0":
+                        # Consider operators with rank <= max_excit_rank
+                        if int(excit.count('1')/2) <= self._pool_type:
+                            occ_idx = [int(i) for i,j in enumerate(reversed(excit)) if int(j) == 1 and self._ref[i] == 1]
+                            unocc_idx = [int(i) for i,j in enumerate(reversed(excit)) if int(j) == 1 and self._ref[i] == 0]
+                            sq_op = qf.SQOperator()
+                            sq_op.add(+1.0, unocc_idx, occ_idx)
+                            sq_op.add(-1.0, occ_idx[::-1], unocc_idx[::-1])
+                            sq_op.simplify()
+                            self._pool_obj.add_term(0.0, sq_op)
+                            self._coeff_idx_to_pool_idx[I] = idx
+                            self._indices_of_zeroable_residuals_for_pool.add(I)
+                            idx += 1
+
+        # Given a pool index, what is the coefficient of the "corresponding" coefficient vector element? Used to extract significant residuals in microiterations.
+        # WARNING! To support repeated operators, either replace this variable or have repeated operators in the pool (which seems an awful hack).
+        self._pool_idx_to_coeff_idx = {value: key for key, value in self._coeff_idx_to_pool_idx.items()}
+
+        self.print_options_banner()
 
         self.build_orb_energies()
-        spqe_iter = 0
-        hit_maxiter = 0
+
+        if self._max_moment_rank:
+            print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
+            self.construct_moment_space()
+
+        self._spqe_iter = 1
 
         if(self._print_summary_file):
             f = open("summary.dat", "w+", buffering=1)
             f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
             f.write('#-------------------------------------------------------------------------------\n')
 
-        while not self._converged:
+        while not self._stop_macro:
 
-            print('\n\n -----> SPQE iteration ', spqe_iter, ' <-----\n')
             self.update_ansatz()
 
             if self._converged:
@@ -128,24 +217,20 @@ class SPQE(UCCPQE):
 
             self.solve()
 
-            if(self._verbose):
+            if self._max_moment_rank:
+                print('\nComputing non-iterative energy corrections')
+                self.compute_moment_energies()
+
+            if self._verbose:
                 print('\ntamplitudes for tops post solve: \n', np.real(self._tamps))
-
-            if(self._print_summary_file):
-                f.write(f'  {spqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
-            spqe_iter += 1
-
-            if spqe_iter > self._spqe_maxiter-1:
-                hit_maxiter = 1
-                break
+            if self._print_summary_file:
+                f.write(f'  {self._spqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
+            self._spqe_iter += 1
 
         if(self._print_summary_file):
             f.close()
 
-        if hit_maxiter:
-            self._Egs = self.get_final_energy(hit_max_spqe_iter=1)
-
-        self._Egs = self.get_final_energy()
+        self._Egs = self._energies[-1]
 
         print("\n\n")
         print("---> Final n-body excitation counts in SPQE ansatz <---")
@@ -156,11 +241,19 @@ class SPQE(UCCPQE):
             print(f"{l+1:12}              {nl:14}")
 
         print('\n\n')
-        print(f"{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
-        print('-------------------------------------------------------------------------------')
+        if not self._max_moment_rank:
+            print(f"{'Iter(k)':>8}{'E':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
+            print('-------------------------------------------------------------------------------')
 
-        for k, Ek in enumerate(self._energies):
-            print(f' {k:7}    {Ek:+15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
+            for k, Ek in enumerate(self._energies):
+                print(f' {k:7}    {Ek:+15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
+
+        else:
+            print(f"{'Iter':>8}{'E':>14}{'E_MMCC(MP)':>24}{'E_MMCC(EN)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
+            print('-----------------------------------------------------------------------------------------------------------------------')
+
+            for k, Ek in enumerate(self._energies):
+                print(f' {k+1:7}    {Ek:+15.9f}    {self._E_mmcc_mp[k]:15.9f}    {self._E_mmcc_en[k]:15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
 
         self._n_classical_params = len(self._tamps)
         self._n_cnot = self._n_cnot_lst[-1]
@@ -195,19 +288,31 @@ class SPQE(UCCPQE):
         else:
             print('Measurement varience thresh:             ',  0.01)
 
+        print('Use qubit excitations:                   ', self._qubit_excitations)
+        print('Use compact excitation circuits:         ', self._compact_excitations)
+
         opt_thrsh_str = '{:.2e}'.format(self._opt_thresh)
         spqe_thrsh_str = '{:.2e}'.format(self._spqe_thresh)
-        print('DIIS maxiter:                            ',  self._opt_maxiter)
-        print('DIIS residual-norm threshold (omega_r):  ',  opt_thrsh_str)
-        print('Operator pool type:                      ',  'full')
-        print('SPQE residual-norm threshold (Omega):    ',  spqe_thrsh_str)
-        print('SPQE maxiter:                            ',  self._spqe_maxiter)
+        print('Optimizer:                               ', self._optimizer)
+        if self._diis_max_dim >=2 and self._optimizer.lower() == 'jacobi':
+            print('DIIS dimension:                          ', self._diis_max_dim)
+        else:
+            print('DIIS dimension:                           Disabled')
+        print('Maximum number of micro-iterations:      ',  self._opt_maxiter)
+        print('Micro-iteration residual-norm threshold: ',  opt_thrsh_str)
+        print('Maximum excitation rank in operator pool:',  self._pool_type)
+        print('Number of operators in pool:             ',  len(self._pool_obj))
+        print('Macro-iteration residual-norm threshold: ',  spqe_thrsh_str)
+        print('Maximum number of macro-iterations:      ',  self._spqe_maxiter)
 
 
     def print_summary_banner(self):
         print('\n\n                ==> SPQE summary <==')
         print('-----------------------------------------------------------')
         print('Final SPQE Energy:                           ', round(self._Egs, 10))
+        if self._max_moment_rank:
+            print('Moment-corrected (MP) SPQE Energy:           ', round(self._E_mmcc_mp[-1], 10))
+            print('Moment-corrected (EN) SPQE Energy:           ', round(self._E_mmcc_en[-1], 10))
         print('Number of operators in pool:                 ', len(self._pool_obj))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Number of classical parameters used:         ', self._n_classical_params)
@@ -216,84 +321,21 @@ class SPQE(UCCPQE):
         print('Number of residual vector evaluations:       ', self._res_vec_evals)
         print('Number of individual residual evaluations:   ', self._res_m_evals)
 
-    def solve(self):
-        self.diis_solve()
-
-
-    def diis_solve(self):
-        # draws heavy insiration from Daniel Smith's ccsd_diss.py code in psi4 numpy
-        diis_dim = 0
-        t_diis = [copy.deepcopy(self._tamps)]
-        e_diis = []
-        rk_norm = 1.0
-        Ek0 = self.energy_feval(self._tamps)
-
-        print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
-        print('---------------------------------------------------------------------------------------------------')
-
-        for k in range(1, self._opt_maxiter+1):
-            t_old = copy.deepcopy(self._tamps)
-
-            #do regular update
-            r_k = self.get_residual_vector(self._tamps)
-            rk_norm = np.linalg.norm(r_k)
-            r_k = self.get_res_over_mpdenom(r_k)
-
-            self._tamps = list(np.add(self._tamps, r_k))
-
-            Ek = self.energy_feval(self._tamps)
-            dE = Ek - Ek0
-            Ek0 = Ek
-            # self._num_res_evals += 1
-            self._res_vec_evals += 1
-            self._res_m_evals += len(self._tamps)
-
-            print(f'     {k:7}        {Ek:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {rk_norm:+12.10f}')
-
-            if(rk_norm < self._opt_thresh):
-                self._results.append('Fake result string')
-                self._final_result = 'nothing'
-                self._Egs = Ek
-                break
-
-            t_diis.append(copy.deepcopy(self._tamps))
-            e_diis.append(np.subtract(copy.deepcopy(self._tamps), t_old))
-
-            if(k >= 1):
-                diis_dim = len(t_diis) - 1
-
-                #consturct diis B matrix (following Crawford Group github tutorial)
-                B = np.ones((diis_dim+1, diis_dim+1)) * -1
-                bsol = np.zeros(diis_dim+1)
-                B[-1, -1] = 0.0
-                bsol[-1] = -1.0
-
-                for i in range(len(e_diis)):
-                    for j in range(i, len(e_diis)):
-                        B[i,j] = np.dot(np.real(e_diis[i]), np.real(e_diis[j]))
-                        if(i!=j):
-                            B[j,i] = B[i,j]
-
-                B[:-1, :-1] /= np.abs(B[:-1, :-1]).max()
-                x = np.linalg.solve(B, bsol)
-
-                t_new = np.zeros(( len(self._tamps) ))
-                for l in range(diis_dim):
-                    temp_ary = x[l] * np.asarray(t_diis[l+1])
-                    t_new = np.add(t_new, temp_ary)
-
-                self._tamps = copy.deepcopy(list(np.real(t_new)))
-
-        self._Egs = Ek
-        self._energies.append(Ek)
-        self._n_pauli_measures_k += self._Nl*k * (2*len(self._tamps) + 1)
-        self._n_pauli_trm_measures_lst.append(self._n_pauli_measures_k)
-        self._n_cnot_lst.append(self.build_Uvqc().get_num_cnots())
-
-
     def get_residual_vector(self, trial_amps):
-        U = self.ansatz_circuit(trial_amps)
+        """
+        Input
+        -----
+        trial_amps list[float]
+         The trial value of the parameters, in order corresponding to the ansatz parameters.
 
+        Output
+
+        list[float]
+         The residuals, in order corresponding to the ansatz parameters.
+        """
+
+        assert len(trial_amps) == len(self._tops)
+        U = self.ansatz_circuit(trial_amps)
         qc_res = qforte.Computer(self._nqb)
         qc_res.apply_circuit(self._Uprep)
         qc_res.apply_circuit(U)
@@ -305,63 +347,31 @@ class SPQE(UCCPQE):
 
         # each operator needs a score, so loop over toperators
         for m in self._tops:
-            sq_op = self._pool_obj[m][1]
-            # occ => i,j,k,...
-            # vir => a,b,c,...
-            # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
-            temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref)/2): # if temp_idx is an occupied idx
-                sq_creators = sq_op.terms()[0][1]
-                sq_annihilators = sq_op.terms()[0][2]
-            else:
-                sq_creators = sq_op.terms()[0][2]
-                sq_annihilators = sq_op.terms()[0][1]
-
-            destroyed = False
-            denom = 1.0
-
-            basis_I = qforte.QubitBasis(self._nqb)
-            for k, occ in enumerate(self._ref):
-                basis_I.set_bit(k, occ)
-
-            # loop over anihilators
-            for p in reversed(sq_annihilators):
-                if( basis_I.get_bit(p) == 0):
-                    destroyed=True
-                    break
-
-                basis_I.set_bit(p, 0)
-
-            # then over creators
-            for p in reversed(sq_creators):
-                if (basis_I.get_bit(p) == 1):
-                    destroyed=True
-                    break
-
-                basis_I.set_bit(p, 1)
-
-            if not destroyed:
-
-                I = basis_I.add()
-
-                ## check for correct dets
-                det_I = integer_to_ref(I, self._nqb)
-                nel_I = sum(det_I)
-                cor_spin_I = correct_spin(det_I, 0)
+            if self._optimizer.lower() == 'jacobi':
+                # In this case, the sign associated with the projection on K |Phi> = (-1)^p |Phi_K>
+                # needs to be taken into consideration
+                sq_op = self._pool_obj[m][1]
+                # occ => i,j,k,...
+                # vir => a,b,c,...
+                # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
 
                 qc_temp = qforte.Computer(self._nqb)
                 qc_temp.apply_circuit(self._Uprep)
-                qc_temp.apply_operator(sq_op.jw_transform())
-                sign_adjust = qc_temp.get_coeff_vec()[I]
+                qc_temp.apply_operator(sq_op.jw_transform(self._qubit_excitations))
+                sign_adjust = qc_temp.get_coeff_vec()[self._pool_idx_to_coeff_idx[m]]
 
-                res_m = coeffs[I] * sign_adjust
-                if(np.imag(res_m) > 0.0):
-                    raise ValueError("residual has imaginary component, someting went wrong!!")
-
-                residuals.append(res_m)
-
+                res_m = coeffs[self._pool_idx_to_coeff_idx[m]] * sign_adjust
             else:
-                raise ValueError("no ops should destroy reference, something went wrong!!")
+                # In residual minimization, we compute the function sum_k |r_k|^2
+                # and thus the sign of the projection is immaterial
+                res_m = coeffs[self._pool_idx_to_coeff_idx[m]]
+            if abs(np.imag(res_m)) > 0.0:
+                raise ValueError("Residual has imaginary component, something went wrong!!")
+            residuals.append(res_m)
+
+        self._res_vec_norm = np.linalg.norm(residuals)
+        self._res_vec_evals += 1
+        self._res_m_evals += len(trial_amps)
 
         return residuals
 
@@ -435,28 +445,33 @@ class SPQE(UCCPQE):
                     print('     op index (Imu)     Number of times measured')
                     print('  -----------------------------------------------')
 
-                for Nmu_tup in Nmu_lst[:-1]:
-                    if(self._verbose):
-                        print(f"  {Nmu_tup[1]:10}                  {np.real(Nmu_tup[0]):14}")
-                    if(Nmu_tup[1] not in self._tops):
-                        self._tops.insert(0,Nmu_tup[1])
-                        self._tamps.insert(0,0.0)
-                        self.add_from_basis_idx(Nmu_tup[1])
+                for rmu_sq, global_op_idx in Nmu_lst[:-1]:
+                    if self._verbose:
+                        print(f"  {global_op_idx:10}                  {np.real(rmu_sq):14}")
+                    if global_op_idx not in self._tops:
+                        pool_idx = self._coeff_idx_to_pool_idx[global_op_idx]
+                        self._tops.insert(0, pool_idx)
+                        self._tamps.insert(0, 0.0)
+                        operator_rank = len(self._pool_obj[pool_idx][1].terms()[0][1])
+                        self._nbody_counts[operator_rank - 1] += 1
 
                 self._n_classical_params_lst.append(len(self._tops))
 
         else: # when M_omega == 'inf', proceed with standard SPQE
-            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in range(len(res_coeffs))]
+            res_sq = [( np.real(np.conj(res_coeffs[I]) * res_coeffs[I]), I) for I in self._indices_of_zeroable_residuals_for_pool - {self._pool_idx_to_coeff_idx[i] for i in self._tops}]
             res_sq.sort()
-            self._curr_res_sq_norm = sum(rmu_sq[0] for rmu_sq in res_sq[:-1]) / (self._dt * self._dt)
+            self._curr_res_sq_norm = sum(rmu_sq[0] for rmu_sq in res_sq) / (self._dt * self._dt)
 
-            print('  \n--> Begin selection opt with residual magnitudes |r_mu|:')
-            print('  Initial guess energy: ', round(init_gues_energy,10))
-            print(f'  Norm of res vec:      {np.sqrt(self._curr_res_sq_norm):14.12f}')
 
             self.conv_status()
 
             if not self._converged:
+
+                print('\n\n -----> SPQE iteration ',self._spqe_iter, ' <-----\n')
+                print('  \n--> Begin selection opt with residual magnitudes |r_mu|:')
+                print('  Initial guess energy: ', round(init_gues_energy,10))
+                print(f'  Norm of res vec:      {np.sqrt(self._curr_res_sq_norm):14.12f}')
+
                 if self._verbose:
                     print('\n')
                     print('     op index (Imu)           Residual Factor')
@@ -467,15 +482,17 @@ class SPQE(UCCPQE):
                     # Make a running list of operators. When the sum of res_sq exceeds the target, every operator
                     # from here out is getting added to the ansatz..
                     temp_ops = []
-                    for rmu_sq, op_idx in res_sq[:-1]:
+                    for rmu_sq, global_op_idx in res_sq:
                         res_sq_sum += rmu_sq / (self._dt * self._dt)
                         if res_sq_sum > (self._spqe_thresh * self._spqe_thresh):
+                            pool_idx = self._coeff_idx_to_pool_idx[global_op_idx]
                             if(self._verbose):
-                                Ktemp = self.get_op_from_basis_idx(op_idx)
-                                print(f"  {op_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}   {Ktemp.str()}" )
-                            if op_idx not in self._tops:
-                                temp_ops.append(op_idx)
-                                self.add_from_basis_idx(op_idx)
+                                print(f"  {pool_idx:10}                  {np.real(rmu_sq):14.12f}"
+                                      f"   {self._pool_obj[pool_idx][1].str()}" )
+                            if pool_idx not in self._tops:
+                                temp_ops.append(pool_idx)
+                                operator_rank = len(self._pool_obj[pool_idx][1].terms()[0][1])
+                                self._nbody_counts[operator_rank - 1] += 1
 
                     for temp_op in temp_ops[::-1]:
                         self._tops.insert(0, temp_op)
@@ -484,171 +501,43 @@ class SPQE(UCCPQE):
                 else:
                     # Add the single operator with greatest rmu_sq not yet in the ansatz
                     res_sq.reverse()
-                    for rmu_sq, op_idx in res_sq[1:]:
-                        print(f"  {op_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}")
-                        if op_idx not in self._tops:
+                    for rmu_sq, global_op_idx in res_sq:
+                        pool_idx = self._coeff_idx_to_pool_idx[global_op_idx]
+                        print(f"  {pool_idx:10}                  {np.real(rmu_sq)/(self._dt * self._dt):14.12f}")
+                        if pool_idx not in self._tops:
                             print('Adding this operator to ansatz')
-                            self._tops.insert(0, op_idx)
+                            self._tops.insert(0, pool_idx)
                             self._tamps.insert(0, 0.0)
-                            self.add_from_basis_idx(op_idx)
+                            operator_rank = len(self._pool_obj[pool_idx][1].terms()[0][1])
+                            self._nbody_counts[operator_rank - 1] += 1
                             break
 
                 self._n_classical_params_lst.append(len(self._tops))
 
-    def add_from_basis_idx(self, I):
-
-        max_nbody = len(self._nbody_counts)
-        nqb = len(self._ref)
-        nel = int(sum(self._ref))
-
-        # TODO(Nick): incorparate more flexability into this
-        na_el = int(nel/2);
-        nb_el = int(nel/2);
-        basis_I = qf.QubitBasis(I)
-
-        nbody = 0
-        pn = 0
-        na_I = 0
-        nb_I = 0
-        holes = [] # i, j, k, ...
-        particles = [] # a, b, c, ...
-        parity = []
-
-        # for ( p=0; p<nel; p++) {
-        for p in range(nel):
-            bit_val = int(basis_I.get_bit(p))
-            nbody += (1 - bit_val)
-            pn += bit_val
-            if(p%2==0):
-                na_I += bit_val
-            else:
-                nb_I += bit_val
-
-            if(bit_val-1):
-                holes.append(p)
-                if(p%2==0):
-                    parity.append(1)
-                else:
-                    parity.append(-1)
-
-        for q in range(nel, nqb):
-            bit_val = int(basis_I.get_bit(q))
-            pn += bit_val
-            if(q%2==0):
-                na_I += bit_val
-            else:
-                nb_I += bit_val
-
-            if(bit_val):
-                particles.append(q)
-                if(q%2==0):
-                    parity.append(1)
-                else:
-                    parity.append(-1)
-
-        if(pn==nel and na_I == na_el and nb_I == nb_el):
-            if (nbody != 0 and nbody <= max_nbody ):
-
-                total_parity = 1
-                for z in parity:
-                    total_parity *= z
-
-                if(total_parity==1):
-                    K_temp = qf.SQOperator()
-                    K_temp.add(+1.0, particles, holes);
-                    K_temp.add(-1.0, holes[::-1], particles[::-1]);
-                    K_temp.simplify();
-                    # this is potentially slow
-                    self._Nm.insert(0, len(K_temp.jw_transform().terms()))
-                    self._nbody_counts[nbody-1] += 1
-
-    def get_op_from_basis_idx(self, I):
-
-        max_nbody = len(self._nbody_counts)
-        nqb = len(self._ref)
-        nel = int(sum(self._ref))
-
-        # TODO(Nick): incorparate more flexability into this
-        na_el = int(nel/2);
-        nb_el = int(nel/2);
-        basis_I = qf.QubitBasis(I)
-
-        nbody = 0
-        pn = 0
-        na_I = 0
-        nb_I = 0
-        holes = [] # i, j, k, ...
-        particles = [] # a, b, c, ...
-        parity = []
-
-        for p in range(nel):
-            bit_val = int(basis_I.get_bit(p))
-            nbody += (1 - bit_val)
-            pn += bit_val
-            if(p%2==0):
-                na_I += bit_val
-            else:
-                nb_I += bit_val
-
-            if(bit_val-1):
-                holes.append(p)
-                if(p%2==0):
-                    parity.append(1)
-                else:
-                    parity.append(-1)
-
-        for q in range(nel, nqb):
-            bit_val = int(basis_I.get_bit(q))
-            pn += bit_val
-            if(q%2==0):
-                na_I += bit_val
-            else:
-                nb_I += bit_val
-
-            if(bit_val):
-                particles.append(q)
-                if(q%2==0):
-                    parity.append(1)
-                else:
-                    parity.append(-1)
-
-        if(pn==nel and na_I == na_el and nb_I == nb_el):
-            if (nbody==0):
-                return qf.SQOperator()
-            if (nbody != 0 and nbody <= max_nbody ):
-
-                total_parity = 1
-                for z in parity:
-                    total_parity *= z
-
-                if(total_parity==1):
-                    K_temp = qf.SQOperator()
-                    K_temp.add(+1.0, particles, holes);
-                    K_temp.add(-1.0, holes[::-1], particles[::-1]);
-                    K_temp.simplify();
-
-                    return K_temp
-
-        return qf.SQOperator()
-
     def conv_status(self):
         if abs(self._curr_res_sq_norm) < abs(self._spqe_thresh * self._spqe_thresh):
             self._converged = True
-            self._final_energy = self._energies[-1]
-            self._final_result = self._results[-1]
-        else:
+            self._stop_macro = True
+            print("\n\n\n------------------------------------------------")
+            print("SPQE macro-iterations converged!")
+            print(f'||r|| = {np.sqrt(self._curr_res_sq_norm):8.6f}')
+            print("------------------------------------------------")
+        elif self._spqe_iter > self._spqe_maxiter:
+            print("\n\n\n------------------------------------------------")
+            print("Maximum number of SPQE macro-iterations reached!")
+            print(f'Current value of ||r||: {np.sqrt(self._curr_res_sq_norm):8.6f}')
+            print("------------------------------------------------")
             self._converged = False
+            self._stop_macro = True
+        elif len(self._tops) == len(self._pool_obj):
+            print("\n\n\n------------------------------------------------")
+            print("Operator pool has been drained!")
+            print(f'Current value of ||r||: {np.sqrt(self._curr_res_sq_norm):8.6f}')
+            print("------------------------------------------------")
+            self._converged = True
+            self._stop_macro = True
 
-    def get_final_energy(self, hit_max_spqe_iter=0):
-        """
-        Parameters
-        ----------
-        hit_max_spqe_iter : bool
-            Wether or not to use the SPQE has already hit the maximum
-            number of iterations.
-        """
-        if hit_max_spqe_iter:
-            print("\nSPQE at maximum number of iterations!")
-            self._final_energy = self._energies[-1]
-        else:
-            return self._final_energy
+SPQE.jacobi_solver = optimizer.jacobi_solver
+SPQE.scipy_solver = optimizer.scipy_solver
+SPQE.construct_moment_space = moment_energy_corrections.construct_moment_space
+SPQE.compute_moment_energies = moment_energy_corrections.compute_moment_energies

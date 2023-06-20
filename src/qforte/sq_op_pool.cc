@@ -61,12 +61,12 @@ QubitOpPool SQOpPool::get_qubit_op_pool(){
 }
 
 
-QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool combine_like_terms){
+QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool combine_like_terms, bool qubit_excitations){
     QubitOperator parent;
 
     if(order_type=="unique_lex"){
         for (auto& term : terms_) {
-            auto child = term.second.jw_transform();
+            auto child = term.second.jw_transform(qubit_excitations);
             child.mult_coeffs(term.first);
             parent.add_op(child);
         }
@@ -76,7 +76,7 @@ QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool c
         parent.order_terms();
     } else if (order_type=="commuting_grp_lex") {
         for (auto& term : terms_) {
-            auto child = term.second.jw_transform();
+            auto child = term.second.jw_transform(qubit_excitations);
             child.mult_coeffs(term.first);
             child.simplify(combine_like_terms=combine_like_terms);
             child.order_terms();
@@ -366,11 +366,6 @@ void SQOpPool::fill_pool(std::string pool_type){
 
                 temp1.simplify();
 
-                std::complex<double> temp1_norm(0.0, 0.0);
-                for (const auto& term : temp1.terms()){
-                    temp1_norm += std::norm(std::get<0>(term));
-                }
-                temp1.mult_coeffs(1.0/std::sqrt(temp1_norm));
                 add_term(1.0, temp1);
             }
         }
@@ -470,8 +465,8 @@ void SQOpPool::fill_pool(std::string pool_type){
                         for (const auto& term : temp2b.terms()){
                             temp2b_norm += std::norm(std::get<0>(term));
                         }
-                        temp2a.mult_coeffs(1.0/std::sqrt(temp2a_norm));
-                        temp2b.mult_coeffs(1.0/std::sqrt(temp2b_norm));
+                        temp2a.mult_coeffs(std::sqrt(2.0/temp2a_norm));
+                        temp2b.mult_coeffs(std::sqrt(2.0/temp2b_norm));
 
                         if(temp2a.terms().size() > 0){
                             add_term(1.0, temp2a);

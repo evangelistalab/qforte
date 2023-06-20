@@ -57,7 +57,13 @@ class SQOperator {
 
     /// Return the QubitOperator object corresponding the the Jordan-Wigner
     /// transform of this sq operator. Calls simplify as a side-effect.
-    QubitOperator jw_transform();
+    /// If qubit_excitation = true, replace fermionic creation/annihilation
+    /// operators by qubit ones.
+    /// WARNING: In the current implementation of qubit excitations,
+    /// the 1-to-1 mapping between second-quantized operators and their
+    /// qubit excitation counterparts is ensured by the normal ordering of
+    /// second-quantized operators
+    QubitOperator jw_transform(bool qubit_excitation = false);
 
     /// return a vector of string representing this quantum operator
     std::string str() const;
@@ -73,7 +79,7 @@ class SQOperator {
 
     /// If operators is a vector of orbital indices, add the corresponding creator
     /// or annihilation qubit operators to holder.
-    void jw_helper(QubitOperator& holder, const std::vector<size_t>& operators, bool creator) const;
+    void jw_helper(QubitOperator& holder, const std::vector<size_t>& operators, bool creator, bool qubit_excitation) const;
 };
 
 #endif // _sq_operator_h_

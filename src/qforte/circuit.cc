@@ -42,11 +42,8 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
         // If there are no gates, there's nothing to order.
         return 1.0;
     }
-    for (const auto& gate: gates_) {
-        const auto& id = gate.gate_id();
-        if (id != "X" && id != "Y" && id != "Z") {
-            throw ("Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other than X, Y, or Z");
-        }
+    if (!is_pauli()) {
+        throw ("Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other than X, Y, or Z");
     }
     //using namespace std::complex_literals;
     std::complex<double> onei(0.0, 1.0);
@@ -112,7 +109,8 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
 int Circuit::get_num_cnots() const {
     int n_cnots = 0;
     for (const auto& gate : gates_) {
-        if(gate.gate_id() == "CNOT" || gate.gate_id() == "cX"){
+        if(gate.gate_id() == "CNOT" || gate.gate_id() == "cX" ||
+                gate.gate_id() == "aCNOT" || gate.gate_id() == "acX"){
             n_cnots++;
         } else if (gate.gate_id() == "A"){
             n_cnots += 3;
@@ -156,6 +154,16 @@ const SparseMatrix Circuit::sparse_matrix(size_t nqubit) const {
     return Rmat;
 }
 
+bool Circuit::is_pauli() const {
+    for (const auto& gate: gates_) {
+        const auto& id = gate.gate_id();
+        if (id != "X" && id != "Y" && id != "Z") {
+            return false;
+        }
+    }
+    return true;
+}
+
 // std::vector<double> Circuit::get_parameters() {
 //     // need a loop over only gates in state preparation circuit that
 //     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
@@ -188,4 +196,22 @@ bool operator==(const Circuit& qc1, const Circuit& qc2)  {
     } else {
         return false;
     }
+}
+
+bool operator < (const Circuit& qc1, const Circuit& qc2)  {
+    if (qc1.size() != qc2.size()) {
+        return qc1.size() < qc2.size();
+    }
+    for (int k=0; k < qc1.size(); k++) {
+        if (qc1.gates()[k].target() != qc2.gates()[k].target()) {
+            return qc1.gates()[k].target() < qc2.gates()[k].target();
+        }
+        if (qc1.gates()[k].gate_id() != qc2.gates()[k].gate_id()) {
+            return qc1.gates()[k].gate_id() < qc2.gates()[k].gate_id();
+        }
+        if (qc1.gates()[k].control() != qc2.gates()[k].control()) {
+            return qc1.gates()[k].control() < qc2.gates()[k].control();
+        }
+    }
+    return false;
 }

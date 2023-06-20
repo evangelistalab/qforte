@@ -13,6 +13,7 @@ from qforte.maths import optimizer
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
+from qforte.utils import moment_energy_corrections
 
 from qforte.helper.printing import matprint
 
@@ -50,12 +51,14 @@ class UCCNPQE(UCCPQE):
             pool_type='SD',
             opt_thresh = 1.0e-5,
             opt_maxiter = 40,
-            noise_factor = 0.0):
+            noise_factor = 0.0,
+            optimizer = 'jacobi'):
 
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("PQE implementation can only handle occupation_list Hartree-Fock reference.")
 
         self._pool_type = pool_type
+        self._optimizer = optimizer
         self._opt_thresh = opt_thresh
         self._opt_maxiter = opt_maxiter
         self._noise_factor = noise_factor
@@ -92,6 +95,12 @@ class UCCNPQE(UCCPQE):
         self.fill_excited_dets()
         self.build_orb_energies()
         self.solve()
+
+        if self._max_moment_rank:
+            print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
+            self.construct_moment_space()
+            print('\nComputing non-iterative energy corrections')
+            self.compute_moment_energies()
 
         if(self._verbose):
             print('\nt operators included from pool: \n', self._tops)
@@ -137,9 +146,17 @@ class UCCNPQE(UCCPQE):
         else:
             print('Measurement varience thresh:             ',  0.01)
 
+        print('Use qubit excitations:                   ', self._qubit_excitations)
+        print('Use compact excitation circuits:         ', self._compact_excitations)
+
         res_thrsh_str = '{:.2e}'.format(self._opt_thresh)
-        print('DIIS maxiter:                            ',  self._opt_maxiter)
-        print('DIIS res-norm threshold:                 ',  res_thrsh_str)
+        print('Optimizer:                               ', self._optimizer)
+        if self._diis_max_dim >= 2 and self._optimizer.lower() == 'jacobi':
+            print('DIIS dimension:                          ', self._diis_max_dim)
+        else:
+            print('DIIS dimension:                           Disabled')
+        print('Maximum number of iterations:            ',  self._opt_maxiter)
+        print('Residual-norm threshold:                 ',  res_thrsh_str)
 
         print('Operator pool type:                      ',  str(self._pool_type))
 
@@ -149,6 +166,9 @@ class UCCNPQE(UCCPQE):
         print('\n\n                   ==> UCC-PQE summary <==')
         print('-----------------------------------------------------------')
         print('Final UCCN-PQE Energy:                      ', round(self._Egs, 10))
+        if self._max_moment_rank:
+            print('Moment-corrected (MP) UCCN-PQE Energy:      ', round(self._E_mmcc_mp[0], 10))
+            print('Moment-corrected (EN) UCCN-PQE Energy:      ', round(self._E_mmcc_en[0], 10))
         print('Number of operators in pool:                 ', len(self._pool_obj))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Number of classical parameters used:         ', len(self._tamps))
@@ -158,9 +178,6 @@ class UCCNPQE(UCCPQE):
         print('Number of residual vector evaluations:       ', self._res_vec_evals)
         print('Number of residual element evaluations*:     ', self._res_m_evals)
         print('Number of non-zero res element evaluations:  ', int(self._res_vec_evals)*self._n_nonzero_params)
-
-    def solve(self):
-        self.diis_solve(self.get_residual_vector)
 
     def fill_excited_dets(self):
         for _, sq_op in self._pool_obj:
@@ -213,7 +230,7 @@ class UCCNPQE(UCCPQE):
 
             qc_temp = qforte.Computer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
-            qc_temp.apply_operator(sq_op.jw_transform())
+            qc_temp.apply_operator(sq_op.jw_transform(self._qubit_excitations))
             phase_factor = qc_temp.get_coeff_vec()[I]
 
             self._excited_dets.append((I, phase_factor))
@@ -254,6 +271,7 @@ class UCCNPQE(UCCPQE):
 
             residuals.append(res_m)
 
+        self._res_vec_norm = np.linalg.norm(residuals)
         self._res_vec_evals += 1
         self._res_m_evals += len(self._tamps)
 
@@ -267,4 +285,7 @@ class UCCNPQE(UCCPQE):
             self._tops.append(l)
             self._tamps.append(0.0)
 
-UCCNPQE.diis_solve = optimizer.diis_solve
+UCCNPQE.jacobi_solver = optimizer.jacobi_solver
+UCCNPQE.scipy_solver = optimizer.scipy_solver
+UCCNPQE.construct_moment_space = moment_energy_corrections.construct_moment_space
+UCCNPQE.compute_moment_energies = moment_energy_corrections.compute_moment_energies

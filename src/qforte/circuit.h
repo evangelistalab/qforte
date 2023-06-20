@@ -58,13 +58,15 @@ class Circuit {
     /// nine qubits.    
     size_t num_qubits() const;
 
+    bool is_pauli() const;
+
   private:
     /// the list of gates
     std::vector<Gate> gates_;
 };
 
-// A eqivalence comparitor for Circuit class
 bool operator==(const Circuit& qc1, const Circuit& qc2);
+bool operator < (const Circuit& qc1, const Circuit& qc2);
 
 
 

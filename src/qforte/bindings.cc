@@ -43,10 +43,11 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_term", &SQOperator::add_term)
         .def("add_op", &SQOperator::add_op)
         .def("set_coeffs", &SQOperator::set_coeffs)
+        .def("mult_coeffs", &SQOperator::mult_coeffs)
         .def("terms", &SQOperator::terms)
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
-        .def("jw_transform", &SQOperator::jw_transform)
+        .def("jw_transform", &SQOperator::jw_transform, py::arg("qubit_excitation") = false)
         .def("str", &SQOperator::str)
         .def("__str__", &SQOperator::str)
         .def("__repr__", &SQOperator::str);
@@ -60,7 +61,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool)
         .def("get_qubit_operator", &SQOpPool::get_qubit_operator, py::arg("order_type"),
-             py::arg("combine_like_terms") = true)
+             py::arg("combine_like_terms") = true, py::arg("qubit_excitations") = false)
         .def("fill_pool", &SQOpPool::fill_pool)
         .def("str", &SQOpPool::str)
         .def("__getitem__", [](const SQOpPool &pool, size_t i) { return pool.terms()[i]; })
@@ -87,6 +88,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("num_qubits", &QubitOperator::num_qubits)
         .def("sparse_matrix", &QubitOperator::sparse_matrix)
         .def("str", &QubitOperator::str)
+        .def("__iter__", [](const QubitOperator &op) { return py::make_iterator(op.terms()); },
+            py::keep_alive<0, 1>())
         .def("__str__", &QubitOperator::str)
         .def("__repr__", &QubitOperator::str);
 
@@ -105,6 +108,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("square", &QubitOpPool::square)
         .def("fill_pool", &QubitOpPool::fill_pool)
         .def("str", &QubitOpPool::str)
+        .def("__iter__", [](const QubitOpPool &pool) { return py::make_iterator(pool.terms()); },
+            py::keep_alive<0, 1>())
         .def("__str__", &QubitOpPool::str)
         .def("__repr__", &QubitOpPool::str);
 
@@ -119,7 +124,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_bit", &QubitBasis::get_bit);
 
     py::class_<Computer>(m, "Computer")
-        .def(py::init<size_t>(), "nqubits"_a, "Make a quantum computer with 'nqubits' qubits")
+        .def(py::init<size_t,double>(), "nqubits"_a, "print_threshold"_a = 1.0e-6, "Make a quantum computer with 'nqubits' qubits")
         .def("apply_circuit_safe", &Computer::apply_circuit_safe)
         .def("apply_matrix", &Computer::apply_matrix)
         .def("apply_sparse_matrix", &Computer::apply_sparse_matrix)
@@ -148,14 +153,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_timings", &Computer::get_timings)
         .def("clear_timings", &Computer::clear_timings)
         .def("str", &Computer::str)
-        .def("__str__", [](const Computer& qc) {
-            std::string r("Computer(\n");
-            for (const std::string& s : qc.str()) {
-                r += "  " + s + "\n";
-            }
-            r += " )";
-            return r;
-        });
+        .def("__str__", &Computer::str)
+        .def("__repr__", &Computer::str);
 
     py::class_<Gate>(m, "Gate")
         .def("target", &Gate::target)
@@ -206,7 +205,7 @@ PYBIND11_MODULE(qforte, m) {
         "gate",
         [](std::string type, size_t target, size_t control) {
             // test for two-qubit gates that require no parameters
-            auto vec = {"SWAP", "cV", "CNOT", "cX", "cY", "cZ"};
+            auto vec = {"SWAP", "cV", "CNOT", "cX", "aCNOT", "acX","cY", "cZ"};
             if (std::find(vec.begin(), vec.end(), type) != vec.end()) {
                 return make_gate(type, target, control, 0.0);
             }

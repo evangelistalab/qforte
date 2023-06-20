@@ -133,6 +133,67 @@ class TestGates:
         with pytest.raises(ValueError):
             gate('CNOT',0,1.0)
 
+    def test_acX_gate(self):
+        # test the acX/aCNOT gate
+        nqubits = 2
+        basis0 = make_basis('00') # basis0:|00>
+        basis1 = make_basis('01') # basis1:|10>
+        basis2 = make_basis('10') # basis2:|01>
+        basis3 = make_basis('11') # basis3:|11>
+        computer = Computer(nqubits)
+        aCNOT = gate('aCNOT',0,1);
+
+        # test aCNOT|00> = |01>
+        computer.set_state([(basis0,1.0)])
+        computer.apply_gate(aCNOT)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        assert coeff0 == approx(0, abs=1.0e-16)
+        assert coeff1 == approx(0, abs=1.0e-16)
+        assert coeff2 == approx(1, abs=1.0e-16)
+        assert coeff3 == approx(0, abs=1.0e-16)
+
+        # test aCNOT|10> = |10>
+        computer.set_state([(basis1,1.0)])
+        computer.apply_gate(aCNOT)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        assert coeff0 == approx(0, abs=1.0e-16)
+        assert coeff1 == approx(1, abs=1.0e-16)
+        assert coeff2 == approx(0, abs=1.0e-16)
+        assert coeff3 == approx(0, abs=1.0e-16)
+
+        # test aCNOT|01> = |00>
+        computer.set_state([(basis2,1.0)])
+        computer.apply_gate(aCNOT)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        assert coeff0 == approx(1, abs=1.0e-16)
+        assert coeff1 == approx(0, abs=1.0e-16)
+        assert coeff2 == approx(0, abs=1.0e-16)
+        assert coeff3 == approx(0, abs=1.0e-16)
+
+        # test aCNOT|11> = |11>
+        computer.set_state([(basis3,1.0)])
+        computer.apply_gate(aCNOT)
+        coeff0 = computer.coeff(basis0)
+        coeff1 = computer.coeff(basis1)
+        coeff2 = computer.coeff(basis2)
+        coeff3 = computer.coeff(basis3)
+        assert coeff0 == approx(0, abs=1.0e-16)
+        assert coeff1 == approx(0, abs=1.0e-16)
+        assert coeff2 == approx(0, abs=1.0e-16)
+        assert coeff3 == approx(1, abs=1.0e-16)
+
+        with pytest.raises(ValueError):
+            gate('aCNOT',0,1.0)
+
     def test_cY_gate(self):
         # test the cY gate
         nqubits = 2
