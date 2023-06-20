@@ -238,7 +238,7 @@ def create_external_mol(**kwargs):
     # extract symmetry information if found
     try:
         point_group = external_data['point_group']['data']
-    except:
+    except KeyError:
         point_group = 'C1'
     irreps = qforte.irreps_of_point_groups(point_group)
     qforte_mol.point_group = [point_group, irreps]
