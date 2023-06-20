@@ -235,8 +235,11 @@ def create_external_mol(**kwargs):
     with open(kwargs["filename"]) as f:
         external_data = json.load(f)
 
-    # extract symmetry information
-    point_group = external_data['point_group']['data']
+    # extract symmetry information if found
+    try:
+        point_group = external_data['point_group']['data']
+    except:
+        point_group = 'C1'
     irreps = qforte.irreps_of_point_groups(point_group)
     qforte_mol.point_group = [point_group, irreps]
 
@@ -245,9 +248,13 @@ def create_external_mol(**kwargs):
 
     # we need the irreps of the spatial orbitals, but the
     # json file provides the irreps of the spin-orbitals
-    for int_irrep in external_data['symmetry']['data'][::2]:
-    	qforte_mol.orb_irreps_to_int.append(int_irrep)
-    	qforte_mol.orb_irreps.append(irreps[int_irrep])
+    if point_group == 'C1':
+        qforte_mol.orb_irreps = ['A'] * int(external_data['nso']['data']/2)
+        qforte_mol.orb_irreps_to_int = [0] * int(external_data['nso']['data']/2)
+    else:
+        for int_irrep in external_data['symmetry']['data'][::2]:
+        	qforte_mol.orb_irreps_to_int.append(int_irrep)
+        	qforte_mol.orb_irreps.append(irreps[int_irrep])
 
     # build sq hamiltonian
     qforte_sq_hamiltonian = qforte.SQOperator()
