@@ -266,10 +266,6 @@
     ],
     "description": "one-electron integrals as a list of tuples (i,j,<i|h|j>)"
   },
-  "point_group": {
-    "data": "C1",
-    "description": "Point group of the system"
-  },
   "scalar_energy": {
     "data": 0.0,
     "description": "scalar energy (sum of nuclear repulsion, frozen core, and scalar contributions"
