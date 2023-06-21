@@ -28,7 +28,7 @@ class SQOpPool {
 
     /// set the total number of occupied and virtual spatial orbitals from a reference, from the number
     ///     of occupied spin orbitals of each point group symmetry
-    void set_orb_spaces(const std::vector<int>& ref);
+    void set_orb_spaces(const std::vector<int>& ref, const std::vector<size_t>& orb_irreps_to_int = {});
 
     /// returns a QubitOpPool object with one term for each term in terms_
     QubitOpPool get_qubit_op_pool();
@@ -48,6 +48,9 @@ class SQOpPool {
 
     /// the number of virtual spatial orbitals
     int nvir_;
+
+    /// the list of integers representing the irreps of the orbitals
+    std::vector<size_t> orb_irreps_to_int_;
 
     /// the list of sq operators in the pool
     std::vector<std::pair<std::complex<double>, SQOperator>> terms_;

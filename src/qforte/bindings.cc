@@ -59,7 +59,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_term", &SQOpPool::add_term)
         .def("set_coeffs", &SQOpPool::set_coeffs)
         .def("terms", &SQOpPool::terms)
-        .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
+        .def("set_orb_spaces", &SQOpPool::set_orb_spaces, py::arg("ref"), py::arg("orb_irreps_to_int") = std::vector<size_t>{})
         .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool)
         .def("get_qubit_operator", &SQOpPool::get_qubit_operator, py::arg("order_type"),
              py::arg("combine_like_terms") = true, py::arg("qubit_excitations") = false)
@@ -238,7 +238,7 @@ PYBIND11_MODULE(qforte, m) {
 
     m.def(
         "find_irrep",
-        [](const std::vector<int>& orb_irrep_to_int, const std::vector<int>& spinorb_indices) -> int {
+        [](const std::vector<size_t>& orb_irrep_to_int, const std::vector<size_t>& spinorb_indices) -> size_t {
             /*
              * Find the irrep of a given set of spinorbitals.
              *

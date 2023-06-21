@@ -259,23 +259,15 @@ class AnsatzAlgorithm(Algorithm):
 
         if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
             self._pool_obj = qf.SQOpPool()
-            self._pool_obj.set_orb_spaces(self._ref)
+            if hasattr(self._sys, 'orb_irreps_to_int'):
+                self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
+            else:
+                self._pool_obj.set_orb_spaces(self._ref)
             self._pool_obj.fill_pool(self._pool_type)
         elif isinstance(self._pool_type, qf.SQOpPool):
             self._pool_obj = self._pool_type
         else:
             raise ValueError('Invalid operator pool type specified.')
-
-        # If possible, impose symmetry restriction to operator pool
-        # Currently, symmetry is supported for system_type='molecule' and build_type='psi4'
-        if hasattr(self._sys, 'point_group'):
-            temp_sq_pool = qf.SQOpPool()
-            for sq_operator in self._pool_obj.terms():
-                create = sq_operator[1].terms()[0][1]
-                annihilate = sq_operator[1].terms()[0][2]
-                if find_irrep(self._sys.orb_irreps_to_int, create + annihilate) == self._irrep:
-                    temp_sq_pool.add(sq_operator[0], sq_operator[1])
-            self._pool_obj = temp_sq_pool
 
         self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
 
