@@ -125,18 +125,25 @@ def create_psi_mol(**kwargs):
     frozen_core = p4_wfn.frzcpi().sum()
     frozen_virtual = p4_wfn.frzvpi().sum()
 
-    # Get symmetry information
+    # Get orbital symmetry information and construct hf reference
     orbitals = []
     for irrep, block in enumerate(p4_wfn.epsilon_a_subset("MO", "ACTIVE").nph):
         for orbital in block:
             orbitals.append([orbital, irrep])
 
     orbitals.sort()
+    occ_alpha_per_irrep = p4_wfn.occupation_a().nph
+    occ_beta_per_irrep = p4_wfn.occupation_b().nph
+    count_per_irrep = list(p4_wfn.frzcpi().to_tuple())
+    hf_reference = []
     hf_orbital_energies = []
     orb_irreps_to_int = []
-    for row in orbitals:
-        hf_orbital_energies.append(row[0])
-        orb_irreps_to_int.append(row[1])
+    for [orbital_energy, irrep] in orbitals:
+        hf_reference.append(int(occ_alpha_per_irrep[irrep][count_per_irrep[irrep]]))
+        hf_reference.append(int(occ_beta_per_irrep[irrep][count_per_irrep[irrep]]))
+        count_per_irrep[irrep] += 1
+        hf_orbital_energies.append(orbital_energy)
+        orb_irreps_to_int.append(irrep)
     del orbitals
 
     point_group = p4_mol.symmetry_from_input().lower()
@@ -163,9 +170,6 @@ def create_psi_mol(**kwargs):
             for q in range(frozen_core, nmo - frozen_virtual):
                 for i in range(frozen_core):
                     mo_oeis[p, q] += 2 * mo_teis[p, q, i, i] - mo_teis[p, i, i, q]
-
-    # Make hf_reference
-    hf_reference = [1] * (nel - 2 * frozen_core) + [0] * (2 * (nmo - frozen_virtual) - nel)
 
     # Build second quantized Hamiltonian
     Hsq = qforte.SQOperator()
