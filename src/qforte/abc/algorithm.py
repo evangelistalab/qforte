@@ -7,7 +7,7 @@ The abstract base classes inherited by all algorithm subclasses.
 from abc import ABC, abstractmethod
 import qforte as qf
 from qforte.utils.state_prep import *
-from qforte.utils.point_groups import sq_op_find_symmetry
+from qforte import find_irrep
 
 class Algorithm(ABC):
     """A class that characterizes the most basic functionality for all
@@ -273,7 +273,7 @@ class AnsatzAlgorithm(Algorithm):
             for sq_operator in self._pool_obj.terms():
                 create = sq_operator[1].terms()[0][1]
                 annihilate = sq_operator[1].terms()[0][2]
-                if sq_op_find_symmetry(self._sys.orb_irreps_to_int, create, annihilate) == self._irrep:
+                if find_irrep(self._sys.orb_irreps_to_int, create + annihilate) == self._irrep:
                     temp_sq_pool.add(sq_operator[0], sq_operator[1])
             self._pool_obj = temp_sq_pool
 
