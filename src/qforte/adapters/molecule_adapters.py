@@ -33,11 +33,13 @@ def create_psi_mol(**kwargs):
     kwargs.setdefault('symmetry', 'c1')
     kwargs.setdefault('charge', 0)
     kwargs.setdefault('multiplicity', 1)
+    kwargs.setdefault('json_dump', False)
 
     mol_geometry = kwargs['mol_geometry']
     basis = kwargs['basis']
     multiplicity = kwargs['multiplicity']
     charge = kwargs['charge']
+    json_dump = kwargs['json_dump']
 
     qforte_mol = Molecule(mol_geometry = mol_geometry,
                                basis = basis,
@@ -213,6 +215,78 @@ def create_psi_mol(**kwargs):
 
     # Order Psi4 to delete its temporary files.
     psi4.core.clean()
+
+    #Dump everything to a JSON file to be loaded later if desired.
+    if json_dump != False:
+        
+        norbs = nmo - frozen_virtual - frozen_core
+
+        external_data = {}
+
+        external_data['scalar_energy'] = {}
+        external_data['scalar_energy']['data'] = p4_Enuc_ref + frozen_core_energy
+        external_data['scalar_energy']['description'] = \
+            "scalar energy (sum of nuclear repulsion, frozen core, and scalar contributions"
+
+        external_data['oei'] = {}
+        external_data['oei']['data'] = []
+        for p in range(norbs):
+            pa = 2*p
+            pb = 2*p + 1
+            for q in range(norbs):
+                qa = 2*q
+                qb = 2*q + 1
+                external_data['oei']['data'].append((pa, qa, mo_oeis[p + frozen_core, q + frozen_core]))
+                external_data['oei']['data'].append((pb, qb, mo_oeis[p + frozen_core, q + frozen_core]))
+        external_data['oei']['description'] = \
+            "one-electron integrals as a list of tuples (i,j,<i|h|j>)"
+        
+        external_data['tei'] = {}
+        external_data['tei']['data'] = []
+        for p in range(norbs):
+            pa = 2*p
+            pb = 2*p + 1
+            for q in range(norbs):
+                qa = 2*q
+                qb = 2*q + 1
+                for r in range(norbs):
+                    ra = 2*r
+                    rb = 2*r + 1
+                    for s in range(norbs):
+                        sa = 2*s
+                        sb = 2*s + 1
+                        pqrs = mo_teis[p + frozen_core, q + frozen_core, r + frozen_core, s + frozen_core]
+                        pqsr = mo_teis[p + frozen_core, q + frozen_core, s + frozen_core, r + frozen_core]
+                        external_data['tei']['data'].append((pa, qa, ra, sa, pqrs - pqsr))
+                        external_data['tei']['data'].append((pa, qa, rb, sb, 0.0))
+                        external_data['tei']['data'].append((pa, qb, ra, sb, pqrs))
+                        external_data['tei']['data'].append((pb, qa, ra, sb, -1 * pqsr))
+                        external_data['tei']['data'].append((pa, qb, rb, sa, -1 * pqsr))
+                        external_data['tei']['data'].append((pb, qa, rb, sa, pqrs))
+                        external_data['tei']['data'].append((pb, qb, ra, sa, 0.0))
+                        external_data['tei']['data'].append((pb, qb, rb, sb, pqrs - pqsr))
+        external_data['tei']['description'] = \
+            "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)"
+            
+        external_data['nso'] = {}
+        external_data['nso']['data'] = 2 * norbs
+        external_data['nso']['description'] = \
+            "number of spin orbitals"
+        
+        external_data['na'] = {}
+        external_data['na']['data'] = nalpha - frozen_core
+        external_data['na']['description'] = \
+            "number of alpha electrons"
+        
+        external_data['nb'] = {}
+        external_data['nb']['data'] = nbeta - frozen_core
+        external_data['nb']['description'] = \
+            "number of beta electrons"
+                   
+        with open(json_dump, 'w') as f:
+            json.dump(external_data, f)
+
+
 
     return qforte_mol
 
