@@ -43,11 +43,23 @@ class SQOpPool {
     std::string str() const;
 
   private:
-    /// the number of occupied spatial orbitals
-    int nocc_;
+    /// the integer representing the refrence determinant
+    uint64_t ref_int_;
 
-    /// the number of virtual spatial orbitals
-    int nvir_;
+    /// the number of spinorbitals
+    int n_spinorb_;
+
+    /// the number of occupied alpha spinorbitals
+    int n_occ_alpha_;
+    
+    /// the number of occupied beta spinorbitals
+    int n_occ_beta_;
+    
+    /// the number of virtual alpha spinorbitals
+    int n_vir_alpha_;
+    
+    /// the number of virtual beta spinorbitals
+    int n_vir_beta_;
 
     /// the list of integers representing the irreps of the orbitals
     std::vector<size_t> orb_irreps_to_int_;
