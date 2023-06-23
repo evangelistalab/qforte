@@ -270,9 +270,11 @@ def create_external_mol(**kwargs):
     for p, q, r, s, h_pqrs in external_data['tei']['data']:
         qforte_sq_hamiltonian.add(h_pqrs/4.0, [p,q], [s,r]) # only works in C1 symmetry
 
-    hf_reference = [0 for i in range(external_data['nso']['data'])]
-    for n in range(external_data['na']['data'] + external_data['nb']['data']):
-        hf_reference[n] = 1
+    hf_reference = [0] * external_data['nso']['data']
+    for occ_alpha in range(external_data['na']['data']):
+        hf_reference[occ_alpha * 2] = 1
+    for occ_beta in range(external_data['nb']['data']):
+        hf_reference[occ_beta * 2 + 1] = 1
 
     qforte_mol.hf_reference = hf_reference
 
