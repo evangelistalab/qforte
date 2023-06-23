@@ -158,7 +158,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_nqubit", &Computer::get_nqubit)
         .def("set_coeff_vec", &Computer::set_coeff_vec)
         .def("set_state", &Computer::set_state)
-        .def("zero_state", &Computer::zero_state)
+        .def("null_state", &Computer::null_state)
+        .def("reset", &Computer::reset, "Reset the quantum computer to the state |0>")
         .def("get_timings", &Computer::get_timings)
         .def("clear_timings", &Computer::clear_timings)
         .def("str", &Computer::str)
@@ -243,4 +244,21 @@ PYBIND11_MODULE(qforte, m) {
         "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0, "Make a gate.");
 
     m.def("control_gate", &make_control_gate, "control"_a, "Gate"_a);
+
+    m.def(
+        "prepare_state",
+        [](int nqubit, const std::vector<Gate>& gates) {
+            local_timer t;
+            auto computer = Computer(nqubit);
+            auto circuit = Circuit();
+            for (auto gate : gates) {
+                circuit.add_gate(gate);
+            }
+            computer.apply_circuit(circuit);
+            return computer;
+        },
+        "nqubit"_a, "gates"_a, "Prepare a state from a list of gates.");
+
+    m.def("inner_product", &dot, "a"_a, "b"_a,
+          "Return the inner product of the states stored in two quantum computers.");
 }

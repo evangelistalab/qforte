@@ -9,8 +9,7 @@ const std::vector<std::pair<size_t, size_t>> Gate::two_qubits_basis_{
 const std::vector<size_t> Gate::index1{0, 1};
 const std::vector<size_t> Gate::index2{0, 1, 2, 3};
 
-Gate::Gate(const std::string& label, size_t target, size_t control,
-                         std::complex<double> gate[4][4])
+Gate::Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4])
     : label_(label), target_(target), control_(control) {
     for (const auto& i : index2) {
         for (const auto& j : index2) {
@@ -27,11 +26,10 @@ const complex_4_4_mat& Gate::gate() const { return gate_; }
 
 const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
     size_t nbasis = std::pow(2, nqubit);
-    if(target_ != control_){
-        throw ("Gate must be a Pauli to convert to matrix!");
-    }
-    else if(target_ >= nqubit){
-        throw ("Target index is too large for specified nqbits!");
+    if (target_ != control_) {
+        throw std::runtime_error("Gate must be a Pauli to convert to matrix!");
+    } else if (target_ >= nqubit) {
+        throw std::runtime_error("Target index is too large for specified nqbits!");
     }
 
     SparseMatrix Spmat = SparseMatrix();
@@ -40,7 +38,7 @@ const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
         for (size_t j = 0; j < 2; j++) {
             auto op_i_j = gate_[i][j];
             if (std::abs(op_i_j) > 1.0e-16) {
-                for(size_t I = 0; I < nbasis; I++) {
+                for (size_t I = 0; I < nbasis; I++) {
                     QubitBasis basis_I = QubitBasis(I);
                     if (basis_I.get_bit(target_) == j) {
                         QubitBasis basis_J = basis_I;
@@ -53,7 +51,6 @@ const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
     }
     return Spmat;
 }
-
 
 std::string Gate::gate_id() const { return label_; }
 
@@ -96,6 +93,4 @@ Gate Gate::adjoint() const {
     return Gate(label_, target_, control_, adj_gate);
 }
 
-const std::vector<std::pair<size_t, size_t>>& Gate::two_qubits_basis() {
-    return two_qubits_basis_;
-}
+const std::vector<std::pair<size_t, size_t>>& Gate::two_qubits_basis() { return two_qubits_basis_; }

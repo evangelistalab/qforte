@@ -24,21 +24,21 @@ void Circuit::set_parameters(const std::vector<double>& params) {
 
 void Circuit::insert_gate(size_t pos, const Gate& gate) {
     if (pos > gates_.size()) {
-        throw("Circuit::insert_gate: position out of range");
+        throw std::runtime_error("Circuit::insert_gate: position out of range");
     }
     gates_.insert(gates_.begin() + pos, gate);
 }
 
 void Circuit::remove_gate(size_t pos) {
     if (pos >= gates_.size()) {
-        throw("Circuit::remove_gate: position out of range");
+        throw std::runtime_error("Circuit::remove_gate: position out of range");
     }
     gates_.erase(gates_.begin() + pos);
 }
 
 void Circuit::swap_gates(size_t pos1, size_t pos2) {
     if (pos1 >= gates_.size() || pos2 >= gates_.size()) {
-        throw("Circuit::swap_gates: position out of range");
+        throw std::runtime_error("Circuit::swap_gates: position out of range");
     }
     std::swap(gates_[pos1], gates_[pos2]);
 }
@@ -51,14 +51,14 @@ void Circuit::add_circuit(const Circuit& circ) {
 
 void Circuit::insert_circuit(size_t pos, const Circuit& circ) {
     if (pos > gates_.size()) {
-        throw("Circuit::insert_circuit: position out of range");
+        throw std::runtime_error("Circuit::insert_circuit: position out of range");
     }
     gates_.insert(gates_.begin() + pos, circ.gates().begin(), circ.gates().end());
 }
 
 void Circuit::remove_gates(size_t pos1, size_t pos2) {
     if (pos1 >= gates_.size() || pos2 >= gates_.size()) {
-        throw("Circuit::remove_gates: position out of range");
+        throw std::runtime_error("Circuit::remove_gates: position out of range");
     }
     gates_.erase(gates_.begin() + pos1, gates_.begin() + pos2);
 }
@@ -78,9 +78,10 @@ std::complex<double> Circuit::canonicalize_pauli_circuit() {
         return 1.0;
     }
     if (!is_pauli()) {
-        throw("Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other "
-              "than "
-              "X, Y, or Z");
+        throw std::runtime_error(
+            "Circuit::canonicalize_pauli_circuit is undefined for circuits with gates other "
+            "than "
+            "X, Y, or Z");
     }
     // using namespace std::complex_literals;
     std::complex<double> onei(0.0, 1.0);
