@@ -68,24 +68,3 @@ def char_table(point_group):
         for idx2, irrep2 in enumerate(irreps):
             print(irreps[idx1 ^ idx2].ljust(3), ' ', end = '')
         print()
-
-def sq_op_find_symmetry(orb_irreps_to_int, annihilate, create):
-    """
-    Function that finds the irreducible representation of a given
-    second-quantized operator.
-
-    Parameters
-    ----------
-    orb_irreps_to_int: list of integers; integer n indexes the irrep of spatial orbital n
-
-    annihilate: list of spinorbital indices to be annihilated
-
-    create: list of spinorbital indices to be created
-
-    """
-
-    sym = 0
-    for spinorb in annihilate + create:
-        sym ^= orb_irreps_to_int[int(spinorb/2)]
-
-    return sym

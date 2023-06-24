@@ -125,18 +125,25 @@ def create_psi_mol(**kwargs):
     frozen_core = p4_wfn.frzcpi().sum()
     frozen_virtual = p4_wfn.frzvpi().sum()
 
-    # Get symmetry information
+    # Get orbital symmetry information and construct hf reference
     orbitals = []
     for irrep, block in enumerate(p4_wfn.epsilon_a_subset("MO", "ACTIVE").nph):
         for orbital in block:
             orbitals.append([orbital, irrep])
 
     orbitals.sort()
+    occ_alpha_per_irrep = p4_wfn.occupation_a().nph
+    occ_beta_per_irrep = p4_wfn.occupation_b().nph
+    count_per_irrep = list(p4_wfn.frzcpi().to_tuple())
+    hf_reference = []
     hf_orbital_energies = []
     orb_irreps_to_int = []
-    for row in orbitals:
-        hf_orbital_energies.append(row[0])
-        orb_irreps_to_int.append(row[1])
+    for [orbital_energy, irrep] in orbitals:
+        hf_reference.append(int(occ_alpha_per_irrep[irrep][count_per_irrep[irrep]]))
+        hf_reference.append(int(occ_beta_per_irrep[irrep][count_per_irrep[irrep]]))
+        count_per_irrep[irrep] += 1
+        hf_orbital_energies.append(orbital_energy)
+        orb_irreps_to_int.append(irrep)
     del orbitals
 
     point_group = p4_mol.symmetry_from_input().lower()
@@ -163,9 +170,6 @@ def create_psi_mol(**kwargs):
             for q in range(frozen_core, nmo - frozen_virtual):
                 for i in range(frozen_core):
                     mo_oeis[p, q] += 2 * mo_teis[p, q, i, i] - mo_teis[p, i, i, q]
-
-    # Make hf_reference
-    hf_reference = [1] * (nel - 2 * frozen_core) + [0] * (2 * (nmo - frozen_virtual) - nel)
 
     # Build second quantized Hamiltonian
     Hsq = qforte.SQOperator()
@@ -235,6 +239,27 @@ def create_external_mol(**kwargs):
     with open(kwargs["filename"]) as f:
         external_data = json.load(f)
 
+    # extract symmetry information if found
+    try:
+        point_group = external_data['point_group']['data']
+    except KeyError:
+        point_group = 'C1'
+    irreps = qforte.irreps_of_point_groups(point_group)
+    qforte_mol.point_group = [point_group, irreps]
+
+    qforte_mol.orb_irreps = []
+    qforte_mol.orb_irreps_to_int = []
+
+    # we need the irreps of the spatial orbitals, but the
+    # json file provides the irreps of the spin-orbitals
+    if point_group == 'C1':
+        qforte_mol.orb_irreps = ['A'] * int(external_data['nso']['data']/2)
+        qforte_mol.orb_irreps_to_int = [0] * int(external_data['nso']['data']/2)
+    else:
+        for int_irrep in external_data['symmetry']['data'][::2]:
+        	qforte_mol.orb_irreps_to_int.append(int_irrep)
+        	qforte_mol.orb_irreps.append(irreps[int_irrep])
+
     # build sq hamiltonian
     qforte_sq_hamiltonian = qforte.SQOperator()
     qforte_sq_hamiltonian.add(external_data['scalar_energy']['data'], [], [])
@@ -245,13 +270,11 @@ def create_external_mol(**kwargs):
     for p, q, r, s, h_pqrs in external_data['tei']['data']:
         qforte_sq_hamiltonian.add(h_pqrs/4.0, [p,q], [s,r]) # only works in C1 symmetry
 
-    hf_reference = [0 for i in range(external_data['nso']['data'])]
-    for n in range(external_data['na']['data'] + external_data['nb']['data']):
-        hf_reference[n] = 1
-
-    qforte_mol.point_group = ['C1', 'A']
-    qforte_mol.orb_irreps = ['A'] * external_data['nso']['data']
-    qforte_mol.orb_irreps_to_int = [0] * external_data['nso']['data']
+    hf_reference = [0] * external_data['nso']['data']
+    for occ_alpha in range(external_data['na']['data']):
+        hf_reference[occ_alpha * 2] = 1
+    for occ_beta in range(external_data['nb']['data']):
+        hf_reference[occ_beta * 2 + 1] = 1
 
     qforte_mol.hf_reference = hf_reference
 

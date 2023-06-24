@@ -12,7 +12,7 @@ and a publication will appear in the future.
 
 import qforte as qf
 from qforte.utils.trotterization import trotterize
-from qforte.utils.point_groups import sq_op_find_symmetry
+from qforte import find_irrep
 import numpy as np
 
 def construct_moment_space(self):
@@ -54,9 +54,9 @@ def construct_moment_space(self):
         # The following checks could be potentially removed, if QForte gets methods
         # that violate particle number, Sz, and spatial symmetries
         if sum(alphas) == nalpha and sum(betas) == nbeta:
-            if sq_op_find_symmetry(self._sys.orb_irreps_to_int,
-                                   [len(alphas) - i - 1 for i, x in enumerate(alphas) if x],
-                                   [len(betas) -i - 1 for i, x in enumerate(betas) if x]) == 0:
+            if find_irrep(self._sys.orb_irreps_to_int,
+                    [len(alphas) - i - 1 for i, x in enumerate(alphas) if x] +
+                    [len(betas) -i - 1 for i, x in enumerate(betas) if x]) == 0:
                 # Create the bitstring of created/annihilated orbitals
                 excit = bin(ref ^ I).replace("0b", "")
                 # Confirm excitation number is non-zero

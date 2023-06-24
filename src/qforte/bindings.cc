@@ -4,6 +4,7 @@
 
 #include "fmt/format.h"
 
+#include "find_irrep.h"
 #include "qubit_basis.h"
 #include "circuit.h"
 #include "gate.h"
@@ -63,7 +64,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_term", &SQOpPool::add_term)
         .def("set_coeffs", &SQOpPool::set_coeffs)
         .def("terms", &SQOpPool::terms)
-        .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
+        .def("set_orb_spaces", &SQOpPool::set_orb_spaces, py::arg("ref"), py::arg("orb_irreps_to_int") = std::vector<size_t>{})
         .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool)
         .def("get_qubit_operator", &SQOpPool::get_qubit_operator, py::arg("order_type"),
              py::arg("combine_like_terms") = true, py::arg("qubit_excitations") = false)
@@ -261,4 +262,24 @@ PYBIND11_MODULE(qforte, m) {
 
     m.def("inner_product", &dot, "a"_a, "b"_a,
           "Return the inner product of the states stored in two quantum computers.");
+    m.def(
+        "find_irrep",
+        [](const std::vector<size_t>& orb_irrep_to_int, const std::vector<size_t>& spinorb_indices) -> size_t {
+            /*
+             * Find the irrep of a given set of spinorbitals.
+             *
+             * @param orb_irrep_to_int: List of integers where the i-th element is the irrep of spatial orbital i.
+             * @param spinorb_indices: List of spinorbital indices.
+             * @return Integer representing the irrep (in Cotton ordering) of the given set of spinorbitals.
+             */
+            return find_irrep(orb_irrep_to_int, spinorb_indices);
+        }, R"pbdoc(
+               Function that finds the irreducible representation of a given set of spinorbitals.
+               
+               :param orb_irrep_to_int: List of integers where the i-th element is the irrep of spatial orbital i.
+               :param spinorb_indices: List of spinorbital indices.
+               :return: Integer representing the irrep (in Cotton ordering) of the given set of spinorbitals.
+           )pbdoc",
+        py::arg("orb_irrep_to_int"), py::arg("spinorb_indices")
+    );
 }
