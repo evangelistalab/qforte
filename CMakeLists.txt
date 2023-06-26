@@ -45,6 +45,7 @@ add_subdirectory(lib/pybind11)
 add_subdirectory(lib/fmt)
 pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
     "${SOURCE_DIR}/helpers.cc"
+    "${SOURCE_DIR}/find_irrep.cc"
     "${SOURCE_DIR}/make_gate.cc"
     "${SOURCE_DIR}/qubit_basis.cc"
     "${SOURCE_DIR}/circuit.cc"
@@ -84,6 +85,7 @@ include_directories(lib/fmt/include)
 add_executable("${PROJECT_NAME}_benchmarks"
     benchmarks/benchmarks.cc
     "${SOURCE_DIR}/helpers.cc"
+    "${SOURCE_DIR}/find_irrep.cc"
     "${SOURCE_DIR}/make_gate.cc"
     "${SOURCE_DIR}/qubit_basis.cc"
     "${SOURCE_DIR}/circuit.cc"
