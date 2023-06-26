@@ -98,7 +98,7 @@ def symmetry_check(n_qubits, qc, irreps, orb_irreps_to_int, target_N, target_Sz,
         weight = np.real(weight * np.conjugate(weight))
         particle_number = len(occ_alpha + occ_beta)
         Sz_value = (len(occ_alpha) - len(occ_beta)) * 0.5
-        irrep = qf.sq_op_find_symmetry(orb_irreps_to_int, occ_alpha + occ_beta, [])
+        irrep = qf.find_irrep(orb_irreps_to_int, occ_alpha + occ_beta)
         if particle_number == target_N and Sz_value == target_Sz and irrep == target_irrep:
             weight_target += weight
         weight_per_particle_number[particle_number] += weight
