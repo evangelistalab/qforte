@@ -340,7 +340,8 @@ class MRSQK(QSD):
                 self._n_pauli_trm_measures += k * (k-1) * self._Nl
                 self._n_pauli_trm_measures += k * (k-1)
 
-                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
+                if len(evals) > self._target_root:
+                    print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         return s_mat, h_mat
 
@@ -447,7 +448,8 @@ class MRSQK(QSD):
                 self._n_pauli_trm_measures += k * (k-1) * self._Nl
                 self._n_pauli_trm_measures += k * (k-1)
 
-                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
+                if len(evals) > self._target_root:
+                    print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         return s_mat, h_mat
 
