@@ -1,6 +1,10 @@
-#include <lightspeed/tensor.hpp>
-#include <lightspeed/math.hpp>
-#include "../util/string.hpp"
+#include "tensor.h"
+
+
+// May need an analog these eventually
+// #include "../util/string.hpp"
+// #include <lightspeed/math.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -178,119 +182,121 @@ std::shared_ptr<Tensor> Tensor::transpose() const
     return T;
 }
 
-std::string Tensor::string(
-    bool print_data, 
-    int maxcols,
-    const std::string& data_format,
-    const std::string& header_format
-    ) const
-{
-    std::string str = "";
-    str += sprintf2( "Tensor: %s\n", name_.c_str());
-    str += sprintf2( "  Ndim  = %zu\n", ndim());
-    str += sprintf2( "  Size  = %zu\n", size());
-    str += sprintf2( "  Shape = (");
-    for (size_t dim = 0; dim < ndim(); dim++) {
-        str += sprintf2( "%zu", shape_[dim]);
-        if (dim < ndim() - 1) {
-            str += sprintf2( ",");
-        }
-    }
-    str += sprintf2(")\n");
+// TODO(Nick): Re-implement high priority
+// std::string Tensor::string(
+//     bool print_data, 
+//     int maxcols,
+//     const std::string& data_format,
+//     const std::string& header_format
+//     ) const
+// {
+//     std::string str = "";
+//     str += sprintf2( "Tensor: %s\n", name_.c_str());
+//     str += sprintf2( "  Ndim  = %zu\n", ndim());
+//     str += sprintf2( "  Size  = %zu\n", size());
+//     str += sprintf2( "  Shape = (");
+//     for (size_t dim = 0; dim < ndim(); dim++) {
+//         str += sprintf2( "%zu", shape_[dim]);
+//         if (dim < ndim() - 1) {
+//             str += sprintf2( ",");
+//         }
+//     }
+//     str += sprintf2(")\n");
 
-    if (print_data) {
+//     if (print_data) {
 
-        str += sprintf2("\n");
+//         str += sprintf2("\n");
             
-        std::string order0str1 = "  " + data_format + "\n";
-        std::string order1str1 = "  %5zu " + data_format + "\n";
-        std::string order2str1 = " " + header_format;
-        std::string order2str2 = " " + data_format;
+//         std::string order0str1 = "  " + data_format + "\n";
+//         std::string order1str1 = "  %5zu " + data_format + "\n";
+//         std::string order2str1 = " " + header_format;
+//         std::string order2str2 = " " + data_format;
 
-        int order = ndim();
-        size_t nelem = size();
+//         int order = ndim();
+//         size_t nelem = size();
 
-        size_t page_size = 1L;
-        size_t rows = 1;
-        size_t cols = 1;
-        if (order >= 1) {
-            page_size *= shape_[order - 1];
-            rows = shape_[order - 1];
-        }
-        if (order >= 2) {
-            page_size *= shape_[order - 2];
-            rows = shape_[order - 2];
-            cols = shape_[order - 1];
-        }
+//         size_t page_size = 1L;
+//         size_t rows = 1;
+//         size_t cols = 1;
+//         if (order >= 1) {
+//             page_size *= shape_[order - 1];
+//             rows = shape_[order - 1];
+//         }
+//         if (order >= 2) {
+//             page_size *= shape_[order - 2];
+//             rows = shape_[order - 2];
+//             cols = shape_[order - 1];
+//         }
 
-        str += sprintf2( "  Data:\n\n");
+//         str += sprintf2( "  Data:\n\n");
 
-        if (nelem > 0){
-            size_t pages = nelem / page_size;
-            for (size_t page = 0L; page < pages; page++) {
+//         if (nelem > 0){
+//             size_t pages = nelem / page_size;
+//             for (size_t page = 0L; page < pages; page++) {
 
-                if (order > 2) {
-                    str += sprintf2( "  Page (");
-                    size_t num = page;
-                    size_t den = pages;
-                    size_t val;
-                    for (int k = 0; k < order - 2; k++) {
-                        den /= shape_[k];
-                        val = num / den;
-                        num -= val * den;
-                        str += sprintf2("%zu,",val);
-                    }
-                    str += sprintf2( "*,*):\n\n");
-                }
+//                 if (order > 2) {
+//                     str += sprintf2( "  Page (");
+//                     size_t num = page;
+//                     size_t den = pages;
+//                     size_t val;
+//                     for (int k = 0; k < order - 2; k++) {
+//                         den /= shape_[k];
+//                         val = num / den;
+//                         num -= val * den;
+//                         str += sprintf2("%zu,",val);
+//                     }
+//                     str += sprintf2( "*,*):\n\n");
+//                 }
 
-                const std::complex<double>* vp = data_.data() + page * page_size;
-                if (order == 0) {
-                    str += sprintf2( order0str1.c_str(), *(vp));
-                } else if(order == 1) {
-                    for (size_t i=0; i<page_size; ++i) {
-                        str += sprintf2( order1str1.c_str(), i, *(vp + i));
-                    }
-                } else {
-                    for (size_t j = 0; j < cols; j += maxcols) {
-                        size_t ncols = (j + maxcols >= cols ? cols - j : maxcols);
+//                 const std::complex<double>* vp = data_.data() + page * page_size;
+//                 if (order == 0) {
+//                     str += sprintf2( order0str1.c_str(), *(vp));
+//                 } else if(order == 1) {
+//                     for (size_t i=0; i<page_size; ++i) {
+//                         str += sprintf2( order1str1.c_str(), i, *(vp + i));
+//                     }
+//                 } else {
+//                     for (size_t j = 0; j < cols; j += maxcols) {
+//                         size_t ncols = (j + maxcols >= cols ? cols - j : maxcols);
 
-                        // Column Header
-                        str += sprintf2("  %5s", "");
-                        for (size_t jj = j; jj < j+ncols; jj++) {
-                            str += sprintf2(order2str1.c_str(), jj);
-                        }
-                        str += sprintf2("\n");
+//                         // Column Header
+//                         str += sprintf2("  %5s", "");
+//                         for (size_t jj = j; jj < j+ncols; jj++) {
+//                             str += sprintf2(order2str1.c_str(), jj);
+//                         }
+//                         str += sprintf2("\n");
 
-                        // Data
-                        for (size_t i = 0; i < rows; i++) {
-                            str += sprintf2("  %5zu", i);
-                            for (size_t jj = j; jj < j+ncols; jj++) {
-                                str += sprintf2(order2str2.c_str(), *(vp + i * cols + jj));
-                            }
-                            str += sprintf2("\n");
-                        }
+//                         // Data
+//                         for (size_t i = 0; i < rows; i++) {
+//                             str += sprintf2("  %5zu", i);
+//                             for (size_t jj = j; jj < j+ncols; jj++) {
+//                                 str += sprintf2(order2str2.c_str(), *(vp + i * cols + jj));
+//                             }
+//                             str += sprintf2("\n");
+//                         }
 
-                        // Block separator
-                        if (page < pages - 1 || j + maxcols < cols - 1) str += sprintf2("\n");
-                    }
-                }
-            }
-        }
-    }
-    return str;
-}
+//                         // Block separator
+//                         if (page < pages - 1 || j + maxcols < cols - 1) str += sprintf2("\n");
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     return str;
+// }
 
-void Tensor::print() const
-{
-    std::cout << string() << std::endl;
-}
+// TODO(Nick): Re-Implement
+// void Tensor::print() const
+// {
+//     std::cout << string() << std::endl;
+// }
 
-void Tensor::print(const std::string& name)
-{
-    std::string bak_name = name_;
-    set_name(name);
-    print();
-    set_name(bak_name);
-}
+// void Tensor::print(const std::string& name)
+// {
+//     std::string bak_name = name_;
+//     set_name(name);
+//     print();
+//     set_name(bak_name);
+// }
 
 // } // namespace lightspeed

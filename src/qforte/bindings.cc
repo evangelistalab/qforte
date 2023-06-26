@@ -14,6 +14,7 @@
 #include "qubit_op_pool.h"
 #include "sparse_tensor.h"
 #include "timer.h"
+#include "tensor.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -155,6 +156,14 @@ PYBIND11_MODULE(qforte, m) {
         .def("str", &Computer::str)
         .def("__str__", &Computer::str)
         .def("__repr__", &Computer::str);
+
+    py::class_<Tensor>(m, "Tensor")
+        .def(py::init<std::vector<size_t>, std::string>(), "shape"_a, "name"_a, "Make a Tensor with a particualr shape")
+        .def("name", &Tensor::name)
+        .def("ndim", &Tensor::ndim)
+        .def("size", &Tensor::size)
+        .def("shape", &Tensor::shape);
+        // .def("__repr__", &Computer::str);
 
     py::class_<Gate>(m, "Gate")
         .def("target", &Gate::target)

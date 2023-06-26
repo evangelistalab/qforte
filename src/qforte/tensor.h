@@ -19,7 +19,7 @@
  * the rows are strided across the column dimension.
  **/ 
 // class Tensor final {
-class Tensor final {
+class Tensor {
 
 public:
 
@@ -63,7 +63,7 @@ const std::vector<size_t>& strides() const { return strides_; }
  *
  * @return a reference to the vector data of this tensor
  **/
-std::vector<double>& data() { return data_; }
+std::vector<std::complex<double>>& data() { return data_; }
 
 // => Setters <= //
 
@@ -81,37 +81,44 @@ std::shared_ptr<Tensor> clone();
  * Set all elements of this Tensor to zero
  **/
 void zero();
+
 /**
  * Set this 2D square Tensor to the identity matrix
  * Throw if not 2D square
  **/
 void identity();
+
 /**
  * Set this 2D square Tensor T to 0.5 * (T + T')
  * Throw if not 2D square
  **/
 void symmetrize();
+
 /**
  * Set this 2D square Tensor T to 0.5 * (T - T')
  * Throw if not 2D square
  **/
 void antisymmetrize();
+
 /**
  * Scale this Tensor by param a
  * @param a the scalar multiplier
  **/
 void scale(double a);
+
 /**
  * Copy the data of Tensor other to this Tensor
  * @param other Tensor to copy data from
  * Throw if other is not same shape 
  * TODO: This is covered by a static Python method, deprecate and remove this function.
  **/
+
 void copy(const std::shared_ptr<Tensor>& other); 
 /**
  * Update this Tensor (y) to be y = a * x + b * y
  * Throw if x is not same shape 
  **/
+
 void axpby(const std::shared_ptr<Tensor>& x, double a, double b);
 /**
  * Compute the dot product between this and other Tensors,
@@ -144,22 +151,22 @@ std::shared_ptr<Tensor> transpose() const;
  * @param header_format the format of the column index
  * @return the string form of the tensor 
  **/
-std::string string(
-    bool print_data = true,
-    int maxcols = 5,
-    const std::string& data_format = "%12.7f",
-    const std::string& header_format = "%12zu"
-    ) const; 
+// std::string string(
+//     bool print_data = true,
+//     int maxcols = 5,
+//     const std::string& data_format = "%12.7f",
+//     const std::string& header_format = "%12zu"
+//     ) const; 
 
 /**
  * Print string representation of this Tensor
  **/
-void print() const;
+// void print() const;
 
 /**
  * Print string representation of this Tensor with name
  **/
-void print(const std::string& name);
+// void print(const std::string& name);
 
 // => Error Throwers <= //
 
