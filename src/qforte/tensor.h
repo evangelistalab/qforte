@@ -75,6 +75,16 @@ void set_name(const std::string& name) { name_ = name; }
 /// Create a new copy of this Tensor (same size and data)
 std::shared_ptr<Tensor> clone();
 
+/// Set a particular element of tis Tensor, specified by idxs
+void set(const std::vector<size_t>& idxs,
+         const std::complex<double> val
+         );
+
+/// Get a particular element of tis Tensor, specified by idxs
+std::complex<double> get(const std::vector<size_t>& idxs,
+         const std::complex<double> val
+         );
+
 // => Simple Core Actions <= //
 
 /**

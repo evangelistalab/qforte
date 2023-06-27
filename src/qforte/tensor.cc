@@ -41,6 +41,68 @@ Tensor::~Tensor()
     total_memory__ -= data_.size() * sizeof(std::complex<double>);
 }
 
+/// Set a particular element of tis Tensor, specified by idxs
+void Tensor::set(
+    const std::vector<size_t>& idxs,
+    const std::complex<double> val
+        )
+{
+    ndim_error(idxs.size());
+
+    if( idxs.size() == 1 ) {
+        data_[idxs[0]] = val;
+    } else if (idxs.size() == 2) {
+        data_[shape()[1]*idxs[0] + idxs[1]] = val;
+    } else {
+        for (int i = 0; i < ndim(); i++) {
+            if (idxs[i] < 0 || idxs[i] >= idxs[i]) {
+                std::cerr << "Index out of bounds for dimension " << i << std::endl;
+            }
+        }
+        
+        size_t vidx = 0;
+        size_t stride = 1;
+        
+        for (int i = ndim() - 1; i >= 0; i--) {
+            vidx += idxs[i] * stride;
+            stride *= shape()[i];
+        }
+
+        data_[vidx] = val;
+    } 
+}
+
+/// Get a particular element of tis Tensor, specified by idxs
+std::complex<double> Tensor::get(
+    const std::vector<size_t>& idxs,
+    const std::complex<double> val
+    )
+{
+    ndim_error(idxs.size());
+
+    if( idxs.size() == 1 ) {
+        return data_[idxs[0]];
+    } else if (idxs.size() == 2) {
+        return data_[shape()[1]*idxs[0] + idxs[1]];
+    } else {
+        for (int i = 0; i < ndim(); i++) {
+            if (idxs[i] < 0 || idxs[i] >= idxs[i]) {
+                std::cerr << "Index out of bounds for dimension " << i << std::endl;
+            }
+        }
+        
+        size_t vidx = 0;
+        size_t stride = 1;
+        
+        for (int i = ndim() - 1; i >= 0; i--) {
+            vidx += idxs[i] * stride;
+            stride *= shape()[i];
+        }
+
+        return data_[vidx];
+    }
+}
+
 void Tensor::ndim_error(size_t ndims) const
 {
     if (!(ndim() == ndims)) {
