@@ -74,8 +74,7 @@ void Tensor::set(
 
 /// Get a particular element of tis Tensor, specified by idxs
 std::complex<double> Tensor::get(
-    const std::vector<size_t>& idxs,
-    const std::complex<double> val
+    const std::vector<size_t>& idxs
     )
 {
     ndim_error(idxs.size());
@@ -244,108 +243,114 @@ std::shared_ptr<Tensor> Tensor::transpose() const
     return T;
 }
 
-// TODO(Nick): Re-implement high priority
-// std::string Tensor::string(
-//     bool print_data, 
-//     int maxcols,
-//     const std::string& data_format,
-//     const std::string& header_format
-//     ) const
-// {
-//     std::string str = "";
-//     str += sprintf2( "Tensor: %s\n", name_.c_str());
-//     str += sprintf2( "  Ndim  = %zu\n", ndim());
-//     str += sprintf2( "  Size  = %zu\n", size());
-//     str += sprintf2( "  Shape = (");
-//     for (size_t dim = 0; dim < ndim(); dim++) {
-//         str += sprintf2( "%zu", shape_[dim]);
-//         if (dim < ndim() - 1) {
-//             str += sprintf2( ",");
-//         }
-//     }
-//     str += sprintf2(")\n");
+// TODO(Nick): Column printing is a little clunky for complex
+// need to fix
+std::string Tensor::str(
+    bool print_data, 
+    bool print_complex, 
+    int maxcols,
+    const std::string& data_format,
+    const std::string& header_format
+    ) const
+{
+    std::string str = "";
+    str += std::printf( "Tensor: %s\n", name_.c_str());
+    str += std::printf( "  Ndim  = %zu\n", ndim());
+    str += std::printf( "  Size  = %zu\n", size());
+    str += std::printf( "  Shape = (");
+    for (size_t dim = 0; dim < ndim(); dim++) {
+        str += std::printf( "%zu", shape_[dim]);
+        if (dim < ndim() - 1) {
+            str += std::printf( ",");
+        }
+    }
+    str += std::printf(")\n");
 
-//     if (print_data) {
+    if (print_data) {
 
-//         str += sprintf2("\n");
+        std::string data_format2 = data_format;
+
+        if(print_complex){ data_format2 = "%f%+fi";}
+
+        str += std::printf("\n");
             
-//         std::string order0str1 = "  " + data_format + "\n";
-//         std::string order1str1 = "  %5zu " + data_format + "\n";
-//         std::string order2str1 = " " + header_format;
-//         std::string order2str2 = " " + data_format;
+        std::string order0str1 = "  " + data_format2 + "\n";
+        std::string order1str1 = "  %5zu " + data_format2 + "\n";
+        std::string order2str1 = " " + header_format;
+        std::string order2str2 = " " + data_format2;
 
-//         int order = ndim();
-//         size_t nelem = size();
+        int order = ndim();
+        size_t nelem = size();
 
-//         size_t page_size = 1L;
-//         size_t rows = 1;
-//         size_t cols = 1;
-//         if (order >= 1) {
-//             page_size *= shape_[order - 1];
-//             rows = shape_[order - 1];
-//         }
-//         if (order >= 2) {
-//             page_size *= shape_[order - 2];
-//             rows = shape_[order - 2];
-//             cols = shape_[order - 1];
-//         }
+        size_t page_size = 1L;
+        size_t rows = 1;
+        size_t cols = 1;
+        if (order >= 1) {
+            page_size *= shape_[order - 1];
+            rows = shape_[order - 1];
+        }
+        if (order >= 2) {
+            page_size *= shape_[order - 2];
+            rows = shape_[order - 2];
+            cols = shape_[order - 1];
+        }
 
-//         str += sprintf2( "  Data:\n\n");
+        str += std::printf( "  Data:\n\n");
 
-//         if (nelem > 0){
-//             size_t pages = nelem / page_size;
-//             for (size_t page = 0L; page < pages; page++) {
+        if (nelem > 0){
+            size_t pages = nelem / page_size;
+            for (size_t page = 0L; page < pages; page++) {
 
-//                 if (order > 2) {
-//                     str += sprintf2( "  Page (");
-//                     size_t num = page;
-//                     size_t den = pages;
-//                     size_t val;
-//                     for (int k = 0; k < order - 2; k++) {
-//                         den /= shape_[k];
-//                         val = num / den;
-//                         num -= val * den;
-//                         str += sprintf2("%zu,",val);
-//                     }
-//                     str += sprintf2( "*,*):\n\n");
-//                 }
+                if (order > 2) {
+                    str += std::printf( "  Page (");
+                    size_t num = page;
+                    size_t den = pages;
+                    size_t val;
+                    for (int k = 0; k < order - 2; k++) {
+                        den /= shape_[k];
+                        val = num / den;
+                        num -= val * den;
+                        str += std::printf("%zu,",val);
+                    }
+                    str += std::printf( "*,*):\n\n");
+                }
 
-//                 const std::complex<double>* vp = data_.data() + page * page_size;
-//                 if (order == 0) {
-//                     str += sprintf2( order0str1.c_str(), *(vp));
-//                 } else if(order == 1) {
-//                     for (size_t i=0; i<page_size; ++i) {
-//                         str += sprintf2( order1str1.c_str(), i, *(vp + i));
-//                     }
-//                 } else {
-//                     for (size_t j = 0; j < cols; j += maxcols) {
-//                         size_t ncols = (j + maxcols >= cols ? cols - j : maxcols);
+                const std::complex<double>* vp = data_.data() + page * page_size;
+                if (order == 0) {
+                    str += std::printf( order0str1.c_str(), *(vp));
+                } else if(order == 1) {
+                    for (size_t i=0; i<page_size; ++i) {
+                        str += std::printf( order1str1.c_str(), i, *(vp + i));
+                    }
+                } else {
+                    for (size_t j = 0; j < cols; j += maxcols) {
+                        size_t ncols = (j + maxcols >= cols ? cols - j : maxcols);
 
-//                         // Column Header
-//                         str += sprintf2("  %5s", "");
-//                         for (size_t jj = j; jj < j+ncols; jj++) {
-//                             str += sprintf2(order2str1.c_str(), jj);
-//                         }
-//                         str += sprintf2("\n");
+                        // Column Header
+                        str += std::printf("  %5s", "");
+                        for (size_t jj = j; jj < j+ncols; jj++) {
+                            str += std::printf(order2str1.c_str(), jj);
+                        }
+                        str += std::printf("\n");
 
-//                         // Data
-//                         for (size_t i = 0; i < rows; i++) {
-//                             str += sprintf2("  %5zu", i);
-//                             for (size_t jj = j; jj < j+ncols; jj++) {
-//                                 str += sprintf2(order2str2.c_str(), *(vp + i * cols + jj));
-//                             }
-//                             str += sprintf2("\n");
-//                         }
+                        // Data
+                        for (size_t i = 0; i < rows; i++) {
+                            str += std::printf("  %5zu", i);
+                            for (size_t jj = j; jj < j+ncols; jj++) {
+                                str += std::printf(order2str2.c_str(), *(vp + i * cols + jj));
+                            }
+                            str += std::printf("\n");
+                        }
 
-//                         // Block separator
-//                         if (page < pages - 1 || j + maxcols < cols - 1) str += sprintf2("\n");
-//                     }
-//                 }
-//             }
-//         }
-//     }
-//     return str;
-// }
+                        // Block separator
+                        if (page < pages - 1 || j + maxcols < cols - 1) str += std::printf("\n");
+                    }
+                }
+            }
+        }
+    }
+    return str;
+}
 
 // TODO(Nick): Re-Implement
 // void Tensor::print() const

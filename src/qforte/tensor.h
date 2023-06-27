@@ -81,9 +81,7 @@ void set(const std::vector<size_t>& idxs,
          );
 
 /// Get a particular element of tis Tensor, specified by idxs
-std::complex<double> get(const std::vector<size_t>& idxs,
-         const std::complex<double> val
-         );
+std::complex<double> get(const std::vector<size_t>& idxs);
 
 // => Simple Core Actions <= //
 
@@ -161,12 +159,13 @@ std::shared_ptr<Tensor> transpose() const;
  * @param header_format the format of the column index
  * @return the string form of the tensor 
  **/
-// std::string string(
-//     bool print_data = true,
-//     int maxcols = 5,
-//     const std::string& data_format = "%12.7f",
-//     const std::string& header_format = "%12zu"
-//     ) const; 
+std::string str(
+    bool print_data = true,
+    bool print_complex = false,
+    int maxcols = 5,
+    const std::string& data_format = "%12.7f",
+    const std::string& header_format = "%12zu"
+    ) const; 
 
 /**
  * Print string representation of this Tensor

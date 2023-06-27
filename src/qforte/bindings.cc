@@ -16,6 +16,7 @@
 #include "timer.h"
 #include "tensor.h"
 
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -162,7 +163,27 @@ PYBIND11_MODULE(qforte, m) {
         .def("name", &Tensor::name)
         .def("ndim", &Tensor::ndim)
         .def("size", &Tensor::size)
-        .def("shape", &Tensor::shape);
+        .def("shape", &Tensor::shape)
+        .def("set", &Tensor::set)
+        .def("get", &Tensor::get)
+        .def("str", &Tensor::str, 
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu")
+        .def("__str__", &Tensor::str,
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu")
+        .def("__repr__", &Tensor::str,
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu");
         // .def("__repr__", &Computer::str);
 
     py::class_<Gate>(m, "Gate")
