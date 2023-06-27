@@ -73,6 +73,7 @@ class Algorithm(ABC):
                  fast=True,
                  verbose=False,
                  print_summary_file=False,
+                 is_multi_state=False,
                  **kwargs):
 
         if isinstance(self, qf.QPE) and hasattr(system, 'frozen_core'):
@@ -81,29 +82,62 @@ class Algorithm(ABC):
 
         self._sys = system
         self._state_prep_type = state_prep_type
+        self._is_multi_state = is_multi_state
 
-        if self._state_prep_type == 'occupation_list':
-            if(reference==None):
+        if not self._is_multi_state:
+            if self._state_prep_type == 'occupation_list':
+                if(reference==None):
+                    self._ref = system.hf_reference
+                else:
+                    if not (isinstance(reference, list)):
+                        raise ValueError("occupation_list reference must be list of 1s and 0s.")
+                    self._ref = reference
+
+                self._Uprep = build_Uprep(self._ref, state_prep_type)
+
+            elif self._state_prep_type == 'unitary_circ':
+                if not isinstance(reference, qf.Circuit):
+                    raise ValueError("unitary_circ reference must be a Circuit.")
+
                 self._ref = system.hf_reference
+                self._Uprep = reference
+
             else:
-                if not (isinstance(reference, list)):
-                    raise ValueError("occupation_list reference must be list of 1s and 0s.")
-                self._ref = reference
-
-            self._Uprep = build_Uprep(self._ref, state_prep_type)
-
-        elif self._state_prep_type == 'unitary_circ':
-            if not isinstance(reference, qf.Circuit):
-                raise ValueError("unitary_circ reference must be a Circuit.")
-
-            self._ref = system.hf_reference
-            self._Uprep = reference
+                raise ValueError("QForte only suppors references as occupation lists and Circuits.")
 
         else:
-            raise ValueError("QForte only suppors references as occupation lists and Circuits.")
+            #Make self._ref and self._Uprep into lists of references and associated preparation unitaries.
+            if self._state_prep_type == 'occupation_list':
+                if(reference==None):
+                    self._ref = [system.hf_reference]
+                else:
+                    self._ref = []
+                    if not isinstance(reference, list):
+                        raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]")
+                    for ref in reference:
+                        if not isinstance(ref, list):
+                            raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]")
+                        self._ref.append(ref)
+                self._Uprep = []
+                for ref in self._ref:
+                    self._Uprep.append(build_Uprep(ref, state_prep_type))
 
+            elif self._state_prep_type == 'unitary circ':
+                self._ref = []
+                self._Uprep = []
+                if not isinstance(reference, list):
+                    raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
+                for ref in reference:
+                    if not isinstance(ref, qf.Circuit):
+                        raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
+                    self._ref.append(system.hf_reference)
+                    self._Uprep.append(ref)
 
-        self._nqb = len(self._ref)
+        if not self._is_multi_state:
+            self._nqb = len(self._ref)
+        else:
+            self._nqb = len(self._ref[0])
+
         self._qb_ham = system.hamiltonian
         if self._qb_ham.num_qubits() != self._nqb:
             raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
