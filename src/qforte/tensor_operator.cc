@@ -27,16 +27,21 @@ TensorOperator::TensorOperator(
         throw std::invalid_argument( "if using restricted calculation, must also use spatial orbital indexing" );
     }
 
-    // Initialize the tensors 
-
+    // Initialize the scaler (zero-body) "Tensor"
     std::vector<size_t> shape0 = {1, 1};
-    std::string name0 = "zero-body";
+    std::string name0 = "0-body";
     Tensor zero_body(shape0, name0);
-
-    // for (size_t i = 0; i < max_nbody_; i++) {
-    //     basis_[i] = QubitBasis(i);
-    // }
     tensors_.push_back(zero_body);
+
+    // Initialize the (n-body) Tensors
+    for (size_t i = 1; i < max_nbody_ + 1; i++) {
+        std::vector<size_t> shape_n;
+        for (size_t j = 0; j < 2*i; j++){shape_n.push_back(dim_);}
+        std::string name_n = std::to_string(i) + "-body";
+        Tensor n_body(shape_n, name_n);
+        tensors_.push_back(n_body);
+    }
+    
 }
 
 // void TensorOperator::add_top(const TensorOperator& qo) {
@@ -80,6 +85,8 @@ TensorOperator::TensorOperator(
 //     }
 // }
 
+// TODO(Nick/Tyler) This function prints a bunch of extr lines in 
+// Python, not sure why, would like to fix
 std::string TensorOperator::str(
     bool print_data, 
     bool print_complex, 
@@ -88,19 +95,16 @@ std::string TensorOperator::str(
     const std::string& header_format
     ) const 
 {
-    std::vector<std::string> s;
-    s.push_back("");
+    std::string s;
     for (const auto& tensor : tensors_) {
-        s.push_back(
-            tensor.str(
+        s += tensor.str(
                 print_data, 
                 print_complex, 
                 maxcols,
                 data_format,
                 header_format
-            )
-        );
-        s.push_back(")\n\n");
+            );
+        s += std::printf("\n");
     }
-    return join(s, " ");
+    return s;
 }
