@@ -278,7 +278,7 @@ class ADAPTVQE(UCCVQE):
         print('Number of operators in pool:                 ', len(self._pool_obj))
         print('Final number of amplitudes in ansatz:        ', len(self._tamps))
         print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
-        print('Total number of commutator measurements:      ', self.get_num_commut_measurements())
+        print('Total number of commutator measurements:     ', self.get_num_commut_measurements())
         print('Number of classical parameters used:         ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
         print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
@@ -307,7 +307,10 @@ class ADAPTVQE(UCCVQE):
         init_gues_energy = self.energy_feval(x0)
 
         self._prev_energy = init_gues_energy
-
+        if not self._is_multi_state:
+            factor = 1
+        else:
+            factor = len(self._ref)
         if self._use_analytic_grad:
             print('  \n--> Begin opt with analytic gradient:')
             print(f" Initial guess energy:              {init_gues_energy:+12.10f}")
@@ -318,11 +321,11 @@ class ADAPTVQE(UCCVQE):
                                     callback=self.report_iteration)
 
             # account for energy evaluations
-            self._n_pauli_measures_k += self._Nl * res.nfev
+            self._n_pauli_measures_k += factor * self._Nl * res.nfev
 
             # account for gradient evaluations
             for m in self._tops:
-                self._n_pauli_measures_k += self._Nm[m] * self._Nl * res.njev
+                self._n_pauli_measures_k += factor * self._Nm[m] * self._Nl * res.njev
 
         else:
             print('  \n--> Begin opt with grad estimated using first-differences:')
@@ -332,7 +335,7 @@ class ADAPTVQE(UCCVQE):
                                     options=opts,
                                     callback=self.report_iteration)
 
-            self._n_pauli_measures_k += self._Nl * res.nfev
+            self._n_pauli_measures_k += factor * self._Nl * res.nfev
 
         if(res.success):
             print('  => Minimization successful!')
@@ -373,8 +376,12 @@ class ADAPTVQE(UCCVQE):
         grads = self.measure_gradient3()
 
         for m, grad_m in enumerate(grads):
+            if not self._is_multi_state:
+                factor = 1
+            else:
+                factor = len(self._ref)
             # refers to number of times sigma_y must be measured in "strategies for UCC" grad eval circuit
-            self._n_pauli_measures_k += self._Nl * self._Nm[m]
+            self._n_pauli_measures_k += factor * self._Nl * self._Nm[m]
 
             curr_norm += grad_m ** 2
             if (self._verbose):
@@ -442,16 +449,26 @@ class ADAPTVQE(UCCVQE):
             self._converged = False
 
     def get_num_ham_measurements(self):
+        if not self._is_multi_state:
+            factor = 1
+        else:
+            factor = len(self._ref)
+
         for res in self._results:
-            self._n_ham_measurements += res.nfev
+            self._n_ham_measurements += factor * res.nfev
         return self._n_ham_measurements
 
     def get_num_commut_measurements(self):
-        self._n_commut_measurements += len(self._tamps) * len(self._pool_obj)
+        if not self._is_multi_state:
+            factor = 1
+        else:
+            factor = len(self._ref)
+
+        self._n_commut_measurements += factor * len(self._tamps) * len(self._pool_obj)
 
         if self._use_analytic_grad:
             for m, res in enumerate(self._results):
-                self._n_commut_measurements += res.njev * (m+1)
+                self._n_commut_measurements += factor * res.njev * (m+1)
 
         return self._n_commut_measurements
 
