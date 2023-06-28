@@ -15,7 +15,7 @@
 #include "sparse_tensor.h"
 #include "timer.h"
 #include "tensor.h"
-
+#include "tensor_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -53,6 +53,32 @@ PYBIND11_MODULE(qforte, m) {
         .def("str", &SQOperator::str)
         .def("__str__", &SQOperator::str)
         .def("__repr__", &SQOperator::str);
+
+    py::class_<TensorOperator>(m, "TensorOperator")
+        .def(py::init<size_t, size_t, bool, bool>(), 
+            "max_nbody"_a, 
+            "dim"_a, 
+            "is_spatial"_a=false, 
+            "is_restricted"_a=false, 
+            "Make a TensorOperator")
+        .def("str", &TensorOperator::str, 
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu")
+        .def("__str__", &TensorOperator::str,
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu")
+        .def("__repr__", &TensorOperator::str,
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu");
 
     py::class_<SQOpPool>(m, "SQOpPool")
         .def(py::init<>())
@@ -184,7 +210,6 @@ PYBIND11_MODULE(qforte, m) {
             py::arg("maxcols") = 5,
             py::arg("data_format") = "%12.7f",
             py::arg("header_format") = "%12zu");
-        // .def("__repr__", &Computer::str);
 
     py::class_<Gate>(m, "Gate")
         .def("target", &Gate::target)
