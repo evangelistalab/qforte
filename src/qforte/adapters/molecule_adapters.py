@@ -333,8 +333,8 @@ def create_external_mol(**kwargs):
         qforte_mol.orb_irreps_to_int = [0] * int(external_data['nso']['data']/2)
     else:
         for int_irrep in external_data['symmetry']['data'][::2]:
-        	qforte_mol.orb_irreps_to_int.append(int_irrep)
-        	qforte_mol.orb_irreps.append(irreps[int_irrep])
+            qforte_mol.orb_irreps_to_int.append(int_irrep)
+            qforte_mol.orb_irreps.append(irreps[int_irrep])
 
     # build sq hamiltonian
     qforte_sq_hamiltonian = qforte.SQOperator()
