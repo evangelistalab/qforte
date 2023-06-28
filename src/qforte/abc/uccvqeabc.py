@@ -329,9 +329,13 @@ class UCCVQE(VQE, UCC):
         if(self._noise_factor > 1e-14):
             grads = [np.random.normal(np.real(grad_m), self._noise_factor) for grad_m in grads]
 
+        if not self._is_multi_state:
+            factor = 1
+        else:
+            factor = len(self._ref)
         self._curr_grad_norm = np.linalg.norm(grads)
-        self._res_vec_evals += 1
-        self._res_m_evals += len(self._tamps)
+        self._res_vec_evals += factor
+        self._res_m_evals += factor * len(self._tamps)
 
         return np.asarray(grads)
 
