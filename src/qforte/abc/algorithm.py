@@ -17,6 +17,7 @@ class Algorithm(ABC):
     ----------
     _ref : list
         The set of 1s and 0s indicating the initial quantum state.
+        Will be a list of these sets if _is_multi_state.
 
     _nqb : int
         The number of qubits the calculation empolys.
@@ -62,6 +63,12 @@ class Algorithm(ABC):
 
     _res_m_evals : int
         The total number of times an individual residual element was evaluated.
+
+    _is_multi_state : bool
+        Whether to use a state-averaged approach.
+
+    _weights : list
+        List of weights in the state-averaged approach.  Defaults to an equipartition.
     """
 
     def __init__(self,
@@ -74,6 +81,7 @@ class Algorithm(ABC):
                  verbose=False,
                  print_summary_file=False,
                  is_multi_state=False,
+                 weights=None,
                  **kwargs):
 
         if isinstance(self, qf.QPE) and hasattr(system, 'frozen_core'):
@@ -106,7 +114,7 @@ class Algorithm(ABC):
                 raise ValueError("QForte only suppors references as occupation lists and Circuits.")
 
         else:
-            #Make self._ref and self._Uprep into lists of references and associated preparation unitaries.
+            #Make self._ref and self._Uprep into lists of references and associated preparation unitaries. 
             if self._state_prep_type == 'occupation_list':
                 if(reference==None):
                     self._ref = [system.hf_reference]
@@ -132,7 +140,15 @@ class Algorithm(ABC):
                         raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
                     self._ref.append(system.hf_reference)
                     self._Uprep.append(ref)
-
+            if(weights==None):
+                #Assume equal weighting
+                self._weights = [1/len(self._ref) for r in range(len(self._ref))]
+            else:
+                self._weights = weights
+            if len(self._weights) != len(self._ref):
+                raise ValueError("Number of weights should match number of references.")
+            if abs(sum(self._weights) - 1) > 1e-12:
+                raise ValueError("Reference weights should sum to 1.")
         if not self._is_multi_state:
             self._nqb = len(self._ref)
         else:
@@ -270,7 +286,8 @@ class AnsatzAlgorithm(Algorithm):
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
         """ This function returns the Circuit object built
-        from the appropriate amplitudes (tops)
+        from the appropriate amplitudes (tops),
+        or in the case where _is_multi_state, a list of circuit objects
 
         Parameters
         ----------
@@ -278,50 +295,85 @@ class AnsatzAlgorithm(Algorithm):
             A list of parameters that define the variational degrees of freedom in
             the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
-
+        
         U = self.ansatz_circuit(amplitudes)
 
-        Uvqc = qforte.Circuit()
-        Uvqc.add(self._Uprep)
-        Uvqc.add(U)
-
+        if not self._is_multi_state:
+            Uvqc = qforte.Circuit()
+            Uvqc.add(self._Uprep)
+            Uvqc.add(U)
+        else:
+            Uvqc = []
+            for r in range(len(self._ref)):
+                Uvqc_r = qforte.Circuit()
+                Uvqc_r.add(self._Uprep[r])
+                Uvqc_r.add(U)
+                Uvqc.append(Uvqc_r)
         return Uvqc
 
     def fill_pool(self):
         """ This function populates an operator pool with SQOperator objects.
         """
-
-        if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
-            self._pool_obj = qf.SQOpPool()
-            if hasattr(self._sys, 'orb_irreps_to_int'):
-                self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
+        if not self._is_multi_state:
+            if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+                self._pool_obj = qf.SQOpPool()
+                if hasattr(self._sys, 'orb_irreps_to_int'):
+                    self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
+                else:
+                    self._pool_obj.set_orb_spaces(self._ref)
+                self._pool_obj.fill_pool(self._pool_type)
+            elif isinstance(self._pool_type, qf.SQOpPool):
+                self._pool_obj = self._pool_type
             else:
-                self._pool_obj.set_orb_spaces(self._ref)
-            self._pool_obj.fill_pool(self._pool_type)
-        elif isinstance(self._pool_type, qf.SQOpPool):
-            self._pool_obj = self._pool_type
+                raise ValueError('Invalid operator pool type specified.')
         else:
-            raise ValueError('Invalid operator pool type specified.')
+            #Only GSD is well-defined for multiple references.
+            if self._pool_type in {'GSD'}:
+                self._pool_obj = qf.SQOpPool()
+                #o/v spaces are not well-defined: passing the dummy state |0>
+                if hasattr(self._sys, 'orb_irreps_to_int'):
+                    self._pool_obj.set_orb_spaces([0 for r in range(len(self._ref[0]))], self._sys.orb_irreps_to_int)
+                else:
+                    self._pool_obj.set_orb_spaces([0 for r in range(len(self._ref[0]))])
+                self._pool_obj.fill_pool(self._pool_type) 
+                
+            elif isinstance(self._pool_type, qf.SQOpPool):
+                self._pool_obj = self._pool_type
+            else:
+                raise ValueError('Invalid operator pool type specified.')
 
         self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
 
     def measure_energy(self, Ucirc):
         """
         This function returns the energy expectation value of the state
-        Uprep|0>.
+        Uprep|0>, or in the case where _is_multi_state, the weighted average
+        of all Uprep[i]|0>.
 
         Parameters
         ----------
         Ucirc : Circuit
-            The state preparation circuit.
+            The state preparation circuit (or list of circuits).
         """
-        if self._fast:
-            myQC = qforte.Computer(self._nqb)
-            myQC.apply_circuit(Ucirc)
-            val = np.real(myQC.direct_op_exp_val(self._qb_ham))
+        if not self._is_multi_state:
+            if self._fast:
+                myQC = qforte.Computer(self._nqb)
+                myQC.apply_circuit(Ucirc)
+                val = np.real(myQC.direct_op_exp_val(self._qb_ham))
+            else:
+                Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
+                val = Exp.perfect_experimental_avg([])
         else:
-            Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
-            val = Exp.perfect_experimental_avg([])
+            val = 0
+            if self._fast:    
+                for r in range(len(self._ref)):
+                    myQC = qforte.Computer(self._nqb)
+                    myQC.apply_circuit(Ucirc[r])
+                    val += self._weights[r] * np.real(myQC.direct_op_exp_val(self._qb_ham))
+            else:
+                for r in range(len(self._ref)):
+                    Exp = qforte.Experiment(self._nqb, Ucirc[r], self._qb_ham, 2000)
+                    val += self._weights[r] * Exp.perfect_experimental_avg([])
 
         assert np.isclose(np.imag(val), 0.0)
 
@@ -371,7 +423,8 @@ class AnsatzAlgorithm(Algorithm):
         """
         This function returns the energy expectation value of the state
         Uprep(params)|0>, where params are parameters that can be optimized
-        for some purpouse such as energy minimizaiton.
+        for some purpouse such as energy minimizaiton.  If _is_multi_state,
+        this will be the state-averaged energy instead.
 
         Parameters
         ----------
