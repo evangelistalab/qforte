@@ -12,10 +12,13 @@ template <class T> std::complex<T> complex_prod(std::complex<T> a, std::complex<
 
 template <class T> std::complex<T> add_c(std::complex<T> a, std::complex<T> b) { return a + b; }
 
+using complex_2_2_mat = std::array<std::array<std::complex<double>, 2>, 2>;
+
 class Gate;
 class QubitBasis;
 class Circuit;
 class QubitOperator;
+class SQOperator;
 class QubitOpPool;
 class SparseMatrix;
 
@@ -104,6 +107,12 @@ class Computer {
 
     /// return a string representing the state of the computer
     std::string str() const;
+
+    void apply_2x2(const complex_2_2_mat& mat, size_t target);
+
+    void apply_thing(const SQOperator& sqop);
+
+    void z_chain(int num);
 
     /// return a vector of the coeficients
     std::vector<std::complex<double>> get_coeff_vec() const { return coeff_; };
