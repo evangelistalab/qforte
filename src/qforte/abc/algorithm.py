@@ -327,6 +327,9 @@ class AnsatzAlgorithm(Algorithm):
             else:
                 raise ValueError('Invalid operator pool type specified.')
         else:
+            #Point group symmetry is likely to cause problems for multiple references.
+            if self._sys.point_group[0].upper() != 'C1':
+                raise ValueError('Only C1 symmetry is supported for multiple references.')
             #Only GSD is well-defined for multiple references.
             if self._pool_type in {'GSD'}:
                 self._pool_obj = qf.SQOpPool()
