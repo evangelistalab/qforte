@@ -45,7 +45,7 @@ class NTSRQK(QSD):
             dt=0.5,
             target_root=0,
             diagonalize_each_step=True,
-            save_final_qk_matrice=False,
+            save_qk_matrices=False,
             ):
 
         if not self._fast:
@@ -61,7 +61,7 @@ class NTSRQK(QSD):
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
 
-        self._save_final_qk_matrice = save_final_qk_matrice
+        self._save_qk_matrices = save_qk_matrices
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()

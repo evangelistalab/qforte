@@ -127,7 +127,7 @@ class MRSQK(QSD):
             target_root=0,
             reference_generator='SRQK',
             refs_user_defined=None,
-            save_final_qk_matrice=False,
+            save_qk_matrices=False,
             use_phase_based_selection=False,
             use_spin_adapted_refs=True,
             s_o=4,
@@ -156,7 +156,7 @@ class MRSQK(QSD):
         self._diagonalize_each_step=diagonalize_each_step
 
         self._sa_ref_lst = []
-        self._save_final_qk_matrice = save_final_qk_matrice
+        self._save_qk_matrices = save_qk_matrices
 
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("MRSQK implementation can only handle occupation_list reference.")
@@ -245,7 +245,7 @@ class MRSQK(QSD):
         print('Target root:                             ',  str(self._target_root))
         print('Use det. selection with sign:            ',  str(self._use_phase_based_selection))
         print('Use spin adapted references:             ',  str(self._use_spin_adapted_refs))
-        print('Save final MRSQK matrics:                ',  str(self._save_final_qk_matrice))
+        print('Save final MRSQK matrics:                ',  str(self._save_qk_matrices))
 
         if(self._reference_generator=='SRQK'):
             print('\n\n     ==> Initial QK options (for ref. selection)  <==')
