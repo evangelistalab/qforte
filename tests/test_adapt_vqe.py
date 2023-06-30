@@ -16,7 +16,7 @@ class TestADAPTVQE:
         # The Nuclear repulsion energy
         Enuc =  3.057468328315556
 
-        mol = system_factory(stytem_type = 'molecule',
+        mol = system_factory(system_type = 'molecule',
                                      build_type = 'external',
                                      basis='sto-6g',
                                      filename=data_path)

@@ -130,7 +130,7 @@ class Algorithm(ABC):
                 for ref in self._ref:
                     self._Uprep.append(build_Uprep(ref, state_prep_type))
 
-            elif self._state_prep_type == 'unitary circ':
+            elif self._state_prep_type == 'unitary_circ':
                 self._ref = []
                 self._Uprep = []
                 if not isinstance(reference, list):
@@ -140,6 +140,10 @@ class Algorithm(ABC):
                         raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
                     self._ref.append(system.hf_reference)
                     self._Uprep.append(ref)
+
+            else:
+                raise ValueError("QForte only suppors references as occupation lists and Circuits.")
+
             if(weights==None):
                 #Assume equal weighting
                 self._weights = [1/len(self._ref) for r in range(len(self._ref))]
