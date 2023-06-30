@@ -144,7 +144,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("direct_circ_exp_val", &Computer::direct_circ_exp_val)
         .def("direct_pauli_circ_exp_val", &Computer::direct_pauli_circ_exp_val)
         .def("direct_gate_exp_val", &Computer::direct_gate_exp_val)
-        .def("apply_thing", &Computer::apply_thing)
+        .def("apply_sq_operator", &Computer::apply_sq_operator)
         .def("z_chain", &Computer::z_chain)
         .def("apply_2x2", &Computer::apply_2x2)
         .def("coeff", &Computer::coeff)

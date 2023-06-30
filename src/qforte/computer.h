@@ -108,10 +108,13 @@ class Computer {
     /// return a string representing the state of the computer
     std::string str() const;
 
+    /// apply a 2 by 2 matrix
     void apply_2x2(const complex_2_2_mat& mat, size_t target);
 
-    void apply_thing(const SQOperator& sqop);
+    /// apply second quantized operator without having to do a Jordan Wigner Transformation
+    void apply_sq_operator(const SQOperator& sqop);
 
+    /// apply any amount of z-gates in ascending order minus 1
     void z_chain(int num);
 
     /// return a vector of the coeficients
@@ -125,7 +128,8 @@ class Computer {
 
     /// return the number of basis states
     size_t get_nbasis() const { return nbasis_; }
-/// return the number of one-qubit operations
+    
+    /// return the number of one-qubit operations
     size_t none_ops() const { return none_ops_; }
 
     /// return the number of two-qubit operations

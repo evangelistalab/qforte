@@ -1008,7 +1008,7 @@ void Computer::apply_2x2(const complex_2_2_mat& mat, size_t target) {
 
 
 
-void Computer::apply_thing(const SQOperator& mysqop){
+void Computer::apply_sq_operator(const SQOperator& mysqop){
     
     // std::complex<double> sigma_plus[2][2];
     complex_2_2_mat sigma_plus;
