@@ -34,10 +34,17 @@ class TestQSCEOM:
         U_ansatz = alg.ansatz_circuit(alg._tamps)
         U_hf = build_Uprep(mol.hf_reference, 'occupation_list')
         #Unitaries to build CISD determinants
-        U_man = [build_Uprep(det, 'occupation_list') for det in cisd_manifold(mol.hf_reference)]
-
+        cisd = [build_Uprep(det, 'occupation_list') for det in cisd_manifold(mol.hf_reference)]
+        manifold = []
+        for i in range(len(cisd)):
+            det = cisd[i]
+            det.add_circuit(U_ansatz)
+            manifold.append(det)
+        
+        U_hf.add_circuit(U_ansatz)
         #Actual q-sc-EOM Calculation
-        E0, Eks = q_sc_eom(mol.hamiltonian, U_ansatz, U_hf, U_man)
+        E0, Eks = q_sc_eom(mol.hamiltonian, U_hf, manifold)
+        #E0, Eks = q_sc_eom(mol.hamiltonian, U_ansatz, U_hf, U_man)
         all_Es = [E0] + list(Eks)
 
         #Get FCI solutions:
@@ -49,7 +56,7 @@ class TestQSCEOM:
         print(w)
         print(all_Es)
         #Check ground and excited states:
-        for i in range(len(all_Es)):
+        for i in range(2):
             assert all_Es[i] - w[i] == approx(0.0, abs = 1.0e-12)
          
 

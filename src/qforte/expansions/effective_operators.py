@@ -23,7 +23,7 @@ def build_effective_operator(qb_op, Us):
         myQC.apply_circuit(Us[i])
         myQC.apply_operator(qb_op)
         sig = np.array(myQC.get_coeff_vec())
-        for j in range(dim):
+        for j in range(i, dim):
             myQC = qforte.Computer(N_qb)
             myQC.apply_circuit(Us[j])
             vec = np.array(myQC.get_coeff_vec())
