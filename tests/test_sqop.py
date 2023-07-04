@@ -19,3 +19,6 @@ class TestSQOp:
 
         assert terms[0][0] == 0.5 + 0.5j
         assert terms[1][0] == -0.5 - 0.5j
+
+    
+    
