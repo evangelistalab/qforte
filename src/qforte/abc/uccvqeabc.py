@@ -140,8 +140,8 @@ class UCCVQE(VQE, UCC):
             qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
             qc_psi.apply_circuit(Utot)
             qc_sig = qforte.Computer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
-            psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
-            qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
+            psi_i = qc_psi.get_coeff_vec()
+            qc_sig.set_coeff_vec(psi_i) # Why was this being copied?
             qc_sig.apply_operator(self._qb_ham)
 
             mu = M-1
@@ -153,7 +153,7 @@ class UCCVQE(VQE, UCC):
             grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
 
             #reset Kmu_prev |psi_i> -> |psi_i>
-            qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
+            qc_psi.set_coeff_vec(psi_i)
 
             for mu in reversed(range(M-1)):
 
@@ -188,33 +188,48 @@ class UCCVQE(VQE, UCC):
 
                 qc_sig.apply_circuit(Umu)
                 qc_psi.apply_circuit(Umu)
-                psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
+                psi_i = qc_psi.get_coeff_vec()
 
                 qc_psi.apply_operator(Kmu)
                 grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
 
                 #reset Kmu |psi_i> -> |psi_i>
-                qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
+                qc_psi.set_coeff_vec(psi_i)
                 Kmu_prev = Kmu
         else:
+            Kmus = []
+            Umus = []
+            pmus = []
+            for mu in range(0, M): 
+                Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
+                Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
+                Kmus.append(Kmu)
+                if params is None:
+                    tamp = self._tamps[mu]
+                else:
+                    tamp = params[mu]
+                Umu, pmu = trotterize(Kmu, factor=-tamp, trotter_number=self._trotter_number)
+                if (pmu != 1.0 + 0.0j):
+                    raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+                Umus.append(Umu)
+                pmus.append(pmu)
+
             for r in range(len(self._ref)):
                 qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
                 qc_psi.apply_circuit(Utot[r])
                 qc_sig = qforte.Computer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
-                psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
-                qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
+                psi_i = qc_psi.get_coeff_vec()
+                qc_sig.set_coeff_vec(psi_i) # Why was this being copied?
                 qc_sig.apply_operator(self._qb_ham)
 
                 mu = M-1
                 # find <sing_N | K_N | psi_N>
-                Kmu_prev = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
-                Kmu_prev.mult_coeffs(self._pool_obj[self._tops[mu]][0])
-
+                Kmu_prev = Kmus[mu]
                 qc_psi.apply_operator(Kmu_prev)
                 grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
 
                 #reset Kmu_prev |psi_i> -> |psi_i>
-                qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
+                qc_psi.set_coeff_vec(psi_i)
 
                 for mu in reversed(range(M-1)):
 
@@ -222,16 +237,16 @@ class UCCVQE(VQE, UCC):
                     # mu+1 => N => M-1
                     # Kmu => KN-1
                     # Kmu_prev => KN
-
+                    """
                     if params is None:
                         tamp = self._tamps[mu+1]
                     else:
                         tamp = params[mu+1]
-
-                    Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
-                    Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
+                    """
+                    Kmu = Kmus[mu]
 
                     if self._compact_excitations:
+                        raise ValueError("Multi-state VQE not adequately tested with compact excitations.")
                         Umu = qf.Circuit()
                         # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
                         # (see original ADAPT-VQE paper)
@@ -242,20 +257,20 @@ class UCCVQE(VQE, UCC):
                     else:
                         # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
                         # (see original ADAPT-VQE paper)
-                        Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
-
-                        if (pmu != 1.0 + 0.0j):
-                            raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+                        Umu = Umus[mu+1]
+                        pmu = pmus[mu+1]
+                        
+                        
 
                     qc_sig.apply_circuit(Umu)
                     qc_psi.apply_circuit(Umu)
-                    psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
+                    psi_i = qc_psi.get_coeff_vec()
 
                     qc_psi.apply_operator(Kmu)
                     grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
 
                     #reset Kmu |psi_i> -> |psi_i>
-                    qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
+                    qc_psi.set_coeff_vec(psi_i)
                     Kmu_prev = Kmu
 
 
@@ -280,11 +295,11 @@ class UCCVQE(VQE, UCC):
             Utot = self.build_Uvqc()
             qc_psi = qforte.Computer(self._nqb)
             qc_psi.apply_circuit(Utot)
-            psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
+            psi_i = qc_psi.get_coeff_vec()
 
             qc_sig = qforte.Computer(self._nqb)
             # TODO: Check if it's faster to recompute psi_i or copy it.
-            qc_sig.set_coeff_vec(copy.deepcopy(psi_i))
+            qc_sig.set_coeff_vec(psi_i)
             qc_sig.apply_operator(self._qb_ham)
 
             grads = np.zeros(len(self._pool_obj))
@@ -294,28 +309,33 @@ class UCCVQE(VQE, UCC):
                 Kmu.mult_coeffs(coeff)
                 qc_psi.apply_operator(Kmu)
                 grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
-                qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
+                qc_psi.set_coeff_vec(psi_i)
 
         else:
+            Kmus = []
+            for mu, (coeff, operator) in enumerate(self._pool_obj):
+                Kmu = operator.jw_transform(self._qubit_excitations)
+                Kmu.mult_coeffs(coeff)
+                Kmus.append(Kmu)
+
             Utot = self.build_Uvqc()
             grads = np.zeros(len(self._pool_obj))
 
             for r in range(len(self._ref)):
                 qc_psi = qforte.Computer(self._nqb)
                 qc_psi.apply_circuit(Utot[r])
-                psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
+                psi_i = qc_psi.get_coeff_vec()
                  
                 qc_sig = qforte.Computer(self._nqb)
-                qc_sig.set_coeff_vec(copy.deepcopy(psi_i))
+                qc_sig.set_coeff_vec(psi_i)
                 qc_sig.apply_operator(self._qb_ham)
                 
 
                 for mu, (coeff, operator) in enumerate(self._pool_obj):
-                    Kmu = operator.jw_transform(self._qubit_excitations)
-                    Kmu.mult_coeffs(coeff)
+                    Kmu = Kmus[mu]
                     qc_psi.apply_operator(Kmu)
                     grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
-                    qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
+                    qc_psi.set_coeff_vec(psi_i)
         
         
 

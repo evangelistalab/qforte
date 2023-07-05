@@ -16,7 +16,6 @@ def cin_manifold(ref, N):
     dets = []
     
     for ann in annihilate:
-        print(f"Outer {ann}")
         for cre in copy.copy(create):
             spins_ann = [i%2 for i in ann]
             spins_cre = [a%2 for a in cre] 
@@ -29,6 +28,12 @@ def cin_manifold(ref, N):
                 new_det[a] = 1
             dets.append(new_det)
     return dets
+
+def cis_manifold(ref):
+    """
+    Get the singly excited dets.
+    """
+    return cin_manifold(ref, 1)
 
 def cisd_manifold(ref):
     """
