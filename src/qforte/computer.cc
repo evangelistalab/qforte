@@ -14,6 +14,7 @@
 #include "qubit_op_pool.h"
 #include "timer.h"
 #include "sparse_tensor.h"
+#include "sq_operator.h"
 
 #include "computer.h"
 
@@ -972,4 +973,138 @@ std::string Computer::str() const {
     }
     terms.push_back(")");
     return join(terms, "\n");
+}
+
+
+
+void Computer::apply_2x2(const complex_2_2_mat& mat, size_t target) {
+
+    // loop over i indix in 2X2 gate matrix, 
+    for (size_t i = 0; i < 2; i++) {
+        // loop over j indix in 2X2 gate matrix
+        for (size_t j = 0; j < 2; j++) {
+            // the element of the matrix
+            auto op_i_j = mat[i][j];
+            if (std::abs(op_i_j) > compute_threshold_) {
+                // loop over all indexes in the state vector
+                for (const QubitBasis& basis_J : basis_) {
+                    // check the target with bit math
+                    if (basis_J.get_bit(target) == j) {
+                        // make a temporary index
+                        QubitBasis basis_I = basis_J;
+                        // set the target qubit index of the temorary index to i
+                        basis_I.set_bit(target, i);
+                        // re write the coefficent at the new index 
+                        new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
+                    }
+                }
+            }
+        }
+    }
+    // none_ops_++;
+    coeff_ = new_coeff_;
+    std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
+}
+
+
+
+void Computer::apply_sq_operator(const SQOperator& mysqop){
+    
+    // std::complex<double> sigma_plus[2][2];
+    complex_2_2_mat sigma_plus;
+    sigma_plus[0][0] = 0;
+    sigma_plus[0][1] = 2;
+    sigma_plus[1][0] = 0; 
+    sigma_plus[1][1] = 0;
+
+
+    complex_2_2_mat sigma_minus;
+    sigma_minus[0][0] = 0;
+    sigma_minus[0][1] = 0;
+    sigma_minus[1][0] = 2; 
+    sigma_minus[1][1] = 0;
+
+
+    int i;
+    int j;
+    int k;
+
+
+    std::vector<std::complex<double>> old_coeff = coeff_;
+    std::vector<std::complex<double>> result;
+
+    result.assign(nbasis_, 0.0);
+
+
+
+    // looping over terms (just 1 in test case)
+    for (i = 0; i < mysqop.terms().size(); i++){
+
+        std::complex<double> outside_coef = (std::get<0>(mysqop.terms()[i]));
+
+
+        for (j = std::get<2>(mysqop.terms()[i]).size() - 1; j >= 0; j--){
+
+            z_chain(std::get<2>(mysqop.terms()[i])[j]);
+            apply_2x2(sigma_plus, std::get<2>(mysqop.terms()[i])[j]);
+            apply_constant(0.5);
+
+
+        }
+
+        // loop over creators in term
+        for (k = std::get<1>(mysqop.terms()[i]).size() - 1; k >= 0; k--){
+
+            z_chain(std::get<1>(mysqop.terms()[i])[k]);
+            apply_2x2(sigma_minus, std::get<1>(mysqop.terms()[i])[k]);
+            apply_constant(0.5);
+
+
+        }
+
+        apply_constant(outside_coef);
+
+        std::transform(result.begin(), result.end(), coeff_.begin(),
+                           result.begin(), add_c<double>);
+
+
+        coeff_ = old_coeff;
+
+
+    }
+    coeff_ = result;
+
+}
+
+void Computer::z_chain(int num){
+
+    std::complex<double> z[4][4];
+
+    z[0][0] = 1;
+    z[0][1] = 0;
+    z[1][0] = 0; 
+    z[1][1] = -1;
+
+    if (num <= 0){
+        return;
+    }
+
+
+
+    for (int i = 0; i < nbasis_; i++){
+
+        int count = 0;
+
+        for (int k = 0; k < num; k++){
+            if (basis_[i].get_bit(k)){
+                count++;
+            }
+        }
+
+        if (count % 2 == 1){
+            coeff_[i] = coeff_[i] * z[1][1];
+        }
+
+    }
+
 }
