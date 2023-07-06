@@ -3,9 +3,6 @@
 #include <tuple>
 
 #include "helpers.h"
-// #include "gate.h"
-// #include "circuit.h"
-// #include "qubit_operator.h"
 #include "sq_operator.h"
 #include "tensor_operator.h"
 #include "tensor.h"
@@ -48,8 +45,177 @@ TensorOperator::TensorOperator(
 //     terms_.push_back(std::make_tuple(circ_coeff, cre_ops, ann_ops));
 // }
 
-// void TensorOperator::add_sqop(const SQOperator& qo) {
+/// TODO(Nick): This is where I want to start
+// void TensorOperator::add_sqop(const SQOperator& sqo) {
+
+//     // check if hermitian
+
+//     // make sqop normal ordered
+
+//     // Going to need to look heavily at the FQE functions for this
+//     // Should be fun...
+//     for (const auto& term : sqo.terms()) {
+//         add_sqop_term(term);
+//     }
+
 //     terms_.insert(terms_.end(), qo.terms().begin(), qo.terms().end());
+// }
+
+void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
+    if (is_spatial_ or is_restricted_) {
+        throw std::invalid_argument("Can only add SQOperator if TensorOperator is not spatial");
+    }
+
+    // vector of ranks present
+    std::vector<int> ranks_present = sqo.ranks_present();
+    if (ranks_present.size() != 1) {
+        throw std::invalid_argument("more than one rank dectected in SQOperter");
+    }
+
+    if (ranks_present[0] != rank) {
+        throw std::invalid_argument("rank of SQOperter does not match rank requested to add");
+    }
+
+    // largest alfa and beta orbital indices
+    std::pair<int, int> abmax_idxs = sqo.get_largest_alfa_beta_indices(); 
+
+    if (dim_ <= abmax_idxs.first) {
+        throw std::invalid_argument("Highest alpha index exceeds the norb of orbitals");
+    }
+    if (dim_ <= abmax_idxs.second) {
+        throw std::invalid_argument("Highest beta index exceeds the norb of orbitals");
+    }
+
+    int rank_index = rank / 2;
+
+    // the largest rank operator
+    // int rank = sqo.many_body_order();
+
+    if (rank % 2) {
+        throw std::invalid_argument("Odd rank operator not supported");
+    }
+
+    // TODO(Nick): Accont for this and remove throw
+    if (rank == 0) {
+        throw std::invalid_argument("Zero rank not supported at this time");
+    }
+
+    // dimensions of tensor, ex [dim, dim, dim, dim] for a 2-body operator
+    std::vector<size_t> tensor_dim(rank, dim_);
+
+    // typedef std::vector<int> IndexMask;
+    // typedef std::vector<std::vector<int>> IndexDict;
+
+    std::vector<size_t> index_mask(rank, 0);
+
+    std::vector<std::vector<int>> index_dict_dagger(rank / 2, std::vector<int>(2, 0));
+    std::vector<std::vector<int>> index_dict_nondagger(rank / 2, std::vector<int>(2, 0));
+
+    // std::vector<std::complex<double>> tensor(pow(dim_, rank), 0.0);
+
+    Tensor tensor(tensor_dim);
+
+    // each n-body operator makes a contribution...
+    for (const auto& term : sqo.terms()) {
+
+        if (std::get<1>(term).size() != std::get<2>(term).size()) {
+            throw std::invalid_argument("Each term must have same number of anihilators and creators");
+        }   
+
+        std::vector<size_t> ops1(std::get<1>(term));
+        std::vector<size_t> ops2(std::get<2>(term));
+        ops1.insert(ops1.end(), ops2.begin(), ops2.end());
+
+        // origional code below...
+
+        // loop over creators AND anihilators to get 
+        for (int i = 0; i < rank; ++i) {
+            /// FermionOp term looks like 
+            // {((3, 1), (2, 1), (0, 0), (1, 0)): 6.9, ((1, 1), (0, 1), (2, 0), (3, 0)): 6.9}
+            // for 6.9 (3^ 2^ 0 1) + 6.9 (1^ 0^ 2 3)
+            
+            
+            // index of anihilator or creator
+            int index = ops1[i];
+
+            // should not a probelm with canonical ordering!
+            // if (i < rank / 2) {
+            //     if (!term[i][1]) {
+            //         throw std::invalid_argument("Found annihilation operator where creation is expected");
+            //     }
+            // }
+            // else if (term[i][1]) {
+            //     throw std::invalid_argument("Found creation operator where annihilation is expected");
+            // }
+
+            int spin = index % 2;
+            int ind;
+
+            if (spin == 1) {
+                ind = (index - 1) / 2 + (dim_ / 2);
+            }
+            else {
+                ind = index / 2;
+            }
+
+            if (i < rank / 2) {
+                index_dict_dagger[i][0] = spin;
+                index_dict_dagger[i][1] = ind;
+            }
+            else {
+                index_dict_nondagger[i - rank / 2][0] = spin;
+                index_dict_nondagger[i - rank / 2][1] = ind;
+            }
+        }
+
+        // May or may not need is if operators are already canonicalized
+        int parity = reverse_bubble_list(index_dict_dagger);
+        parity += reverse_bubble_list(index_dict_nondagger);
+
+        for (int i = 0; i < rank; ++i) {
+            if (i < rank / 2) {
+                index_mask[i] = index_dict_dagger[i][1];
+            }
+            else {
+                index_mask[i] = index_dict_nondagger[i - rank / 2][1];
+            }
+        }
+
+        std::complex<double> val = tensors_[rank_index].get(index_mask); 
+        val += pow(-1, parity) * std::get<0>(term);
+        tensors_[rank_index].set(index_mask, val); 
+    }
+
+    Tensor tensor2(tensors_[rank_index].shape());
+    double length = 0;
+    std::vector<size_t> seed(rank / 2);
+    for (size_t i = 0; i < rank / 2; ++i) {
+        seed[i] = i;
+    }
+    do {
+        std::vector<size_t> iperm(seed);
+        std::vector<size_t> jperm(seed);
+        for (size_t j = 0; j < rank / 2; ++j) {
+            jperm[j] += rank / 2;
+        }
+
+        iperm.insert(iperm.end(), jperm.begin(), jperm.end());
+
+        Tensor transposed_tensor = tensor.general_transpose(iperm);
+        tensor2.add(transposed_tensor);
+        length += 1.0;
+    } while (next_permutation(seed.begin(), seed.end()));
+
+    tensor2.scale(1.0/length);
+
+    tensors_[rank_index] = tensor2;
+
+}
+
+
+// void TensorOperator::add_sqop_term(const std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& sqo_term )
+// {
+
 // }
 
 // void TensorOperator::set_from_tensor_op(const TensorOperator& to) {

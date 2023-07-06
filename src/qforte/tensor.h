@@ -65,6 +65,13 @@ const std::vector<size_t>& strides() const { return strides_; }
  **/
 std::vector<std::complex<double>>& data() { return data_; }
 
+/**
+ * The data of this Tensor, using C-style compound indexing.
+ *
+ * @return a reference to the vector data of this tensor, can't be modified, only read
+ **/
+const std::vector<std::complex<double>>& read_data() const { return data_; }
+
 // => Setters <= //
 
 /// Set this Tensor's name to @param name
@@ -112,7 +119,7 @@ void antisymmetrize();
  * Scale this Tensor by param a
  * @param a the scalar multiplier
  **/
-void scale(double a);
+void scale(std::complex<double> a);
 
 /**
  * Copy the data of Tensor other to this Tensor
@@ -120,14 +127,20 @@ void scale(double a);
  * Throw if other is not same shape 
  * TODO: This is covered by a static Python method, deprecate and remove this function.
  **/
-
 void copy(const std::shared_ptr<Tensor>& other); 
+
 /**
  * Update this Tensor (y) to be y = a * x + b * y
  * Throw if x is not same shape 
  **/
-
 void axpby(const std::shared_ptr<Tensor>& x, double a, double b);
+
+/**
+ * Update this Tensor (y) to be y = x + y
+ * Throw if x is not same shape 
+ **/
+void add(const Tensor& x);
+
 /**
  * Compute the dot product between this and other Tensors,
  * by unrolling this and other Tensor and adding sum of products of
@@ -146,7 +159,14 @@ double vector_dot(const std::shared_ptr<Tensor>& other) const;
  * @return a transposed copy of this
  * Throw if not 2 ndim
  **/
-std::shared_ptr<Tensor> transpose() const;
+Tensor transpose() const;
+
+/**
+ * Compute a new copy of this Tensor which is a transpose of this.
+ *
+ * @return a transposed copy of this acording to axes
+ **/
+Tensor general_transpose(const std::vector<size_t>& axes) const;
 
 // => Printing <= //
 

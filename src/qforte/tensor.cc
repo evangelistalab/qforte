@@ -195,10 +195,13 @@ void Tensor::antisymmetrize()
 }
 
 // TODO(NICK:) reimplement Scal
-// void Tensor::scale(std::complex<double> a)
-// {
-//     C_DSCAL(size_,a,data_.data(),1);
-// }
+void Tensor::scale(std::complex<double> a)
+{
+    // C_DSCAL(size_,a,data_.data(),1);
+    for(size_t i = 0; i < size_; i++){
+        data_[i] *= a;
+    }
+}
 
 void Tensor::copy(
     const std::shared_ptr<Tensor>& other
@@ -207,6 +210,22 @@ void Tensor::copy(
     shape_error(other->shape());
     
     std::memcpy(data_.data(), other->data().data(), sizeof(std::complex<double>)*size_);
+}
+
+void Tensor::add(const Tensor& other) 
+{
+    shape_error(other.shape());
+    for(size_t i = 0; i < size_; i++){
+        data_[i] += other.read_data()[i];
+    }
+
+    // std::transform(
+    //     data_.begin(), 
+    //     data_.end(), 
+    //     other.read_data().begin(),
+    //     data_.begin(), 
+    //     add_c<double>
+    //     );
 }
 
 // void Tensor::axpby(
@@ -230,17 +249,62 @@ void Tensor::copy(
 //     return C_DDOT(size_, const_cast<std::complex<double>*>(data_.data()), 1, other->data().data(), 1);
 // }
 
-std::shared_ptr<Tensor> Tensor::transpose() const
+// NOTE(Nick) we maywant to return sharred pointer to a tensor instead...
+// std::shared_pointer<Tensor> Tensor::transpose() const
+Tensor Tensor::transpose() const
 {
     ndim_error(2);
-    std::shared_ptr<Tensor> T(new Tensor({shape_[1], shape_[0]}));
-    std::complex<double>* Tp = T->data().data();
+    // std::shared_ptr<Tensor> T(new Tensor({shape_[1], shape_[0]}));
+    Tensor T({shape_[1], shape_[0]});
+    std::complex<double>* Tp = T.data().data();
     const std::complex<double>* Ap = data_.data();
     for (size_t ind1 = 0; ind1 < shape_[0]; ind1++) {
-    for (size_t ind2 = 0; ind2 < shape_[1]; ind2++) {
-        Tp[ind2 * shape_[0] + ind1] = Ap[ind1 * shape_[1] + ind2];
-    }}
+        for (size_t ind2 = 0; ind2 < shape_[1]; ind2++) {
+            Tp[ind2 * shape_[0] + ind1] = Ap[ind1 * shape_[1] + ind2];
+        }
+    }
     return T;
+}
+
+// NOTE(Nick) we maywant to return sharred pointer to a tensor instead...
+Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const 
+{
+    size_t rank = shape_.size();
+    if (axes.size() != rank) {
+        throw std::invalid_argument("Invalid axes permutation");
+    }
+
+    std::vector<size_t> transposed_shape(rank);
+    for (size_t i = 0; i < rank; ++i) {
+        transposed_shape[i] = shape_[axes[i]];
+    }
+
+    // std::shared_ptr<Tensor> transposed_tensor(new Tensor(transposed_shape));
+    Tensor transposed_tensor(transposed_shape);
+
+    std::complex<double>* transposed_data = transposed_tensor.data().data();
+    const std::complex<double>* original_data = data_.data();
+
+    std::vector<size_t> perm(rank);
+    for (size_t i = 0; i < rank; ++i) {
+        perm[i] = i;
+    }
+
+    do {
+        size_t transposed_index = 0;
+        for (size_t i = 0; i < rank; ++i) {
+            transposed_index = transposed_index * shape_[i] + perm[i];
+        }
+
+        size_t original_index = 0;
+        for (size_t i = 0; i < rank; ++i) {
+            original_index = original_index * shape_[i] + axes[perm[i]];
+        }
+
+        transposed_data[transposed_index] = original_data[original_index];
+    } while (std::next_permutation(perm.begin(), perm.end()));
+
+    return transposed_tensor;  // Not sure if returning this makes another copy...
 }
 
 // TODO(Nick): Column printing is a little clunky for complex

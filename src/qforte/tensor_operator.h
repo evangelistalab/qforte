@@ -27,8 +27,10 @@ class TensorOperator {
     // /// adds a tensor operator to the second quantized operator
     // void add_top(const TensorOperator& to);
 
-    // /// adds a second quantized operator to the current tensor operator
-    // void add_sqop(const SQOperator& sqo);
+    /// adds a second quantized operator to the current tensor operator
+    void add_sqop_of_rank(const SQOperator& sqo, const int);
+
+    void add_sqop_term(const std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& sqo_term);
 
     // /// sets the tensor elements from another tensor operator
     // void set_from_tensor_op(const TensorOperator& to);
@@ -63,7 +65,9 @@ class TensorOperator {
     /// tensors_[0].shape => (0,) [just a scalar always]
     /// tensors_[1].shape => (4, 4) [just a scalar always]
     /// tensors_[2].shape => (4, 4, 4, 4) [just a scalar always]
-    size_t dim_; 
+    /// Also equal to the number of spin orbs if is_spatial_ == false,
+    /// or the number of spatial orbs if is_spatial_ == false,
+    size_t dim_;
 
     /// Whether the tensors correspond to spatial orbitals
     /// if false it is assumed that all indices correspond to qubits/spin-orbitals

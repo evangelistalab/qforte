@@ -45,6 +45,16 @@ class SQOperator {
     /// return a vector of terms and their coefficients
     const std::vector<std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>>& terms() const;
 
+    /// return the largest alpha and beta orbital indicies based on current spin orbitlts 
+    /// present in the sq operator
+    std::pair<int, int> get_largest_alfa_beta_indices() const;
+
+    /// return the largerst n-body order of the sq operator
+    int many_body_order() const;
+
+    /// returns a list of ranks present in this SQOperator
+    std::vector<int> ranks_present() const;
+
     /// Put a single term into "canonical" form. Canonical form orders orbital indices
     /// descending.
     void canonical_order_single_term(std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& term );
