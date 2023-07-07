@@ -35,10 +35,10 @@ def ritz_eigh(H, U, verbose = True):
     """
     M = qforte.build_effective_operator(H, U)
     Ek, A = np.linalg.eigh(M)
-    E_pre_diag = np.diag(M)
+    E_pre_diag = np.diag(M).real
     if verbose == True:
         print("Ritz Diagonalization:")
-        print(f"State:          Energy (Eh)")
+        print(f"State:          Energy (Eh)     Post-Diagonalized Energy")
         for i in range(len(Ek)):
             print(f"{i:5}{E_pre_diag[i]:35.16}{Ek[i]:35.16}")
     return Ek, A

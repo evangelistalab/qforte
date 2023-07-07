@@ -286,6 +286,11 @@ def create_psi_mol(**kwargs):
         external_data['nb'] = {}
         external_data['nb']['data'] = nbeta - frozen_core
         external_data['nb']['description'] = "number of beta electrons"
+
+        external_data['point_group'] = {}
+        external_data['point_group']['data'] = point_group
+        external_data['point_group']['description'] = "Saves the point group."
+
                    
         with open(json_dump, 'w') as f:
             json.dump(external_data, f, indent = 0)

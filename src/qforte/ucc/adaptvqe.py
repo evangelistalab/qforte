@@ -82,6 +82,7 @@ class ADAPTVQE(UCCVQE):
             opt_thresh=1.0e-5,
             opt_maxiter=200,
             adapt_maxiter=20,
+            stop_E=None,
             optimizer='BFGS',
             use_analytic_grad = True,
             use_cumulative_thresh = False,
@@ -91,6 +92,7 @@ class ADAPTVQE(UCCVQE):
         self._opt_thresh = opt_thresh
         self._adapt_maxiter = adapt_maxiter
         self._opt_maxiter = opt_maxiter
+        self._stop_E = stop_E
         self._use_analytic_grad = use_analytic_grad
         self._optimizer = optimizer
         self._pool_type = pool_type
@@ -418,19 +420,36 @@ class ADAPTVQE(UCCVQE):
                         print(f"  Adding operator m =     {gm_sq[1]:10}   |gm| = {np.sqrt(gm_sq[0]):10.8f}")
                         self._tamps.append(0.0)
                         temp_order_tops.insert(0,gm_sq[1])
-
+                
                 self._tops.extend(copy.deepcopy(temp_order_tops))
+                
             else:
                 print("  Adding operator m =", lgrst_grad_idx)
-                self._tops.append(lgrst_grad_idx)
-                self._tamps.append(0.0)
 
-                if(self._add_equiv_ops):
-                    if (abs(lgrst_grad) - abs(secnd_lgst_grad) < 1.0e-5):
-                        print(" *Adding operator m =", secnd_lgrst_grad_idx)
-                        self._tops.append(secnd_lgrst_grad_idx)
-                        self._tamps.append(0.0)
+                if(len(self._tops) > 0 and self._stop_E!=None and self._energies[-1]<self._stop_E):
+                    print("Energy is below the targeted accuracy.")
+                    self._converged = True
+                    self._final_energy = self._energies[-1]
+                    if self._optimizer.lower() != 'jacobi':
+                        self._final_result = self._results[-1]
 
+                elif(len(self._tops) > 0 and self._tops[-1] == lgrst_grad_idx):
+                    print("Classical optimizer can't optimize well enough to advance ADAPT.  Aborting.")
+                    self._converged = True
+                    self._final_energy = self._energies[-1]
+                    if self._optimizer.lower() != 'jacobi':
+                        self._final_result = self._results[-1]
+
+                else:
+                    self._tops.append(lgrst_grad_idx)
+                    self._tamps.append(0.0)
+
+                    if(self._add_equiv_ops):
+                        if (abs(lgrst_grad) - abs(secnd_lgst_grad) < 1.0e-5):
+                            print(" *Adding operator m =", secnd_lgrst_grad_idx)
+                            self._tops.append(secnd_lgrst_grad_idx)
+                            self._tamps.append(0.0)
+                
             self._n_classical_params_lst.append(len(self._tops))
 
         else:
