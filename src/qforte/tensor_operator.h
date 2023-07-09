@@ -7,6 +7,9 @@
 #include <numeric>
 #include <map>
 
+// TODO(Tyler) temporary for debugging, remove when not needed
+#include <iostream>
+
 class SQOperator;
 class Tensor;
 
@@ -52,6 +55,20 @@ class TensorOperator {
         const std::string& data_format = "%12.7f",
         const std::string& header_format = "%12zu"
         ) const;
+
+    template<typename T>
+    void print_vector(const std::string& str, const std::vector<T>& vec) {
+        std::cout << str << std::endl;
+        std::cout << "[";
+        for (size_t i = 0; i < vec.size(); ++i) {
+            std::cout << vec[i];
+            if (i != vec.size() - 1) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << "]" << std::endl;
+        // std::cout << std::endl << std::endl;
+    }
 
   private:
     /// The linear combination of second quantized operators. Stored as a tuple of

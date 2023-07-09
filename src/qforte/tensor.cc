@@ -42,6 +42,7 @@ Tensor::~Tensor()
 }
 
 /// Set a particular element of tis Tensor, specified by idxs
+// TODO(Nick) usde strides_
 void Tensor::set(
     const std::vector<size_t>& idxs,
     const std::complex<double> val
@@ -55,11 +56,10 @@ void Tensor::set(
         data_[shape()[1]*idxs[0] + idxs[1]] = val;
     } else {
         for (int i = 0; i < ndim(); i++) {
-            if (idxs[i] < 0 || idxs[i] >= idxs[i]) {
+            if (idxs[i] < 0 || idxs[i] >= shape()[i]) {
                 std::cerr << "Index out of bounds for dimension " << i << std::endl;
             }
-        }
-        
+        }      
         size_t vidx = 0;
         size_t stride = 1;
         
@@ -67,15 +67,47 @@ void Tensor::set(
             vidx += idxs[i] * stride;
             stride *= shape()[i];
         }
-
         data_[vidx] = val;
     } 
 }
 
+/// Get the vector index for this tensor based on the tensor index
+size_t Tensor::tidx_to_vidx(const std::vector<size_t>& tidx) const
+{   
+    size_t vidx = 0;
+    for (int i = ndim() - 1; i >= 0; i--) {
+        vidx += tidx[i] * strides_[i];
+    }
+    return vidx;
+}
+
+size_t Tensor::tidx_to_trans_vidx(const std::vector<size_t>& tidx, const std::vector<size_t>& axes) const
+{   
+    size_t vidx = 0;
+    for (int i = ndim() - 1; i >= 0; i--) {
+        vidx += tidx[i] * strides_[axes[i]];
+    }
+    return vidx;
+}
+
+/// Get the tensor index for this tensor based on the vector index
+std::vector<size_t> Tensor::vidx_to_tidx(size_t vidx) const
+{
+    std::vector<size_t> tidx(ndim());
+    size_t vidx_tmp = vidx;
+
+    for (int i = ndim() - 1; i >= 0; i--) {
+        tidx[i] = vidx_tmp % shape()[i];
+        vidx_tmp /= shape()[i];
+    }
+    return tidx;
+}
+
 /// Get a particular element of tis Tensor, specified by idxs
+// TODO(Nick/Tyler) use strides_
 std::complex<double> Tensor::get(
     const std::vector<size_t>& idxs
-    )
+    ) const
 {
     ndim_error(idxs.size());
 
@@ -85,7 +117,7 @@ std::complex<double> Tensor::get(
         return data_[shape()[1]*idxs[0] + idxs[1]];
     } else {
         for (int i = 0; i < ndim(); i++) {
-            if (idxs[i] < 0 || idxs[i] >= idxs[i]) {
+            if (idxs[i] < 0 || idxs[i] >= shape()[i]) {
                 std::cerr << "Index out of bounds for dimension " << i << std::endl;
             }
         }
@@ -269,13 +301,12 @@ Tensor Tensor::transpose() const
 // NOTE(Nick) we maywant to return sharred pointer to a tensor instead...
 Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const 
 {
-    size_t rank = shape_.size();
-    if (axes.size() != rank) {
+    if (axes.size() != ndim()) {
         throw std::invalid_argument("Invalid axes permutation");
     }
 
-    std::vector<size_t> transposed_shape(rank);
-    for (size_t i = 0; i < rank; ++i) {
+    std::vector<size_t> transposed_shape(ndim());
+    for (size_t i = 0; i < ndim(); ++i) {
         transposed_shape[i] = shape_[axes[i]];
     }
 
@@ -283,31 +314,20 @@ Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const
     Tensor transposed_tensor(transposed_shape);
 
     std::complex<double>* transposed_data = transposed_tensor.data().data();
-    const std::complex<double>* original_data = data_.data();
+    // const std::complex<double>* original_data = data_.data();
 
-    std::vector<size_t> perm(rank);
-    for (size_t i = 0; i < rank; ++i) {
-        perm[i] = i;
+    // This works but probably can be made more efficient.
+    // Fix if it turns out to be a bottleneck
+    for (size_t i = 0; i < size_; i++){
+        std::vector<size_t> tidx_trans = vidx_to_tidx(i);
+        size_t t_vidx = transposed_tensor.tidx_to_trans_vidx(tidx_trans, axes);
+        transposed_data[t_vidx] = data_[i];
     }
 
-    do {
-        size_t transposed_index = 0;
-        for (size_t i = 0; i < rank; ++i) {
-            transposed_index = transposed_index * shape_[i] + perm[i];
-        }
-
-        size_t original_index = 0;
-        for (size_t i = 0; i < rank; ++i) {
-            original_index = original_index * shape_[i] + axes[perm[i]];
-        }
-
-        transposed_data[transposed_index] = original_data[original_index];
-    } while (std::next_permutation(perm.begin(), perm.end()));
-
-    return transposed_tensor;  // Not sure if returning this makes another copy...
+    return transposed_tensor;  
 }
 
-// TODO(Nick): Column printing is a little clunky for complex
+// TODO(Tyler?): Column printing is a little clunky for complex
 // need to fix
 std::string Tensor::str(
     bool print_data, 

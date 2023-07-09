@@ -47,9 +47,10 @@ class SQOperator {
 
     /// return the largest alpha and beta orbital indicies based on current spin orbitlts 
     /// present in the sq operator
+    /// returns -1 if there are no operators present.
     std::pair<int, int> get_largest_alfa_beta_indices() const;
 
-    /// return the largerst n-body order of the sq operator
+    /// return the largerst n-body order of the sq operator (same as largerst rank)
     int many_body_order() const;
 
     /// returns a list of ranks present in this SQOperator

@@ -88,7 +88,16 @@ void set(const std::vector<size_t>& idxs,
          );
 
 /// Get a particular element of tis Tensor, specified by idxs
-std::complex<double> get(const std::vector<size_t>& idxs);
+std::complex<double> get(const std::vector<size_t>& idxs) const;
+
+/// Get the vector index for this tensor based on the tensor index
+size_t tidx_to_vidx(const std::vector<size_t>& tidx) const;
+
+/// Get the vector index for this tensor based on the tensor index, and axes
+size_t tidx_to_trans_vidx(const std::vector<size_t>& tidx, const std::vector<size_t>& axes) const;
+
+/// Get the tensor index for this tensor based on the vector index
+std::vector<size_t> vidx_to_tidx(size_t vidx) const;
 
 // => Simple Core Actions <= //
 

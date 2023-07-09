@@ -198,6 +198,10 @@ PYBIND11_MODULE(qforte, m) {
         .def("get", &Tensor::get)
         .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)
         .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
+        .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
+        .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 
+        .def("symmetrize", &Tensor::symmetrize) // TODO(Tyler) Need Test 
+        .def("antisymmetrize", &Tensor::antisymmetrize) // TODO(Tyler) Need Test 
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
         .def("general_transpose", &Tensor::general_transpose) // TODO(Tyler) Need Test (use numpy)
         .def("str", &Tensor::str, 

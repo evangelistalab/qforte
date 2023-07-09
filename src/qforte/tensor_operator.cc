@@ -45,22 +45,6 @@ TensorOperator::TensorOperator(
 //     terms_.push_back(std::make_tuple(circ_coeff, cre_ops, ann_ops));
 // }
 
-/// TODO(Nick): This is where I want to start
-// void TensorOperator::add_sqop(const SQOperator& sqo) {
-
-//     // check if hermitian
-
-//     // make sqop normal ordered
-
-//     // Going to need to look heavily at the FQE functions for this
-//     // Should be fun...
-//     for (const auto& term : sqo.terms()) {
-//         add_sqop_term(term);
-//     }
-
-//     terms_.insert(terms_.end(), qo.terms().begin(), qo.terms().end());
-// }
-
 void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
     if (is_spatial_ or is_restricted_) {
         throw std::invalid_argument("Can only add SQOperator if TensorOperator is not spatial");
@@ -69,27 +53,24 @@ void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
     // vector of ranks present
     std::vector<int> ranks_present = sqo.ranks_present();
     if (ranks_present.size() != 1) {
-        throw std::invalid_argument("more than one rank dectected in SQOperter");
+        throw std::invalid_argument("More than one rank dectected in SQOperter");
     }
 
     if (ranks_present[0] != rank) {
-        throw std::invalid_argument("rank of SQOperter does not match rank requested to add");
+        throw std::invalid_argument("Rank of SQOperter does not match rank requested to add");
     }
 
     // largest alfa and beta orbital indices
     std::pair<int, int> abmax_idxs = sqo.get_largest_alfa_beta_indices(); 
 
-    if (dim_ <= abmax_idxs.first) {
+    if (static_cast<int>(dim_) <= abmax_idxs.first) {
         throw std::invalid_argument("Highest alpha index exceeds the norb of orbitals");
     }
-    if (dim_ <= abmax_idxs.second) {
+    if (static_cast<int>(dim_) <= abmax_idxs.second) {
         throw std::invalid_argument("Highest beta index exceeds the norb of orbitals");
     }
 
     int rank_index = rank / 2;
-
-    // the largest rank operator
-    // int rank = sqo.many_body_order();
 
     if (rank % 2) {
         throw std::invalid_argument("Odd rank operator not supported");
@@ -102,20 +83,12 @@ void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
 
     // dimensions of tensor, ex [dim, dim, dim, dim] for a 2-body operator
     std::vector<size_t> tensor_dim(rank, dim_);
-
-    // typedef std::vector<int> IndexMask;
-    // typedef std::vector<std::vector<int>> IndexDict;
-
     std::vector<size_t> index_mask(rank, 0);
 
-    std::vector<std::vector<int>> index_dict_dagger(rank / 2, std::vector<int>(2, 0));
-    std::vector<std::vector<int>> index_dict_nondagger(rank / 2, std::vector<int>(2, 0));
+    std::vector<std::vector<int>> index_dict_dagger(std::floor(rank / 2), std::vector<int>(2, 0));
+    std::vector<std::vector<int>> index_dict_nondagger(std::floor(rank / 2), std::vector<int>(2, 0));
 
-    // std::vector<std::complex<double>> tensor(pow(dim_, rank), 0.0);
-
-    Tensor tensor(tensor_dim);
-
-    // each n-body operator makes a contribution...
+    // each n-body operator makes a contribution
     for (const auto& term : sqo.terms()) {
 
         if (std::get<1>(term).size() != std::get<2>(term).size()) {
@@ -126,27 +99,9 @@ void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
         std::vector<size_t> ops2(std::get<2>(term));
         ops1.insert(ops1.end(), ops2.begin(), ops2.end());
 
-        // origional code below...
-
-        // loop over creators AND anihilators to get 
         for (int i = 0; i < rank; ++i) {
-            /// FermionOp term looks like 
-            // {((3, 1), (2, 1), (0, 0), (1, 0)): 6.9, ((1, 1), (0, 1), (2, 0), (3, 0)): 6.9}
-            // for 6.9 (3^ 2^ 0 1) + 6.9 (1^ 0^ 2 3)
-            
-            
             // index of anihilator or creator
             int index = ops1[i];
-
-            // should not a probelm with canonical ordering!
-            // if (i < rank / 2) {
-            //     if (!term[i][1]) {
-            //         throw std::invalid_argument("Found annihilation operator where creation is expected");
-            //     }
-            // }
-            // else if (term[i][1]) {
-            //     throw std::invalid_argument("Found creation operator where annihilation is expected");
-            // }
 
             int spin = index % 2;
             int ind;
@@ -186,22 +141,24 @@ void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
         tensors_[rank_index].set(index_mask, val); 
     }
 
-    Tensor tensor2(tensors_[rank_index].shape());
-    double length = 0;
+    Tensor tensor2(tensors_[rank_index].shape(), "T2");
+    double length = 0.0;
     std::vector<size_t> seed(rank / 2);
     for (size_t i = 0; i < rank / 2; ++i) {
         seed[i] = i;
     }
+
     do {
         std::vector<size_t> iperm(seed);
         std::vector<size_t> jperm(seed);
+
         for (size_t j = 0; j < rank / 2; ++j) {
             jperm[j] += rank / 2;
         }
 
         iperm.insert(iperm.end(), jperm.begin(), jperm.end());
 
-        Tensor transposed_tensor = tensor.general_transpose(iperm);
+        Tensor transposed_tensor = tensors_[rank_index].general_transpose(iperm);
         tensor2.add(transposed_tensor);
         length += 1.0;
     } while (next_permutation(seed.begin(), seed.end()));
@@ -209,7 +166,6 @@ void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
     tensor2.scale(1.0/length);
 
     tensors_[rank_index] = tensor2;
-
 }
 
 
