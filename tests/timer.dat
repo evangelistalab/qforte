@@ -1,0 +1,125 @@
+
+Host: CSM-NSTAIR-01
+
+Timers On : Mon Jul 10 15:29:47 2023
+Timers Off: Mon Jul 10 15:29:48 2023
+
+Wall Time:        1.79 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+
+--------------------------------------------------------------------------------------
+
+**************************************************************************************
+
+Host: CSM-NSTAIR-01
+
+Timers On : Mon Jul 10 15:31:54 2023
+Timers Off: Mon Jul 10 15:36:58 2023
+
+Wall Time:      304.62 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+Total PK formation time             :      0.717u      0.017s      0.480w     63 calls
+Libint2ERI::Libint2ERI              :      0.183u      0.000s      0.132w    189 calls
+HF: Form core H                     :      0.117u      0.150s      0.326w     63 calls
+HF: Form S/X                        :      0.033u      0.000s      0.015w     63 calls
+HF: Guess                           :      1.283u      0.117s      0.924w     63 calls
+SAD Guess                           :      1.167u      0.117s      0.831w     38 calls
+HF: Form G                          :      0.000u      0.017s      0.027w    355 calls
+JK: D                               :      0.000u      0.000s      0.003w    355 calls
+JK: USO2AO                          :      0.000u      0.000s      0.008w    355 calls
+JK: JK                              :      0.000u      0.000s      0.006w    355 calls
+PK computes JK                      :      0.000u      0.000s      0.005w    355 calls
+JK: AO2USO                          :      0.000u      0.000s      0.002w    355 calls
+HF: Form F                          :      0.000u      0.000s      0.004w    355 calls
+HF: Form D                          :      0.000u      0.000s      0.003w    355 calls
+HF: DIIS                            :      2.750u      0.117s      1.876w    317 calls
+HF: Form C                          :      0.233u      0.000s      0.126w    317 calls
+trans_ints                          :      0.017u      0.033s      0.038w      5 calls
+Trans (OV|OV)                       :      0.000u      0.033s      0.034w      5 calls
+Sort chem -> phys                   :      0.000u      0.000s      0.000w      5 calls
+Sort (OV|OV) -> <OO|VV>             :      0.000u      0.000s      0.000w      5 calls
+Trans OEI                           :      0.000u      0.000s      0.000w      5 calls
+Build Denominators                  :      0.017u      0.000s      0.000w      5 calls
+T2(1)                               :      0.017u      0.017s      0.009w      5 calls
+MP2 Energy                          :      0.000u      0.017s      0.008w      5 calls
+CIWave: CIvect write                :      0.000u      0.000s      0.001w     74 calls
+CIWave: CIvect read                 :      0.000u      0.000s      0.001w    208 calls
+CIWave: s2                          :      0.000u      0.000s      0.000w     21 calls
+CIWave: s3                          :      0.000u      0.000s      0.000w     52 calls
+ccenergy                            :      0.150u      0.733s      0.997w      1 calls
+F build                             :      0.000u      0.017s      0.006w     13 calls
+Wmbej build                         :      0.017u      0.000s      0.006w     13 calls
+C->Wmbej                            :      0.000u      0.000s      0.000w     13 calls
+F->Wmbej                            :      0.017u      0.000s      0.002w     13 calls
+E->Wmbej                            :      0.000u      0.000s      0.001w     13 calls
+X->Wmbej                            :      0.000u      0.000s      0.002w     13 calls
+Z                                   :      0.000u      0.000s      0.000w     13 calls
+T2 Build                            :      0.017u      0.017s      0.012w     13 calls
+BT2                                 :      0.000u      0.000s      0.003w     13 calls
+ABCD:new                            :      0.000u      0.000s      0.002w     13 calls
+ABCD:S                              :      0.000u      0.000s      0.000w     13 calls
+ABCD:A                              :      0.000u      0.000s      0.000w     13 calls
+ABCD:axpy                           :      0.000u      0.000s      0.000w     13 calls
+FT2                                 :      0.000u      0.000s      0.001w     13 calls
+WmbejT2                             :      0.000u      0.017s      0.002w     13 calls
+CT2                                 :      0.017u      0.000s      0.004w     13 calls
+FNOCC: Initializing Integrals       :      0.000u      0.000s      0.000w      1 calls
+FNOCC: Two Elec Int Trans.          :      0.000u      0.017s      0.017w      1 calls
+FNOCC: CEPA energy                  :      0.067u      0.333s      0.614w      1 calls
+
+--------------------------------------------------------------------------------------
+Total PK formation time             :      0.717u      0.017s      0.480w     63 calls
+| Libint2ERI::Libint2ERI            :      0.100u      0.000s      0.087w    126 calls
+HF: Form core H                     :      0.117u      0.150s      0.326w     63 calls
+HF: Form S/X                        :      0.033u      0.000s      0.015w     63 calls
+HF: Guess                           :      1.283u      0.117s      0.924w     63 calls
+| SAD Guess                         :      1.167u      0.117s      0.831w     38 calls
+HF: Form G                          :      0.000u      0.017s      0.027w    355 calls
+| JK: D                             :      0.000u      0.000s      0.003w    355 calls
+| JK: USO2AO                        :      0.000u      0.000s      0.008w    355 calls
+| JK: JK                            :      0.000u      0.000s      0.006w    355 calls
+| | PK computes JK                  :      0.000u      0.000s      0.005w    355 calls
+| JK: AO2USO                        :      0.000u      0.000s      0.002w    355 calls
+HF: Form F                          :      0.000u      0.000s      0.004w    355 calls
+HF: Form D                          :      0.000u      0.000s      0.003w    355 calls
+HF: DIIS                            :      2.750u      0.117s      1.876w    317 calls
+HF: Form C                          :      0.233u      0.000s      0.126w    317 calls
+Libint2ERI::Libint2ERI              :      0.083u      0.000s      0.046w     63 calls
+trans_ints                          :      0.017u      0.033s      0.038w      5 calls
+| Trans (OV|OV)                     :      0.000u      0.033s      0.034w      5 calls
+| Sort chem -> phys                 :      0.000u      0.000s      0.000w      5 calls
+| | Sort (OV|OV) -> <OO|VV>         :      0.000u      0.000s      0.000w      5 calls
+| Trans OEI                         :      0.000u      0.000s      0.000w      5 calls
+| Build Denominators                :      0.017u      0.000s      0.000w      5 calls
+T2(1)                               :      0.017u      0.017s      0.009w      5 calls
+MP2 Energy                          :      0.000u      0.017s      0.008w      5 calls
+CIWave: CIvect write                :      0.000u      0.000s      0.001w     74 calls
+CIWave: CIvect read                 :      0.000u      0.000s      0.001w    208 calls
+CIWave: s2                          :      0.000u      0.000s      0.000w     21 calls
+CIWave: s3                          :      0.000u      0.000s      0.000w     52 calls
+ccenergy                            :      0.150u      0.733s      0.997w      1 calls
+| F build                           :      0.000u      0.017s      0.006w     13 calls
+| Wmbej build                       :      0.017u      0.000s      0.006w     13 calls
+| | C->Wmbej                        :      0.000u      0.000s      0.000w     13 calls
+| | F->Wmbej                        :      0.017u      0.000s      0.002w     13 calls
+| | E->Wmbej                        :      0.000u      0.000s      0.001w     13 calls
+| | X->Wmbej                        :      0.000u      0.000s      0.002w     13 calls
+| Z                                 :      0.000u      0.000s      0.000w     13 calls
+| T2 Build                          :      0.017u      0.017s      0.012w     13 calls
+| | BT2                             :      0.000u      0.000s      0.003w     13 calls
+| | | ABCD:new                      :      0.000u      0.000s      0.002w     13 calls
+| | | | ABCD:S                      :      0.000u      0.000s      0.000w     13 calls
+| | | | ABCD:A                      :      0.000u      0.000s      0.000w     13 calls
+| | | | ABCD:axpy                   :      0.000u      0.000s      0.000w     13 calls
+| | FT2                             :      0.000u      0.000s      0.001w     13 calls
+| | WmbejT2                         :      0.000u      0.017s      0.002w     13 calls
+| | CT2                             :      0.017u      0.000s      0.004w     13 calls
+FNOCC: Initializing Integrals       :      0.000u      0.000s      0.000w      1 calls
+FNOCC: Two Elec Int Trans.          :      0.000u      0.017s      0.017w      1 calls
+FNOCC: CEPA energy                  :      0.067u      0.333s      0.614w      1 calls
+
+**************************************************************************************

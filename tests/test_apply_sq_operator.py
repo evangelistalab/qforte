@@ -182,7 +182,7 @@ class TestApplySQOP(unittest.TestCase):
 
 
 
-unittest.main()
+# unittest.main()
 
 
 

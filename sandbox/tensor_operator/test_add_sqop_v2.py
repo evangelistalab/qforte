@@ -29,4 +29,4 @@ print("Now printing qf Debug Stuff")
 print("===========================")
 Top.add_sqop_of_rank(sqop, sqop.ranks_present()[0])
 
-# print(Top)
+print(Top)
