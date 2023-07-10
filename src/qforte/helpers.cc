@@ -23,3 +23,24 @@ std::string to_string(std::complex<double> value) {
     }
     return fmt::format("{:+f} {:+f}i", std::real(value), std::imag(value));
 }
+
+// TODO(Tyler): Need to expose and need a test case
+// More of a helper funcitn may be better to put elsewhere
+int reverse_bubble_list(std::vector<std::vector<int>>& arr) {
+    int larr = arr.size();
+    int swap_count = 0;
+    for (int i = 0; i < larr; ++i) {
+        bool swapped = false;
+        for (int j = 0; j < larr - i - 1; ++j) {
+            if (arr[j][0] < arr[j + 1][0]) {
+                std::swap(arr[j], arr[j + 1]);
+                swapped = true;
+                ++swap_count;
+            }
+        }
+        if (!swapped) {
+            break;
+        }
+    }
+    return swap_count;
+}

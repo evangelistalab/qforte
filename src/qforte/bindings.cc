@@ -14,6 +14,8 @@
 #include "qubit_op_pool.h"
 #include "sparse_tensor.h"
 #include "timer.h"
+#include "tensor.h"
+#include "tensor_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -45,12 +47,42 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_coeffs", &SQOperator::set_coeffs)
         .def("mult_coeffs", &SQOperator::mult_coeffs)
         .def("terms", &SQOperator::terms)
+        .def("get_largest_alfa_beta_indices", &SQOperator::get_largest_alfa_beta_indices) // TODO(Tyler) Need Test
+        .def("many_body_order", &SQOperator::many_body_order) // TODO(Tyler) Need Test
+        .def("ranks_present", &SQOperator::ranks_present) // TODO(Tyler) Need Test
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
         .def("jw_transform", &SQOperator::jw_transform, py::arg("qubit_excitation") = false)
         .def("str", &SQOperator::str)
         .def("__str__", &SQOperator::str)
         .def("__repr__", &SQOperator::str);
+
+    py::class_<TensorOperator>(m, "TensorOperator")
+        .def(py::init<size_t, size_t, bool, bool>(), 
+            "max_nbody"_a, 
+            "dim"_a, 
+            "is_spatial"_a=false, 
+            "is_restricted"_a=false, 
+            "Make a TensorOperator")
+        .def("add_sqop_of_rank", &TensorOperator::add_sqop_of_rank)    
+        .def("str", &TensorOperator::str, 
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu")
+        .def("__str__", &TensorOperator::str,
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu")
+        .def("__repr__", &TensorOperator::str,
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu");
 
     py::class_<SQOpPool>(m, "SQOpPool")
         .def(py::init<>())
@@ -158,6 +190,41 @@ PYBIND11_MODULE(qforte, m) {
         .def("str", &Computer::str)
         .def("__str__", &Computer::str)
         .def("__repr__", &Computer::str);
+
+    py::class_<Tensor>(m, "Tensor")
+        .def(py::init<std::vector<size_t>, std::string>(), "shape"_a, "name"_a, "Make a Tensor with a particualr shape")
+        .def("name", &Tensor::name)
+        .def("ndim", &Tensor::ndim)
+        .def("size", &Tensor::size)
+        .def("shape", &Tensor::shape)
+        .def("set", &Tensor::set)
+        .def("get", &Tensor::get)
+        .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)
+        .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
+        .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
+        .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 
+        .def("symmetrize", &Tensor::symmetrize) // TODO(Tyler) Need Test 
+        .def("antisymmetrize", &Tensor::antisymmetrize) // TODO(Tyler) Need Test 
+        .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
+        .def("general_transpose", &Tensor::general_transpose) // TODO(Tyler) Need Test (use numpy)
+        .def("str", &Tensor::str, 
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu")
+        .def("__str__", &Tensor::str,
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu")
+        .def("__repr__", &Tensor::str,
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false, 
+            py::arg("maxcols") = 5,
+            py::arg("data_format") = "%12.7f",
+            py::arg("header_format") = "%12zu");
 
     py::class_<Gate>(m, "Gate")
         .def("target", &Gate::target)

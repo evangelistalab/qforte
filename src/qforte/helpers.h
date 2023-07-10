@@ -2,10 +2,14 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 std::string join(const std::vector<std::string>& vec_str, const std::string& sep = ",");
 
 std::string to_string(std::complex<double> value);
+
+/// returns the parity given a list of creators and anihliators
+int reverse_bubble_list(std::vector<std::vector<int>>& arr);
 
 // class SparseVector {
 //     /* A SparseVector is a custom class based on the standard map for sparse

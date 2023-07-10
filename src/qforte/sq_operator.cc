@@ -35,6 +35,52 @@ const std::vector<std::tuple<std::complex<double>, std::vector<size_t>, std::vec
     return terms_;
 }
 
+// TODO(Tyler): Need to expose and need a test case
+std::pair<int, int> SQOperator::get_largest_alfa_beta_indices() const {
+    int maxodd = -1;
+    int maxeven = -1;
+    // for term in ops.terms:
+    for (auto& term : terms_){
+        // loop over creators
+        for (auto& cre_idx : std::get<1>(term) ){
+            if (cre_idx % 2) maxodd = std::max(static_cast<int>(cre_idx), maxodd);
+            else maxeven = std::max(static_cast<int>(cre_idx), maxeven);
+        } 
+        // loop over anihilators
+        for (auto& ann_idx : std::get<2>(term) ){
+            if (ann_idx % 2) maxodd = std::max(static_cast<int>(ann_idx), maxodd);
+            else maxeven = std::max(static_cast<int>(ann_idx), maxeven);
+        }        
+    }
+    return std::make_pair(maxeven, maxodd);
+}
+
+// TODO(Tyler): Need to expose and need a test case
+int SQOperator::many_body_order() const {
+    int max_rank = -1;
+    for (auto& term : terms_){
+        int term_rank = 0;
+        term_rank += std::get<1>(term).size();
+        term_rank += std::get<2>(term).size();
+        max_rank = std::max(max_rank, term_rank);        
+    }
+    return max_rank;
+}
+
+// TODO(Tyler): Need to expose and need a test case
+std::vector<int> SQOperator::ranks_present() const {
+    std::vector<int> ranks_present;
+    for (auto& term : terms_){
+        int term_rank = 0;
+        term_rank += std::get<1>(term).size();
+        term_rank += std::get<2>(term).size();
+        if ( std::count(ranks_present.begin(), ranks_present.end(), term_rank) == false) {
+            ranks_present.push_back(term_rank);
+        }     
+    }
+    return ranks_present;
+}
+
 int SQOperator::canonicalize_helper(std::vector<size_t>& op_list) const {
     auto temp_op = op_list;
     auto length = temp_op.size();
