@@ -258,6 +258,8 @@ class AnsatzAlgorithm(Algorithm):
         """
 
         if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+            if self._pool_type == 'sa_SD' and self._compact_excitations:
+                raise ValueError('Compact excitation circuits not yet implemented for sa_SD operator pool.')
             self._pool_obj = qf.SQOpPool()
             if hasattr(self._sys, 'orb_irreps_to_int'):
                 self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
