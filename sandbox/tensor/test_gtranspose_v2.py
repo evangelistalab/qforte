@@ -35,7 +35,7 @@ T2 = T1.transpose()
 T3 = T1.general_transpose(axes)
 # T2.set_name('transposed')
 
-# print(T1)
+print(T1)
 print(T2)
 print(T3)
 
