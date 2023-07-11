@@ -105,7 +105,7 @@ void SQOpPool::fill_pool(std::string pool_type){
                 size_t aa = 2*a;
                 size_t ab = 2*a+1;
 
-                if (!find_irrep(orb_irreps_to_int_, std::vector<size_t>{i,a})) {
+                if (!find_irrep(orb_irreps_to_int_, std::vector<size_t>{ia,aa})) {
 
                     if( aa != ia ){
                         SQOperator temp1a;
@@ -146,7 +146,7 @@ void SQOpPool::fill_pool(std::string pool_type){
                         size_t ba = 2*b;
                         size_t bb = 2*b+1;
 
-                        if (!find_irrep(orb_irreps_to_int_, std::vector<size_t>{i,j,a,b})) {
+                        if (!find_irrep(orb_irreps_to_int_, std::vector<size_t>{ia,ja,aa,ba})) {
 
                             if((aa != ba) && (ia != ja)){
                                 SQOperator temp2aaaa;
@@ -374,7 +374,7 @@ void SQOpPool::fill_pool(std::string pool_type){
                 size_t aa = 2*nocc_ + 2*a;
                 size_t ab = 2*nocc_ + 2*a+1;
 
-                if (!find_irrep(orb_irreps_to_int_, std::vector<size_t>{i,a})) {
+                if (!find_irrep(orb_irreps_to_int_, std::vector<size_t>{ia,aa})) {
 
                     SQOperator temp1;
                     temp1.add_term(+1.0/std::sqrt(2), {aa}, {ia});
@@ -406,7 +406,7 @@ void SQOpPool::fill_pool(std::string pool_type){
                         size_t ba = 2*nocc_ + 2*b;
                         size_t bb = 2*nocc_ + 2*b+1;
 
-                        if (!find_irrep(orb_irreps_to_int_, std::vector<size_t>{i,j,a,b})) {
+                        if (!find_irrep(orb_irreps_to_int_, std::vector<size_t>{ia,ja,aa,ba})) {
 
                             SQOperator temp2a;
                             if((aa != ba) && (ia != ja)){
