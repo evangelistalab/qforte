@@ -409,7 +409,7 @@ std::string Tensor::str(
                 } else {
                     for (size_t j = 0; j < cols; j += maxcols) {
                         size_t ncols = (j + maxcols >= cols ? cols - j : maxcols);
-
+                
                         // Column Header
                         str += std::printf("  %5s", "");
                         for (size_t jj = j; jj < j+ncols; jj++) {
