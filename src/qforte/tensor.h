@@ -196,6 +196,8 @@ std::string str(
     const std::string& header_format = "%12zu"
     ) const; 
 
+void fill_from_nparray(std::vector<std::complex<double>>, std::vector<size_t>);
+
 /**
  * Print string representation of this Tensor
  **/

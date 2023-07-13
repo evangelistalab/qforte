@@ -197,6 +197,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("ndim", &Tensor::ndim)
         .def("size", &Tensor::size)
         .def("shape", &Tensor::shape)
+        .def("strides", &Tensor::strides)
         .def("set", &Tensor::set)
         .def("get", &Tensor::get)
         .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)
@@ -207,6 +208,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("antisymmetrize", &Tensor::antisymmetrize) // TODO(Tyler) Need Test 
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
         .def("general_transpose", &Tensor::general_transpose) // TODO(Tyler) Need Test (use numpy)
+        .def("fill_from_nparray", &Tensor::fill_from_nparray)
         .def("str", &Tensor::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false, 
