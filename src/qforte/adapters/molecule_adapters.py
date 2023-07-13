@@ -230,8 +230,6 @@ def create_psi_mol(**kwargs):
                     ja = (j - frozen_core)*2
                     jb = (j - frozen_core)*2 + 1
                     Musq.add(mo_dipints[axis][i,j], [ia], [ja])
-                    Musq.add(mo_dipints[axis][i,j], [ib], [ja])
-                    Musq.add(mo_dipints[axis][i,j], [ia], [jb])
                     Musq.add(mo_dipints[axis][i,j], [ib], [jb])
             Musqs.append(Musq)
         
@@ -341,16 +339,10 @@ def create_psi_mol(**kwargs):
                     qa = 2*q
                     qb = 2*q + 1
                     external_data['dip_ints_x']['data'].append((pa, qa, mo_dipints[0][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints_x']['data'].append((pa, qb, mo_dipints[0][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints_x']['data'].append((pb, qa, mo_dipints[0][p + frozen_core, q + frozen_core]))
                     external_data['dip_ints_x']['data'].append((pb, qb, mo_dipints[0][p + frozen_core, q + frozen_core]))
                     external_data['dip_ints_y']['data'].append((pa, qa, mo_dipints[1][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints_y']['data'].append((pa, qb, mo_dipints[1][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints_y']['data'].append((pb, qa, mo_dipints[1][p + frozen_core, q + frozen_core]))
                     external_data['dip_ints_y']['data'].append((pb, qb, mo_dipints[1][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints_z']['data'].append((pa, qa, mo_dipints[2][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints_z']['data'].append((pa, qb, mo_dipints[2][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints_z']['data'].append((pb, qa, mo_dipints[2][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_z']['data'].append((pa, qa, mo_dipints[2][p + frozen_core, q + frozen_core])) 
                     external_data['dip_ints_z']['data'].append((pb, qb, mo_dipints[2][p + frozen_core, q + frozen_core]))
             external_data['dip_ints_x']['description'] = "x dipole integrals for the active space"
             external_data['dip_ints_y']['description'] = "y dipole integrals for the active space"
