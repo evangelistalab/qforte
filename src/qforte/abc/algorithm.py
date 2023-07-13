@@ -318,8 +318,11 @@ class AnsatzAlgorithm(Algorithm):
     def fill_pool(self):
         """ This function populates an operator pool with SQOperator objects.
         """
+
         if not self._is_multi_state:
             if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+                if self._pool_type == 'sa_SD' and self._compact_excitations:
+                    raise ValueError('Compact excitation circuits not yet implemented for sa_SD operator pool.')
                 self._pool_obj = qf.SQOpPool()
                 if hasattr(self._sys, 'orb_irreps_to_int'):
                     self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
@@ -328,6 +331,7 @@ class AnsatzAlgorithm(Algorithm):
                 self._pool_obj.fill_pool(self._pool_type)
             elif isinstance(self._pool_type, qf.SQOpPool):
                 self._pool_obj = self._pool_type
+
             else:
                 raise ValueError('Invalid operator pool type specified.')
         else:
