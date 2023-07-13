@@ -216,13 +216,16 @@ def create_psi_mol(**kwargs):
                     frozen_core_dipole[j] += 2 * mo_dipints[j][i, i]
         
         #Build second quantized dipole moment operators (Mux, Muy, Muz)
+        
         Musqs = []
         for axis in range(3):
             Musq = qforte.SQOperator()
+            
             Musq.add(frozen_core_dipole[axis], [], [])
+                
             for i in range(frozen_core, nmo - frozen_virtual):
-                ia = (1 - frozen_core)*2
-                ib = (1 - frozen_core)*2 + 1
+                ia = (i - frozen_core)*2
+                ib = (i - frozen_core)*2 + 1
                 for j in range(frozen_core, nmo - frozen_virtual):
                     ja = (j - frozen_core)*2
                     jb = (j - frozen_core)*2 + 1
@@ -231,9 +234,9 @@ def create_psi_mol(**kwargs):
                     Musq.add(mo_dipints[axis][i,j], [ia], [jb])
                     Musq.add(mo_dipints[axis][i,j], [ib], [jb])
             Musqs.append(Musq)
+        
     else:
         Musqs = None  
-        exit()
 
 
     # Set attributes
@@ -248,6 +251,9 @@ def create_psi_mol(**kwargs):
         qforte_mol.dipole_x = Musqs[0].jw_transform()
         qforte_mol.dipole_y = Musqs[1].jw_transform()
         qforte_mol.dipole_z = Musqs[2].jw_transform()
+    
+    
+    
     qforte_mol.hamiltonian = Hsq.jw_transform()
     qforte_mol.point_group = [point_group, irreps]
     qforte_mol.orb_irreps = orb_irreps
@@ -320,31 +326,35 @@ def create_psi_mol(**kwargs):
             external_data['frozen_dip'] = {}
             
             external_data['frozen_dip']['data'] = frozen_core_dipole
-            external_data['frozen_dip']['description'] = "zero-body dipole associated with frozen core"
+            external_data['frozen_dip']['description'] = "zero-body dipole associated with frozen core ([x, y, z] list)"
 
-            external_data['dip_ints'] = {}
-            external_data['dip_ints']['x_data'] = []
-            external_data['dip_ints']['y_data'] = []
-            external_data['dip_ints']['z_data'] = []
+            external_data['dip_ints_x'] = {}
+            external_data['dip_ints_y'] = {}
+            external_data['dip_ints_z'] = {}
+            external_data['dip_ints_x']['data'] = []
+            external_data['dip_ints_y']['data'] = []
+            external_data['dip_ints_z']['data'] = []
             for p in range(norbs):
                 pa = 2*p
                 pb = 2*p + 1
                 for q in range(norbs):
                     qa = 2*q
                     qb = 2*q + 1
-                    external_data['dip_ints']['x_data'].append((pa, qa, mo_dipints[0][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['x_data'].append((pa, qb, mo_dipints[0][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['x_data'].append((pb, qa, mo_dipints[0][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['x_data'].append((pb, qb, mo_dipints[0][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['y_data'].append((pa, qa, mo_dipints[1][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['y_data'].append((pa, qb, mo_dipints[1][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['y_data'].append((pb, qa, mo_dipints[1][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['y_data'].append((pb, qb, mo_dipints[1][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['z_data'].append((pa, qa, mo_dipints[2][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['z_data'].append((pa, qb, mo_dipints[2][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['z_data'].append((pb, qa, mo_dipints[2][p + frozen_core, q + frozen_core]))
-                    external_data['dip_ints']['z_data'].append((pb, qb, mo_dipints[2][p + frozen_core, q + frozen_core]))
-            external_data['dip_ints']['description'] = "dipole integrals for the active space"
+                    external_data['dip_ints_x']['data'].append((pa, qa, mo_dipints[0][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_x']['data'].append((pa, qb, mo_dipints[0][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_x']['data'].append((pb, qa, mo_dipints[0][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_x']['data'].append((pb, qb, mo_dipints[0][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_y']['data'].append((pa, qa, mo_dipints[1][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_y']['data'].append((pa, qb, mo_dipints[1][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_y']['data'].append((pb, qa, mo_dipints[1][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_y']['data'].append((pb, qb, mo_dipints[1][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_z']['data'].append((pa, qa, mo_dipints[2][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_z']['data'].append((pa, qb, mo_dipints[2][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_z']['data'].append((pb, qa, mo_dipints[2][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints_z']['data'].append((pb, qb, mo_dipints[2][p + frozen_core, q + frozen_core]))
+            external_data['dip_ints_x']['description'] = "x dipole integrals for the active space"
+            external_data['dip_ints_y']['description'] = "y dipole integrals for the active space"
+            external_data['dip_ints_z']['description'] = "z dipole integrals for the active space"
 
         external_data['nso'] = {}
         external_data['nso']['data'] = 2 * norbs
@@ -417,6 +427,37 @@ def create_external_mol(**kwargs):
 
     for p, q, r, s, h_pqrs in external_data['tei']['data']:
         qforte_sq_hamiltonian.add(h_pqrs/4.0, [p,q], [s,r]) # only works in C1 symmetry
+
+    try:
+        x_scalar, y_scalar, z_scalar = external_data['frozen_dip']['data'] 
+        
+        qforte_mol.sq_dipole_x = qforte.SQOperator()
+        qforte_mol.sq_dipole_x.add(x_scalar, [], [])
+        qforte_mol.sq_dipole_y = qforte.SQOperator()
+        qforte_mol.sq_dipole_y.add(y_scalar, [], [])
+        qforte_mol.sq_dipole_z = qforte.SQOperator()
+        qforte_mol.sq_dipole_z.add(z_scalar, [], [])
+        for p, q, mu_pq in external_data['dip_ints_x']['data']:
+            qforte_mol.sq_dipole_x.add(mu_pq, [p], [q])
+        for p, q, mu_pq in external_data['dip_ints_y']['data']:
+            qforte_mol.sq_dipole_y.add(mu_pq, [p], [q])
+        for p, q, mu_pq in external_data['dip_ints_z']['data']:
+            qforte_mol.sq_dipole_z.add(mu_pq, [p], [q])
+             
+        qforte_mol.dipole_x = qforte_mol.sq_dipole_x.jw_transform()
+        qforte_mol.dipole_y = qforte_mol.sq_dipole_y.jw_transform()
+        qforte_mol.dipole_z = qforte_mol.sq_dipole_z.jw_transform()
+        
+
+    except KeyError:
+        qforte_mol.sq_dipole_x = None
+        qforte_mol.sq_dipole_y = None
+        qforte_mol.sq_dipole_z = None
+        qforte_mol.dipole_x = None
+        qforte_mol.dipole_y = None
+        qforte_mol.dipole_z = None
+        print("Dipole information not available.")
+            
 
     hf_reference = [0] * external_data['nso']['data']
     for occ_alpha in range(external_data['na']['data']):
