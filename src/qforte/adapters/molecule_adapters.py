@@ -34,12 +34,14 @@ def create_psi_mol(**kwargs):
     kwargs.setdefault('charge', 0)
     kwargs.setdefault('multiplicity', 1)
     kwargs.setdefault('json_dump', False)
+    kwargs.setdefault('dipole', False)
 
     mol_geometry = kwargs['mol_geometry']
     basis = kwargs['basis']
     multiplicity = kwargs['multiplicity']
     charge = kwargs['charge']
     json_dump = kwargs['json_dump']
+    dipole = kwargs['dipole']
 
     qforte_mol = Molecule(mol_geometry = mol_geometry,
                                basis = basis,
@@ -172,7 +174,7 @@ def create_psi_mol(**kwargs):
             for q in range(frozen_core, nmo - frozen_virtual):
                 for i in range(frozen_core):
                     mo_oeis[p, q] += 2 * mo_teis[p, q, i, i] - mo_teis[p, i, i, q]
-
+    
     # Build second quantized Hamiltonian
     Hsq = qforte.SQOperator()
     Hsq.add(p4_Enuc_ref + frozen_core_energy, [], [])
@@ -203,11 +205,49 @@ def create_psi_mol(**kwargs):
                     if(ib!=jb and kb!=lb):
                         Hsq.add( mo_teis[i,l,k,j]/2, [ib, jb], [kb, lb] ) # bbbb
 
+    if dipole == True:
+        mo_dipints = np.asarray(mints.ao_dipole())
+        mo_dipints = [np.einsum('uj,vi,uv', C, C, mo_dipints[i]) for i in range(3)]
+    
+        frozen_core_dipole = [0, 0, 0]
+        if frozen_core > 0:
+            for i in range(frozen_core):
+                for j in range(3):
+                    frozen_core_dipole[j] += 2 * mo_dipints[j][i, i]
+        
+        #Build second quantized dipole moment operators (Mux, Muy, Muz)
+        Musqs = []
+        for axis in range(3):
+            Musq = qforte.SQOperator()
+            Musq.add(frozen_core_dipole[axis], [], [])
+            for i in range(frozen_core, nmo - frozen_virtual):
+                ia = (1 - frozen_core)*2
+                ib = (1 - frozen_core)*2 + 1
+                for j in range(frozen_core, nmo - frozen_virtual):
+                    ja = (j - frozen_core)*2
+                    jb = (j - frozen_core)*2 + 1
+                    Musq.add(mo_dipints[axis][i,j], [ia], [ja])
+                    Musq.add(mo_dipints[axis][i,j], [ib], [ja])
+                    Musq.add(mo_dipints[axis][i,j], [ia], [jb])
+                    Musq.add(mo_dipints[axis][i,j], [ib], [jb])
+            Musqs.append(Musq)
+    else:
+        Musqs = None  
+        exit()
+
+
     # Set attributes
     qforte_mol.nuclear_repulsion_energy = p4_Enuc_ref
     qforte_mol.hf_energy = p4_Escf
     qforte_mol.hf_reference = hf_reference
     qforte_mol.sq_hamiltonian = Hsq
+    if (Musqs!=None):
+        qforte_mol.sq_dipole_x = Musqs[0]
+        qforte_mol.sq_dipole_y = Musqs[1]
+        qforte_mol.sq_dipole_z = Musqs[2]
+        qforte_mol.dipole_x = Musqs[0].jw_transform()
+        qforte_mol.dipole_y = Musqs[1].jw_transform()
+        qforte_mol.dipole_z = Musqs[2].jw_transform()
     qforte_mol.hamiltonian = Hsq.jw_transform()
     qforte_mol.point_group = [point_group, irreps]
     qforte_mol.orb_irreps = orb_irreps
@@ -274,7 +314,38 @@ def create_psi_mol(**kwargs):
                         external_data['tei']['data'].append((pb, qb, rb, sb, prqs - psqr))
         external_data['tei']['description'] = \
             "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)"
+        
+
+        if dipole == True:
+            external_data['frozen_dip'] = {}
             
+            external_data['frozen_dip']['data'] = frozen_core_dipole
+            external_data['frozen_dip']['description'] = "zero-body dipole associated with frozen core"
+
+            external_data['dip_ints'] = {}
+            external_data['dip_ints']['x_data'] = []
+            external_data['dip_ints']['y_data'] = []
+            external_data['dip_ints']['z_data'] = []
+            for p in range(norbs):
+                pa = 2*p
+                pb = 2*p + 1
+                for q in range(norbs):
+                    qa = 2*q
+                    qb = 2*q + 1
+                    external_data['dip_ints']['x_data'].append((pa, qa, mo_dipints[0][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['x_data'].append((pa, qb, mo_dipints[0][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['x_data'].append((pb, qa, mo_dipints[0][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['x_data'].append((pb, qb, mo_dipints[0][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['y_data'].append((pa, qa, mo_dipints[1][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['y_data'].append((pa, qb, mo_dipints[1][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['y_data'].append((pb, qa, mo_dipints[1][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['y_data'].append((pb, qb, mo_dipints[1][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['z_data'].append((pa, qa, mo_dipints[2][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['z_data'].append((pa, qb, mo_dipints[2][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['z_data'].append((pb, qa, mo_dipints[2][p + frozen_core, q + frozen_core]))
+                    external_data['dip_ints']['z_data'].append((pb, qb, mo_dipints[2][p + frozen_core, q + frozen_core]))
+            external_data['dip_ints']['description'] = "dipole integrals for the active space"
+
         external_data['nso'] = {}
         external_data['nso']['data'] = 2 * norbs
         external_data['nso']['description'] = "number of spin orbitals"
@@ -294,10 +365,6 @@ def create_psi_mol(**kwargs):
                    
         with open(json_dump, 'w') as f:
             json.dump(external_data, f, indent = 0)
-        
-        
-
-
 
     return qforte_mol
 
