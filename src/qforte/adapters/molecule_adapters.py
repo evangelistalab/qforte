@@ -287,9 +287,9 @@ def create_psi_mol(**kwargs):
         external_data['nb']['data'] = nbeta - frozen_core
         external_data['nb']['description'] = "number of beta electrons"
 
-        external_data['point_group'] = {}
-        external_data['point_group']['data'] = point_group
-        external_data['point_group']['description'] = "Saves the point group."
+        external_data['symmetry'] = {}
+        external_data['symmetry']['data'] = point_group
+        external_data['symmetry']['description'] = "Saves the point group."
 
                    
         with open(json_dump, 'w') as f:
@@ -333,7 +333,7 @@ def create_external_mol(**kwargs):
 
     # we need the irreps of the spatial orbitals, but the
     # json file provides the irreps of the spin-orbitals
-    if point_group == 'C1':
+    if point_group.upper() == 'C1':
         qforte_mol.orb_irreps = ['A'] * int(external_data['nso']['data']/2)
         qforte_mol.orb_irreps_to_int = [0] * int(external_data['nso']['data']/2)
     else:
