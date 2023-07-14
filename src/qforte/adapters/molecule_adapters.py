@@ -117,6 +117,10 @@ def create_psi_mol(**kwargs):
 
     p4_Enuc_ref = scalars["NUCLEAR REPULSION ENERGY"]
 
+    
+    p4_dip_nuc = p4_mol.nuclear_dipole()
+    
+
     # Do MO integral transformation
     mo_teis = np.asarray(mints.mo_eri(C, C, C, C))
     mo_oeis = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
@@ -209,7 +213,10 @@ def create_psi_mol(**kwargs):
         mo_dipints = np.asarray(mints.ao_dipole())
         mo_dipints = [np.einsum('uj,vi,uv', C, C, mo_dipints[i]) for i in range(3)]
     
-        frozen_core_dipole = [0, 0, 0]
+        
+        frozen_core_dipole = [p4_dip_nuc[i] for i in range(3)]
+        
+        
         if frozen_core > 0:
             for i in range(frozen_core):
                 for j in range(3):
