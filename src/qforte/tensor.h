@@ -196,6 +196,12 @@ std::string str(
     const std::string& header_format = "%12zu"
     ) const; 
 
+/**
+ * Fill a tensor from a Numpy Array
+ * @param arr Numpy array to fill from
+ * @param shape The Shape of the Numpy Array
+ * Throw if the Numpy Array shape isn't the same as the Tensor shape
+ **/
 void fill_from_nparray(std::vector<std::complex<double>>, std::vector<size_t>);
 
 /**

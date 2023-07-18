@@ -436,38 +436,17 @@ std::string Tensor::str(
     return str;
 }
 
+
+// py::array_t<double> array
+// std::vector<std::complex<double>>
+
 void Tensor::fill_from_nparray(std::vector<std::complex<double>> arr, std::vector<size_t> shape){
 
-    int size = 0;
-    while (shape[size] != '\0'){
-        size++;
+    if (shape_ != shape){
+        throw std::runtime_error("The Shapes are not the same.");
     }
 
-    switch(size) {
-
-        case 1:
-            for (int i = 0; i < size_; i++){
-                data_[i] = arr[i];
-            }
-            break;
-        case 2:
-            for (int i = 0; i < shape[1]; i++){
-                for (int j = 0; j < shape[0]; j++){
-                    data_[j + i*strides_[0]] = arr[j + i*strides_[0]];
-                }
-            }
-            break;
-        case 3:
-            for (int i = 0; i < shape[2]; i++){
-                for (int j = 0; j < shape[1]; j++){
-                    for (int k = 0; k < shape[0]; k++){
-                        data_[k + j*strides_[0] + i*strides_[1]];
-                    }
-                }
-            }
-            break;
-
-    }
+    std::memcpy(data_.data(), arr.data(), sizeof(std::complex<double>)*size_);
 
 }
 

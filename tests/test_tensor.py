@@ -627,6 +627,69 @@ class TestTensor(unittest.TestCase):
         with self.assertRaises(ValueError):
             t1.general_transpose(axes)
 
+    def test_fill_from_np(self):
+
+        shape = [3, 4, 4]
+        ref_arr = [[[0 for i in range(4)] for j in range(4)] for k in range(3)]
+
+
+        t1 = qf.Tensor(shape, "Tensor 1")
+
+        random_array = np.random.rand(3, 4, 4)
+        random = np.array(random_array, dtype = np.dtype(np.complex128))
+
+        t1.fill_from_nparray(random.ravel(), shape)
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                for k in range(shape[2]):
+                    ref_arr[i][j][k] = t1.get([i, j, k])
+
+        final_arr = np.asarray(ref_arr) - np.asarray(random)
+
+        self.assertLess(np.linalg.norm(final_arr), 1e-16)
+
+    def test_fill_from_np2(self):
+
+        shape = [16, 15, 12, 9]
+        ref_arr = [[[[0 for i in range(9)] for j in range(12)] for k in range(15)] for z in range(16)]
+
+
+        t1 = qf.Tensor(shape, "Tensor 1")
+
+        random_array = np.random.rand(16, 15, 12, 9)
+        random = np.array(random_array, dtype = np.dtype(np.complex128))
+
+        t1.fill_from_nparray(random.ravel(), shape)
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                for k in range(shape[2]):
+                    for z in range(shape[3]):
+                        ref_arr[i][j][k][z] = t1.get([i, j, k, z])
+
+        final_arr = np.asarray(ref_arr) - np.asarray(random)
+
+        self.assertLess(np.linalg.norm(final_arr), 1e-16)
+
+
+    def test_fill_from_np3(self):
+
+        shape1 = [2, 4]
+        shape2 = [3, 5]
+
+        t1 = qf.Tensor(shape1, "Tensor 1")
+
+        random_array = np.random.rand(2, 4)
+        random = np.array(random_array, dtype = np.dtype(np.complex128))
+
+
+        with self.assertRaises(RuntimeError):
+            t1.fill_from_nparray(random.ravel(), shape2)
+
+
+
+
 
 unittest.main()
 

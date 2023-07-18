@@ -76,6 +76,8 @@ class SQOperator {
     /// second-quantized operators
     QubitOperator jw_transform(bool qubit_excitation = false);
 
+    std::vector<SQOperator> split_by_rank(void);
+
     /// return a vector of string representing this quantum operator
     std::string str() const;
 

@@ -53,6 +53,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
         .def("jw_transform", &SQOperator::jw_transform, py::arg("qubit_excitation") = false)
+        .def("split_by_rank", &SQOperator::split_by_rank)
         .def("str", &SQOperator::str)
         .def("__str__", &SQOperator::str)
         .def("__repr__", &SQOperator::str);

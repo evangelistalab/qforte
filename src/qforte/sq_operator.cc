@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <tuple>
+#include <map>
 
 #include "helpers.h"
 #include "gate.h"
@@ -208,6 +209,50 @@ QubitOperator SQOperator::jw_transform(bool qubit_excitation) {
     qo.simplify();
 
     return qo;
+}
+
+std::vector<SQOperator> SQOperator::split_by_rank(void){
+
+    // What we will be returning
+    std::vector<SQOperator> return_vec;
+
+    // list of all the unique ranks
+    std::vector<int> rank_list = ranks_present();
+
+    // how many unique ranks there are
+    int unique = ranks_present().size();
+
+
+    std::map<int, SQOperator> group_map;
+
+    // Populate the map with key-value pairs for respective rank
+    for (int i = 0; i < unique; i++){
+        group_map[rank_list[i]] = SQOperator();
+    }
+
+    // Go through each term and add it to its respective SQOperator in our map
+    for (int i = 0; i < terms_.size(); i++){
+
+        int rank = (std::get<1>(terms_[i])).size() + (std::get<2>(terms_[i])).size();
+
+        auto it = group_map.find(rank);
+
+        if (it != group_map.end()){
+
+            SQOperator& my_op = it->second;
+            
+            my_op.add_term(std::get<0>(terms_[i]), std::get<1>(terms_[i]), std::get<2>(terms_[i]));
+        }
+
+    }
+    // Add all our SQOperators to a vector to return
+    for (const auto& entry : group_map){
+        SQOperator op = entry.second;
+        return_vec.push_back(op);
+    }
+
+    return return_vec;
+
 }
 
 std::string SQOperator::str() const {
