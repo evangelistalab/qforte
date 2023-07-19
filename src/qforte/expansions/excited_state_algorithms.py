@@ -62,7 +62,7 @@ def ritz_eigh(H, U, verbose = True, ops_to_compute = []):
 
     op_mats = []
     for op in ops_to_compute:
-        op_vqe_basis = qforte.build_effective_operator(op, all_Us)
+        op_vqe_basis = qforte.build_effective_operator(op, U)
         op_ritz_basis = A.T.conj()@op_vqe_basis@A
         op_mats.append(op_ritz_basis.real)
 
