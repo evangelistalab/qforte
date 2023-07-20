@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.4)
 set (CMAKE_CXX_STANDARD 14)
+# set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 
 # optionally use OpenMP, if so use OpenMP compatible compiler
 OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)
@@ -27,6 +28,23 @@ if(USE_OpenMP)
     # endif()
 endif()
 
+# Need to check how much of this is actually needed!
+
+# Find BLAS library
+cmake_policy(SET CMP0074 NEW)
+
+# Bypass FindBLAS module
+set(BLA_VENDOR "Generic")
+
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+set(CMAKE_PREFIX_PATH "/Users/nstair/anaconda3/envs/qforte_env_v1")
+set(BLAS_ROOT "/Users/nstair/anaconda3/envs/qforte_env_v1/lib")
+set(BLAS_LIBRARIES "/Users/nstair/anaconda3/envs/qforte_env_v1/lib")
+set(CBLAS_INCLUDE_DIR "/Users/nstair/anaconda3/envs/qforte_env_v1/include")
+# find_package(BLAS REQUIRED)
+
+
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
 #set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -52,6 +70,7 @@ pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
     "${SOURCE_DIR}/tensor.cc"
     "${SOURCE_DIR}/tensor_operator.cc"
     "${SOURCE_DIR}/gate.cc"
+    "${SOURCE_DIR}/blas_math.cc" 
     "${SOURCE_DIR}/qubit_operator.cc"
     "${SOURCE_DIR}/qubit_op_pool.cc"
     "${SOURCE_DIR}/sq_operator.cc"
@@ -59,7 +78,18 @@ pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
     "${SOURCE_DIR}/sparse_tensor.cc"
     "${SOURCE_DIR}/timer.cc")
 
-target_link_libraries(qforte PRIVATE fmt-header-only)
+# NOTE Had to install: conda install -c anaconda openblas-devel
+# To get this BS to work.
+
+# target_link_libraries(qforte PRIVATE fmt-header-only) OLD
+# set(CMAKE_VERBOSE_MAKEFILE ON)
+link_directories(/Users/nstair/anaconda3/envs/qforte_env_v1/lib)
+target_include_directories(qforte PRIVATE /Users/nstair/anaconda3/envs/qforte_env_v1/include)
+
+target_link_libraries(qforte PRIVATE fmt-header-only /Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib)
+# target_link_libraries(qforte PRIVATE fmt-header-only /Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib)
+# target_link_libraries(qforte PRIVATE fmt-header-only BLAS::BLAS)
+# target_link_libraries(qforte PRIVATE fmt-header-only)
 
 # specify open MP flags
 if(USE_OpenMP)
@@ -75,13 +105,15 @@ SET(TESTS ${SOURCES}
     "${TEST_DIR}/test_math.cc")
 
 # Generate a test executable
+include_directories(/Users/nstair/anaconda3/envs/qforte_env_v1/include)
 include_directories(lib/catch2/single_include/catch2)
 include_directories(lib/fmt/include)
+
 add_executable("${PROJECT_NAME}_test" ${TESTS})
 
 #include_directories(${SOURCE_DIR})
 #include_directories(lib/catch2/single_include/catch2)
-include_directories(lib/fmt/include)
+# include_directories(lib/fmt/include)
 
 add_executable("${PROJECT_NAME}_benchmarks"
     benchmarks/benchmarks.cc
@@ -93,6 +125,7 @@ add_executable("${PROJECT_NAME}_benchmarks"
     "${SOURCE_DIR}/tensor.cc"
     "${SOURCE_DIR}/tensor_operator.cc"
     "${SOURCE_DIR}/gate.cc"
+    "${SOURCE_DIR}/blas_math.cc"
     "${SOURCE_DIR}/qubit_operator.cc"
     "${SOURCE_DIR}/sq_operator.cc"
     "${SOURCE_DIR}/qubit_op_pool.cc"
@@ -100,4 +133,4 @@ add_executable("${PROJECT_NAME}_benchmarks"
     "${SOURCE_DIR}/sparse_tensor.cc"
     "${SOURCE_DIR}/timer.cc")
 
-target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only)
+target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only /Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib)

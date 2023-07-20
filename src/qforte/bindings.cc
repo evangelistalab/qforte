@@ -16,6 +16,7 @@
 #include "timer.h"
 #include "tensor.h"
 #include "tensor_operator.h"
+#include "blas_math.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;

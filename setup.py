@@ -16,9 +16,19 @@ class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
+        
+        # Add BLAS options
+        self.cmake_args = []
+        self.cmake_args.extend([
+            '-DBLAS_LIBRARIES=/Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib',  # Replace with actual BLAS library path
+            # '-DLAPACK_LIBRARIES=/path/to/lapack/libraries'  # Replace with actual LAPACK library path
+        ])
 
 class CMakeBuild(build_ext):
     def run(self):
+        # Add BLAS and LAPACK libraries to linker arguments
+        # self.compiler.linker_so.append('-lblas')
+
         try:
             out = subprocess.check_output(['cmake', '--version'])
         except OSError:
@@ -26,11 +36,11 @@ class CMakeBuild(build_ext):
                 "CMake must be installed to build the following extensions: " +
                 ", ".join(e.name for e in self.extensions))
 
-        if platform.system() == "Windows":
-            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)',
-                                         out.decode()).group(1))
-            if cmake_version < '3.1.0':
-                raise RuntimeError("CMake >= 3.1.0 is required on Windows")
+        # if platform.system() == "Windows":
+        #     cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)',
+        #                                  out.decode()).group(1))
+        #     if cmake_version < '3.1.0':
+        #         raise RuntimeError("CMake >= 3.1.0 is required on Windows")
 
         for ext in self.extensions:
             self.build_extension(ext)
@@ -39,7 +49,7 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(
             os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable]
+                      '-DPYTHON_EXECUTABLE=' + sys.executable]  + ext.cmake_args # Last bit is crucial here
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
