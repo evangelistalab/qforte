@@ -15,21 +15,25 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.join(THIS_DIR, 'H4-sto6g-075a.json')
 
 class TestQSCEOM:
-    def test_h2_qsceom(self):
+    def test_lih_qsceom(self):
         print('\n')
 
-        geom = [("H", (0, 0, 0)), ("H", (0, 0, 1.5))]
+        geom = [("Li", (0, 0, 0)), ("H", (0, 0, 1))]
         mol = system_factory(system_type = 'molecule',
                              mol_geometry = geom,
                              build_type = 'psi4',
-                             basis = 'sto-6g')
+                             basis = 'sto-6g',
+                             num_frozen_docc = 1,
+                             num_frozen_uocc = 1,
+                             dipole = True)
         
         alg = ADAPTVQE(mol, print_summary_file = False)
 
         alg.run(adapt_maxiter = 100,
-                avqe_thresh = 1e-6,
-                opt_thresh = 1e-10,
-                pool_type = 'GSD')
+                avqe_thresh = 0,
+                opt_thresh = 1e-16,
+                pool_type = 'GSD',
+                opt_maxiter = 100000)
         
         U_ansatz = alg.ansatz_circuit(alg._tamps)
         U_hf = build_Uprep(mol.hf_reference, 'occupation_list')
@@ -43,21 +47,43 @@ class TestQSCEOM:
         
         U_hf.add_circuit(U_ansatz)
         #Actual q-sc-EOM Calculation
-        E0, Eks = q_sc_eom(mol.hamiltonian, U_hf, manifold)
+        E0, Eks, dip_x, dip_y, dip_z = q_sc_eom(mol.hamiltonian, U_hf, manifold, ops_to_compute = [mol.dipole_x, 
+                                                                                                   mol.dipole_y, 
+                                                                                                   mol.dipole_z])
         #E0, Eks = q_sc_eom(mol.hamiltonian, U_ansatz, U_hf, U_man)
+        
         all_Es = [E0] + list(Eks)
-
+        
         #Get FCI solutions:
         H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb).todense()
         Sz = sq_op_to_scipy(total_spin_z(alg._nqb, do_jw = False), alg._nqb).todense()
         N = sq_op_to_scipy(total_number(alg._nqb, do_jw = False), alg._nqb).todense()
-        H_penalized = H + 1000*Sz@Sz + (N@N - 4*N + 4*np.eye(H.shape[0]))
+        fci_dip_x = sq_op_to_scipy(mol.sq_dipole_x, alg._nqb).todense()
+        fci_dip_y = sq_op_to_scipy(mol.sq_dipole_y, alg._nqb).todense()
+        fci_dip_z = sq_op_to_scipy(mol.sq_dipole_z, alg._nqb).todense()
+        
+        
+        H_penalized = H + 1000*Sz@Sz + 1000*(N@N - 4*N + 4*np.eye(H.shape[0]))
         w, v = np.linalg.eigh(H_penalized)
-        print(w)
-        print(all_Es)
-        #Check ground and excited states:
-        for i in range(2):
-            assert all_Es[i] - w[i] == approx(0.0, abs = 1.0e-12)
-         
+        
+        non_degens = [0,1,2,9,10,15]
+        
+        
+        for i in range(len(all_Es)):
+            assert all_Es[i] - w[i] == approx(0.0, abs = 1.0e-10)
+        
+        total_dip = np.sqrt(np.square(dip_x) + np.square(dip_y) + np.square(dip_z))
+        dip_dir = np.zeros((len(all_Es), len(all_Es)),dtype = "complex")
+        for i in non_degens:
+             for op in [fci_dip_x, fci_dip_y, fci_dip_z]:
+                  sig = op@v[:,i]
+                  for j in non_degens:
+                       dip_dir[i,j] += (sig.T.conj()@v[:,j])[0,0]**2
+
+        dip_dir = np.sqrt(dip_dir.real)
+        
+        for i in non_degens:
+             for j in non_degens:
+                  assert dip_dir[i,j]-total_dip[i,j] == approx(0.0, abs = 1e-8)
 
         

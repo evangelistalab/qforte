@@ -20,6 +20,8 @@ def q_sc_eom(H, U_ref, U_manifold, ops_to_compute = []):
     myQC.apply_circuit(U_ref)
     E0 = myQC.direct_op_exp_val(H).real  
     Ek, A = ritz_eigh(H, U_manifold, verbose = False)
+    Es = [E0] + Ek
+    
     print("q-sc-EOM:")
     print("*"*34)
     print(f"State:          Energy (Eh)")
@@ -35,12 +37,12 @@ def q_sc_eom(H, U_ref, U_manifold, ops_to_compute = []):
         A_plus_ref[0, 0] = 1.0
         A_plus_ref[1:,1:] = A
         all_Us = [U_ref] + U_manifold
-             
+        
         for op in ops_to_compute:
             op_vqe_basis = qforte.build_effective_operator(op, all_Us)
             op_q_sc_eom_basis = A_plus_ref.T.conj()@op_vqe_basis@A_plus_ref
             op_mats.append(op_q_sc_eom_basis.real)
-
+    
     return [E0, Ek] + op_mats
 
 def ritz_eigh(H, U, verbose = True, ops_to_compute = []):
@@ -52,6 +54,8 @@ def ritz_eigh(H, U, verbose = True, ops_to_compute = []):
     ops_to_compute is a list of JW-transformed operators that we want an array in the basis of the ground and excited states.
     """
     M = qforte.build_effective_operator(H, U)
+    
+    
     Ek, A = np.linalg.eigh(M)
     E_pre_diag = np.diag(M).real
     if verbose == True:
