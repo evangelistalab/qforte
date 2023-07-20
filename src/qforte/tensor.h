@@ -151,6 +151,17 @@ void axpby(const std::shared_ptr<Tensor>& x, double a, double b);
 void add(const Tensor& x);
 
 /**
+ * Subtract one tensor from another
+ * Throw if x is not same shape 
+ **/
+ void subtract(const Tensor& other);
+
+/**
+ * Get the norm of a Tensor
+ **/
+ long double norm();
+
+/**
  * Compute the dot product between this and other Tensors,
  * by unrolling this and other Tensor and adding sum of products of
  * elements

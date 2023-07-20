@@ -79,6 +79,7 @@ std::vector<int> SQOperator::ranks_present() const {
             ranks_present.push_back(term_rank);
         }     
     }
+    std::sort(ranks_present.begin(), ranks_present.end());
     return ranks_present;
 }
 
@@ -211,7 +212,11 @@ QubitOperator SQOperator::jw_transform(bool qubit_excitation) {
     return qo;
 }
 
-std::vector<SQOperator> SQOperator::split_by_rank(void){
+std::vector<SQOperator> SQOperator::split_by_rank(bool simplify){
+
+    if (simplify){
+        SQOperator::simplify();
+    }
 
     // What we will be returning
     std::vector<SQOperator> return_vec;

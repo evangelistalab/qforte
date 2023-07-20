@@ -264,6 +264,22 @@ class TestApplySQOP(unittest.TestCase):
 
         self.assertEqual(ranks, [5, 2])
 
+    def test_split_by_rank(self):
+
+        my_op = qf.SQOperator()
+
+        my_op.add_term(1.5, [2, 4, 2], [2, 1])
+        my_op.add_term(1.5, [2, 4, 4, 2], [2, 1])
+        my_op.add_term(1.5, [6, 2, 4, 2], [2, 1])
+        my_op.add_term(1.5, [2], [2, 1])
+        my_op.add_term(1.0, [], [])
+
+        list = my_op.split_by_rank(False)
+
+        for i in list:
+            self.assertEqual(len(i.ranks_present()), 1)
+        
+
 
 unittest.main()
 

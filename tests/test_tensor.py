@@ -119,6 +119,44 @@ class TestTensor(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             t1.add(t2)
 
+    def test_subtract(self):
+        
+        shape = [10, 12]
+        ref_arr = [ [0]*12 for i in range(10)]
+
+        t1 = qf.Tensor(shape, "Tensor 1")
+        t2 = qf.Tensor(shape, "Tensor 2")
+
+        random_array = np.random.rand(10, 12)
+        random_array2 = np.random.rand(10, 12)
+
+        
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                t1.set([i, j], random_array[i, j])
+                t2.set([i, j], random_array2[i, j])
+
+        t1.subtract(t2)
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                ref_arr[i][j] = t1.get([i, j])
+
+        final_array = np.subtract(random_array, random_array2) - ref_arr
+
+        self.assertLess(np.linalg.norm(final_array), 1e-16)
+
+    def test_subtract2(self):
+        shape1 = [3, 2]
+        t1 = qf.Tensor(shape1, "Tensor 1")
+
+        shape2 = [1, 4]
+        t2 = qf.Tensor(shape2, "Tensor 2")
+
+        with self.assertRaises(RuntimeError):
+            t1.subtract(t2)
+        
+
     def test_scale(self):
 
         shape = [3, 3]
@@ -686,6 +724,43 @@ class TestTensor(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             t1.fill_from_nparray(random.ravel(), shape2)
+
+    def test_norm(self):
+
+        shape1 = [4, 5]
+
+        t1 = qf.Tensor(shape1, "Tensor 1")
+
+        random_array = np.random.rand(4, 5)
+        random = np.array(random_array, dtype = np.dtype(np.complex128))
+
+        random[2, 3] = 3.0 + 2.5j 
+
+        t1.fill_from_nparray(random.ravel(), shape1)
+        qf_result = t1.norm()
+        ref = np.linalg.norm(random)
+
+
+
+        self.assertEqual(qf_result, ref, 1e-16)
+
+    def test_norm2(self):
+
+        shape1 = [12, 15]
+
+        t1 = qf.Tensor(shape1, "Tensor 1")
+
+        random_array = np.random.rand(12, 15)
+        random = np.array(random_array, dtype = np.dtype(np.complex128))
+
+        random[3, 10] = 12.2 + 2.6j
+
+        t1.fill_from_nparray(random.ravel(), shape1)
+        qf_result = t1.norm()
+        ref = np.linalg.norm(random)
+
+        self.assertEqual(qf_result, ref, 1e-14)
+
 
 
 

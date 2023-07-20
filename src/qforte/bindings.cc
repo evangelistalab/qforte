@@ -66,6 +66,7 @@ PYBIND11_MODULE(qforte, m) {
             "is_restricted"_a=false, 
             "Make a TensorOperator")
         .def("add_sqop_of_rank", &TensorOperator::add_sqop_of_rank)    
+        .def("tensors", &TensorOperator::tensors)
         .def("str", &TensorOperator::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false, 
@@ -202,6 +203,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("set", &Tensor::set)
         .def("get", &Tensor::get)
         .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)
+        .def("subtract", &Tensor::subtract)
+        .def("norm", &Tensor::norm)
         .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
         .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
         .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 

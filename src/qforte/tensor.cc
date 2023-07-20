@@ -6,6 +6,7 @@
 // #include <lightspeed/math.hpp>
 
 #include <iostream>
+#include <cmath>
 #include <sstream>
 #include <stdexcept>
 #include <cstring>
@@ -258,6 +259,31 @@ void Tensor::add(const Tensor& other)
     //     data_.begin(), 
     //     add_c<double>
     //     );
+}
+
+void Tensor::subtract(const Tensor& other){
+
+    shape_error(other.shape());
+    for (size_t i = 0; i < size_; i++){
+        data_[i] -= other.read_data()[i];
+    }
+}
+
+long double Tensor::norm(){
+
+    long double result = 0;
+
+    for (int i = 0; i < size_; i++){
+
+        result += std::real(data_[i]) * std::real(data_[i]);
+        result += std::imag(data_[i]) * std::imag(data_[i]);
+
+    }
+
+    result = std::sqrt(result);
+
+    return result;
+
 }
 
 // void Tensor::axpby(
