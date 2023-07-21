@@ -36,6 +36,8 @@ Tensor(
     const std::string& name = "T"
     );
 
+Tensor();
+
 ~Tensor();
 
 // => Topology Accessors <= //
@@ -76,6 +78,12 @@ const std::vector<std::complex<double>>& read_data() const { return data_; }
 
 /// Set this Tensor's name to @param name
 void set_name(const std::string& name) { name_ = name; } 
+
+/// Set this Tensor's strides to @param strides
+void set_strides(const std::vector<size_t> strides) { strides_ = strides; } 
+
+/// Set this Tensor to all seros with @param shape 
+void zero_with_shape(const std::vector<size_t>& shape);
 
 // => Clone Actions <= //
 
@@ -191,7 +199,7 @@ Tensor general_transpose(const std::vector<size_t>& axes) const;
 std::string str(
     bool print_data = true,
     bool print_complex = false,
-    int maxcols = 5,
+    int maxcols = 6,
     const std::string& data_format = "%12.7f",
     const std::string& header_format = "%12zu"
     ) const; 
