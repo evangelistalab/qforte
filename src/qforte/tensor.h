@@ -225,6 +225,15 @@ void shape_error(const std::vector<size_t>& shape) const;
  **/
 void square_error() const;
 
+
+/// ===============> MATH <===================== ///
+
+void zaxpy(
+    const Tensor& x, 
+    const std::complex<double> alpha,
+    const int incx,
+    const int incy);
+
 /// NICK: Comment out the functions below for now, will need external lib
 // => Tensor Multiplication/Permutation <= //
 

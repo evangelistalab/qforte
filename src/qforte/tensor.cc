@@ -1,5 +1,5 @@
 #include "tensor.h"
-
+#include "blas_math.h"
 
 // May need an analog these eventually
 // #include "../util/string.hpp"
@@ -271,6 +271,25 @@ void Tensor::add(const Tensor& other)
 //     C_DSCAL(size_,b,data_.data(),1);
 //     C_DAXPY(size_,a,other->data().data(),1,data_.data(),1); 
 // }
+
+void Tensor::zaxpy(
+    const Tensor& x, 
+    const std::complex<double> alpha, 
+    const int incx, 
+    const int incy)
+{
+    // Check if the two tensors have compatible shapes
+    if (shape_ != x.shape()) {
+        throw std::runtime_error("Tensor::zaxpy: Incompatible tensor shapes for axpy operation.");
+    }
+
+    // Get the raw data pointers for both tensors
+    const std::complex<double>* x_data = x.read_data().data();
+    std::complex<double>* y_data = data_.data();
+
+    // Call the zaxpy function from blas_math.h to perform the operation
+    math_zaxpy(size_, alpha, x_data, incx, y_data, incy);
+}
 
 // std::complex<double> Tensor::vector_dot(
 //     const std::shared_ptr<Tensor>& other
