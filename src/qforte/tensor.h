@@ -242,28 +242,35 @@ void zaxpy(
     const int incx,
     const int incy);
 
+void zaxpby(
+    const Tensor& x,
+    std::complex<double> a,
+    std::complex<double> b,
+    const int incx,
+    const int incy);
+
 /// NICK: Comment out the functions below for now, will need external lib
 // => Tensor Multiplication/Permutation <= //
 
-// /**
-//  * Performed the chained matrix multiplication:
-//  *      
-//  *  C = alpha * As[0]^trans[0] * As[1]^trans[1] * ... + beta * C
-//  *      
-//  *  @param As the list of A core Tensors
-//  *  @param trans the list of transpose arguments
-//  *  @param C the resultant matrix - if this argument is not provided, C is
-//  *      allocated and set to zero in the routine
-//  *  @param alpha the prefactor of the chained multiply
-//  *  @param beta the prefactor of the register tensor C
-//  *  @return C - the resultant tensor (for chaining and new allocation)
-//  **/
-// static std::shared_ptr<Tensor> chain(
-//     const std::vector<std::shared_ptr<Tensor> >& As,
-//     const std::vector<bool>& trans,
-//     const std::shared_ptr<Tensor>& C = std::shared_ptr<Tensor>(),
-//     double alpha = 1.0,
-//     double beta = 0.0);
+/**
+ * Performed the chained matrix multiplication:
+ *      
+ *  C = alpha * As[0]^trans[0] * As[1]^trans[1] * ... + beta * C
+ *      
+ *  @param As the list of A core Tensors
+ *  @param trans the list of transpose arguments
+ *  @param C the resultant matrix - if this argument is not provided, C is
+ *      allocated and set to zero in the routine
+ *  @param alpha the prefactor of the chained multiply
+ *  @param beta the prefactor of the register tensor C
+ *  @return C - the resultant tensor (for chaining and new allocation)
+ **/
+static Tensor chain(
+    const std::vector<Tensor>& As,
+    const std::vector<bool>& trans,
+    // const Tensor& C = Tensor(),
+    std::complex<double> alpha,
+    std::complex<double> beta);
 
 // static std::shared_ptr<Tensor> permute(
 //     const std::vector<std::string>& Ainds,

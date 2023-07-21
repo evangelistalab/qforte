@@ -257,12 +257,17 @@ void Tensor::antisymmetrize()
 }
 
 // TODO(NICK:) reimplement Scal
+// void Tensor::scale(std::complex<double> a)
+// {
+//     // C_DSCAL(size_,a,data_.data(),1);
+//     for(size_t i = 0; i < size_; i++){
+//         data_[i] *= a;
+//     }
+// }
+
 void Tensor::scale(std::complex<double> a)
 {
-    // C_DSCAL(size_,a,data_.data(),1);
-    for(size_t i = 0; i < size_; i++){
-        data_[i] *= a;
-    }
+    math_zscale(size_, a, data_.data(), 1);
 }
 
 void Tensor::copy(
@@ -290,7 +295,7 @@ void Tensor::add(const Tensor& other)
     //     );
 }
 
-// void Tensor::axpby(
+// void Tensor::zaxpby(
 //     const std::shared_ptr<Tensor>& other,
 //     std::complex<double> a,
 //     std::complex<double> b
@@ -300,7 +305,20 @@ void Tensor::add(const Tensor& other)
     
 //     C_DSCAL(size_,b,data_.data(),1);
 //     C_DAXPY(size_,a,other->data().data(),1,data_.data(),1); 
-// }
+// } OLD
+
+void Tensor::zaxpby(
+    const Tensor& x,
+    std::complex<double> a,
+    std::complex<double> b,
+    const int incx,
+    const int incy
+    )
+{
+    shape_error(x.shape());
+    math_zscale(size_, b, data_.data(),1);
+    math_zaxpy(size_, a, x.read_data().data(), incx, data_.data(), incy); 
+}
 
 void Tensor::zaxpy(
     const Tensor& x, 

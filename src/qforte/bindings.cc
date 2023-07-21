@@ -224,6 +224,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
         .def("general_transpose", &Tensor::general_transpose) // TODO(Tyler) Need Test (use numpy)
         .def("zaxpy", &Tensor::zaxpy, "x"_a, "alpha"_a, "incx"_a = 1, "incy"_a = 1) // TODO(Tyler) Need Test (use numpy)
+        .def_static("chain", &Tensor::chain, "As"_a, "trans"_a, "alpha"_a = 1.0, "beta"_a = 0.0) // TODO(Tyler) Need Test (use numpy)
         .def("str", &Tensor::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false, 
