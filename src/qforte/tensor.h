@@ -159,7 +159,7 @@ void add(const Tensor& x);
 /**
  * Get the norm of a Tensor
  **/
- long double norm();
+ double norm();
 
 /**
  * Compute the dot product between this and other Tensors,

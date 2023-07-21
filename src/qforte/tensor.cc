@@ -269,14 +269,13 @@ void Tensor::subtract(const Tensor& other){
     }
 }
 
-long double Tensor::norm(){
+double Tensor::norm(){
 
-    long double result = 0;
+    double result = 0;
 
     for (int i = 0; i < size_; i++){
 
-        result += std::real(data_[i]) * std::real(data_[i]);
-        result += std::imag(data_[i]) * std::imag(data_[i]);
+        result += std::real(data_[i]) * std::real(data_[i]) + std::imag(data_[i]) * std::imag(data_[i]);
 
     }
 

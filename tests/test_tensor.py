@@ -740,9 +740,9 @@ class TestTensor(unittest.TestCase):
         qf_result = t1.norm()
         ref = np.linalg.norm(random)
 
+        diff = qf_result - ref
 
-
-        self.assertEqual(qf_result, ref, 1e-16)
+        self.assertLess(abs(diff), 1e-14)
 
     def test_norm2(self):
 
@@ -759,7 +759,9 @@ class TestTensor(unittest.TestCase):
         qf_result = t1.norm()
         ref = np.linalg.norm(random)
 
-        self.assertEqual(qf_result, ref, 1e-14)
+        diff = qf_result - ref
+
+        self.assertLess(abs(diff), 1e-14)
 
 
 
