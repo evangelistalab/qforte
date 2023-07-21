@@ -37,24 +37,15 @@ class TestQSCEOM:
         
         U_ansatz = alg.ansatz_circuit(alg._tamps)
         U_hf = build_Uprep(mol.hf_reference, 'occupation_list')
-        #Unitaries to build CISD determinants
+        U_hf.add_circuit(U_ansatz)
+        
         cisd = [build_Uprep(det, 'occupation_list') for det in cisd_manifold(mol.hf_reference)]
         manifold = []
         for i in range(len(cisd)):
             det = cisd[i]
             det.add_circuit(U_ansatz)
-            manifold.append(det)
+            manifold.append(det)   
         
-        U_hf.add_circuit(U_ansatz)
-        #Actual q-sc-EOM Calculation
-        E0, Eks, dip_x, dip_y, dip_z = q_sc_eom(mol.hamiltonian, U_hf, manifold, ops_to_compute = [mol.dipole_x, 
-                                                                                                   mol.dipole_y, 
-                                                                                                   mol.dipole_z])
-        #E0, Eks = q_sc_eom(mol.hamiltonian, U_ansatz, U_hf, U_man)
-        
-        all_Es = [E0] + list(Eks)
-        
-        #Get FCI solutions:
         H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb).todense()
         Sz = sq_op_to_scipy(total_spin_z(alg._nqb, do_jw = False), alg._nqb).todense()
         N = sq_op_to_scipy(total_number(alg._nqb, do_jw = False), alg._nqb).todense()
@@ -66,8 +57,12 @@ class TestQSCEOM:
         H_penalized = H + 1000*Sz@Sz + 1000*(N@N - 4*N + 4*np.eye(H.shape[0]))
         w, v = np.linalg.eigh(H_penalized)
         
+        E0, Eks, dip_x, dip_y, dip_z = q_sc_eom(mol.hamiltonian, U_hf, manifold, ops_to_compute = [mol.dipole_x, 
+                                                                                                   mol.dipole_y, 
+                                                                                                   mol.dipole_z]) 
+        all_Es = [E0] + list(Eks)
+
         non_degens = [0,1,2,9,10,15]
-        
         
         for i in range(len(all_Es)):
             assert all_Es[i] - w[i] == approx(0.0, abs = 1.0e-10)
@@ -79,7 +74,6 @@ class TestQSCEOM:
                   sig = op@v[:,i]
                   for j in non_degens:
                        dip_dir[i,j] += (sig.T.conj()@v[:,j])[0,0]**2
-
         dip_dir = np.sqrt(dip_dir.real)
         
         for i in non_degens:

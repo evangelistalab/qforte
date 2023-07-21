@@ -7,8 +7,6 @@ from qforte import ritz_eigh
 from qforte import total_spin_z
 from qforte import total_number
 from qforte import cisd_manifold
-
-
 import os
 import numpy as np
 import pytest
@@ -29,10 +27,11 @@ class TestSAADAPTVQE:
                              num_frozen_uocc = 1)
         
         refs = [mol.hf_reference] + cisd_manifold(mol.hf_reference)
-        
+        np.random.seed(0)
         weights = np.random.random((len(refs)))
         weights /= np.sum(weights)
         weights = list(weights)
+
         alg = ADAPTVQE(mol,
                        print_summary_file = False,
                        is_multi_state = True,
@@ -47,11 +46,12 @@ class TestSAADAPTVQE:
 
         H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb).todense()
         Sz = sq_op_to_scipy(total_spin_z(alg._nqb, do_jw = False), alg._nqb).todense()
-        N = sq_op_to_scipy(total_number(alg._nqb, do_jw = False), alg._nqb).todense()
-        H_penalized = H + 1000*Sz@Sz + 1000*(N@N - 4*N + 4*np.eye(H.shape[0]))
+        N = sq_op_to_scipy(total_number(alg._nqb, do_jw = False), alg._nqb).todense() 
         dip_x_arr = sq_op_to_scipy(mol.sq_dipole_x, alg._nqb).todense()
         dip_y_arr = sq_op_to_scipy(mol.sq_dipole_y, alg._nqb).todense()
         dip_z_arr = sq_op_to_scipy(mol.sq_dipole_z, alg._nqb).todense()
+
+        H_penalized = H + 1000*Sz@Sz + 1000*(N@N - 4*N + 4*np.eye(H.shape[0]))
         w, v = np.linalg.eigh(H_penalized)
 
         U = alg.build_Uvqc(amplitudes = alg._tamps)
@@ -62,13 +62,13 @@ class TestSAADAPTVQE:
              assert Es[i] == approx(w[i], abs = 1.0e-10)
         
         non_degens = [0,1,2,9,10,15]
+        
         dip_dir = np.zeros((len(Es), len(Es)),dtype = "complex")
         for i in non_degens:
              for op in [dip_x_arr, dip_y_arr, dip_z_arr]:
                   sig = op@v[:,i]
                   for j in non_degens:
                        dip_dir[i,j] += (sig.T.conj()@v[:,j])[0,0]**2
-
         dip_dir = np.sqrt(dip_dir.real)
         
         for i in non_degens:
