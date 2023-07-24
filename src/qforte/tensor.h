@@ -57,6 +57,9 @@ const std::vector<size_t>& shape() const { return shape_; }
 /// The offset between consecutive indices within each dimension
 const std::vector<size_t>& strides() const { return strides_; }
 
+/// Whether the tensor has been initilized or not 
+const bool initialized() const { return initialized_; }
+
 // => Data Accessors <= //
 
 /**
@@ -272,23 +275,23 @@ static Tensor chain(
     std::complex<double> alpha,
     std::complex<double> beta);
 
-// static std::shared_ptr<Tensor> permute(
-//     const std::vector<std::string>& Ainds,
-//     const std::vector<std::string>& Cinds,
-//     const std::shared_ptr<Tensor>& A,
-//     const std::shared_ptr<Tensor>& C = std::shared_ptr<Tensor>(),
-//     double alpha = 1.0,
-//     double beta = 0.0);
+static Tensor permute(
+    const std::vector<std::string>& Ainds,
+    const std::vector<std::string>& Cinds,
+    const Tensor& A,
+    const Tensor& C2 = Tensor(), // This again, ability to have uninitialized tensor
+    std::complex<double> alpha = 1.0,
+    std::complex<double> beta = 0.0);
 
-// static std::shared_ptr<Tensor> einsum(
-//     const std::vector<std::string>& Ainds,
-//     const std::vector<std::string>& Binds,
-//     const std::vector<std::string>& Cinds,
-//     const std::shared_ptr<Tensor>& A,
-//     const std::shared_ptr<Tensor>& B,
-//     const std::shared_ptr<Tensor>& C = std::shared_ptr<Tensor>(),
-//     double alpha = 1.0,
-//     double beta = 0.0);
+static Tensor einsum(
+    const std::vector<std::string>& Ainds,
+    const std::vector<std::string>& Binds,
+    const std::vector<std::string>& Cinds,
+    const Tensor& A,
+    const Tensor& B,
+    const Tensor& C3 = Tensor(),
+    std::complex<double> alpha = 1.0,
+    std::complex<double> beta = 0.0);
 
 // // => Linear Algebra <= //
 
@@ -384,6 +387,8 @@ std::vector<size_t> shape_;
 std::vector<size_t> strides_;
 
 size_t size_;
+
+bool initialized_ = 0;
 
 /// TODO(Nick): I am sure this will cause problems...
 std::vector<std::complex<double>> data_;

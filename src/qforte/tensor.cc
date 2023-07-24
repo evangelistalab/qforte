@@ -30,6 +30,8 @@ Tensor::Tensor(
     }  
     data_.resize(size_,0.0);
 
+    initialized_ = 1;
+
     // Ed's special memory thing
     total_memory__ += data_.size() * sizeof(std::complex<double>);
 }
@@ -96,6 +98,8 @@ void Tensor::zero_with_shape(const std::vector<size_t>& shape)
     size_ = size;
     data_.resize(size_, 0.0);
     memset(data_.data(),'\0',sizeof(std::complex<double>)*size_);
+
+    initialized_ = 1;
 
     // Ed's special memory thing
     total_memory__ = data_.size() * sizeof(std::complex<double>);
