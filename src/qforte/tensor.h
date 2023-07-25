@@ -275,21 +275,24 @@ static Tensor chain(
     std::complex<double> alpha,
     std::complex<double> beta);
 
-static Tensor permute(
+// static Tensor permute(
+static void permute(
     const std::vector<std::string>& Ainds,
     const std::vector<std::string>& Cinds,
     const Tensor& A,
-    const Tensor& C2 = Tensor(), // This again, ability to have uninitialized tensor
+    // const Tensor& C2 = Tensor(), // This again, ability to have uninitialized tensor
+    Tensor& C2,
     std::complex<double> alpha = 1.0,
     std::complex<double> beta = 0.0);
 
-static Tensor einsum(
+static void einsum(
     const std::vector<std::string>& Ainds,
     const std::vector<std::string>& Binds,
     const std::vector<std::string>& Cinds,
     const Tensor& A,
     const Tensor& B,
-    const Tensor& C3 = Tensor(),
+    // const Tensor& C3 = Tensor(),
+    Tensor& C3,
     std::complex<double> alpha = 1.0,
     std::complex<double> beta = 0.0);
 

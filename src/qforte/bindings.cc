@@ -226,6 +226,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("zaxpy", &Tensor::zaxpy, "x"_a, "alpha"_a, "incx"_a = 1, "incy"_a = 1) // TODO(Tyler) Need Test (use numpy)
 
         .def_static("chain", &Tensor::chain, "As"_a, "trans"_a, "alpha"_a = 1.0, "beta"_a = 0.0) // TODO(Tyler) Need Test (use numpy)
+
         .def_static("einsum", 
             &Tensor::einsum, 
             "Ainds"_a, 
@@ -234,6 +235,15 @@ PYBIND11_MODULE(qforte, m) {
             "A"_a,
             "B"_a, 
             "C3"_a,
+            "alpha"_a = 1.0,
+            "beta"_a = 0.0) 
+
+        .def_static("permute", 
+            &Tensor::permute, 
+            "Ainds"_a, 
+            "Cinds"_a, 
+            "A"_a,
+            "C2"_a,
             "alpha"_a = 1.0,
             "beta"_a = 0.0) 
 

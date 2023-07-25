@@ -2,6 +2,7 @@
 
 #include <tensor.h>
 #include <blas_math.h>
+#include <iostream>
 
 #include <stdexcept>
 #include <algorithm>
@@ -133,11 +134,13 @@ Tensor Tensor::chain(
 
 
 // std::shared_ptr<Tensor> Tensor::permute(
-Tensor Tensor::permute(
+// Tensor Tensor::permute(
+void Tensor::permute( /// NICK: will try replacement only model here
     const std::vector<std::string>& Ainds,
     const std::vector<std::string>& Cinds,
     const Tensor& A,
-    const Tensor& C2,
+    // const Tensor& C2,
+    Tensor& C2,
     std::complex<double> alpha,
     std::complex<double> beta)
 {
@@ -164,7 +167,7 @@ Tensor Tensor::permute(
 
     // Allocate C if needed
     // std::shared_ptr<Tensor> C = C2; OLD
-    Tensor C = C2;
+    Tensor C = C2; // Shallow copy?
 
     /// NICK: Might be a todo,
     /// not sure when we would pass C2 as an empty tensor,
@@ -175,7 +178,7 @@ Tensor Tensor::permute(
             Cdim[perm[dim]] = A.shape()[dim];
         } 
         // C = std::shared_ptr<Tensor>(new Tensor(Cdim,"C"));
-        C.zero_with_shape(Cdim); // May want to mane this
+        // C.zero_with_shape(Cdim); // May want to mane this
     }
     
     // if (Cinds.size() != C->ndim()) { OLD
@@ -219,7 +222,9 @@ Tensor Tensor::permute(
             1,
             Cp,
             1);
-        return C;
+
+        C2 = C;
+        return;
     }
 
     // size_t slow_size = A->size() / fast_size;
@@ -567,18 +572,24 @@ Tensor Tensor::permute(
             }
         }
     }
-    return C;
+    // return C;
+
+    /// NICK: This seems to work but is obviously super wasteful, 
+    /// May want to revise.
+    C2 = C;
+    return;
 } // Well, it compiles at least!
 
 
 
-Tensor Tensor::einsum(
+void Tensor::einsum(
     const std::vector<std::string>& Ainds,
     const std::vector<std::string>& Binds,
     const std::vector<std::string>& Cinds,
     const Tensor& A,
     const Tensor& B,
-    const Tensor& C3, 
+    // const Tensor& C3, 
+    Tensor& C3, 
     std::complex<double> alpha,
     std::complex<double> beta)
 {
@@ -595,7 +606,15 @@ Tensor Tensor::einsum(
     
     /// Allocate C if needed
     // std::shared_ptr<Tensor> C = C3;
-    Tensor C = C3;
+    Tensor C = C3; /// IS A DEEP COPY, should be a shallow copy...
+
+    // std::cout << " C.get({0}):  " << C.get({0}) << std::endl;
+
+    // C3.set({0}, 1.5632);
+
+    // std::cout << " C.get({0}):  " <<  C.get({0}) << std::endl;
+    // std::cout << "C3.get({0}):  " << C3.get({0}) << std::endl;
+
     if (!C.initialized()) {
         std::vector<size_t> Cdims(Cinds.size());
         for (size_t Crank = 0; Crank < Cinds.size(); Crank++) {
@@ -623,7 +642,7 @@ Tensor Tensor::einsum(
             if (!found) throw std::runtime_error("einsum: Cind not present in Ainds or Binds: " + Cinds[Crank]);
         }
         // C = std::shared_ptr<Tensor>(new Tensor(Cdims, "C"));
-        C.zero_with_shape(Cdims);
+        // C.zero_with_shape(Cdims);
     }
 
     // if (Cinds.size() != C->ndim()) {
@@ -868,7 +887,7 @@ Tensor Tensor::einsum(
     }
 
     // So what exactly happened?
-    #if 0
+    // #if 0
     printf("==> Einsum Trace <==\n\n");
     printf("Original: C[");
     for (size_t ind = 0l; ind < Cinds.size(); ind++) {
@@ -900,7 +919,7 @@ Tensor Tensor::einsum(
     printf("A Permuted: %s\n", Aperm ? "Yes" : "No");
     printf("B Permuted: %s\n", Bperm ? "Yes" : "No");
     printf("\n");
-    #endif
+    // #endif
 
     // TODO: Do not permute if DGEMV or lower - use for loops
 
@@ -918,6 +937,15 @@ Tensor Tensor::einsum(
     // std::shared_ptr<Tensor> C2 = C;
     Tensor C2 = C;
 
+    // std::cout << "\n mid: C  \n" << C.str() << std::endl;
+    // std::cout << "\n mid: C2 \n" << C2.str() << std::endl;
+    // std::cout << "\n mid: C3 \n" << C3.str() << std::endl;
+    // std::cout << "\n mid: A2 \n" << A2.str() << std::endl;
+    // std::cout << "\n mid: B2 \n" << B2.str() << std::endl;
+
+    std::cout << "\n Psize: \n" << Psize << std::endl;
+    
+
     if (Aperm) {
         std::vector<size_t> A2shape;
         for (size_t ind2 = 0; ind2 < Ainds2.size(); ind2++) {
@@ -928,7 +956,8 @@ Tensor Tensor::einsum(
         // A2 = std::shared_ptr<Tensor>(new Tensor(A2shape));
         Tensor A2(A2shape);
         // Tensor::permute(Ainds, Ainds2, A, A2);
-        A2 = Tensor::permute(Ainds, Ainds2, A, A2); //Maybe?? Permute doesn't have to return someting?? A and A2 are const??
+        // A2 = Tensor::permute(Ainds, Ainds2, A, A2); //Maybe?? Permute doesn't have to return someting?? A and A2 are const??
+        Tensor::permute(Ainds, Ainds2, A, A2); //Maybe?? Permute doesn't have to return someting?? A and A2 are const??
     }
     if (Bperm) {
         std::vector<size_t> B2shape;
@@ -940,7 +969,8 @@ Tensor Tensor::einsum(
         // B2 = std::shared_ptr<Tensor>(new Tensor(B2shape));
         Tensor B2(B2shape);
         // Tensor::permute(Binds,Binds2,B,B2);
-        B2 = Tensor::permute(Binds, Binds2, B, B2);
+        // B2 = Tensor::permute(Binds, Binds2, B, B2);
+        Tensor::permute(Binds, Binds2, B, B2);
     }
     if (Cperm) {
         std::vector<size_t> C2shape;
@@ -952,7 +982,8 @@ Tensor Tensor::einsum(
         // C2 = std::shared_ptr<Tensor>(new Tensor(C2shape));
         Tensor C2(C2shape);
         // Tensor::permute(Cinds,Cinds2,C,C2);
-        C2 = Tensor::permute(Cinds, Cinds2, C,  C2);
+        // C2 = Tensor::permute(Cinds, Cinds2, C,  C2);
+        Tensor::permute(Cinds, Cinds2, C,  C2);
     }
     
     // => BLAS <= //
@@ -963,6 +994,7 @@ Tensor Tensor::einsum(
     std::complex<double>* B2p = B2.data().data();
     // std::complex<double>* C2p = C2->data().data();
     std::complex<double>* C2p = C2.data().data();
+
     for (size_t P = 0; P < Psize; P++) {
         char Ltrans;
         char Rtrans;
@@ -1114,6 +1146,8 @@ Tensor Tensor::einsum(
             }
         } else {
             // C_DGEMM(Ltrans, Rtrans, nrow, ncol, nzip, alpha, Lp, Llda, Rp, Rlda, beta, C2p, Clda);
+            std::cout << "I get here!" << std::endl;
+
             math_zgemm(
                 Ltrans, 
                 Rtrans, 
@@ -1139,10 +1173,20 @@ Tensor Tensor::einsum(
 
     if (Cperm) {
         // Tensor::permute(Cinds2,Cinds,C2,C);
-        C = Tensor::permute(Cinds2, Cinds, C2, C);
+        // C = Tensor::permute(Cinds2, Cinds, C2, C);
+        // Tensor::permute(Cinds2, Cinds, C2, C);
+        Tensor::permute(Cinds2, Cinds, C2, C3);
+    } else {
+        C3 = C2;
     }
 
-    return C;
+    // std::cout << "\n end: C  \n" << C.str() << std::endl;
+    // std::cout << "\n end: C2 \n" << C2.str() << std::endl;
+    // std::cout << "\n end: C3 \n" << C3.str() << std::endl;
+
+    // return C;
+    // C3 = C;
+    // return;
 }
 
 // } // namespace lightspeed

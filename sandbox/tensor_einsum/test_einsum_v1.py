@@ -25,30 +25,29 @@ T2.set([0,1], 4.0)
 T2.set([1,0], 7.0)
 T2.set([1,1], 8.0)
 
-T3 = qf.Tensor(shape=[2], name='joe')
-
-T3.set([0], 1.0)
-# T3 = qf.Tensor()
-
 print(T1)
 print(T2)
 
 my_einstr = "ij,ji->i"
-
 Astr, Bstr, Cstr = re.split(r',|->', my_einstr)
-
 print(f"{Astr}, {Bstr}, {Cstr}")
 
-T4 = qf.Tensor.einsum(
+Tcontainer = qf.Tensor(shape=[2], name='Tcontainer')
+Tcontainer.set([0], 6.5)
+Tcontainer.set([1], 4.5)
+
+print(Tcontainer)
+
+qf.Tensor.einsum(
     [x for x in Astr], 
     [x for x in Bstr], 
     [x for x in Cstr], 
     T1, 
     T2,
-    T3,
+    Tcontainer,
     1.0,
-    1.0)
+    0.0)
 
 # print(T4)
-print(T4)
+print(Tcontainer)
 
