@@ -67,6 +67,7 @@ PYBIND11_MODULE(qforte, m) {
             "Make a TensorOperator")
         .def("add_sqop_of_rank", &TensorOperator::add_sqop_of_rank)    
         .def("tensors", &TensorOperator::tensors)
+        .def("fill_tensor_from_np_by_rank", &TensorOperator::fill_tensor_from_np_by_rank)
         .def("str", &TensorOperator::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false, 

@@ -37,6 +37,8 @@ class TensorOperator {
 
     std::vector<Tensor> tensors() { return tensors_; };
 
+    void fill_tensor_from_np_by_rank(int, std::vector<std::complex<double>>, std::vector<size_t>);
+
     // /// sets the tensor elements from another tensor operator
     // void set_from_tensor_op(const TensorOperator& to);
 
