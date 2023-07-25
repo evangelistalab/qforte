@@ -8,6 +8,7 @@
 #include "circuit.h"
 #include "gate.h"
 #include "computer.h"
+#include "fci_computer.h"
 #include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
@@ -194,8 +195,21 @@ PYBIND11_MODULE(qforte, m) {
         .def("__str__", &Computer::str)
         .def("__repr__", &Computer::str);
 
+    py::class_<FCIComputer>(m, "FCIComputer")
+        .def(py::init<int, int, int>(), "nel"_a, "sz"_a, "norb"_a, "Make a FCIComputer with nel, sz, and norb")
+        .def("str", &FCIComputer::str, 
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false)
+        .def("__str__", &FCIComputer::str, 
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false)
+        .def("__repr__", &FCIComputer::str, 
+            py::arg("print_data") = true, 
+            py::arg("print_complex") = false);
+
     py::class_<Tensor>(m, "Tensor")
         .def(py::init<std::vector<size_t>, std::string>(), "shape"_a, "name"_a, "Make a Tensor with a particualr shape")
+        .def(py::init<>())
         .def("name", &Tensor::name)
         .def("ndim", &Tensor::ndim)
         .def("size", &Tensor::size)
@@ -209,6 +223,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
         .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
         .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 
+        .def("zero_with_shape", &Tensor::zero_with_shape) // TODO(Tyler) Need Test 
         .def("symmetrize", &Tensor::symmetrize) // TODO(Tyler) Need Test 
         .def("antisymmetrize", &Tensor::antisymmetrize) // TODO(Tyler) Need Test 
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)

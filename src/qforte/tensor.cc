@@ -35,6 +35,15 @@ Tensor::Tensor(
     total_memory__ += data_.size() * sizeof(std::complex<double>);
 }
 
+Tensor::Tensor()
+{
+    shape_.assign(1, 1);
+    strides_.resize(1);
+    size_ = 1L;
+    data_.resize(size_, 0.0);
+    total_memory__ += data_.size() * sizeof(std::complex<double>);
+}
+
 /// Destructor
 Tensor::~Tensor()
 {
@@ -70,6 +79,27 @@ void Tensor::set(
         }
         data_[vidx] = val;
     } 
+}
+
+void Tensor::zero_with_shape(const std::vector<size_t>& shape)
+{
+    std::vector<size_t> strides;
+    strides.resize(shape.size());
+    size_t size = 1L;
+
+    for (int i = shape.size() - 1; i >= 0; i--) {
+        strides[i] = size;
+        size *= shape[i];
+    }  
+
+    shape_ = shape;
+    strides_ = strides;
+    size_ = size;
+    data_.resize(size_, 0.0);
+    memset(data_.data(),'\0',sizeof(std::complex<double>)*size_);
+
+    // Ed's special memory thing
+    total_memory__ = data_.size() * sizeof(std::complex<double>);
 }
 
 /// Get the vector index for this tensor based on the tensor index
