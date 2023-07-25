@@ -4,12 +4,14 @@ Quality-of-life shortcuts to build manifolds for excited state methods
 import copy
 from itertools import combinations
 
-def ipea_manifold(ref, n_ann, n_cre, sz_delta):
+def ipea_manifold(ref, n_ann, n_cre, sz_delta, irreps = None):
     """Compute all excitations where n occupied orbitals are annihilated
       and n_cre virtual electrons are created
       sz_delta is a list of allowed spin changes.
-      (e.g. sz_delta = -1 would allow i->ab') 
+      (e.g. sz_delta = -1 would allow i->ab')
+      irreps is a list of the irreducible representation of each spatial orbital.
       """
+    
     M = len(ref)
     occs = [i for i in range(M) if ref[i] == 1]
     noccs = [i for i in range(M) if ref[i] == 0]
@@ -37,6 +39,10 @@ def ipea_manifold(ref, n_ann, n_cre, sz_delta):
                 for a in cre:
                     new_det[a] = 1
                 dets.append(new_det)
+
+        if (irreps!=None):
+            print("Hello")
+        exit()
     return dets
 
 def cin_manifold(ref, N):

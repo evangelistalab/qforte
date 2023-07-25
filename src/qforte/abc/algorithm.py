@@ -99,6 +99,10 @@ class Algorithm(ABC):
                 else:
                     if not (isinstance(reference, list)):
                         raise ValueError("occupation_list reference must be list of 1s and 0s.")
+                    for r in reference:
+                        if r != 0 and r != 1:
+                            raise ValueError("occupation_list reference must be list of 1s and 0s.")
+
                     self._ref = reference
 
                 self._Uprep = build_Uprep(self._ref, state_prep_type)
@@ -125,6 +129,9 @@ class Algorithm(ABC):
                     for ref in reference:
                         if not isinstance(ref, list):
                             raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]")
+                        for r in ref:
+                            if r != 0 and r != 1:
+                                raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]") 
                         self._ref.append(ref)
                 self._Uprep = []
                 for ref in self._ref:
@@ -146,7 +153,7 @@ class Algorithm(ABC):
 
             if(weights==None):
                 #Assume equal weighting
-                self._weights = [1/len(self._ref) for r in range(len(self._ref))]
+                self._weights = [1/len(self._ref)] * len(self._ref)
             else:
                 self._weights = weights
             if len(self._weights) != len(self._ref):
@@ -308,9 +315,9 @@ class AnsatzAlgorithm(Algorithm):
             Uvqc.add(U)
         else:
             Uvqc = []
-            for r in range(len(self._ref)):
+            for Uprep in self._Uprep:
                 Uvqc_r = qforte.Circuit()
-                Uvqc_r.add(self._Uprep[r])
+                Uvqc_r.add(Uprep)
                 Uvqc_r.add(U)
                 Uvqc.append(Uvqc_r)
         return Uvqc
@@ -335,17 +342,28 @@ class AnsatzAlgorithm(Algorithm):
             else:
                 raise ValueError('Invalid operator pool type specified.')
         else:
-            #Point group symmetry is likely to cause problems for multiple references.
             if self._sys.point_group[0].upper() != 'C1':
-                raise ValueError('Only C1 symmetry is supported for multiple references.')
+                if self._state_prep_type != "occupation_list":
+                    print("\nWARNING: Symmetry consistency of references is only checked for occupation lists.\n")
+                for r in range(1, len(self._ref)):
+                    diff = [self._ref[0][i] ^ self._ref[r][i] for i in range(len(self._ref[0]))]
+                    irrep = 0
+                    for i in range(len(diff)):
+                        if diff[i] == 1:
+                            irrep ^= self._sys.orb_irreps_to_int[int(i/2)] 
+                    if irrep != 0:
+                        print("WARNING: References of different irreps. Proceeding with symmetric pool anyway.")
+                    break
+                
+                
             #Only GSD is well-defined for multiple references.
             if self._pool_type in {'GSD'}:
                 self._pool_obj = qf.SQOpPool()
                 #o/v spaces are not well-defined: passing the dummy state |0>
                 if hasattr(self._sys, 'orb_irreps_to_int'):
-                    self._pool_obj.set_orb_spaces([0 for r in range(len(self._ref[0]))], self._sys.orb_irreps_to_int)
+                    self._pool_obj.set_orb_spaces(self._ref[0], self._sys.orb_irreps_to_int)
                 else:
-                    self._pool_obj.set_orb_spaces([0 for r in range(len(self._ref[0]))])
+                    self._pool_obj.set_orb_spaces(self._ref[0])
                 self._pool_obj.fill_pool(self._pool_type) 
                 
             elif isinstance(self._pool_type, qf.SQOpPool):

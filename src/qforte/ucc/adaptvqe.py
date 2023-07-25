@@ -91,6 +91,8 @@ class ADAPTVQE(UCCVQE):
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
         self._adapt_maxiter = adapt_maxiter
+        if adapt_maxiter < 1:
+            raise ValueError("ADAPT must have at least one iteration.") 
         self._opt_maxiter = opt_maxiter
         self._stop_E = stop_E
         self._use_analytic_grad = use_analytic_grad
@@ -237,7 +239,7 @@ class ADAPTVQE(UCCVQE):
                 print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
             else:
                 for r in range(len(self._ref)):
-                    print(f'Trial reference state {r}:      ',  ref_string(self._ref[r], self._nqb))
+                    print(f"{f'Trial reference state {r}:':<35}",  ref_string(self._ref[r], self._nqb))
         else:
             print('Trial reference state(s) were not provided as Slater determinants.')
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
