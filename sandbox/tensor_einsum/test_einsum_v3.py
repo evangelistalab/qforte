@@ -11,25 +11,20 @@ B = np.array([[1.5, 2.5, 3.5],
               [4.5, 5.5, 6.5], 
               [7.5, 8.5, 9.5]])
 
-C1 = A @ B
-print(f"C = A@B \n {C1} \n")
+# C1 = A @ B
+# print(f"C = A@B \n {C1} \n")
 
 # Perform matrix multiplication using einsum
-# einstr  = 'ij,ji->i'
-# einstr  = 'ij,ij->i' # works
-einstr  = 'ij,jk->ik' # Is a matrix multiply... works
-# einstr  = 'ij,jk->ki' # Does not work
-# einstr  = 'ij,kj->ik'
+# einstr  = 'ij,ji->i'  # NOPE
+# einstr  = 'ij,ij->i'  # works and returns same result as above
+# einstr  = 'ij,jk->ik' # works
+# einstr  = 'ij,jk->ki' # works!
+einstr  = 'ij,kj->ik'   # works!
 
 # currently is working with only regular ordering!
-
+print(f"einstring: {einstr}")
 C2 = np.einsum(einstr, A, B)
-
 print(f"C = einsum(..., A, B) \n {C2} \n")
-
-C3 = np.matmul(A, B)
-
-print(f"C = matmul(..., A, B) \n {C3} \n")
 
 shape1 = [3, 3]
 
@@ -55,21 +50,11 @@ T2.set([2,0], 7.5)
 T2.set([2,1], 8.5)
 T2.set([2,2], 9.5)
 
-# my_einstr = "ij,ji->i"
 Astr, Bstr, Cstr = re.split(r',|->', einstr)
 print(f"{Astr}, {Bstr}, {Cstr}")
 
 Tcontainer = qf.Tensor(shape=[3,3], name='Tcontainer')
 # Tcontainer = qf.Tensor(shape=[3], name='Tcontainer')
-
-# Tcontainer.set([0], 6.5)
-# Tcontainer.set([1], 4.5)
-# Tcontainer.set([2], 3.5)
-
-# print(Tcontainer)
-
-T3 = qf.Tensor.chain([T1, T2], [False, False])
-print(T3)
 
 qf.Tensor.einsum(
     [x for x in Astr], 
@@ -81,6 +66,6 @@ qf.Tensor.einsum(
     1.0, # does nothing!
     0.0) # does nothing
 
-# print(T4)
+
 print(Tcontainer)
 

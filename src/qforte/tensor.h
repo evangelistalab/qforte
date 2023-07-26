@@ -93,6 +93,8 @@ void zero_with_shape(const std::vector<size_t>& shape);
 /// Create a new copy of this Tensor (same size and data)
 std::shared_ptr<Tensor> clone();
 
+void fill_from_np(std::vector<std::complex<double>>, std::vector<size_t>);
+
 /// Set a particular element of tis Tensor, specified by idxs
 void set(const std::vector<size_t>& idxs,
          const std::complex<double> val

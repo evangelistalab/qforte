@@ -214,6 +214,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("shape", &Tensor::shape)
         .def("set", &Tensor::set)
         .def("get", &Tensor::get)
+        .def("fill_from_np", &Tensor::fill_from_np)
         .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)
         .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
         .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 

@@ -82,6 +82,13 @@ void Tensor::set(
     } 
 }
 
+void Tensor::fill_from_np(std::vector<std::complex<double>> arr, std::vector<size_t> shape){
+    if (shape_ != shape){
+        throw std::runtime_error("The Shapes are not the same.");
+    }
+    std::memcpy(data_.data(), arr.data(), sizeof(std::complex<double>)*size_);
+}
+
 void Tensor::zero_with_shape(const std::vector<size_t>& shape)
 {
     std::vector<size_t> strides;

@@ -76,7 +76,7 @@ void math_zgemm(
     if(transb == 'C'){ transB = CblasConjTrans; }
 
     cblas_zgemm(
-      CblasColMajor, 
+      CblasRowMajor, // was CblasColMajor Should be CblasRowMajor
       transA, 
       transB, 
       M, 
@@ -114,7 +114,7 @@ void math_zgemv(
     }
 
     cblas_zgemv(
-        CblasColMajor, 
+        CblasRowMajor, 
         transA, 
         M, 
         N, 
@@ -161,7 +161,7 @@ void math_zger(
     const int lda)
 {
     cblas_zgeru(
-        CblasColMajor, 
+        CblasRowMajor, 
         m, 
         n, 
         reinterpret_cast<const openblas_complex_double*>(&alpha), 

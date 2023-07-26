@@ -874,6 +874,7 @@ void Tensor::einsum(
         Ainds2.insert(Ainds2.end(), compound_inds2["iA"].begin(), compound_inds2["iA"].end());
         Ainds2.insert(Ainds2.end(), compound_inds2["kA"].begin(), compound_inds2["kA"].end());
         Atrans = false;
+        // Atrans = true; // ?? Nick Test
     } else {
         Ainds2 = Ainds;
     }
@@ -882,6 +883,7 @@ void Tensor::einsum(
         Binds2.insert(Binds2.end(), compound_inds2["jB"].begin(), compound_inds2["jB"].end());
         Binds2.insert(Binds2.end(), compound_inds2["kB"].begin(), compound_inds2["kB"].end());
         Btrans = true;
+        // Btrans = false; // ?? Nick Test
     } else {
         Binds2 = Binds;
     }
@@ -918,6 +920,15 @@ void Tensor::einsum(
     printf("C Permuted: %s\n", Cperm ? "Yes" : "No");
     printf("A Permuted: %s\n", Aperm ? "Yes" : "No");
     printf("B Permuted: %s\n", Bperm ? "Yes" : "No");
+    // printf("\n");
+    
+    // if(Cperm and Ctrans){ Ctrans = false;}
+    // if(Aperm and Atrans){ Atrans = false;}
+    // if(Bperm and Btrans){ Btrans = false;}
+
+    printf("C Transposed: %s\n", Ctrans ? "Yes" : "No");
+    printf("A Transposed: %s\n", Atrans ? "Yes" : "No");
+    printf("B Transposed: %s\n", Btrans ? "Yes" : "No");
     printf("\n");
     // #endif
 
@@ -1117,6 +1128,7 @@ void Tensor::einsum(
         } else if (nrow > 1 && ncol == 1 && nzip > 1) {
             if (Ltrans == 'N') {
                 // C_DGEMV('N', nrow, nzip, alpha, Lp, Llda, Rp, 1, beta, C2p, 1);
+                std::cout << "I get to math_zgemv with nrow > 1 && ncol == 1 && nzip > 1 and Ltrans == 'N'" << std::endl;
                 math_zgemv(
                     'N', 
                     nrow, 
@@ -1131,6 +1143,7 @@ void Tensor::einsum(
                     1);
             } else {
                 // C_DGEMV('T', nzip, nrow, alpha, Lp, Llda, Rp, 1, beta, C2p, 1);
+                std::cout << "I get to math_zgemv with nrow > 1 && ncol == 1 && nzip > 1 and Ltrans == 'T'" << std::endl;
                 math_zgemv(
                     'T', 
                     nzip, 
@@ -1146,7 +1159,7 @@ void Tensor::einsum(
             }
         } else {
             // C_DGEMM(Ltrans, Rtrans, nrow, ncol, nzip, alpha, Lp, Llda, Rp, Rlda, beta, C2p, Clda);
-            std::cout << "I get here!" << std::endl;
+            std::cout << "I get to zgemm!" << std::endl;
 
             math_zgemm(
                 Ltrans, 
