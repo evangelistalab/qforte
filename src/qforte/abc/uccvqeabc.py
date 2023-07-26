@@ -232,21 +232,14 @@ class UCCVQE(VQE, UCC):
                 qc_psi.set_coeff_vec(psi_i)
 
                 for mu in reversed(range(M-1)):
-
                     # mu => N-1 => M-2
                     # mu+1 => N => M-1
                     # Kmu => KN-1
                     # Kmu_prev => KN
-                    """
-                    if params is None:
-                        tamp = self._tamps[mu+1]
-                    else:
-                        tamp = params[mu+1]
-                    """
+
                     Kmu = Kmus[mu]
 
                     if self._compact_excitations:
-                        raise ValueError("Multi-state VQE not adequately tested with compact excitations.")
                         Umu = qf.Circuit()
                         # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
                         # (see original ADAPT-VQE paper)
@@ -260,8 +253,6 @@ class UCCVQE(VQE, UCC):
                         Umu = Umus[mu+1]
                         pmu = pmus[mu+1]
                         
-                        
-
                     qc_sig.apply_circuit(Umu)
                     qc_psi.apply_circuit(Umu)
                     psi_i = qc_psi.get_coeff_vec()

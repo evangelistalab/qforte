@@ -280,8 +280,7 @@ def create_psi_mol(**kwargs):
 
         external_data['scalar_energy'] = {}
         external_data['scalar_energy']['data'] = p4_Enuc_ref + frozen_core_energy
-        external_data['scalar_energy']['description'] = \
-            "scalar energy (sum of nuclear repulsion, frozen core, and scalar contributions"
+        external_data['scalar_energy']['description'] = "scalar energy (sum of nuclear repulsion and frozen core energy"
 
         external_data['oei'] = {}
         external_data['oei']['data'] = []
@@ -331,7 +330,7 @@ def create_psi_mol(**kwargs):
             external_data['frozen_dip'] = {}
             
             external_data['frozen_dip']['data'] = frozen_core_dipole
-            external_data['frozen_dip']['description'] = "zero-body dipole associated with frozen core ([x, y, z] list)"
+            external_data['frozen_dip']['description'] = "nuclear and frozen-core contribution to dipole moment ([x, y, z] list)"
 
             external_data['dip_ints_x'] = {}
             external_data['dip_ints_y'] = {}
@@ -357,21 +356,24 @@ def create_psi_mol(**kwargs):
 
         external_data['nso'] = {}
         external_data['nso']['data'] = 2 * norbs
-        external_data['nso']['description'] = "number of spin orbitals"
+        external_data['nso']['description'] = "number of active spin orbitals"
         
         external_data['na'] = {}
         external_data['na']['data'] = nalpha - frozen_core
-        external_data['na']['description'] = "number of alpha electrons"
+        external_data['na']['description'] = "number of active alpha electrons"
         
         external_data['nb'] = {}
         external_data['nb']['data'] = nbeta - frozen_core
-        external_data['nb']['description'] = "number of beta electrons"
+        external_data['nb']['description'] = "number of active beta electrons"
+
+        external_data['point_group'] = {}
+        external_data['point_group']['data'] = point_group
+        external_data['point_group']['description'] = "point group."
 
         external_data['symmetry'] = {}
-        external_data['symmetry']['data'] = point_group
-        external_data['symmetry']['description'] = "Saves the point group."
+        external_data['symmetry']['data'] = qforte_mol.orb_irreps_to_int 
+        external_data['symmetry']['description'] = "point group."
 
-                   
         with open(json_dump, 'w') as f:
             json.dump(external_data, f, indent = 0)
 
@@ -427,37 +429,26 @@ def create_external_mol(**kwargs):
     for p, q, r, s, h_pqrs in external_data['tei']['data']:
         qforte_sq_hamiltonian.add(h_pqrs/4.0, [p,q], [s,r]) # only works in C1 symmetry
 
-    try:
-        x_scalar, y_scalar, z_scalar = external_data['frozen_dip']['data'] 
+    
+    x_scalar, y_scalar, z_scalar = external_data['frozen_dip']['data'] 
         
-        qforte_mol.sq_dipole_x = qforte.SQOperator()
-        qforte_mol.sq_dipole_x.add(x_scalar, [], [])
-        qforte_mol.sq_dipole_y = qforte.SQOperator()
-        qforte_mol.sq_dipole_y.add(y_scalar, [], [])
-        qforte_mol.sq_dipole_z = qforte.SQOperator()
-        qforte_mol.sq_dipole_z.add(z_scalar, [], [])
-        for p, q, mu_pq in external_data['dip_ints_x']['data']:
-            qforte_mol.sq_dipole_x.add(mu_pq, [p], [q])
-        for p, q, mu_pq in external_data['dip_ints_y']['data']:
-            qforte_mol.sq_dipole_y.add(mu_pq, [p], [q])
-        for p, q, mu_pq in external_data['dip_ints_z']['data']:
-            qforte_mol.sq_dipole_z.add(mu_pq, [p], [q])
-             
-        qforte_mol.dipole_x = qforte_mol.sq_dipole_x.jw_transform()
-        qforte_mol.dipole_y = qforte_mol.sq_dipole_y.jw_transform()
-        qforte_mol.dipole_z = qforte_mol.sq_dipole_z.jw_transform()
+    qforte_mol.sq_dipole_x = qforte.SQOperator()
+    qforte_mol.sq_dipole_x.add(x_scalar, [], [])
+    qforte_mol.sq_dipole_y = qforte.SQOperator()
+    qforte_mol.sq_dipole_y.add(y_scalar, [], [])
+    qforte_mol.sq_dipole_z = qforte.SQOperator()
+    qforte_mol.sq_dipole_z.add(z_scalar, [], [])
+    for p, q, mu_pq in external_data['dip_ints_x']['data']:
+        qforte_mol.sq_dipole_x.add(mu_pq, [p], [q])
+    for p, q, mu_pq in external_data['dip_ints_y']['data']:
+        qforte_mol.sq_dipole_y.add(mu_pq, [p], [q])
+    for p, q, mu_pq in external_data['dip_ints_z']['data']:
+        qforte_mol.sq_dipole_z.add(mu_pq, [p], [q])
+         
+    qforte_mol.dipole_x = qforte_mol.sq_dipole_x.jw_transform()
+    qforte_mol.dipole_y = qforte_mol.sq_dipole_y.jw_transform()
+    qforte_mol.dipole_z = qforte_mol.sq_dipole_z.jw_transform()
         
-
-    except KeyError:
-        qforte_mol.sq_dipole_x = None
-        qforte_mol.sq_dipole_y = None
-        qforte_mol.sq_dipole_z = None
-        qforte_mol.dipole_x = None
-        qforte_mol.dipole_y = None
-        qforte_mol.dipole_z = None
-        print("Dipole information not available.")
-            
-
     hf_reference = [0] * external_data['nso']['data']
     for occ_alpha in range(external_data['na']['data']):
         hf_reference[occ_alpha * 2] = 1

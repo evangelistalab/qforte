@@ -9,7 +9,7 @@ class TestOpToSparse:
     def test_sq_op_to_scipy(self):
         geom = [("H", (0, 0, r)) for r in range(9)]
         N_qubits = 8
-        hdim = int(2**N_qubits) 
+        hdim = 1 << N_qubits
 
         mol1 = system_factory(build_type = "psi4",
                               mol_geometry = geom, 

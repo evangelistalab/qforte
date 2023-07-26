@@ -142,17 +142,17 @@ class Algorithm(ABC):
                 self._Uprep = []
                 if not isinstance(reference, list):
                     raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
+                self._ref = [system.hf_reference] * len(reference)
                 for ref in reference:
                     if not isinstance(ref, qf.Circuit):
                         raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
-                    self._ref.append(system.hf_reference)
                     self._Uprep.append(ref)
 
             else:
                 raise ValueError("QForte only suppors references as occupation lists and Circuits.")
 
             if(weights==None):
-                #Assume equal weighting
+                print("State-averaging weights not specified.  Assuming equal weights.")
                 self._weights = [1/len(self._ref)] * len(self._ref)
             else:
                 self._weights = weights
@@ -395,14 +395,14 @@ class AnsatzAlgorithm(Algorithm):
         else:
             val = 0
             if self._fast:    
-                for r in range(len(self._ref)):
+                for idx, U in enumerate(Ucirc):
                     myQC = qforte.Computer(self._nqb)
-                    myQC.apply_circuit(Ucirc[r])
-                    val += self._weights[r] * np.real(myQC.direct_op_exp_val(self._qb_ham))
+                    myQC.apply_circuit(U)
+                    val += self._weights[idx] * np.real(myQC.direct_op_exp_val(self._qb_ham))
             else:
-                for r in range(len(self._ref)):
-                    Exp = qforte.Experiment(self._nqb, Ucirc[r], self._qb_ham, 2000)
-                    val += self._weights[r] * Exp.perfect_experimental_avg([])
+                for idx, U in enumerate(Ucirc):
+                    Exp = qforte.Experiment(self._nqb, U, self._qb_ham, 2000)
+                    val += self._weights[idx] * Exp.perfect_experimental_avg([])
 
         assert np.isclose(np.imag(val), 0.0)
 
@@ -452,7 +452,7 @@ class AnsatzAlgorithm(Algorithm):
         """
         This function returns the energy expectation value of the state
         Uprep(params)|0>, where params are parameters that can be optimized
-        for some purpouse such as energy minimizaiton.  If _is_multi_state,
+        for some purpose such as energy minimization.  If _is_multi_state,
         this will be the state-averaged energy instead.
 
         Parameters
