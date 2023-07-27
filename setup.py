@@ -19,10 +19,10 @@ class CMakeExtension(Extension):
         
         # Add BLAS options
         self.cmake_args = []
-        self.cmake_args.extend([
-            '-DBLAS_LIBRARIES=/Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib',  # Replace with actual BLAS library path
-            # '-DLAPACK_LIBRARIES=/path/to/lapack/libraries'  # Replace with actual LAPACK library path
-        ])
+        # self.cmake_args.extend([
+        #     '-DBLAS_LIBRARIES=/Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib',  # Replace with actual BLAS library path
+        #     # '-DLAPACK_LIBRARIES=/path/to/lapack/libraries'  # Replace with actual LAPACK library path
+        # ])
 
 class CMakeBuild(build_ext):
     def run(self):
@@ -49,7 +49,7 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(
             os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable]  + ext.cmake_args # Last bit is crucial here
+                      '-DPYTHON_EXECUTABLE=' + sys.executable] #  + ext.cmake_args # Last bit is crucial here
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]

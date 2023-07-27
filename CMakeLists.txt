@@ -36,12 +36,18 @@ cmake_policy(SET CMP0074 NEW)
 # Bypass FindBLAS module
 set(BLA_VENDOR "Generic")
 
+# (Nick) I need the following, may be elsewhere or unneeded on other os. 
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
+# set(CMAKE_PREFIX_PATH "/Users/nstair/anaconda3/envs/qforte_env_v1")
+# set(BLAS_ROOT "/Users/nstair/anaconda3/envs/qforte_env_v1/lib") V1-removed
+
+# Use these if installing to anaconda
 set(CMAKE_PREFIX_PATH "/Users/nstair/anaconda3/envs/qforte_env_v1")
-set(BLAS_ROOT "/Users/nstair/anaconda3/envs/qforte_env_v1/lib")
-set(BLAS_LIBRARIES "/Users/nstair/anaconda3/envs/qforte_env_v1/lib")
-set(CBLAS_INCLUDE_DIR "/Users/nstair/anaconda3/envs/qforte_env_v1/include")
+set(BLAS_LIBRARIES "${CMAKE_PREFIX_PATH}/lib") 
+set(CBLAS_INCLUDE_DIR "${CMAKE_PREFIX_PATH}/include") #need
+set(OPENBLAS_EXE "${CMAKE_PREFIX_PATH}/lib/libopenblas.dylib") #need, may be libopenblas.so for linux
 # find_package(BLAS REQUIRED)
 
 
@@ -85,10 +91,13 @@ pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
 
 # target_link_libraries(qforte PRIVATE fmt-header-only) OLD
 # set(CMAKE_VERBOSE_MAKEFILE ON)
-link_directories(/Users/nstair/anaconda3/envs/qforte_env_v1/lib)
-target_include_directories(qforte PRIVATE /Users/nstair/anaconda3/envs/qforte_env_v1/include)
+# link_directories(/Users/nstair/anaconda3/envs/qforte_env_v1/lib) V1
+link_directories(${BLAS_LIBRARIES})
+# target_include_directories(qforte PRIVATE /Users/nstair/anaconda3/envs/qforte_env_v1/include) V1
+target_include_directories(qforte PRIVATE ${CBLAS_INCLUDE_DIR})
 
-target_link_libraries(qforte PRIVATE fmt-header-only /Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib)
+# target_link_libraries(qforte PRIVATE fmt-header-only /Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib) V1
+target_link_libraries(qforte PRIVATE fmt-header-only ${OPENBLAS_EXE})
 # target_link_libraries(qforte PRIVATE fmt-header-only /Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib)
 # target_link_libraries(qforte PRIVATE fmt-header-only BLAS::BLAS)
 # target_link_libraries(qforte PRIVATE fmt-header-only)
@@ -107,7 +116,7 @@ SET(TESTS ${SOURCES}
     "${TEST_DIR}/test_math.cc")
 
 # Generate a test executable
-include_directories(/Users/nstair/anaconda3/envs/qforte_env_v1/include)
+include_directories(${CBLAS_INCLUDE_DIR})
 include_directories(lib/catch2/single_include/catch2)
 include_directories(lib/fmt/include)
 
@@ -137,4 +146,5 @@ add_executable("${PROJECT_NAME}_benchmarks"
     "${SOURCE_DIR}/sparse_tensor.cc"
     "${SOURCE_DIR}/timer.cc")
 
-target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only /Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib)
+# target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only /Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib) V1
+target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only ${OPENBLAS_EXE})
