@@ -941,12 +941,38 @@ void Tensor::einsum(
     /// NICK: This next section above the blas calls is a bit odd to me,
     /// may be why all of the tensors were kepts as shared pointer to tensors?
 
+    // ==> NEW CODE FOR TENSOR SIZING <== //
+
+    std::vector<size_t> A2shape;
+    for (size_t ind2 = 0; ind2 < Ainds2.size(); ind2++) {
+        const std::string& ind = Ainds2[ind2];
+        A2shape.push_back(A.shape()[std::distance(Ainds.begin(),std::find(Ainds.begin(),Ainds.end(),ind))]);
+    } 
+
+    std::vector<size_t> B2shape;
+    for (size_t ind2 = 0; ind2 < Binds2.size(); ind2++) {
+        const std::string& ind = Binds2[ind2];
+        B2shape.push_back(B.shape()[std::distance(Binds.begin(),std::find(Binds.begin(),Binds.end(),ind))]);
+    } 
+
+    std::vector<size_t> C2shape;
+    for (size_t ind2 = 0; ind2 < Cinds2.size(); ind2++) {
+        const std::string& ind = Cinds2[ind2];
+        // C2shape.push_back(C->shape()[std::distance(Cinds.begin(),std::find(Cinds.begin(),Cinds.end(),ind))]);
+        C2shape.push_back(C.shape()[std::distance(Cinds.begin(),std::find(Cinds.begin(),Cinds.end(),ind))]);
+    } 
+
+
     // std::shared_ptr<Tensor> A2 = A;
-    Tensor A2 = A;
+    // Tensor A2 = A;
     // std::shared_ptr<Tensor> B2 = B;
-    Tensor B2 = B;
+    // Tensor B2 = B;
     // std::shared_ptr<Tensor> C2 = C;
-    Tensor C2 = C;
+    // Tensor C2 = C;
+
+    Tensor A2(A2shape, "A2");
+    Tensor B2(B2shape, "B2");
+    Tensor C2(C2shape, "C2");
 
     // std::cout << "\n mid: C  \n" << C.str() << std::endl;
     // std::cout << "\n mid: C2 \n" << C2.str() << std::endl;
@@ -964,11 +990,14 @@ void Tensor::einsum(
             // A2shape.push_back(A->shape()[std::distance(Ainds.begin(),std::find(Ainds.begin(),Ainds.end(),ind))]);
             A2shape.push_back(A.shape()[std::distance(Ainds.begin(),std::find(Ainds.begin(),Ainds.end(),ind))]);
         } 
+
         // A2 = std::shared_ptr<Tensor>(new Tensor(A2shape));
-        Tensor A2(A2shape);
+        // Tensor A2(A2shape);
         // Tensor::permute(Ainds, Ainds2, A, A2);
-        // A2 = Tensor::permute(Ainds, Ainds2, A, A2); //Maybe?? Permute doesn't have to return someting?? A and A2 are const??
-        Tensor::permute(Ainds, Ainds2, A, A2); //Maybe?? Permute doesn't have to return someting?? A and A2 are const??
+        // A2 = Tensor::permute(Ainds, Ainds2, A, A2); 
+        Tensor::permute(Ainds, Ainds2, A, A2); 
+    } else {
+        A2 = A;
     }
     if (Bperm) {
         std::vector<size_t> B2shape;
@@ -978,10 +1007,12 @@ void Tensor::einsum(
             B2shape.push_back(B.shape()[std::distance(Binds.begin(),std::find(Binds.begin(),Binds.end(),ind))]);
         } 
         // B2 = std::shared_ptr<Tensor>(new Tensor(B2shape));
-        Tensor B2(B2shape);
+        // Tensor B2(B2shape);
         // Tensor::permute(Binds,Binds2,B,B2);
         // B2 = Tensor::permute(Binds, Binds2, B, B2);
         Tensor::permute(Binds, Binds2, B, B2);
+    } else {
+        B2 = B;
     }
     if (Cperm) {
         std::vector<size_t> C2shape;
@@ -991,10 +1022,12 @@ void Tensor::einsum(
             C2shape.push_back(C.shape()[std::distance(Cinds.begin(),std::find(Cinds.begin(),Cinds.end(),ind))]);
         } 
         // C2 = std::shared_ptr<Tensor>(new Tensor(C2shape));
-        Tensor C2(C2shape);
+        // Tensor C2(C2shape);
         // Tensor::permute(Cinds,Cinds2,C,C2);
         // C2 = Tensor::permute(Cinds, Cinds2, C,  C2);
         Tensor::permute(Cinds, Cinds2, C,  C2);
+    } else {
+        C2 = C;
     }
     
     // => BLAS <= //
@@ -1036,8 +1069,6 @@ void Tensor::einsum(
         }
         size_t nzip = ksize;
         size_t Clda = (Ctrans ? isize : jsize);
-
-        /// NICK: Need the following math_zgemv, math_zdot, math_zger
 
         if (nrow == 1L && ncol == 1L && nzip == 1L) {
             (*C2p) = alpha * (*Lp) * (*Rp) + beta * (*C2p);
