@@ -12,8 +12,8 @@ def create_random_array(shape, seed=None):
 
 dim1 = 4
 
-# shape1 = [dim1, dim1, dim1, dim1]
-shape1 = [dim1, dim1]
+shape1 = [dim1, dim1, dim1, dim1]
+# shape1 = [dim1, dim1]
 seed_value = 42
 
 R1 = create_random_array(shape1, seed=seed_value)
@@ -22,19 +22,17 @@ R1 = R1.astype(np.complex128)
 R2 = R2.astype(np.complex128)
 
 # Perform matrix multiplication using einsum
-# einstr   = 'pqrs,qrst->pqrt'  # Works!
+einstr   = 'pqrs,qrst->pqrt'  # Works!
 # einstr   = 'qrps,qrst->qrpt'  
 # einstr   = 'qprs,psqr->p'  
 
-# einstr   = 'pppp,pppp->p'  #does not work
-# einstr   = 'pqpq,pqpq->p'  #does not work
-# einstr   = 'pqpq,pqpq->p'  #does not work
+# einstr   = 'pppp,pppp->p'  #does not work?
+# einstr   = 'pqpq,pqpq->p'  #does not work?
+# einstr   = 'pqpq,pqpq->p'  #does not work?
 # einstr   = 'pqrs,pqrs->sr' #works!
 # einstr   = 'pqrs,pqrs->s'  #works!
 
-einstr   = 'ij,jk->ik'  #works!
-
-
+# einstr   = 'ij,jk->ik'  #works!
 
 # may still be some debugging but ok for now...
 

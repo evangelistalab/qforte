@@ -588,7 +588,6 @@ void Tensor::einsum(
     const std::vector<std::string>& Cinds,
     const Tensor& A,
     const Tensor& B,
-    // const Tensor& C3, 
     Tensor& C3, 
     std::complex<double> alpha,
     std::complex<double> beta)
@@ -606,14 +605,7 @@ void Tensor::einsum(
     
     /// Allocate C if needed
     // std::shared_ptr<Tensor> C = C3;
-    Tensor C = C3; /// IS A DEEP COPY, should be a shallow copy...
-
-    // std::cout << " C.get({0}):  " << C.get({0}) << std::endl;
-
-    // C3.set({0}, 1.5632);
-
-    // std::cout << " C.get({0}):  " <<  C.get({0}) << std::endl;
-    // std::cout << "C3.get({0}):  " << C3.get({0}) << std::endl;
+    Tensor C = C3; 
 
     if (!C.initialized()) {
         std::vector<size_t> Cdims(Cinds.size());
@@ -642,7 +634,7 @@ void Tensor::einsum(
             if (!found) throw std::runtime_error("einsum: Cind not present in Ainds or Binds: " + Cinds[Crank]);
         }
         // C = std::shared_ptr<Tensor>(new Tensor(Cdims, "C"));
-        // C.zero_with_shape(Cdims);
+        C.zero_with_shape(Cdims);
     }
 
     // if (Cinds.size() != C->ndim()) {
@@ -874,7 +866,6 @@ void Tensor::einsum(
         Ainds2.insert(Ainds2.end(), compound_inds2["iA"].begin(), compound_inds2["iA"].end());
         Ainds2.insert(Ainds2.end(), compound_inds2["kA"].begin(), compound_inds2["kA"].end());
         Atrans = false;
-        // Atrans = true; // ?? Nick Test
     } else {
         Ainds2 = Ainds;
     }
@@ -883,54 +874,46 @@ void Tensor::einsum(
         Binds2.insert(Binds2.end(), compound_inds2["jB"].begin(), compound_inds2["jB"].end());
         Binds2.insert(Binds2.end(), compound_inds2["kB"].begin(), compound_inds2["kB"].end());
         Btrans = true;
-        // Btrans = false; // ?? Nick Test
     } else {
         Binds2 = Binds;
     }
 
     // So what exactly happened?
-    // #if 0
-    printf("==> Einsum Trace <==\n\n");
-    printf("Original: C[");
-    for (size_t ind = 0l; ind < Cinds.size(); ind++) {
-        printf("%s", Cinds[ind].c_str());
-    }
-    printf("] = A[");
-    for (size_t ind = 0l; ind < Ainds.size(); ind++) {
-        printf("%s", Ainds[ind].c_str());
-    }
-    printf("] * B[");
-    for (size_t ind = 0l; ind < Binds.size(); ind++) {
-        printf("%s", Binds[ind].c_str());
-    }
-    printf("]\n");
-    printf("New:      C[");
-    for (size_t ind = 0l; ind < Cinds2.size(); ind++) {
-        printf("%s", Cinds2[ind].c_str());
-    }
-    printf("] = A[");
-    for (size_t ind = 0l; ind < Ainds2.size(); ind++) {
-        printf("%s", Ainds2[ind].c_str());
-    }
-    printf("] * B[");
-    for (size_t ind = 0l; ind < Binds2.size(); ind++) {
-        printf("%s", Binds2[ind].c_str());
-    }
-    printf("]\n");
-    printf("C Permuted: %s\n", Cperm ? "Yes" : "No");
-    printf("A Permuted: %s\n", Aperm ? "Yes" : "No");
-    printf("B Permuted: %s\n", Bperm ? "Yes" : "No");
+    // printf("==> Einsum Trace <==\n\n");
+    // printf("Original: C[");
+    // for (size_t ind = 0l; ind < Cinds.size(); ind++) {
+    //     printf("%s", Cinds[ind].c_str());
+    // }
+    // printf("] = A[");
+    // for (size_t ind = 0l; ind < Ainds.size(); ind++) {
+    //     printf("%s", Ainds[ind].c_str());
+    // }
+    // printf("] * B[");
+    // for (size_t ind = 0l; ind < Binds.size(); ind++) {
+    //     printf("%s", Binds[ind].c_str());
+    // }
+    // printf("]\n");
+    // printf("New:      C[");
+    // for (size_t ind = 0l; ind < Cinds2.size(); ind++) {
+    //     printf("%s", Cinds2[ind].c_str());
+    // }
+    // printf("] = A[");
+    // for (size_t ind = 0l; ind < Ainds2.size(); ind++) {
+    //     printf("%s", Ainds2[ind].c_str());
+    // }
+    // printf("] * B[");
+    // for (size_t ind = 0l; ind < Binds2.size(); ind++) {
+    //     printf("%s", Binds2[ind].c_str());
+    // }
+    // printf("]\n");
+    // printf("C Permuted: %s\n", Cperm ? "Yes" : "No");
+    // printf("A Permuted: %s\n", Aperm ? "Yes" : "No");
+    // printf("B Permuted: %s\n", Bperm ? "Yes" : "No");
     // printf("\n");
-    
-    // if(Cperm and Ctrans){ Ctrans = false;}
-    // if(Aperm and Atrans){ Atrans = false;}
-    // if(Bperm and Btrans){ Btrans = false;}
-
-    printf("C Transposed: %s\n", Ctrans ? "Yes" : "No");
-    printf("A Transposed: %s\n", Atrans ? "Yes" : "No");
-    printf("B Transposed: %s\n", Btrans ? "Yes" : "No");
-    printf("\n");
-    // #endif
+    // printf("C Transposed: %s\n", Ctrans ? "Yes" : "No");
+    // printf("A Transposed: %s\n", Atrans ? "Yes" : "No");
+    // printf("B Transposed: %s\n", Btrans ? "Yes" : "No");
+    // printf("\n");
 
     // TODO: Do not permute if DGEMV or lower - use for loops
 
@@ -958,73 +941,28 @@ void Tensor::einsum(
     std::vector<size_t> C2shape;
     for (size_t ind2 = 0; ind2 < Cinds2.size(); ind2++) {
         const std::string& ind = Cinds2[ind2];
-        // C2shape.push_back(C->shape()[std::distance(Cinds.begin(),std::find(Cinds.begin(),Cinds.end(),ind))]);
         C2shape.push_back(C.shape()[std::distance(Cinds.begin(),std::find(Cinds.begin(),Cinds.end(),ind))]);
     } 
 
-
     // std::shared_ptr<Tensor> A2 = A;
-    // Tensor A2 = A;
     // std::shared_ptr<Tensor> B2 = B;
-    // Tensor B2 = B;
     // std::shared_ptr<Tensor> C2 = C;
-    // Tensor C2 = C;
 
     Tensor A2(A2shape, "A2");
     Tensor B2(B2shape, "B2");
     Tensor C2(C2shape, "C2");
-
-    // std::cout << "\n mid: C  \n" << C.str() << std::endl;
-    // std::cout << "\n mid: C2 \n" << C2.str() << std::endl;
-    // std::cout << "\n mid: C3 \n" << C3.str() << std::endl;
-    // std::cout << "\n mid: A2 \n" << A2.str() << std::endl;
-    // std::cout << "\n mid: B2 \n" << B2.str() << std::endl;
-
-    std::cout << "\n Psize: \n" << Psize << std::endl;
     
-
     if (Aperm) {
-        std::vector<size_t> A2shape;
-        for (size_t ind2 = 0; ind2 < Ainds2.size(); ind2++) {
-            const std::string& ind = Ainds2[ind2];
-            // A2shape.push_back(A->shape()[std::distance(Ainds.begin(),std::find(Ainds.begin(),Ainds.end(),ind))]);
-            A2shape.push_back(A.shape()[std::distance(Ainds.begin(),std::find(Ainds.begin(),Ainds.end(),ind))]);
-        } 
-
-        // A2 = std::shared_ptr<Tensor>(new Tensor(A2shape));
-        // Tensor A2(A2shape);
-        // Tensor::permute(Ainds, Ainds2, A, A2);
-        // A2 = Tensor::permute(Ainds, Ainds2, A, A2); 
         Tensor::permute(Ainds, Ainds2, A, A2); 
     } else {
         A2 = A;
     }
     if (Bperm) {
-        std::vector<size_t> B2shape;
-        for (size_t ind2 = 0; ind2 < Binds2.size(); ind2++) {
-            const std::string& ind = Binds2[ind2];
-            // B2shape.push_back(B->shape()[std::distance(Binds.begin(),std::find(Binds.begin(),Binds.end(),ind))]);
-            B2shape.push_back(B.shape()[std::distance(Binds.begin(),std::find(Binds.begin(),Binds.end(),ind))]);
-        } 
-        // B2 = std::shared_ptr<Tensor>(new Tensor(B2shape));
-        // Tensor B2(B2shape);
-        // Tensor::permute(Binds,Binds2,B,B2);
-        // B2 = Tensor::permute(Binds, Binds2, B, B2);
         Tensor::permute(Binds, Binds2, B, B2);
     } else {
         B2 = B;
     }
     if (Cperm) {
-        std::vector<size_t> C2shape;
-        for (size_t ind2 = 0; ind2 < Cinds2.size(); ind2++) {
-            const std::string& ind = Cinds2[ind2];
-            // C2shape.push_back(C->shape()[std::distance(Cinds.begin(),std::find(Cinds.begin(),Cinds.end(),ind))]);
-            C2shape.push_back(C.shape()[std::distance(Cinds.begin(),std::find(Cinds.begin(),Cinds.end(),ind))]);
-        } 
-        // C2 = std::shared_ptr<Tensor>(new Tensor(C2shape));
-        // Tensor C2(C2shape);
-        // Tensor::permute(Cinds,Cinds2,C,C2);
-        // C2 = Tensor::permute(Cinds, Cinds2, C,  C2);
         Tensor::permute(Cinds, Cinds2, C,  C2);
     } else {
         C2 = C;
@@ -1216,21 +1154,11 @@ void Tensor::einsum(
     // => Result Permutation <= //
 
     if (Cperm) {
-        // Tensor::permute(Cinds2,Cinds,C2,C);
-        // C = Tensor::permute(Cinds2, Cinds, C2, C);
-        // Tensor::permute(Cinds2, Cinds, C2, C);
         Tensor::permute(Cinds2, Cinds, C2, C3);
     } else {
         C3 = C2;
     }
 
-    // std::cout << "\n end: C  \n" << C.str() << std::endl;
-    // std::cout << "\n end: C2 \n" << C2.str() << std::endl;
-    // std::cout << "\n end: C3 \n" << C3.str() << std::endl;
-
-    // return C;
-    // C3 = C;
-    // return;
 }
 
 // } // namespace lightspeed
