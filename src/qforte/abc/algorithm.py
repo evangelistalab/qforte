@@ -398,6 +398,7 @@ class AnsatzAlgorithm(Algorithm):
                 for idx, U in enumerate(Ucirc):
                     myQC = qforte.Computer(self._nqb)
                     myQC.apply_circuit(U)
+                    
                     val += self._weights[idx] * np.real(myQC.direct_op_exp_val(self._qb_ham))
             else:
                 for idx, U in enumerate(Ucirc):
@@ -405,7 +406,7 @@ class AnsatzAlgorithm(Algorithm):
                     val += self._weights[idx] * Exp.perfect_experimental_avg([])
 
         assert np.isclose(np.imag(val), 0.0)
-
+        
         return val
 
     def __init__(self, *args, qubit_excitations=False, compact_excitations=False, diis_max_dim=8,

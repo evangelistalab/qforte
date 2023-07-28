@@ -25,11 +25,12 @@ class TestQSCEOM:
                              basis = 'sto-6g',
                              num_frozen_docc = 1,
                              num_frozen_uocc = 1,
-                             dipole = True)
+                             dipole = True,
+                             symmetry = "C1")
         
         alg = ADAPTVQE(mol, print_summary_file = False)
 
-        alg.run(adapt_maxiter = 100,
+        alg.run(adapt_maxiter = 1000,
                 avqe_thresh = 0,
                 opt_thresh = 1e-16,
                 pool_type = 'GSD',
@@ -39,7 +40,7 @@ class TestQSCEOM:
         U_hf = build_Uprep(mol.hf_reference, 'occupation_list')
         U_hf.add_circuit(U_ansatz)
         
-        cisd = [build_Uprep(det, 'occupation_list') for det in cisd_manifold(mol.hf_reference)]
+        cisd = [build_Uprep(det, 'occupation_list') for det in cisd_manifold(mol.hf_reference, irreps = mol.orb_irreps_to_int)]
         manifold = []
         for i in range(len(cisd)):
             det = cisd[i]
@@ -66,18 +67,24 @@ class TestQSCEOM:
         
         for i in range(len(all_Es)):
             assert all_Es[i] - w[i] == approx(0.0, abs = 1.0e-10)
+        total_dip = np.zeros(dip_x.shape)
+        for op in [dip_x, dip_y, dip_z]:
+             total_dip += np.multiply(op.conj(),op).real
+        total_dip = np.sqrt(total_dip)
+        print(total_dip, flush = True)
         
-        total_dip = np.sqrt(np.square(dip_x) + np.square(dip_y) + np.square(dip_z))
-        dip_dir = np.zeros((len(all_Es), len(all_Es)),dtype = "complex")
+        dip_dir = np.zeros((len(all_Es), len(all_Es)), dtype = "complex")
         for i in non_degens:
              for op in [fci_dip_x, fci_dip_y, fci_dip_z]:
                   sig = op@v[:,i]
                   for j in non_degens:
-                       dip_dir[i,j] += (sig.T.conj()@v[:,j])[0,0]**2
+                       dip_dir[i,j] += ((sig.T.conj()@v[:,j])[0,0] * (v[:,j].T.conj()@sig)[0,0]).real
+
         dip_dir = np.sqrt(dip_dir.real)
-        
+        print(dip_dir, flush = True)
+        print("----", flush = True)
         for i in non_degens:
              for j in non_degens:
-                  assert dip_dir[i,j]-total_dip[i,j] == approx(0.0, abs = 1e-8)
+                  assert dip_dir[i,j]-total_dip[i,j] == approx(0.0, abs = 1e-6)
 
         

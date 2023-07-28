@@ -257,8 +257,6 @@ def create_psi_mol(**kwargs):
         qforte_mol.dipole_y = Musqs[1].jw_transform()
         qforte_mol.dipole_z = Musqs[2].jw_transform()
     
-    
-    
     qforte_mol.hamiltonian = Hsq.jw_transform()
     qforte_mol.point_group = [point_group, irreps]
     qforte_mol.orb_irreps = orb_irreps
@@ -429,25 +427,26 @@ def create_external_mol(**kwargs):
     for p, q, r, s, h_pqrs in external_data['tei']['data']:
         qforte_sq_hamiltonian.add(h_pqrs/4.0, [p,q], [s,r]) # only works in C1 symmetry
 
-    
-    x_scalar, y_scalar, z_scalar = external_data['frozen_dip']['data'] 
-        
-    qforte_mol.sq_dipole_x = qforte.SQOperator()
-    qforte_mol.sq_dipole_x.add(x_scalar, [], [])
-    qforte_mol.sq_dipole_y = qforte.SQOperator()
-    qforte_mol.sq_dipole_y.add(y_scalar, [], [])
-    qforte_mol.sq_dipole_z = qforte.SQOperator()
-    qforte_mol.sq_dipole_z.add(z_scalar, [], [])
-    for p, q, mu_pq in external_data['dip_ints_x']['data']:
-        qforte_mol.sq_dipole_x.add(mu_pq, [p], [q])
-    for p, q, mu_pq in external_data['dip_ints_y']['data']:
-        qforte_mol.sq_dipole_y.add(mu_pq, [p], [q])
-    for p, q, mu_pq in external_data['dip_ints_z']['data']:
-        qforte_mol.sq_dipole_z.add(mu_pq, [p], [q])
-         
-    qforte_mol.dipole_x = qforte_mol.sq_dipole_x.jw_transform()
-    qforte_mol.dipole_y = qforte_mol.sq_dipole_y.jw_transform()
-    qforte_mol.dipole_z = qforte_mol.sq_dipole_z.jw_transform()
+    try: 
+        x_scalar, y_scalar, z_scalar = external_data['frozen_dip']['data'] 
+        qforte_mol.sq_dipole_x = qforte.SQOperator()
+        qforte_mol.sq_dipole_x.add(x_scalar, [], [])
+        qforte_mol.sq_dipole_y = qforte.SQOperator()
+        qforte_mol.sq_dipole_y.add(y_scalar, [], [])
+        qforte_mol.sq_dipole_z = qforte.SQOperator()
+        qforte_mol.sq_dipole_z.add(z_scalar, [], [])
+        for p, q, mu_pq in external_data['dip_ints_x']['data']:
+            qforte_mol.sq_dipole_x.add(mu_pq, [p], [q])
+        for p, q, mu_pq in external_data['dip_ints_y']['data']:
+            qforte_mol.sq_dipole_y.add(mu_pq, [p], [q])
+        for p, q, mu_pq in external_data['dip_ints_z']['data']:
+            qforte_mol.sq_dipole_z.add(mu_pq, [p], [q])
+
+        qforte_mol.dipole_x = qforte_mol.sq_dipole_x.jw_transform()
+        qforte_mol.dipole_y = qforte_mol.sq_dipole_y.jw_transform()
+        qforte_mol.dipole_z = qforte_mol.sq_dipole_z.jw_transform()
+    except:
+        print("Dipole data not found.")
         
     hf_reference = [0] * external_data['nso']['data']
     for occ_alpha in range(external_data['na']['data']):

@@ -33,6 +33,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("canonicalize_pauli_circuit", &Circuit::canonicalize_pauli_circuit)
         .def("set_parameters", &Circuit::set_parameters)
         .def("get_num_cnots", &Circuit::get_num_cnots)
+        .def("num_qubits", &Circuit::num_qubits)
         .def("str", &Circuit::str)
         .def("__str__", &Circuit::str)
         .def("__repr__", &Circuit::str);

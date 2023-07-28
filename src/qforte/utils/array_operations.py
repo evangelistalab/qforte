@@ -57,5 +57,6 @@ def sq_op_to_scipy(sq_op, N_qubits):
     cols = np.concatenate(cols)
     arr = scipy.sparse.coo_matrix((vals, (rows, cols)), shape = (dim, dim))    
     arr = arr.tocsc(copy = False)    
-    arr.eliminate_zeros() 
+    arr.eliminate_zeros()
+    
     return scipy.sparse.csc_matrix(arr)

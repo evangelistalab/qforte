@@ -199,20 +199,48 @@ class UCCVQE(VQE, UCC):
         else:
             Kmus = []
             Umus = []
-            pmus = []
-            for mu in range(0, M): 
-                Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
-                Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
-                Kmus.append(Kmu)
-                if params is None:
-                    tamp = self._tamps[mu]
-                else:
-                    tamp = params[mu]
-                Umu, pmu = trotterize(Kmu, factor=-tamp, trotter_number=self._trotter_number)
-                if (pmu != 1.0 + 0.0j):
-                    raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
-                Umus.append(Umu)
-                pmus.append(pmu)
+            
+            for mu in range(0, M):
+                if self._compact_excitations:
+                    if params is None:
+                        tamp = self._tamps[mu]
+                    else:
+                        tamp = params[mu]
+                     
+                    Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
+                    Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0]) 
+                    Kmus.append(Kmu)
+
+                    if params is None:
+                        tamp = self._tamps[mu]
+                    else:
+                        tamp = params[mu]
+                    
+                    
+                    Umu = qf.Circuit()
+                    # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                    # (see original ADAPT-VQE paper)
+                    
+                    Umu.add(compact_excitation_circuit(-tamp * self._pool_obj[self._tops[mu]][1].terms()[1][0],
+                                                                   self._pool_obj[self._tops[mu]][1].terms()[1][1],
+                                                                   self._pool_obj[self._tops[mu]][1].terms()[1][2],
+                                                                   self._qubit_excitations))
+                    Umus.append(Umu)
+
+                    
+                else: 
+                    Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
+                    Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
+                    Kmus.append(Kmu)
+                    if params is None:
+                        tamp = self._tamps[mu]
+                    else:
+                        tamp = params[mu]
+                    Umu, pmu = trotterize(Kmu, factor=-tamp, trotter_number=self._trotter_number)
+                    if (pmu != 1.0 + 0.0j):
+                        raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+                    Umus.append(Umu)
+                    
 
             for r in range(len(self._ref)):
                 qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
@@ -238,20 +266,8 @@ class UCCVQE(VQE, UCC):
                     # Kmu_prev => KN
 
                     Kmu = Kmus[mu]
-
-                    if self._compact_excitations:
-                        Umu = qf.Circuit()
-                        # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
-                        # (see original ADAPT-VQE paper)
-                        Umu.add(compact_excitation_circuit(-tamp * self._pool_obj[self._tops[mu + 1]][1].terms()[1][0],
-                                                                   self._pool_obj[self._tops[mu + 1]][1].terms()[1][1],
-                                                                   self._pool_obj[self._tops[mu + 1]][1].terms()[1][2],
-                                                                   self._qubit_excitations))
-                    else:
-                        # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
-                        # (see original ADAPT-VQE paper)
-                        Umu = Umus[mu+1]
-                        pmu = pmus[mu+1]
+                    Umu = Umus[mu+1]
+                        
                         
                     qc_sig.apply_circuit(Umu)
                     qc_psi.apply_circuit(Umu)
@@ -265,8 +281,8 @@ class UCCVQE(VQE, UCC):
                     Kmu_prev = Kmu
 
 
-        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
-
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-12)
+        
         return grads
 
     def measure_gradient3(self):
@@ -309,12 +325,13 @@ class UCCVQE(VQE, UCC):
                 Kmu.mult_coeffs(coeff)
                 Kmus.append(Kmu)
 
-            Utot = self.build_Uvqc()
+            U_ansatz = self.ansatz_circuit()
             grads = np.zeros(len(self._pool_obj))
 
             for r in range(len(self._ref)):
                 qc_psi = qforte.Computer(self._nqb)
-                qc_psi.apply_circuit(Utot[r])
+                qc_psi.apply_circuit(self._Uprep[r])
+                qc_psi.apply_circuit(U_ansatz)
                 psi_i = qc_psi.get_coeff_vec()
                  
                 qc_sig = qforte.Computer(self._nqb)
