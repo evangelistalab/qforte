@@ -134,7 +134,7 @@ class Computer {
     /// reset the quantum computer to the null state (all coefficients are 0)
     void null_state();
 
-    /// reset the quantum computer to the state |0
+    /// reset the quantum computer to the state |0>
     void reset();
 
     /// get timings
