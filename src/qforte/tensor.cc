@@ -405,6 +405,36 @@ Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const
     return transposed_tensor;  
 }
 
+Tensor Tensor::chain(
+    const std::vector<Tensor>& As,
+    const std::vector<bool>& trans,
+    std::complex<double> alpha,
+    std::complex<double> beta)
+    {
+        
+        
+        int i;
+
+        if (As.size() != trans.size()){
+            throw std::runtime_error("Sizes aren't the same.\n");
+        }
+
+        Tensor c = Tensor(As.shape(), "Result Tensor");
+
+        for (i = 0; i < As.size(); i++){
+
+            if (trans[i]){
+                c[i] = alpha * As[i] * data_[i];
+            }
+
+        }
+
+        return c;
+
+    }
+
+
+
 // TODO(Tyler?): Column printing is a little clunky for complex
 // need to fix
 std::string Tensor::str(
