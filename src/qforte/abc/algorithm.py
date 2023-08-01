@@ -366,8 +366,6 @@ class AnsatzAlgorithm(Algorithm):
                     self._pool_obj.set_orb_spaces(self._ref[0])
                 self._pool_obj.fill_pool(self._pool_type) 
                 
-            elif isinstance(self._pool_type, qf.SQOpPool):
-                self._pool_obj = self._pool_type
             else:
                 raise ValueError('Invalid operator pool type specified.')
 

@@ -36,7 +36,7 @@ def compute_operator_matrix_element(n_qubit, U_bra, U_ket, QOp=None):
     try:
         assert(U_ket.num_qubits() <= n_qubit)
     except:
-        raise ValueError("Circuit references more qubits than n_qubit.")
+        raise ValueError("Circuit involves more qubits than n_qubit.")
     
     comp = qf.Computer(n_qubit)
     comp.apply_circuit(U_ket)
@@ -44,7 +44,5 @@ def compute_operator_matrix_element(n_qubit, U_bra, U_ket, QOp=None):
     if QOp is not None:
         comp.apply_operator(QOp)
     comp.apply_circuit(U_bra.adjoint())
-    
-    
-    print("----")
+     
     return comp.get_coeff_vec()[0]

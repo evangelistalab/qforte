@@ -19,15 +19,10 @@ def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
     
     myQC = qforte.Computer(n_qubit)
     myQC.apply_circuit(U_ref)
-    E0 = myQC.direct_op_exp_val(H).real  
-    Ek, A = ritz_eigh(H, U_manifold, verbose = False) 
-    
-    print("q-sc-EOM:")
-    print("*"*34)
-    print(f"State:          Energy (Eh)")
-    print(f"    0{E0:35.16f}")
-    for i in range(0, len(Ek)):
-        print(f"{(i+1):5}{Ek[i]:35.16f}")
+    E0 = myQC.direct_op_exp_val(H).real
+    print(f"Ground state energy: {E0}")
+    print(f"Doing Ritz diagonalization for excited states.")  
+    Ek, A = ritz_eigh(n_qubit, H, U_manifold) 
     
     op_mats = []
     if len(ops_to_compute) > 0:
@@ -45,7 +40,7 @@ def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
     
     return [E0, Ek] + op_mats
 
-def ritz_eigh(n_qubit, H, U, verbose = True, ops_to_compute = []):
+def ritz_eigh(n_qubit, H, U, ops_to_compute = []):
     """
     Obtains the ritz eigeinvalues of H in the space of {U|i>}
 
@@ -58,20 +53,18 @@ def ritz_eigh(n_qubit, H, U, verbose = True, ops_to_compute = []):
     
     Ek, A = np.linalg.eigh(M)
     
-
-    if verbose == True:
-        print("Ritz Diagonalization:")
-        print(f"State:  Post-Diagonalized Energy")
-        for i, E in enumerate(Ek):
-            print(f"{(i+1):5}{E:35.16f}")
+    
+    print("Ritz Diagonalization:")
+    print(f"State:  Post-Diagonalized Energy")
+    for i, E in enumerate(Ek):
+        print(f"{(i+1):5}{E:35.16f}")
 
     op_mats = []
-    print("------") 
+    
     for op in ops_to_compute:
         op_vqe_basis = qforte.build_effective_symmetric_operator(n_qubit, op, U)
         op_ritz_basis = A.T.conj()@op_vqe_basis@A
         op_mats.append(op_ritz_basis)
-    print("------") 
-
+    
     return [Ek, A] + op_mats
     

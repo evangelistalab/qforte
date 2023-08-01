@@ -2,16 +2,10 @@
 A class for building molecular object adapters. Adapters for various approaches to build
 the molecular info and properties (hamiltonian, rdms, etc...).
 """
-import operator
+
 import numpy as np
-from abc import ABC, abstractmethod
-
 import qforte
-
 from qforte.system.molecular_info import Molecule
-from qforte.utils import transforms as tf
-
-
 import json
 
 try:
@@ -33,13 +27,13 @@ def create_psi_mol(**kwargs):
     kwargs.setdefault('symmetry', 'c1')
     kwargs.setdefault('charge', 0)
     kwargs.setdefault('multiplicity', 1)
-    kwargs.setdefault('json_dump', False)
     kwargs.setdefault('dipole', False)
-
+    
     mol_geometry = kwargs['mol_geometry']
     basis = kwargs['basis']
     multiplicity = kwargs['multiplicity']
     charge = kwargs['charge']
+    
     json_dump = kwargs['json_dump']
     dipole = kwargs['dipole']
 
@@ -188,9 +182,10 @@ def create_psi_mol(**kwargs):
         for j in range(frozen_core, nmo - frozen_virtual):
             ja = (j - frozen_core)*2
             jb = (j - frozen_core)*2 + 1
-
-            Hsq.add(mo_oeis[i,j], [ia], [ja])
-            Hsq.add(mo_oeis[i,j], [ib], [jb])
+            irrep = orb_irreps_to_int[i - frozen_core] ^ orb_irreps_to_int[j - frozen_core]
+            if irrep == 0:
+                Hsq.add(mo_oeis[i,j], [ia], [ja])
+                Hsq.add(mo_oeis[i,j], [ib], [jb])
 
             for k in range(frozen_core, nmo - frozen_virtual):
                 ka = (k - frozen_core)*2
@@ -198,16 +193,19 @@ def create_psi_mol(**kwargs):
                 for l in range(frozen_core, nmo - frozen_virtual):
                     la = (l - frozen_core)*2
                     lb = (l - frozen_core)*2 + 1
+                    irrep = 0
+                    for idx in [i,j,k,l]:
+                        irrep ^= orb_irreps_to_int[idx - frozen_core]
+                    if irrep == 0:
+                        if(ia!=jb and kb != la):
+                            Hsq.add( mo_teis[i,l,k,j]/2, [ia, jb], [kb, la] ) # abba
+                        if(ib!=ja and ka!=lb):
+                            Hsq.add( mo_teis[i,l,k,j]/2, [ib, ja], [ka, lb] ) # baab
 
-                    if(ia!=jb and kb != la):
-                        Hsq.add( mo_teis[i,l,k,j]/2, [ia, jb], [kb, la] ) # abba
-                    if(ib!=ja and ka!=lb):
-                        Hsq.add( mo_teis[i,l,k,j]/2, [ib, ja], [ka, lb] ) # baab
-
-                    if(ia!=ja and ka!=la):
-                        Hsq.add( mo_teis[i,l,k,j]/2, [ia, ja], [ka, la] ) # aaaa
-                    if(ib!=jb and kb!=lb):
-                        Hsq.add( mo_teis[i,l,k,j]/2, [ib, jb], [kb, lb] ) # bbbb
+                        if(ia!=ja and ka!=la):
+                            Hsq.add( mo_teis[i,l,k,j]/2, [ia, ja], [ka, la] ) # aaaa
+                        if(ib!=jb and kb!=lb):
+                            Hsq.add( mo_teis[i,l,k,j]/2, [ib, jb], [kb, lb] ) # bbbb
 
     if dipole == True:
         mo_dipints = np.asarray(mints.ao_dipole())
@@ -288,8 +286,10 @@ def create_psi_mol(**kwargs):
             for q in range(norbs):
                 qa = 2*q
                 qb = 2*q + 1
-                external_data['oei']['data'].append((pa, qa, mo_oeis[p + frozen_core, q + frozen_core]))
-                external_data['oei']['data'].append((pb, qb, mo_oeis[p + frozen_core, q + frozen_core]))
+                irrep = orb_irreps_to_int[i - frozen_core] ^ orb_irreps_to_int[j - frozen_core]
+                if irrep == 0:
+                    external_data['oei']['data'].append((pa, qa, mo_oeis[p + frozen_core, q + frozen_core]))
+                    external_data['oei']['data'].append((pb, qb, mo_oeis[p + frozen_core, q + frozen_core]))
         external_data['oei']['description'] = "one-electron integrals as a list of tuples (i,j,<i|h|j>)"
         
         external_data['tei'] = {}
@@ -304,22 +304,24 @@ def create_psi_mol(**kwargs):
                     ra = 2*r
                     rb = 2*r + 1
                     for s in range(norbs):
-                        sa = 2*s
-                        sb = 2*s + 1
-                        #prqs = <pq|rs> = (pr|qs) 
-                        #(Spatial orbitals - Psi4 uses chemist's notation.)
-                        prqs = mo_teis[p + frozen_core, r + frozen_core, q + frozen_core, s + frozen_core]
-                        psqr = mo_teis[p + frozen_core, s + frozen_core, q + frozen_core, r + frozen_core]
-                        #external_data['tei']['data'][p, q, r, s] = <pq||rs> = (pr||qs)
-                        #(Spin-orbitals - QForte uses physicist's notation.)
-                        external_data['tei']['data'].append((pa, qa, ra, sa, prqs - psqr))
-                        external_data['tei']['data'].append((pa, qa, rb, sb, 0.0))
-                        external_data['tei']['data'].append((pa, qb, ra, sb, prqs))
-                        external_data['tei']['data'].append((pb, qa, ra, sb, -1 * psqr))
-                        external_data['tei']['data'].append((pa, qb, rb, sa, -1 * psqr))
-                        external_data['tei']['data'].append((pb, qa, rb, sa, prqs))
-                        external_data['tei']['data'].append((pb, qb, ra, sa, 0.0))
-                        external_data['tei']['data'].append((pb, qb, rb, sb, prqs - psqr))
+                        irrep = 0
+                        for idx in [p,q,r,s]:
+                            irrep ^= orb_irreps_to_int[idx - frozen_core]
+                        if irrep == 0: 
+                            sa = 2*s
+                            sb = 2*s + 1
+                            #prqs = <pq|rs> = (pr|qs) 
+                            #(Spatial orbitals - Psi4 uses chemist's notation.)
+                            prqs = mo_teis[p + frozen_core, r + frozen_core, q + frozen_core, s + frozen_core]
+                            psqr = mo_teis[p + frozen_core, s + frozen_core, q + frozen_core, r + frozen_core]
+                            #external_data['tei']['data'][p, q, r, s] = <pq||rs> = (pr||qs)
+                            #(Spin-orbitals - QForte uses physicist's notation.)
+                            external_data['tei']['data'].append((pa, qa, ra, sa, prqs - psqr))
+                            external_data['tei']['data'].append((pa, qb, ra, sb, prqs))
+                            external_data['tei']['data'].append((pb, qa, ra, sb, -1 * psqr))
+                            external_data['tei']['data'].append((pa, qb, rb, sa, -1 * psqr))
+                            external_data['tei']['data'].append((pb, qa, rb, sa, prqs))
+                            external_data['tei']['data'].append((pb, qb, rb, sb, prqs - psqr))
         external_data['tei']['description'] = \
             "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)"
         
