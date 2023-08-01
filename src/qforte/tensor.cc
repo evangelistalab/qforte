@@ -350,6 +350,87 @@ void Tensor::zaxpy(
     math_zaxpy(size_, alpha, x_data, incx, y_data, incy);
 }
 
+
+void Tensor::gemm(
+    const Tensor& B,
+    const char transa,
+    const char transb,
+    const std::complex<double> alpha,
+    const std::complex<double> beta,
+    const bool mult_B_on_right)
+{
+
+    if ((shape_.size() != 2) || (shape_ != B.shape())){
+        throw std::runtime_error("Incompatible shape(s)/dimension(s).");
+    }
+
+  const int M = (transa == 'N') ? shape_[0] : shape_[1];
+  const int N = (transb == 'N') ? B.shape()[1] : B.shape()[0];
+  const int K = (transa == 'N') ? shape_[1] : shape_[0];
+  
+  std::complex<double>* A_data = data_.data();
+  const std::complex<double>* B_data = B.read_data().data();
+  
+  // Since Tensor C is 'this' Tensor
+  std::complex<double>* C_data = data_.data();
+
+  if(mult_B_on_right) {
+    math_zgemm(transa, transb, M, N, K, alpha, A_data, shape_[1], B_data, B.shape()[1], beta, C_data, shape_[1]);
+  } 
+  else {
+    math_zgemm(transb, transa, N, M, K, alpha, B_data, B.shape()[1], A_data, shape_[1], beta, C_data, shape_[1]);
+  }
+
+    // int M = multOnRight ? B.shape()[0] : shape_[0];
+    // int N = multOnRight ? shape_[1] : B.shape()[1];
+    // int K = shape_[1];
+    // int lda = shape_[0];
+    // int ldb = B.shape()[0];
+    // int ldc = M;
+
+    // // weird syntax? data_.data()?
+    // const std::complex<double>* this_data = data_.data();
+    // const std::complex<double>* B_data = B.read_data().data();
+
+
+    // if (multOnRight){
+    //     math_zgemm(CblasRowMajor,
+    //                 transb == 'N' ? CblasNoTrans : CblasTrans,
+    //                 transa == 'N' ? CblasNoTrans : CblasTrans,
+    //                 M, N, K, &alpha, B_data, ldb, this_data, lda, &beta,
+    //                 this_data, ldc);
+    // }
+    // else {
+    //     math_zgemm(CblasRowMajor,
+    //                 transa == 'N' ? CblasNoTrans : CblasTrans,
+    //                 transb == 'N' ? CblasNoTrans : CblasTrans,
+    //                 M, N, K, &alpha, this_data, lda, B_data, ldb, &beta,
+    //                 this_data, ldc);
+    // }
+
+}
+
+// void Tensor::daxpy(
+//     const Tensor& x,
+//     const double alpha,
+//     const int inx,
+//     const int incy)
+// {
+
+//     if (shape_ != x.shape()){
+//         throw std::runtime_error("Incompatible Tensor Shapes.");
+//     }
+
+//     const double* x_data = x.read_data().data();
+//     double* y_data = data_.data();
+
+//     math_daxpy(size_, alpha, x_data, inx, y_data, incy);
+
+
+// }
+
+
+
 // std::complex<double> Tensor::vector_dot(
 //     const std::shared_ptr<Tensor>& other
 //     ) const
@@ -404,34 +485,6 @@ Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const
 
     return transposed_tensor;  
 }
-
-Tensor Tensor::chain(
-    const std::vector<Tensor>& As,
-    const std::vector<bool>& trans,
-    std::complex<double> alpha,
-    std::complex<double> beta)
-    {
-        
-        
-        int i;
-
-        if (As.size() != trans.size()){
-            throw std::runtime_error("Sizes aren't the same.\n");
-        }
-
-        Tensor c = Tensor(As.shape(), "Result Tensor");
-
-        for (i = 0; i < As.size(); i++){
-
-            if (trans[i]){
-                c[i] = alpha * As[i] * data_[i];
-            }
-
-        }
-
-        return c;
-
-    }
 
 
 

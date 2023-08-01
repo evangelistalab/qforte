@@ -125,14 +125,131 @@ class TestBlas(unittest.TestCase):
 
         t1.zaxpby(t2, 1.0, 5.0)
 
-        print(t1)
+    def test_gemm1(self):
 
+        shape = [5, 5]
 
+        t1 = qf.Tensor(shape, "Tensor 1")
+        t2 = qf.Tensor(shape, "Tensor 2")
 
+        random_arr1 = np.random.rand(shape[0], shape[1])
+        random_arr2 = np.random.rand(shape[0], shape[1])
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                t1.set([i, j], random_arr1[i, j])
+                t2.set([i, j], random_arr2[i, j])
 
         
+        final_np_arr = np.matmul(random_arr1, random_arr2)
 
+        t1.gemm(t2)
 
+        ref_arr = [ [0]*shape[1] for i in range(shape[0])]
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                ref_arr[i][j] = t1.get([i, j])
+
+        final_norm = np.linalg.norm(final_np_arr) - np.linalg.norm(ref_arr)
+
+        self.assertLess(final_norm, 1e-16)
+
+    def test_gemm2(self):
+
+        shape = [10, 10]
+
+        t1 = qf.Tensor(shape, "Tensor 1")
+        t2 = qf.Tensor(shape, "Tensor 2")
+
+        random_arr1 = np.random.rand(shape[0], shape[1])
+        random_arr2 = np.random.rand(shape[0], shape[1])
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                t1.set([i, j], random_arr1[i, j])
+                t2.set([i, j], random_arr2[i, j])
+
+        
+        final_np_arr = np.matmul(random_arr1, random_arr2)
+
+        t1.gemm(t2)
+
+        ref_arr = [ [0]*shape[1] for i in range(shape[0])]
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                ref_arr[i][j] = t1.get([i, j])
+
+        final_norm = np.linalg.norm(final_np_arr) - np.linalg.norm(ref_arr)
+
+        self.assertLess(final_norm, 1e-16)
+
+    def test_gemm3(self):
+
+        shape = [10, 10]
+
+        t1 = qf.Tensor(shape, "Tensor 1")
+        t2 = qf.Tensor(shape, "Tensor 2")
+
+        random_arr1 = np.random.rand(shape[0], shape[1])
+        random_arr2 = np.random.rand(shape[0], shape[1])
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                t1.set([i, j], random_arr1[i, j])
+                t2.set([i, j], random_arr2[i, j])
+
+        
+        final_np_arr = np.matmul(random_arr2, random_arr1)
+
+        t1.gemm(t2, mult_B_on_right = True)
+
+        ref_arr = [ [0]*shape[1] for i in range(shape[0])]
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                ref_arr[i][j] = t1.get([i, j])
+
+        final_norm = np.linalg.norm(final_np_arr) - np.linalg.norm(ref_arr)
+
+        self.assertLess(final_norm, 1e-16)    
+
+    def test_gemm4(self):
+
+        shape = [10, 10]
+
+        t1 = qf.Tensor(shape, "Tensor 1")
+        t2 = qf.Tensor(shape, "Tensor 2")
+
+        random_arr1 = np.random.rand(shape[0], shape[1])
+        random_arr2 = np.random.rand(shape[0], shape[1])
+
+        random_arr1 = np.array(random_arr1, dtype=complex)
+        random_arr2 = np.array(random_arr2, dtype=complex)
+
+        random_arr1[2, 3] = 1.0+2.3j
+        random_arr2[1, 0] = 2.5+3.0j
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                t1.set([i, j], random_arr1[i, j])
+                t2.set([i, j], random_arr2[i, j])
+
+        
+        final_np_arr = np.matmul(random_arr1.conj().T, random_arr2.conj().T)
+
+        t1.gemm(t2, transa = 'C', transb = 'C')
+
+        ref_arr = [ [0]*shape[1] for i in range(shape[0])]
+
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                ref_arr[i][j] = t1.get([i, j])
+
+        final_norm = np.linalg.norm(final_np_arr) - np.linalg.norm(ref_arr)
+
+        self.assertLess(final_norm, 1e-16)  
 
 
 
