@@ -185,6 +185,9 @@ Tensor transpose() const;
  **/
 Tensor general_transpose(const std::vector<size_t>& axes) const;
 
+
+Tensor slice(std::vector<std::pair<size_t, size_t>>& idxs) const;
+
 // => Printing <= //
 
 /**

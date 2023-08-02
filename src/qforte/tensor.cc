@@ -9,7 +9,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <cstring>
-
+#include <utility>
+#include <algorithm>
 // namespace lightspeed { 
 
 size_t Tensor::total_memory__ = 0;
@@ -356,6 +357,61 @@ Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const
 
     return transposed_tensor;  
 }
+
+Tensor Tensor::slice(std::vector<std::pair<size_t, size_t>>& idxs)const{
+
+    std::vector<size_t> new_shape(idxs.size());
+    std::vector<size_t> new_strides(idxs.size());
+    size_t new_size = 1;
+
+    if (idxs.size() != ndim()){
+        throw std::invalid_argument("Number of slices should match the number of dimensions.");
+    }
+
+
+    for (int i = idxs.size() - 1; i >= 0; i--){
+        if (idxs[i].first >= idxs[i].second || idxs[i].second > shape_[i]){
+            throw std::invalid_argument("Invalid slice index.");
+        }
+
+        new_shape[i] = idxs[i].second - idxs[i].first;
+        new_strides[i] = strides_[i];
+        new_size *= new_shape[i];
+
+    }
+
+
+    Tensor new_tensor(new_shape, name_ + "_sliced");
+
+    std::vector<size_t> old_tidx(ndim());
+    std::fill(old_tidx.begin(), old_tidx.end(), 0);
+    std::vector<size_t> new_tidx(new_shape.size(), 0);
+
+    for (size_t vidx = 0; vidx < size_; vidx++){
+        old_tidx = vidx_to_tidx(vidx);
+        bool is_in_slice = true;
+
+        for (size_t i = 0; i < old_tidx.size(); i++){
+            if (old_tidx[i] < idxs[i].first || old_tidx[i] >= idxs[i].second){
+                is_in_slice = false;
+                break;
+            }
+            else{
+                new_tidx[i] = old_tidx[i] - idxs[i].first;
+            }
+        }
+
+        if (is_in_slice){
+            size_t new_vidx = new_tensor.tidx_to_vidx(new_tidx);
+            new_tensor.data()[new_vidx] = data_[vidx];
+        }
+
+    }
+
+
+    return new_tensor;
+}
+
 
 // TODO(Tyler?): Column printing is a little clunky for complex
 // need to fix

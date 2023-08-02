@@ -222,6 +222,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("antisymmetrize", &Tensor::antisymmetrize) // TODO(Tyler) Need Test 
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
         .def("general_transpose", &Tensor::general_transpose) // TODO(Tyler) Need Test (use numpy)
+        .def("slice", &Tensor::slice)
         .def("str", &Tensor::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false, 
