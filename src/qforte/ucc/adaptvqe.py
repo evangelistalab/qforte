@@ -51,6 +51,9 @@ class ADAPTVQE(UCCVQE):
         The gradient norm threshold to determine when the ADAPT-VQE
         algorithm has converged.
 
+    _stop_E : float
+        An energy at which ADAPT will terminate, regardless of gradient, number of iterations, etc.
+
     _commutator_pool : [QubitOpPool]
         The list of [H, X] to be measured
 
@@ -238,8 +241,8 @@ class ADAPTVQE(UCCVQE):
             if not self._is_multi_state:
                 print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
             else:
-                for r in range(len(self._ref)):
-                    print(f"{f'Trial reference state {r}:':<35}",  ref_string(self._ref[r], self._nqb))
+                for idx, ref in enumerate(self._ref):
+                    print(f"{f'Trial reference state {idx}:':<35}",  ref_string(ref, self._nqb))
         else:
             print('Trial reference state(s) were not provided as Slater determinants.')
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
@@ -345,19 +348,30 @@ class ADAPTVQE(UCCVQE):
             print('  => Minimization successful!')
             print(f'  => Minimum Energy: {res.fun:+12.10f}')
 
+        
         else:
             print('  => WARNING: minimization result may not be tightly converged.')
             print(f'  => Minimum Energy: {res.fun:+12.10f}')
 
-        self._energies.append(res.fun)
-        self._results.append(res)
-        self._tamps = list(res.x)
-        self._n_pauli_trm_measures_lst.append(self._n_pauli_measures_k)
+
+        if res.x[-1] == 0:
+            print('  => WARNING: ADAPT could not optimize the new parameter.  Deleting new parameter and terminating the algorithm.')
+            print(f'  => Minimum Energy: {self._energies[-1]:+12.10f}')
+            self._converged = True
+            self._final_energy = self._energies[-1]
+            self._final_results = self._results[-1]
+            self._tops = self._tops[:-1]
+            self._tamps = self._tamps[:-1]
+        else:
+            self._energies.append(res.fun)
+            self._results.append(res)
+            self._tamps = list(res.x)
+            self._n_pauli_trm_measures_lst.append(self._n_pauli_measures_k)
         if not self._is_multi_state:
             self._n_cnot_lst.append(self.build_Uvqc().get_num_cnots())
         else:
             U_temp = self.build_Uvqc()
-            cnots = [U_temp[r].get_num_cnots() for r in range(len(self._ref))]
+            cnots = [U.get_num_cnots for U in U_temp]
             self._n_cnot_lst.append(max(cnots))
             del U_temp
             del cnots
@@ -436,7 +450,7 @@ class ADAPTVQE(UCCVQE):
                         self._final_result = self._results[-1]
 
                 elif(len(self._tops) > 0 and self._tops[-1] == lgrst_grad_idx):
-                    print("Classical optimizer can't optimize well enough to advance ADAPT.  Aborting.")
+                    print("ADAPT wants to add the same operator as the previous iteration.  Aborting.")
                     self._converged = True
                     self._final_energy = self._energies[-1]
                     if self._optimizer.lower() != 'jacobi':

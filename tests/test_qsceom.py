@@ -63,7 +63,7 @@ class TestQSCEOM:
            
           H_penalized = H + 1000*Sz@Sz + 1000*(N@N - 4*N + 4*np.eye(H.shape[0]))
           w, v = np.linalg.eigh(H_penalized)
-                                                                                              
+          
           for i in range(len(all_Es)):
               assert all_Es[i] - w[i] == approx(0.0, abs = 1.0e-10)
           
@@ -74,7 +74,7 @@ class TestQSCEOM:
                total_dip += np.multiply(op.conj(),op).real
           total_dip = np.sqrt(total_dip)
           
-          dip_dir = np.zeros((len(all_Es), len(all_Es)), dtype = "complex")
+          dip_dir = np.zeros((len(all_Es), len(all_Es)))
           for i in non_degens:
                for op in [fci_dip_x, fci_dip_y, fci_dip_z]:
                     sig = op@v[:,i]
@@ -82,11 +82,9 @@ class TestQSCEOM:
                          dip_dir[i,j] += ((sig.T.conj()@v[:,j])[0,0] * (v[:,j].T.conj()@sig)[0,0]).real
           dip_dir = np.sqrt(dip_dir.real)
           
-          
-
           for i in non_degens:
                for j in non_degens:
-                    print(f"{i} {j} {dip_dir[i,j]} {total_dip[i,j]}")
                     assert dip_dir[i,j]-total_dip[i,j] == approx(0.0, abs = 1.0e-8)
+          
 
-        
+          

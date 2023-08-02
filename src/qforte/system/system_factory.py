@@ -36,10 +36,12 @@ def system_factory(system_type = 'molecule', build_type = 'psi4', **kwargs):
         kwargs.setdefault('basis', 'sto-3g')
         kwargs.setdefault('multiplicity', 1)
         kwargs.setdefault('charge', 0)
+        kwargs.setdefault('symmetry', 'C1')
         kwargs.setdefault('description', "")
         kwargs.setdefault('filename', "output")
         kwargs.setdefault('hdf5_dir', None)
         kwargs.setdefault('json_dump', False)
+        kwargs.setdefault('dipole', False)
         try:
             adapter = molecule_adapters[build_type]
         except:

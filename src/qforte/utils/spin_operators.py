@@ -170,7 +170,7 @@ def total_number(n_qubits, do_jw = True):
     Returns
     =======
 
-    q_Sigma_squared: QubitOperator
+    sq_Number: QubitOperator
         Number operator in the qubit basis, using Jordan-Wigner encoding
 
         (Or the Fermionic basis if do_jw == False)

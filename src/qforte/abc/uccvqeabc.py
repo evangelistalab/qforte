@@ -227,7 +227,6 @@ class UCCVQE(VQE, UCC):
                                                                    self._qubit_excitations))
                     Umus.append(Umu)
 
-                    
                 else: 
                     Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
                     Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])

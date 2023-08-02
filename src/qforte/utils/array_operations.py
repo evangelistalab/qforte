@@ -18,7 +18,7 @@ def sq_op_to_scipy(sq_op, N_qubits):
     
     
     #Hilbert space dimension
-    dim = int(2**N_qubits)
+    dim = 1 << N_qubits
 
     #Build all the annihilation operators
     annihilators = []
@@ -26,7 +26,7 @@ def sq_op_to_scipy(sq_op, N_qubits):
     for i in range(0, N_qubits):
         ann = scipy.sparse.csc_matrix(.5*np.ones((1,1)))
         big_Z = scipy.sparse.diags(zvec) 
-        big_id = scipy.sparse.identity(2**(N_qubits - i - 1), dtype = "complex", format = "csc")
+        big_id = scipy.sparse.identity(1<<(N_qubits - i - 1), dtype = "complex", format = "csc")
         ann = scipy.sparse.kron(ann, big_id)
         ann = scipy.sparse.kron(ann, X + 1j*Y)
         ann = scipy.sparse.kron(ann, big_Z)     

@@ -8,6 +8,7 @@ import numpy as np
 def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
     """
     Quantum, self-consistent equation-of-motion method from Asthana et. al.
+    DOI: 10.1039/d2sc05371c
 
     H is the JW-transformed Hamiltonian.
     U_ref is the VQE ground state circuit (or some other state not to be included in the manifold)
@@ -35,14 +36,14 @@ def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
         
         for op in ops_to_compute:
             op_vqe_basis = qforte.build_effective_symmetric_operator(n_qubit, op, all_Us)
-            op_q_sc_eom_basis = A_plus_ref.T.conj()@op_vqe_basis@A_plus_ref
+            op_q_sc_eom_basis = (A_plus_ref.T.conj()@op_vqe_basis@A_plus_ref).real        
             op_mats.append(op_q_sc_eom_basis)
     
     return [E0, Ek] + op_mats
 
 def ritz_eigh(n_qubit, H, U, ops_to_compute = []):
     """
-    Obtains the ritz eigeinvalues of H in the space of {U|i>}
+    Obtains the ritz eigenvalues of H in the space of {U|i>}
 
     H is a qubit operator
     U is a list of unitaries
@@ -52,8 +53,6 @@ def ritz_eigh(n_qubit, H, U, ops_to_compute = []):
     M = qforte.build_effective_symmetric_operator(n_qubit, H, U)
     
     Ek, A = np.linalg.eigh(M)
-    
-    
     print("Ritz Diagonalization:")
     print(f"State:  Post-Diagonalized Energy")
     for i, E in enumerate(Ek):

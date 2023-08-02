@@ -24,19 +24,13 @@ def create_psi_mol(**kwargs):
         The qforte Molecule object which holds the molecular information.
     """
 
-    kwargs.setdefault('symmetry', 'c1')
-    kwargs.setdefault('charge', 0)
-    kwargs.setdefault('multiplicity', 1)
-    kwargs.setdefault('dipole', False)
-    
     mol_geometry = kwargs['mol_geometry']
     basis = kwargs['basis']
     multiplicity = kwargs['multiplicity']
-    charge = kwargs['charge']
-    
+    charge = kwargs['charge']    
     json_dump = kwargs['json_dump']
     dipole = kwargs['dipole']
-
+    
     qforte_mol = Molecule(mol_geometry = mol_geometry,
                                basis = basis,
                                multiplicity = multiplicity,
@@ -182,6 +176,7 @@ def create_psi_mol(**kwargs):
         for j in range(frozen_core, nmo - frozen_virtual):
             ja = (j - frozen_core)*2
             jb = (j - frozen_core)*2 + 1
+            
             irrep = orb_irreps_to_int[i - frozen_core] ^ orb_irreps_to_int[j - frozen_core]
             if irrep == 0:
                 Hsq.add(mo_oeis[i,j], [ia], [ja])
@@ -210,11 +205,9 @@ def create_psi_mol(**kwargs):
     if dipole == True:
         mo_dipints = np.asarray(mints.ao_dipole())
         mo_dipints = [np.einsum('uj,vi,uv', C, C, mo_dipints[i]) for i in range(3)]
-    
         
         frozen_core_dipole = [p4_dip_nuc[i] for i in range(3)]
-        
-        
+         
         if frozen_core > 0:
             for i in range(frozen_core):
                 for j in range(3):
@@ -306,7 +299,7 @@ def create_psi_mol(**kwargs):
                     for s in range(norbs):
                         irrep = 0
                         for idx in [p,q,r,s]:
-                            irrep ^= orb_irreps_to_int[idx - frozen_core]
+                            irrep ^= orb_irreps_to_int[idx]
                         if irrep == 0: 
                             sa = 2*s
                             sb = 2*s + 1
@@ -353,7 +346,7 @@ def create_psi_mol(**kwargs):
             external_data['dip_ints_x']['description'] = "x dipole integrals for the active space"
             external_data['dip_ints_y']['description'] = "y dipole integrals for the active space"
             external_data['dip_ints_z']['description'] = "z dipole integrals for the active space"
-
+        
         external_data['nso'] = {}
         external_data['nso']['data'] = 2 * norbs
         external_data['nso']['description'] = "number of active spin orbitals"
@@ -372,11 +365,12 @@ def create_psi_mol(**kwargs):
 
         external_data['symmetry'] = {}
         external_data['symmetry']['data'] = qforte_mol.orb_irreps_to_int 
-        external_data['symmetry']['description'] = "point group."
+        external_data['symmetry']['description'] = "irreps of each spatial orbital"
 
         with open(json_dump, 'w') as f:
             json.dump(external_data, f, indent = 0)
 
+    print(orb_irreps_to_int)
     return qforte_mol
 
 
@@ -402,6 +396,7 @@ def create_external_mol(**kwargs):
     try:
         point_group = external_data['point_group']['data']
     except KeyError:
+        "No point group in JSON file.  Using C1."
         point_group = 'C1'
     irreps = qforte.irreps_of_point_groups(point_group)
     qforte_mol.point_group = [point_group, irreps]
@@ -423,12 +418,13 @@ def create_external_mol(**kwargs):
     qforte_sq_hamiltonian = qforte.SQOperator()
     qforte_sq_hamiltonian.add(external_data['scalar_energy']['data'], [], [])
 
+    
     for p, q, h_pq in external_data['oei']['data']:
         qforte_sq_hamiltonian.add(h_pq, [p], [q])
-
+        
     for p, q, r, s, h_pqrs in external_data['tei']['data']:
         qforte_sq_hamiltonian.add(h_pqrs/4.0, [p,q], [s,r]) # only works in C1 symmetry
-
+ 
     try: 
         x_scalar, y_scalar, z_scalar = external_data['frozen_dip']['data'] 
         qforte_mol.sq_dipole_x = qforte.SQOperator()

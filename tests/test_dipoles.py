@@ -33,6 +33,7 @@ class TestDipoles:
                 for op in [mu_x, mu_y, mu_z]:
                     dipole[i,j] += ((C[:,inds[i]].T.conj()@op@C[:,inds[j]])[0,0].real)**2
                 dipole[i,j] = np.sqrt(dipole[i,j])
+        #Make sure lowest 5 states consistent with Psi4
         psi4_dipoles = [1.8751853, 1.6664460, 0.0250378, 0.0250378, 3.2070140]
         psi4_tdms = [0.2422177, 1.2959115, 1.2959115, 0.1294187]
         for i in range(5):
