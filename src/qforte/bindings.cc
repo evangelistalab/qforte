@@ -263,6 +263,8 @@ PYBIND11_MODULE(qforte, m) {
             "alpha"_a = 1.0,
             "beta"_a = 0.0) 
 
+        .def("slice", &Tensor::slice)
+
         .def("str", &Tensor::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false, 
