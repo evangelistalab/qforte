@@ -34,11 +34,9 @@ class TestSAADAPTVQE:
                          weights = weights,
                          compact_excitations = True)
         
-          H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb).todense()
-          Sz = sq_op_to_scipy(total_spin_z(alg._nqb, False), alg._nqb).todense()
-          N = sq_op_to_scipy(total_number(alg._nqb, False), alg._nqb).todense()
-          H_penalized = H + 100*Sz@Sz + 100*(N@N - 4*N + 4*np.eye(H.shape[0]))
-          w, v = np.linalg.eigh(H_penalized)
+          H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb, Sz = 0, N = 2).todense()
+          
+          w, v = np.linalg.eigh(H)
           
           w_idx = [0,2,10,15]
           w = w[w_idx]

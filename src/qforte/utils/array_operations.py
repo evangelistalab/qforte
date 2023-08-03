@@ -6,7 +6,8 @@ A module for working with Scipy arrays
 
 import numpy as np
 import scipy
-import math
+import copy
+from pytest import approx
 
 def number(a):
     #Get sum of bits in binary representation of a. (I.e., particle number.)
@@ -15,6 +16,19 @@ def number(a):
         sum_digits += a & 1
         a >>= 1
     return sum_digits
+
+def spin(a):
+    spin = 0
+    b = copy.deepcopy(a)
+    a >>= 1
+    while a > 0:
+        spin += (a & 1)
+        a >>= 2
+    while b > 0:
+        spin -= (b & 1)
+        b >>= 2
+    return spin/2
+        
  
 def sq_op_to_scipy(sq_op, N_qubits, N = None, Sz = None):
     #Function to convert a second-quantized operator to a sparse, complex matrix
@@ -58,24 +72,26 @@ def sq_op_to_scipy(sq_op, N_qubits, N = None, Sz = None):
             term_mat = annihilators[i].getH()@term_mat
         term_mat = term_mat.tocoo(copy = False)
         term_mat.eliminate_zeros()
-        vals.append(coeff * term_mat.data)
-        print(term_mat.data.shape)
         
+        val = coeff * term_mat.data 
         row, col = term_mat.nonzero()
-        print(len(row))
-        print(len(col))
+        
         if N != None:
-            r_accept = [i for i in range(len(row)) if number(row[i]) == N] 
-            c_accept = [i for i in range(len(col)) if number(col[i]) == N]  
-            v_accept = r_accept + [len(r_accept) + i for i in c_accept]
-            row = row[r_accept]
-            col = col[c_accept]
-            vals[-1] = vals[-1][v_accept]
-            print(len(row))
-            print(len(col))
-            print(len(vals)) 
+            accept = [i for i in range(len(val)) if number(row[i]) == number(col[i]) == N] 
+            row = [row[i] for i in accept]
+            col = [col[i] for i in accept]
+            val = [val[i] for i in accept]
+
+        if Sz != None:
+            accept = [i for i in range(len(val)) if spin(row[i]) == approx(spin(col[i]), abs = 1e-12) == approx(Sz, abs = 1e-12)]
+            row = [row[i] for i in accept]
+            col = [col[i] for i in accept]
+            val = [val[i] for i in accept]
+
+        vals.append(val)
         rows.append(row)
-        cols.append(col)    
+        cols.append(col)
+        
     vals = np.concatenate(vals)
     rows = np.concatenate(rows)
     cols = np.concatenate(cols)

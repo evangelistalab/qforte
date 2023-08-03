@@ -53,15 +53,13 @@ class TestQSCEOM:
                total_dip += np.multiply(op.conj(),op).real
           total_dip = np.sqrt(total_dip)
 
-          H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb, N = 2, Sz = 0).todense()
-          Sz = sq_op_to_scipy(total_spin_z(alg._nqb, False), alg._nqb).todense()
-          N = sq_op_to_scipy(total_number(alg._nqb, False), alg._nqb).todense()
+          H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb, N = 2, Sz = 0).todense() 
           fci_dip_x = sq_op_to_scipy(mol.sq_dipole_x, alg._nqb).todense()
           fci_dip_y = sq_op_to_scipy(mol.sq_dipole_y, alg._nqb).todense()
           fci_dip_z = sq_op_to_scipy(mol.sq_dipole_z, alg._nqb).todense()
            
-          H_penalized = H + 1000*Sz@Sz + 1000*(N@N - 4*N + 4*np.eye(H.shape[0]))
-          w, v = np.linalg.eigh(H_penalized)
+          
+          w, v = np.linalg.eigh(H)
           
           for i in range(len(all_Es)):
               assert all_Es[i] - w[i] == approx(0.0, abs = 1.0e-10)
