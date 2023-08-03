@@ -168,6 +168,20 @@ void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
     tensors_[rank_index] = tensor2;
 }
 
+void TensorOperator::fill_tensor_from_np_by_rank(int idx, std::vector<std::complex<double>> arr, std::vector<size_t> shape){
+
+    if (idx % 2 != 0){
+        throw std::runtime_error("Invalid Rank.");
+    }
+
+    if (arr.size() != tensors_[idx/2].size()){
+        throw std::runtime_error("Sizes of arrays are not the same.");
+    }
+
+    tensors_[idx/2].fill_from_nparray(arr, shape);
+
+}
+
 
 // void TensorOperator::add_sqop_term(const std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& sqo_term )
 // {

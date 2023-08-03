@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.4)
 set (CMAKE_CXX_STANDARD 14)
+# set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 
 # optionally use OpenMP, if so use OpenMP compatible compiler
 OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)
@@ -27,9 +28,24 @@ if(USE_OpenMP)
     # endif()
 endif()
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Need to check how much of this is actually needed!
+
+# Find BLAS library
+cmake_policy(SET CMP0074 NEW)
+
+# Bypass FindBLAS module
+set(BLA_VENDOR "Generic")
+
+# (Nick) I need the following, may be elsewhere or unneeded on other os. 
+# set(CMAKE_C_COMPILER "/usr/bin/clang")
+# set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
+# Use these if installing to anaconda
+set(CMAKE_PREFIX_PATH "/home/tylerpbrady/anaconda3/envs/qf2")
+set(BLAS_LIBRARIES "${CMAKE_PREFIX_PATH}/lib") 
+set(CBLAS_INCLUDE_DIR "${CMAKE_PREFIX_PATH}/include") #need
+set(OPENBLAS_EXE "${CMAKE_PREFIX_PATH}/lib/libopenblas.so") #need, may be libopenblas.so for linux
+# find_package(BLAS REQUIRED)
 
 project(qforte)
 
@@ -51,8 +67,10 @@ pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
     "${SOURCE_DIR}/computer.cc"
     "${SOURCE_DIR}/fci_computer.cc"
     "${SOURCE_DIR}/tensor.cc"
+    "${SOURCE_DIR}/tensor_einsum.cc"
     "${SOURCE_DIR}/tensor_operator.cc"
     "${SOURCE_DIR}/gate.cc"
+    "${SOURCE_DIR}/blas_math.cc" 
     "${SOURCE_DIR}/qubit_operator.cc"
     "${SOURCE_DIR}/qubit_op_pool.cc"
     "${SOURCE_DIR}/sq_operator.cc"
@@ -60,7 +78,9 @@ pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
     "${SOURCE_DIR}/sparse_tensor.cc"
     "${SOURCE_DIR}/timer.cc")
 
-target_link_libraries(qforte PRIVATE fmt-header-only)
+link_directories(${BLAS_LIBRARIES})
+target_include_directories(qforte PRIVATE ${CBLAS_INCLUDE_DIR})
+target_link_libraries(qforte PRIVATE fmt-header-only ${OPENBLAS_EXE})
 
 # specify open MP flags
 if(USE_OpenMP)
@@ -76,13 +96,11 @@ SET(TESTS ${SOURCES}
     "${TEST_DIR}/test_math.cc")
 
 # Generate a test executable
+include_directories(${CBLAS_INCLUDE_DIR})
 include_directories(lib/catch2/single_include/catch2)
 include_directories(lib/fmt/include)
-add_executable("${PROJECT_NAME}_test" ${TESTS})
 
-#include_directories(${SOURCE_DIR})
-#include_directories(lib/catch2/single_include/catch2)
-include_directories(lib/fmt/include)
+add_executable("${PROJECT_NAME}_test" ${TESTS})
 
 add_executable("${PROJECT_NAME}_benchmarks"
     benchmarks/benchmarks.cc
@@ -93,8 +111,10 @@ add_executable("${PROJECT_NAME}_benchmarks"
     "${SOURCE_DIR}/computer.cc"
     "${SOURCE_DIR}/fci_computer.cc"
     "${SOURCE_DIR}/tensor.cc"
+    "${SOURCE_DIR}/tensor_einsum.cc"
     "${SOURCE_DIR}/tensor_operator.cc"
     "${SOURCE_DIR}/gate.cc"
+    "${SOURCE_DIR}/blas_math.cc"
     "${SOURCE_DIR}/qubit_operator.cc"
     "${SOURCE_DIR}/sq_operator.cc"
     "${SOURCE_DIR}/qubit_op_pool.cc"
@@ -102,4 +122,4 @@ add_executable("${PROJECT_NAME}_benchmarks"
     "${SOURCE_DIR}/sparse_tensor.cc"
     "${SOURCE_DIR}/timer.cc")
 
-target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only)
+target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only ${OPENBLAS_EXE})

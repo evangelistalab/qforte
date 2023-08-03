@@ -42,3 +42,6 @@ qforte.egg-info/
 
 # local binary files
 *tests/bin/
+
+# Timers
+timer.dat

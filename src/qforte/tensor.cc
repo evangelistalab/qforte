@@ -1,15 +1,17 @@
 #include "tensor.h"
-
+#include "blas_math.h"
 
 // May need an analog these eventually
 // #include "../util/string.hpp"
 // #include <lightspeed/math.hpp>
 
 #include <iostream>
+#include <cmath>
 #include <sstream>
 #include <stdexcept>
 #include <cstring>
-
+#include <utility>
+#include <algorithm>
 // namespace lightspeed { 
 
 size_t Tensor::total_memory__ = 0;
@@ -29,6 +31,8 @@ Tensor::Tensor(
         size_ *= shape_[i];
     }  
     data_.resize(size_,0.0);
+
+    initialized_ = 1;
 
     // Ed's special memory thing
     total_memory__ += data_.size() * sizeof(std::complex<double>);
@@ -80,6 +84,13 @@ void Tensor::set(
     } 
 }
 
+void Tensor::fill_from_np(std::vector<std::complex<double>> arr, std::vector<size_t> shape){
+    if (shape_ != shape){
+        throw std::runtime_error("The Shapes are not the same.");
+    }
+    std::memcpy(data_.data(), arr.data(), sizeof(std::complex<double>)*size_);
+}
+
 void Tensor::zero_with_shape(const std::vector<size_t>& shape)
 {
     std::vector<size_t> strides;
@@ -96,6 +107,8 @@ void Tensor::zero_with_shape(const std::vector<size_t>& shape)
     size_ = size;
     data_.resize(size_, 0.0);
     memset(data_.data(),'\0',sizeof(std::complex<double>)*size_);
+
+    initialized_ = 1;
 
     // Ed's special memory thing
     total_memory__ = data_.size() * sizeof(std::complex<double>);
@@ -257,12 +270,17 @@ void Tensor::antisymmetrize()
 }
 
 // TODO(NICK:) reimplement Scal
+// void Tensor::scale(std::complex<double> a)
+// {
+//     // C_DSCAL(size_,a,data_.data(),1);
+//     for(size_t i = 0; i < size_; i++){
+//         data_[i] *= a;
+//     }
+// }
+
 void Tensor::scale(std::complex<double> a)
 {
-    // C_DSCAL(size_,a,data_.data(),1);
-    for(size_t i = 0; i < size_; i++){
-        data_[i] *= a;
-    }
+    math_zscale(size_, a, data_.data(), 1);
 }
 
 void Tensor::copy(
@@ -290,7 +308,35 @@ void Tensor::add(const Tensor& other)
     //     );
 }
 
+
+void Tensor::subtract(const Tensor& other){
+
+    shape_error(other.shape());
+    for (size_t i = 0; i < size_; i++){
+        data_[i] -= other.read_data()[i];
+    }
+}
+
+double Tensor::norm(){
+
+    double result = 0;
+
+    for (int i = 0; i < size_; i++){
+
+        result += std::real(data_[i]) * std::real(data_[i]) + std::imag(data_[i]) * std::imag(data_[i]);
+
+    }
+
+    result = std::sqrt(result);
+
+    return result;
+
+}
+
 // void Tensor::axpby(
+
+// void Tensor::zaxpby(
+
 //     const std::shared_ptr<Tensor>& other,
 //     std::complex<double> a,
 //     std::complex<double> b
@@ -300,7 +346,73 @@ void Tensor::add(const Tensor& other)
     
 //     C_DSCAL(size_,b,data_.data(),1);
 //     C_DAXPY(size_,a,other->data().data(),1,data_.data(),1); 
-// }
+// } OLD
+
+void Tensor::zaxpby(
+    const Tensor& x,
+    std::complex<double> a,
+    std::complex<double> b,
+    const int incx,
+    const int incy
+    )
+{
+    shape_error(x.shape());
+    math_zscale(size_, b, data_.data(),1);
+    math_zaxpy(size_, a, x.read_data().data(), incx, data_.data(), incy); 
+}
+
+void Tensor::zaxpy(
+    const Tensor& x, 
+    const std::complex<double> alpha, 
+    const int incx, 
+    const int incy)
+{
+    // Check if the two tensors have compatible shapes
+    if (shape_ != x.shape()) {
+        throw std::runtime_error("Tensor::zaxpy: Incompatible tensor shapes for axpy operation.");
+    }
+
+    // Get the raw data pointers for both tensors
+    const std::complex<double>* x_data = x.read_data().data();
+    std::complex<double>* y_data = data_.data();
+
+    // Call the zaxpy function from blas_math.h to perform the operation
+    math_zaxpy(size_, alpha, x_data, incx, y_data, incy);
+}
+
+
+void Tensor::gemm(
+    const Tensor& B,
+    const char transa,
+    const char transb,
+    const std::complex<double> alpha,
+    const std::complex<double> beta,
+    const bool mult_B_on_right)
+{
+
+    if ((shape_.size() != 2) || (shape_ != B.shape())){
+        throw std::runtime_error("Incompatible shape(s)/dimension(s).");
+    }
+
+  const int M = (transa == 'N') ? shape_[0] : shape_[1];
+  const int N = (transb == 'N') ? B.shape()[1] : B.shape()[0];
+  const int K = (transa == 'N') ? shape_[1] : shape_[0];
+  
+  std::complex<double>* A_data = data_.data();
+  const std::complex<double>* B_data = B.read_data().data();
+  
+  // Since Tensor C is 'this' Tensor
+  std::complex<double>* C_data = data_.data();
+
+  if(mult_B_on_right) {
+    math_zgemm(transa, transb, M, N, K, alpha, A_data, shape_[1], B_data, B.shape()[1], beta, C_data, shape_[1]);
+  } 
+  else {
+    math_zgemm(transb, transa, N, M, K, alpha, B_data, B.shape()[1], A_data, shape_[1], beta, C_data, shape_[1]);
+  }
+
+}
+
 
 // std::complex<double> Tensor::vector_dot(
 //     const std::shared_ptr<Tensor>& other
@@ -355,6 +467,61 @@ Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const
     }
 
     return transposed_tensor;  
+}
+
+
+Tensor Tensor::slice(std::vector<std::pair<size_t, size_t>>& idxs)const{
+
+    std::vector<size_t> new_shape(idxs.size());
+    std::vector<size_t> new_strides(idxs.size());
+    size_t new_size = 1;
+
+    if (idxs.size() != ndim()){
+        throw std::invalid_argument("Number of slices should match the number of dimensions.");
+    }
+
+
+    for (int i = idxs.size() - 1; i >= 0; i--){
+        if (idxs[i].first >= idxs[i].second || idxs[i].second > shape_[i]){
+            throw std::invalid_argument("Invalid slice index.");
+        }
+
+        new_shape[i] = idxs[i].second - idxs[i].first;
+        new_strides[i] = strides_[i];
+        new_size *= new_shape[i];
+
+    }
+
+
+    Tensor new_tensor(new_shape, name_ + "_sliced");
+
+    std::vector<size_t> old_tidx(ndim());
+    std::fill(old_tidx.begin(), old_tidx.end(), 0);
+    std::vector<size_t> new_tidx(new_shape.size(), 0);
+
+    for (size_t vidx = 0; vidx < size_; vidx++){
+        old_tidx = vidx_to_tidx(vidx);
+        bool is_in_slice = true;
+
+        for (size_t i = 0; i < old_tidx.size(); i++){
+            if (old_tidx[i] < idxs[i].first || old_tidx[i] >= idxs[i].second){
+                is_in_slice = false;
+                break;
+            }
+            else{
+                new_tidx[i] = old_tidx[i] - idxs[i].first;
+            }
+        }
+
+        if (is_in_slice){
+            size_t new_vidx = new_tensor.tidx_to_vidx(new_tidx);
+            new_tensor.data()[new_vidx] = data_[vidx];
+        }
+
+    }
+
+
+    return new_tensor;
 }
 
 // TODO(Tyler?): Column printing is a little clunky for complex
@@ -439,7 +606,7 @@ std::string Tensor::str(
                 } else {
                     for (size_t j = 0; j < cols; j += maxcols) {
                         size_t ncols = (j + maxcols >= cols ? cols - j : maxcols);
-
+                
                         // Column Header
                         str += std::printf("  %5s", "");
                         for (size_t jj = j; jj < j+ncols; jj++) {
@@ -464,6 +631,20 @@ std::string Tensor::str(
         }
     }
     return str;
+}
+
+
+// py::array_t<double> array
+// std::vector<std::complex<double>>
+
+void Tensor::fill_from_nparray(std::vector<std::complex<double>> arr, std::vector<size_t> shape){
+
+    if (shape_ != shape){
+        throw std::runtime_error("The Shapes are not the same.");
+    }
+
+    std::memcpy(data_.data(), arr.data(), sizeof(std::complex<double>)*size_);
+
 }
 
 // TODO(Nick): Re-Implement

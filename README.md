@@ -55,13 +55,15 @@ conda activate qforte_env
 ```bash
 conda install psi4 -c psi4
 conda install scipy
+conda install cmake
+conda install -c anaconda openblas-devel
 ```
 
 Installation (For Development)
 ------------------------------
 
 ```bash
-git clone --recurse-submodules https://github.com/evangelistalab/qforte.git
+git clone --recurse-submodules https://github.com/nstair/qforte.git
 cd qforte
 python setup.py develop
 ```
