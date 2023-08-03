@@ -381,54 +381,7 @@ void Tensor::gemm(
     math_zgemm(transb, transa, N, M, K, alpha, B_data, B.shape()[1], A_data, shape_[1], beta, C_data, shape_[1]);
   }
 
-    // int M = multOnRight ? B.shape()[0] : shape_[0];
-    // int N = multOnRight ? shape_[1] : B.shape()[1];
-    // int K = shape_[1];
-    // int lda = shape_[0];
-    // int ldb = B.shape()[0];
-    // int ldc = M;
-
-    // // weird syntax? data_.data()?
-    // const std::complex<double>* this_data = data_.data();
-    // const std::complex<double>* B_data = B.read_data().data();
-
-
-    // if (multOnRight){
-    //     math_zgemm(CblasRowMajor,
-    //                 transb == 'N' ? CblasNoTrans : CblasTrans,
-    //                 transa == 'N' ? CblasNoTrans : CblasTrans,
-    //                 M, N, K, &alpha, B_data, ldb, this_data, lda, &beta,
-    //                 this_data, ldc);
-    // }
-    // else {
-    //     math_zgemm(CblasRowMajor,
-    //                 transa == 'N' ? CblasNoTrans : CblasTrans,
-    //                 transb == 'N' ? CblasNoTrans : CblasTrans,
-    //                 M, N, K, &alpha, this_data, lda, B_data, ldb, &beta,
-    //                 this_data, ldc);
-    // }
-
 }
-
-// void Tensor::daxpy(
-//     const Tensor& x,
-//     const double alpha,
-//     const int inx,
-//     const int incy)
-// {
-
-//     if (shape_ != x.shape()){
-//         throw std::runtime_error("Incompatible Tensor Shapes.");
-//     }
-
-//     const double* x_data = x.read_data().data();
-//     double* y_data = data_.data();
-
-//     math_daxpy(size_, alpha, x_data, inx, y_data, incy);
-
-
-// }
-
 
 
 // std::complex<double> Tensor::vector_dot(

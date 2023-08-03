@@ -1,4 +1,4 @@
-from qforte import SQOperator, Computer
+from qforte import SQOperator, Computer, Tensor
 import qforte as qf
 import numpy as np
 import unittest
@@ -108,8 +108,6 @@ class TestBlas(unittest.TestCase):
 
 
     def test_zaxpby2(self):
-
-        # appears to scale 'a' with t2 and 'b' with t1??
 
         shape = [2, 2]
 
@@ -250,21 +248,6 @@ class TestBlas(unittest.TestCase):
         final_norm = np.linalg.norm(final_np_arr) - np.linalg.norm(ref_arr)
 
         self.assertLess(final_norm, 1e-16)  
-
-
-
-
-
-#   2   0   0   0
-#   0   2   0   0
-#   2   0   0   0
-#   0   0   0   0
-
-#   0   0   1.5   0
-#   0   0   0   1.5
-#   0   j   0   0
-#   0   0   0   0
-
 
 
 unittest.main()

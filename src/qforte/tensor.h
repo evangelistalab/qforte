@@ -262,13 +262,6 @@ void gemm(
     const std::complex<double> beta,
     const bool multOnRight);
 
-// void daxpy(
-//     const Tensor& x,
-//     const double alpha,
-//     const int incx,
-//     const int incy);
-
-
 /// NICK: Comment out the functions below for now, will need external lib
 // => Tensor Multiplication/Permutation <= //
 
