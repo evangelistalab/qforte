@@ -37,6 +37,33 @@ class FCIComputer {
     /// apply a 1-body TensorOperator to the current state 
     void apply_tensor_spin_1bdy(const TensorOperator& top);
 
+    void lm_apply_array1(
+      // const double complex *coeff, don't need
+      // double complex *out,
+      const Tensor& out,
+      // const int *dexc,
+      const std::vector<int> dexc,
+      const int astates,
+      const int bstates,
+      const int ndexc,
+      // const double complex *h1e,
+      const Tensor& h1e,
+      const int norbs,
+      const bool is_alpha);
+      // const struct blasfunctions * blasfunc);
+
+    void lm_apply_array1_new(
+      // const std::vector<std::complex<double>>& coeff,
+      Tensor& out,
+      const std::vector<int>& dexc,
+      const int astates,
+      const int bstates,
+      const int ndexc,
+      const Tensor& h1e,
+      const int norbs,
+      const bool is_alpha);
+      // const CBLAS_FUNCTIONS* blasfunc);
+
     /// apply a 1-body and 2-body TensorOperator to the current state 
     void apply_tensor_spin_12_body(const TensorOperator& top);
 

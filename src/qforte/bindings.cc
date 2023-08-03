@@ -9,6 +9,7 @@
 #include "gate.h"
 #include "computer.h"
 #include "fci_computer.h"
+#include "fci_graph.h"
 #include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
@@ -204,6 +205,10 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", &FCIComputer::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false);
+
+    py::class_<FciGraph>(m, "FCIGraph")
+        .def(py::init<int, int, int>(), "nalfa"_a, "nbeta"_a, "norb"_a, "Make a FCIGraph")
+        .def("get_nalfa", &FciGraph::get_nalfa);
 
     py::class_<Tensor>(m, "Tensor")
         .def(py::init<std::vector<size_t>, std::string>(), "shape"_a, "name"_a, "Make a Tensor with a particualr shape")
