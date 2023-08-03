@@ -23,8 +23,8 @@ def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
     E0 = myQC.direct_op_exp_val(H).real
     print(f"Ground state energy: {E0}")
     print(f"Doing Ritz diagonalization for excited states.")  
-    Ek, A = ritz_eigh(n_qubit, H, U_manifold) 
-    
+    Ek, A, ops = ritz_eigh(n_qubit, H, U_manifold) 
+    del ops 
     op_mats = []
     if len(ops_to_compute) > 0:
         #Add the reference state with coefficient 1.
@@ -39,7 +39,7 @@ def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
             op_q_sc_eom_basis = (A_plus_ref.T.conj()@op_vqe_basis@A_plus_ref).real        
             op_mats.append(op_q_sc_eom_basis)
     
-    return [E0, Ek] + op_mats
+    return [E0]+list(Ek), op_mats
 
 def ritz_eigh(n_qubit, H, U, ops_to_compute = []):
     """
@@ -65,5 +65,5 @@ def ritz_eigh(n_qubit, H, U, ops_to_compute = []):
         op_ritz_basis = A.T.conj()@op_vqe_basis@A
         op_mats.append(op_ritz_basis)
     
-    return [Ek, A] + op_mats
+    return Ek, A, op_mats
     

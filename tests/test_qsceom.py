@@ -45,16 +45,15 @@ class TestQSCEOM:
               det.add_circuit(U_ansatz)
               manifold.append(det)   
           
-          E0, Eks, dip_x, dip_y, dip_z = q_sc_eom(alg._nqb, mol.hamiltonian, U_hf, manifold, [mol.dipole_x, mol.dipole_y, mol.dipole_z]) 
-          
-          all_Es = [E0] + list(Eks)
+          all_Es, ops = q_sc_eom(alg._nqb, mol.hamiltonian, U_hf, manifold, [mol.dipole_x, mol.dipole_y, mol.dipole_z]) 
+          dip_x, dip_y, dip_z = ops
 
           total_dip = np.zeros(dip_x.shape)
           for op in [dip_x, dip_y, dip_z]:
                total_dip += np.multiply(op.conj(),op).real
           total_dip = np.sqrt(total_dip)
 
-          H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb).todense()
+          H = sq_op_to_scipy(mol.sq_hamiltonian, alg._nqb, N = 2, Sz = 0).todense()
           Sz = sq_op_to_scipy(total_spin_z(alg._nqb, False), alg._nqb).todense()
           N = sq_op_to_scipy(total_number(alg._nqb, False), alg._nqb).todense()
           fci_dip_x = sq_op_to_scipy(mol.sq_dipole_x, alg._nqb).todense()

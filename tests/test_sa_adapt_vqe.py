@@ -26,7 +26,7 @@ class TestSAADAPTVQE:
           refs = [mol.hf_reference] + cisd_manifold(mol.hf_reference, mol.orb_irreps_to_int)
           weights = [2**(-i-1) for i in range(len(refs))]
           weights[-1] += 2**(-len(weights))
-
+          
           alg = ADAPTVQE(mol,
                          print_summary_file = False,
                          is_multi_state = True,
@@ -56,8 +56,9 @@ class TestSAADAPTVQE:
           
           U = alg.build_Uvqc(amplitudes = alg._tamps)
            
-          Es, A, dip_x, dip_y, dip_z = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z])
-     
+          Es, A, ops = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z])
+          dip_x, dip_y, dip_z = ops
+
           E_idx = [0,2,3,5]
           Es = Es[E_idx]
           for i in range(len(Es)):             
@@ -99,7 +100,8 @@ class TestSAADAPTVQE:
 
           U = alg.build_Uvqc(amplitudes = alg._tamps)
            
-          Es, A, dip_x, dip_y, dip_z = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z])
+          Es, A, ops = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z]) 
+          dip_x, dip_y, dip_z = ops
           Es = Es[E_idx]
           for i in range(len(Es)):             
                assert Es[i] == approx(w[i], abs = 1.0e-10)
@@ -129,7 +131,9 @@ class TestSAADAPTVQE:
 
           U = alg.build_Uvqc(amplitudes = alg._tamps)
            
-          Es, A, dip_x, dip_y, dip_z = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z])
+          Es, A, ops = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z])
+          dip_x, dip_y, dip_z = ops
+          
           Es = Es[E_idx]
           for i in range(len(Es)):             
                assert Es[i] == approx(w[i], abs = 1.0e-10)

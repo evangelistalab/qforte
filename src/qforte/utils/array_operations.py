@@ -6,8 +6,17 @@ A module for working with Scipy arrays
 
 import numpy as np
 import scipy
+import math
 
-def sq_op_to_scipy(sq_op, N_qubits):
+def number(a):
+    #Get sum of bits in binary representation of a. (I.e., particle number.)
+    sum_digits = 0
+    while a > 0:
+        sum_digits += a & 1
+        a >>= 1
+    return sum_digits
+ 
+def sq_op_to_scipy(sq_op, N_qubits, N = None, Sz = None):
     #Function to convert a second-quantized operator to a sparse, complex matrix
     #Draws heavily from the sparse_tools module in OpenFermion
     
@@ -39,8 +48,9 @@ def sq_op_to_scipy(sq_op, N_qubits):
     vals = [[]]
     rows = [[]]
     cols = [[]]
-    for term in terms:
+    for term in terms: 
         coeff = term[0]
+        
         term_mat = scipy.sparse.identity(dim, dtype = "complex", format = "csc")
         for i in term[1]:
             term_mat = annihilators[i]@term_mat
@@ -49,7 +59,21 @@ def sq_op_to_scipy(sq_op, N_qubits):
         term_mat = term_mat.tocoo(copy = False)
         term_mat.eliminate_zeros()
         vals.append(coeff * term_mat.data)
+        print(term_mat.data.shape)
+        
         row, col = term_mat.nonzero()
+        print(len(row))
+        print(len(col))
+        if N != None:
+            r_accept = [i for i in range(len(row)) if number(row[i]) == N] 
+            c_accept = [i for i in range(len(col)) if number(col[i]) == N]  
+            v_accept = r_accept + [len(r_accept) + i for i in c_accept]
+            row = row[r_accept]
+            col = col[c_accept]
+            vals[-1] = vals[-1][v_accept]
+            print(len(row))
+            print(len(col))
+            print(len(vals)) 
         rows.append(row)
         cols.append(col)    
     vals = np.concatenate(vals)

@@ -4,16 +4,16 @@ import numpy as np
 
 class TestOpToSparse:
     def test_sq_op_to_scipy(self):
-        geom = [("O", (0, 0, 0)), ("O", (0, 0, 1))]
+        geom = [("Li", (0, 0, 0)), ("Be", (0, 0, 1))]
         N_qubits = 8
         hdim = 1 << N_qubits
 
         mol = system_factory(build_type = "psi4",
                               mol_geometry = geom, 
-                              basis = "cc-pvdz",
-                              multiplicity = 3,
-                              num_frozen_docc = 6,
-                              num_frozen_uocc = 18,
+                              basis = "sto-6g",
+                              multiplicity = 2,
+                              num_frozen_docc = 2,
+                              num_frozen_uocc = 4,
                               charge = 0)
     
         H = sq_op_to_scipy(mol.sq_hamiltonian, N_qubits).todense()

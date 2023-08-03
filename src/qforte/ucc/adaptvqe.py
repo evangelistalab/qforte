@@ -371,7 +371,7 @@ class ADAPTVQE(UCCVQE):
             self._n_cnot_lst.append(self.build_Uvqc().get_num_cnots())
         else:
             U_temp = self.build_Uvqc()
-            cnots = [U.get_num_cnots for U in U_temp]
+            cnots = [U.get_num_cnots() for U in U_temp]
             self._n_cnot_lst.append(max(cnots))
             del U_temp
             del cnots
