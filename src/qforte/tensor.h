@@ -57,6 +57,9 @@ const std::vector<size_t>& shape() const { return shape_; }
 /// The offset between consecutive indices within each dimension
 const std::vector<size_t>& strides() const { return strides_; }
 
+/// Whether the tensor has been initilized or not 
+const bool initialized() const { return initialized_; }
+
 // => Data Accessors <= //
 
 /**
@@ -89,6 +92,8 @@ void zero_with_shape(const std::vector<size_t>& shape);
 
 /// Create a new copy of this Tensor (same size and data)
 std::shared_ptr<Tensor> clone();
+
+void fill_from_np(std::vector<std::complex<double>>, std::vector<size_t>);
 
 /// Set a particular element of tis Tensor, specified by idxs
 void set(const std::vector<size_t>& idxs,
@@ -252,46 +257,73 @@ void shape_error(const std::vector<size_t>& shape) const;
  **/
 void square_error() const;
 
+
+/// ===============> MATH <===================== ///
+
+void zaxpy(
+    const Tensor& x, 
+    const std::complex<double> alpha,
+    const int incx,
+    const int incy);
+
+void zaxpby(
+    const Tensor& x,
+    std::complex<double> a,
+    std::complex<double> b,
+    const int incx,
+    const int incy);
+
+void gemm(
+    const Tensor& B,
+    const char transa,
+    const char transb,
+    const std::complex<double> alpha,
+    const std::complex<double> beta,
+    const bool multOnRight);
+
 /// NICK: Comment out the functions below for now, will need external lib
 // => Tensor Multiplication/Permutation <= //
 
-// /**
-//  * Performed the chained matrix multiplication:
-//  *      
-//  *  C = alpha * As[0]^trans[0] * As[1]^trans[1] * ... + beta * C
-//  *      
-//  *  @param As the list of A core Tensors
-//  *  @param trans the list of transpose arguments
-//  *  @param C the resultant matrix - if this argument is not provided, C is
-//  *      allocated and set to zero in the routine
-//  *  @param alpha the prefactor of the chained multiply
-//  *  @param beta the prefactor of the register tensor C
-//  *  @return C - the resultant tensor (for chaining and new allocation)
-//  **/
-// static std::shared_ptr<Tensor> chain(
-//     const std::vector<std::shared_ptr<Tensor> >& As,
-//     const std::vector<bool>& trans,
-//     const std::shared_ptr<Tensor>& C = std::shared_ptr<Tensor>(),
-//     double alpha = 1.0,
-//     double beta = 0.0);
+/**
+ * Performed the chained matrix multiplication:
+ *      
+ *  C = alpha * As[0]^trans[0] * As[1]^trans[1] * ... + beta * C
+ *      
+ *  @param As the list of A core Tensors
+ *  @param trans the list of transpose arguments
+ *  @param C the resultant matrix - if this argument is not provided, C is
+ *      allocated and set to zero in the routine
+ *  @param alpha the prefactor of the chained multiply
+ *  @param beta the prefactor of the register tensor C
+ *  @return C - the resultant tensor (for chaining and new allocation)
+ **/
+static Tensor chain(
+    const std::vector<Tensor>& As,
+    const std::vector<bool>& trans,
+    // const Tensor& C = Tensor(),
+    std::complex<double> alpha,
+    std::complex<double> beta);
 
-// static std::shared_ptr<Tensor> permute(
-//     const std::vector<std::string>& Ainds,
-//     const std::vector<std::string>& Cinds,
-//     const std::shared_ptr<Tensor>& A,
-//     const std::shared_ptr<Tensor>& C = std::shared_ptr<Tensor>(),
-//     double alpha = 1.0,
-//     double beta = 0.0);
+// static Tensor permute(
+static void permute(
+    const std::vector<std::string>& Ainds,
+    const std::vector<std::string>& Cinds,
+    const Tensor& A,
+    // const Tensor& C2 = Tensor(), // This again, ability to have uninitialized tensor
+    Tensor& C2,
+    std::complex<double> alpha = 1.0,
+    std::complex<double> beta = 0.0);
 
-// static std::shared_ptr<Tensor> einsum(
-//     const std::vector<std::string>& Ainds,
-//     const std::vector<std::string>& Binds,
-//     const std::vector<std::string>& Cinds,
-//     const std::shared_ptr<Tensor>& A,
-//     const std::shared_ptr<Tensor>& B,
-//     const std::shared_ptr<Tensor>& C = std::shared_ptr<Tensor>(),
-//     double alpha = 1.0,
-//     double beta = 0.0);
+static void einsum(
+    const std::vector<std::string>& Ainds,
+    const std::vector<std::string>& Binds,
+    const std::vector<std::string>& Cinds,
+    const Tensor& A,
+    const Tensor& B,
+    // const Tensor& C3 = Tensor(),
+    Tensor& C3,
+    std::complex<double> alpha = 1.0,
+    std::complex<double> beta = 0.0);
 
 // // => Linear Algebra <= //
 
@@ -387,6 +419,8 @@ std::vector<size_t> shape_;
 std::vector<size_t> strides_;
 
 size_t size_;
+
+bool initialized_ = 0;
 
 /// TODO(Nick): I am sure this will cause problems...
 std::vector<std::complex<double>> data_;

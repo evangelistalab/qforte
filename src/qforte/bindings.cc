@@ -17,6 +17,7 @@
 #include "timer.h"
 #include "tensor.h"
 #include "tensor_operator.h"
+#include "blas_math.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -217,6 +218,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("strides", &Tensor::strides)
         .def("set", &Tensor::set)
         .def("get", &Tensor::get)
+        .def("fill_from_np", &Tensor::fill_from_np)
         .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)
         .def("subtract", &Tensor::subtract)
         .def("norm", &Tensor::norm)
@@ -229,6 +231,38 @@ PYBIND11_MODULE(qforte, m) {
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
         .def("general_transpose", &Tensor::general_transpose) // TODO(Tyler) Need Test (use numpy)
         .def("fill_from_nparray", &Tensor::fill_from_nparray)
+        .def("zaxpy", &Tensor::zaxpy, "x"_a, "alpha"_a, "incx"_a = 1, "incy"_a = 1) // TODO(Tyler) Need Test (use numpy)
+        .def("zaxpby", &Tensor::zaxpby, "x"_a, "a"_a, "b"_a, "incx"_a = 1, "incy"_a = 1)
+        .def("gemm", &Tensor::gemm, "B"_a, 
+            "transa"_a = 'N', 
+            "transb"_a = 'N', 
+            "alpha"_a = 1.0, 
+            "beta"_a = 1.0, 
+            "mult_B_on_right"_a = false)
+
+
+        .def_static("chain", &Tensor::chain, "As"_a, "trans"_a, "alpha"_a = 1.0, "beta"_a = 0.0) // TODO(Tyler) Need Test (use numpy)
+
+        .def_static("einsum", 
+            &Tensor::einsum, 
+            "Ainds"_a, 
+            "Binds"_a, 
+            "Cinds"_a, 
+            "A"_a,
+            "B"_a, 
+            "C3"_a,
+            "alpha"_a = 1.0,
+            "beta"_a = 0.0) 
+
+        .def_static("permute", 
+            &Tensor::permute, 
+            "Ainds"_a, 
+            "Cinds"_a, 
+            "A"_a,
+            "C2"_a,
+            "alpha"_a = 1.0,
+            "beta"_a = 0.0) 
+
         .def("str", &Tensor::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false, 
