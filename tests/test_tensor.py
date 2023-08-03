@@ -768,27 +768,4 @@ class TestTensor(unittest.TestCase):
 
 
 
-unittest.main()
-
-
-"""
-
-Questions:
-
-what happens if you add a 2x3 tensor to a 3x2 tensor
-or a 4x1 tensor to a 2x2 tensor
-
-what part of shape is the x and y grid?
-    is [4, 2] a grid of 4 rows of 2 wide?
-
-
-add more tests
-complex numbers
-tensor to np helper function
-rank component grouping function
-
-
-"""
-
-
 

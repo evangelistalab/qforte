@@ -281,7 +281,6 @@ class TestApplySQOP(unittest.TestCase):
         
 
 
-unittest.main()
 
 
 

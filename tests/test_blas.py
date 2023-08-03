@@ -250,4 +250,3 @@ class TestBlas(unittest.TestCase):
         self.assertLess(final_norm, 1e-16)  
 
 
-unittest.main()
