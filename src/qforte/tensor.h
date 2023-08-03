@@ -185,7 +185,13 @@ Tensor transpose() const;
  **/
 Tensor general_transpose(const std::vector<size_t>& axes) const;
 
-
+/**
+ * Create a new tensor based off the given sliced indexes.
+ * 
+ * @param idxs A vector of pairs with the indexes for the respective dimension.
+ * @return a new tensor with new shape, size, and data
+ * Throw if given too many indexes for the dimensions or if given invalid syntax for indexes.
+ **/
 Tensor slice(std::vector<std::pair<size_t, size_t>>& idxs) const;
 
 // => Printing <= //

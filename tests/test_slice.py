@@ -17,11 +17,7 @@ class TestSlice(unittest.TestCase):
             for j in range(shape[1]):
                 t1.set([i, j], i + j)
 
-        print(t1)
-
         t2 = t1.slice([(2, 3), (2, 3)])
-
-        print(t2)
 
     def test2(self):
 
