@@ -3,62 +3,51 @@
 #include <algorithm>
 #include <cstdint>
 #include <unordered_map>
+#include <iostream>
 
-
-FciGraph::FciGraph(int nalpha, int nbeta, int norb) {
+/// Custom construcotr
+FCIGraph::FCIGraph(int nalfa, int nbeta, int norb) 
+{
     if (norb < 0)
         throw std::invalid_argument("norb needs to be >= 0");
-    if (nalpha < 0)
-        throw std::invalid_argument("nalpha needs to be >= 0");
+    if (nalfa < 0)
+        throw std::invalid_argument("nalfa needs to be >= 0");
     if (nbeta < 0)
         throw std::invalid_argument("nbeta needs to be >= 0");
-    if (nalpha > norb)
-        throw std::invalid_argument("nalpha needs to be <= norb");
+    if (nalfa > norb)
+        throw std::invalid_argument("nalfa needs to be <= norb");
     if (nbeta > norb)
         throw std::invalid_argument("nbeta needs to be <= norb");
 
     norb_ = norb;
-    nalpha_ = nalpha;
+    nalfa_ = nalfa;
     nbeta_ = nbeta;
-    lena_ = binom(norb, nalpha);  // size of alpha-Hilbert space
-    lenb_ = binom(norb, nbeta);   // size of beta-Hilbert space
+    lena_ = binom(norb, nalfa); 
+    lenb_ = binom(norb, nbeta); 
 
-    // _astr = {};  // string labels for alpha-Hilbert space
-    // _bstr = {};  // string labels for beta-Hilbert space
-    // _aind = {};  // map string-binary to matrix index
-    // _bind = {};  // map string-binary to matrix index
-
-    std::tie(astr_, aind_) = build_strings(nalpha_, lena_);
+    std::tie(astr_, aind_) = build_strings(nalfa_, lena_);
     std::tie(bstr_, bind_) = build_strings(nbeta_, lenb_);
 
-    alpha_map_ = build_mapping(astr_, nalpha_, aind_);
+    alfa_map_ = build_mapping(astr_, nalfa_, aind_);
     beta_map_ = build_mapping(bstr_, nbeta_, bind_);
 
-    dexca_ = map_to_deexc(alpha_map_, lena_, norb_, nalpha_);
+    /// NICK: This is an intermediate and likely not needed...
+    dexca_ = map_to_deexc(alfa_map_, lena_, norb_, nalfa_);
     dexcb_ = map_to_deexc(beta_map_, lenb_, norb_, nbeta_);
 
-    // _fci_map = {};
+    dexca_vec_ = unroll_from_3d(dexca_);
+    dexcb_vec_ = unroll_from_3d(dexcb_);
 }
 
-int FciGraph::binom(int n, int k) {
-    if (k > n - k)
-        k = n - k;
-    int res = 1;
-    for (int i = 0; i < k; ++i) {
-        res *= (n - i);
-        res /= (i + 1);
-    }
-    return res;
-}
+FCIGraph::FCIGraph() : FCIGraph(0, 0, 0) {}
 
-std::pair<std::vector<uint64_t>, std::unordered_map<uint64_t, size_t>> FciGraph::build_strings(
+std::pair<std::vector<uint64_t>, std::unordered_map<uint64_t, size_t>> FCIGraph::build_strings(
     int nele, 
     size_t length) 
 {
     int norb = norb_;
 
-    /// NICK: rename...
-    std::vector<uint64_t> blist = lexicographic_bitstring_generator(nele, norb); // Assuming lexicographic_bitstring_generator is available
+    std::vector<uint64_t> blist = get_lex_bitstrings(nele, norb); // Assuming get_lex_bitstrings is available
 
     std::vector<uint64_t> string_list;
 
@@ -89,18 +78,7 @@ std::pair<std::vector<uint64_t>, std::unordered_map<uint64_t, size_t>> FciGraph:
     return std::make_pair(string_list, index_list);
 }
 
-// struct PairHash {
-//     template <class T1, class T2>
-//     std::size_t operator () (const std::pair<T1, T2>& p) const {
-//         auto h1 = std::hash<T1>{}(p.first);
-//         auto h2 = std::hash<T2>{}(p.second);
-//         return h1 ^ (h2 << 1);
-//     }
-// };
-
-// using Spinmap = std::unordered_map<std::pair<int, int>, std::vector<std::tuple<int, int, int>>, PairHash>;
-
-Spinmap FciGraph::build_mapping(
+Spinmap FCIGraph::build_mapping(
     const std::vector<uint64_t>& strings, 
     int nele, 
     const std::unordered_map<uint64_t, size_t>& index) 
@@ -113,10 +91,16 @@ Spinmap FciGraph::build_mapping(
             std::vector<std::tuple<int, int, int>> value;
             for (uint64_t string : strings) {
                 if (get_bit(string, jorb) && !get_bit(string, iorb)) {
-                    int parity = count_bits_between(string, iorb, jorb); // Assuming count_bits_between is available
+                    int parity = count_bits_between(string, iorb, jorb); 
                     int sign = (parity % 2 == 0) ? 1 : -1;
-                    value.push_back(std::make_tuple(index.at(string), index.at(unset_bit(set_bit(string, iorb), jorb)), sign));
+                    value.push_back(
+                        std::make_tuple(
+                            index.at(string), 
+                            index.at(unset_bit(set_bit(string, iorb), jorb)), 
+                            sign)
+                        );
                 } else if (iorb == jorb && get_bit(string, iorb)) {
+                    std::cout << "I get here B" << std::endl;
                     value.push_back(std::make_tuple(index.at(string), index.at(string), 1));
                 }
             }
@@ -128,43 +112,28 @@ Spinmap FciGraph::build_mapping(
     for (const auto& entry : out) {
         const auto& key = entry.first;
         const auto& value = entry.second;
-        // std::vector<std::vector<int>> casted_value;
         std::vector<std::tuple<int,int,int>> casted_value;
         for (const auto& tpl : value) {
-            casted_value.push_back(std::make_tuple(std::get<0>(tpl), std::get<1>(tpl), std::get<2>(tpl)));
+            casted_value.push_back(
+                std::make_tuple(
+                    std::get<0>(tpl), 
+                    std::get<1>(tpl), 
+                    std::get<2>(tpl))
+                );
         }
         result[key] = casted_value;
     }
-
     return result;
 }
 
-// bool get_bit(uint64_t string, size_t pos) { return string & maskbit(pos); }
-
-// constexpr uint64_t maskbit(size_t pos) { return static_cast<uint64_t>(1) << pos; }
-
-// int count_bits_between(uint64_t string, size_t pos1, size_t pos2) {
-//     uint64_t mask = (((1ULL << pos1) - 1) ^ ((1ULL << (pos2 + 1)) - 1)) &
-//                     (((1ULL << pos2) - 1) ^ ((1ULL << (pos1 + 1)) - 1));
-    
-//     return static_cast<int>(string & mask);
-// }
-
-// uint64_t set_bit(uint64_t string, int pos) {
-//     return string | (1ULL << pos);
-// }
-
-// uint64_t unset_bit(uint64_t string, int pos) {
-//     return string & ~(1ULL << pos);
-// }
-
-std::vector<std::vector<std::vector<int>>> FciGraph::map_to_deexc(
+std::vector<std::vector<std::vector<int>>> FCIGraph::map_to_deexc(
     const Spinmap& mappings, 
     int states, 
     int norbs,
     int nele) 
 {
     int lk = nele * (norbs - nele + 1);
+
     std::vector<std::vector<std::vector<int>>> dexc(
         states, 
         std::vector<std::vector<int>>(lk, std::vector<int>(3, 0)));
@@ -193,13 +162,8 @@ std::vector<std::vector<std::vector<int>>> FciGraph::map_to_deexc(
     return dexc;
 }
 
-// Additional helper functions
-// uint64_t FciGraph::integer_index(uint64_t wbit) {
-
-// }
-
 /// NICK: 1. Consider a faster blas veriosn, 2. consider using qubit basis, 3. rename (too long)
-std::vector<uint64_t> FciGraph::lexicographic_bitstring_generator(int nele, int norb) {
+std::vector<uint64_t> FCIGraph::get_lex_bitstrings(int nele, int norb) {
 
     if (nele > norb) {
         throw std::invalid_argument("can't have more electorns that orbitals");
@@ -229,9 +193,8 @@ std::vector<uint64_t> FciGraph::lexicographic_bitstring_generator(int nele, int 
 
 }
 
-
 /// NICK: Seems slow..., may want to use qubit basis, convert to size_t maybe??
-uint64_t FciGraph::build_string_address(
+uint64_t FCIGraph::build_string_address(
     int nele, 
     int norb, 
     uint64_t occ,
@@ -252,21 +215,12 @@ uint64_t FciGraph::build_string_address(
     return address;
 }
 
-// std::unordered_map<uint64_t, int> FciGraph::build_string_address(int nele, int norb, uint64_t occ) {
-
-// }
-
-// std::vector<uint64_t> FciGraph::calculate_string_address(const std::vector<std::vector<int>>& Z, int nele, int norb, const std::vector<uint64_t>& blist){
-
-// }
-
 /// NICK: May want to make faster using blas calls if it becomes a bottleneck
-std::vector<std::vector<uint64_t>> FciGraph::get_z_matrix(int norb, int nele) {
-    std::vector<std::vector<uint64_t>> Z(nele, std::vector<uint64_t>(norb, 0)); // Initialize Z matrix with zeros
+std::vector<std::vector<uint64_t>> FCIGraph::get_z_matrix(int norb, int nele) {
+    // Initialize Z matrix with zeros
+    std::vector<std::vector<uint64_t>> Z(nele, std::vector<uint64_t>(norb, 0)); 
 
-    if (nele == 0 || norb == 0) {
-        return Z; // Return an empty matrix if nele or norb is zero
-    }
+    if (nele == 0 || norb == 0) { return Z; }
 
     for (int k = 1; k < nele; ++k) {
         for (int ll = k; ll < norb - nele + k + 1; ++ll) {
@@ -283,25 +237,4 @@ std::vector<std::vector<uint64_t>> FciGraph::get_z_matrix(int norb, int nele) {
     }
 
     return Z;
-}
-
-int binom(int n, int m) {
-    if (m < 0 || m > n)
-        return 0;
-
-    // Initialize a 2D vector to store the binomial coefficients
-    std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
-
-    // Base cases
-    for (int i = 0; i <= n; ++i)
-        dp[i][0] = 1;
-
-    // Calculate the binomial coefficients using dynamic programming
-    for (int i = 1; i <= n; ++i) {
-        for (int j = 1; j <= std::min(i, m); ++j) {
-            dp[i][j] = dp[i - 1][j - 1] + dp[i - 1][j];
-        }
-    }
-
-    return dp[n][m];
 }

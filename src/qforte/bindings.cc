@@ -206,9 +206,19 @@ PYBIND11_MODULE(qforte, m) {
             py::arg("print_data") = true, 
             py::arg("print_complex") = false);
 
-    py::class_<FciGraph>(m, "FCIGraph")
+    py::class_<FCIGraph>(m, "FCIGraph")
         .def(py::init<int, int, int>(), "nalfa"_a, "nbeta"_a, "norb"_a, "Make a FCIGraph")
-        .def("get_nalfa", &FciGraph::get_nalfa);
+        .def("get_nalfa", &FCIGraph::get_nalfa)
+        .def("get_nbeta", &FCIGraph::get_nbeta)
+        .def("get_astr", &FCIGraph::get_astr)
+        .def("get_bstr", &FCIGraph::get_bstr)
+        .def("get_aind", &FCIGraph::get_aind)
+        .def("get_bind", &FCIGraph::get_bind)
+        .def("get_alfa_map", &FCIGraph::get_alfa_map)
+        .def("get_beta_map", &FCIGraph::get_beta_map)
+        .def("get_dexca", &FCIGraph::get_dexca)
+        .def("get_dexcb", &FCIGraph::get_dexcb);
+
 
     py::class_<Tensor>(m, "Tensor")
         .def(py::init<std::vector<size_t>, std::string>(), "shape"_a, "name"_a, "Make a Tensor with a particualr shape")

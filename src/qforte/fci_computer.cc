@@ -20,13 +20,8 @@
 #include "blas_math.h"
 
 #include "fci_computer.h"
+#include "fci_graph.h"
 
-// #if defined(_OPENMP)
-// #include <omp.h>
-// extern const bool parallelism_enabled = true;
-// #else
-// extern const bool parallelism_enabled = false;
-// #endif
 
 FCIComputer::FCIComputer(int nel, int sz, int norb) : 
     nel_(nel), 
@@ -66,8 +61,10 @@ FCIComputer::FCIComputer(int nel, int sz, int norb) :
         nbeta_strs_ = 0;
     }
 
-    state_.zero_with_shape({nalfa_strs_, nbeta_strs_});
-    state_.set_name("FCI Computer");
+    C_.zero_with_shape({nalfa_strs_, nbeta_strs_});
+    C_.set_name("FCI Computer");
+
+    graph_ = FCIGraph(nalfa_el_, nbeta_el_, norb_);
 }
 
 /// apply a TensorOperator to the current state 
@@ -77,13 +74,13 @@ void apply_tensor_operator(const TensorOperator& top);
 void apply_tensor_spin_1bdy(const TensorOperator& top);
 
 // TODO(Nick): Uncomment, will need someting like the following:
-std::vector<double> apply_tensor_spin_1bdy(const Tensor& h1e, size_t norb) {
+void FCIComputer::apply_tensor_spin_1bdy(const Tensor& h1e, size_t norb) {
 
-    // if(h1e.size() != (norb * 2) * (norb * 2)){
-    //     throw std::invalid_argument("Expecting h1e to be nso x nso for apply_tensor_spin_1bdy");
-    // }
+    if(h1e.size() != (norb * 2) * (norb * 2)){
+        throw std::invalid_argument("Expecting h1e to be nso x nso for apply_tensor_spin_1bdy");
+    }
 
-    // // Not sure what this is checking for?
+    // Not sure what this is checking for?
     // size_t ncol = 0;
     // size_t jorb = 0;
     // for (size_t j = 0; j < norb * 2; ++j) {
@@ -103,12 +100,51 @@ std::vector<double> apply_tensor_spin_1bdy(const Tensor& h1e, size_t norb) {
 
     // std::vector<double> out;
     // if (ncol > 1) {
-    //     // Implementation of dense_apply_array_spin1_lm
-    //     out = lm_apply_array1(coeff, {h1e.begin(), h1e.begin() + norb * norb},
-    //                             core._dexca, lena(), lenb(), norb, true);
 
-    //     lm_apply_array1(coeff, {h1e.begin() + norb * norb, h1e.end()},
-    //                     core._dexcb, lena(), lenb(), norb, false, out);
+    Tensor Cnew({nalfa_strs_, nbeta_strs_}, "Cnew");
+    Tensor h1e_blk1 = h1e.slice({{0, norb_}, {0, norb_}});
+    Tensor h1e_blk2 = h1e.slice({{norb_, 2*norb_}, {norb_, 2*norb_}});
+
+    // Implementation of dense_apply_array_spin1_lm
+    // out = lm_apply_array1(
+    //     coeff, 
+    //     {h1e.begin(), h1e.begin() + norb * norb},
+    //     core._dexca,
+    //     lena(), 
+    //     lenb(), 
+    //     norb, 
+    //     true);
+
+    lm_apply_array1_new(
+        Cnew,
+        graph_.read_dexca_vec(),
+        nalfa_strs_,
+        nbeta_strs_,
+        graph_.get_ndexca(),
+        h1e_blk1,
+        norb_,
+        true);
+
+    // lm_apply_array1(
+    //     coeff, 
+    //     {h1e.begin() + norb * norb, h1e.end()},
+    //     core._dexcb, 
+    //     lena(), 
+    //     lenb(), 
+    //     norb, 
+    //     false, 
+    //     out);
+
+    lm_apply_array1_new(
+        Cnew,
+        graph_.read_dexcb_vec(),
+        nalfa_strs_,
+        nbeta_strs_,
+        graph_.get_ndexcb(),
+        h1e_blk2,
+        norb_,
+        false);
+
     // } else {
     // if (jorb < norb) {
     //     std::vector<double> dvec = calculate_dvec_spin_fixed_j(jorb);
@@ -127,7 +163,7 @@ std::vector<double> apply_tensor_spin_1bdy(const Tensor& h1e, size_t norb) {
     // }
     // }
 
-    // return out;
+    C_ = Cnew;
 }
 
 void FCIComputer::lm_apply_array1_new(
@@ -148,6 +184,9 @@ void FCIComputer::lm_apply_array1_new(
     for (int s1 = 0; s1 < states1; ++s1) {
         // const int* cdexc = &dexc[3 * s1 * ndexc];
         const int* cdexc = dexc.data() + 3 * s1 * ndexc;
+
+
+
         const int* lim1 = cdexc + 3 * ndexc;
         // std::complex<double>* cout = &out[s1 * inc1];
         std::complex<double>* cout = out.data().data() + s1 * inc1;
@@ -158,7 +197,7 @@ void FCIComputer::lm_apply_array1_new(
 
             const std::complex<double> pref = static_cast<double>(parity) * h1e.read_data()[ijshift];
             // const std::complex<double>* xptr = &coeff[target * inc1];
-            const std::complex<double>* xptr = state_.data().data() + target * inc1;
+            const std::complex<double>* xptr = C_.data().data() + target * inc1;
             math_zaxpy(states2, pref, xptr, inc2, cout, inc2);
         }
     }
