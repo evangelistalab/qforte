@@ -38,9 +38,9 @@ class TestSAADAPTVQE:
           
           w, v = np.linalg.eigh(H)
           
-          w_idx = [0,2,10,15]
-          w = w[w_idx]
-          v = v[:,w_idx]
+          non_degens = [0, 1, 2, 7, 8, 15]
+          w = w[non_degens]
+          v = v[:,non_degens]
           
           dip_x_arr = sq_op_to_scipy(mol.sq_dipole_x, alg._nqb).todense()
           dip_y_arr = sq_op_to_scipy(mol.sq_dipole_y, alg._nqb).todense()
@@ -56,9 +56,10 @@ class TestSAADAPTVQE:
            
           Es, A, ops = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z])
           dip_x, dip_y, dip_z = ops
-
-          E_idx = [0,2,3,5]
-          Es = Es[E_idx]
+          
+          Es = Es[non_degens]
+          
+          
           for i in range(len(Es)):             
                assert Es[i] == approx(w[i], abs = 1.0e-10)
           
@@ -66,7 +67,7 @@ class TestSAADAPTVQE:
           for op in [dip_x, dip_y, dip_z]:
                total_dip += np.multiply(op.conj(),op).real
           total_dip = np.sqrt(total_dip) 
-          total_dip = total_dip[np.ix_(E_idx,E_idx)] 
+          total_dip = total_dip[np.ix_(non_degens,non_degens)] 
            
           dip_dir = np.zeros((len(Es), len(Es)))
           for i in range(len(Es)):
@@ -100,7 +101,8 @@ class TestSAADAPTVQE:
            
           Es, A, ops = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z]) 
           dip_x, dip_y, dip_z = ops
-          Es = Es[E_idx]
+          Es = Es[non_degens]
+          
           for i in range(len(Es)):             
                assert Es[i] == approx(w[i], abs = 1.0e-10)
           
@@ -108,7 +110,7 @@ class TestSAADAPTVQE:
           for op in [dip_x, dip_y, dip_z]:
                total_dip += np.multiply(op.conj(),op).real
           total_dip = np.sqrt(total_dip)
-          total_dip = total_dip[np.ix_(E_idx,E_idx)] 
+          total_dip = total_dip[np.ix_(non_degens,non_degens)] 
           
           for i in range(len(Es)):
                for j in range(len(Es)):
@@ -132,7 +134,7 @@ class TestSAADAPTVQE:
           Es, A, ops = ritz_eigh(alg._nqb, mol.hamiltonian, U, [mol.dipole_x, mol.dipole_y, mol.dipole_z])
           dip_x, dip_y, dip_z = ops
           
-          Es = Es[E_idx]
+          Es = Es[non_degens]
           for i in range(len(Es)):             
                assert Es[i] == approx(w[i], abs = 1.0e-10)
           
@@ -140,7 +142,7 @@ class TestSAADAPTVQE:
           for op in [dip_x, dip_y, dip_z]:
                total_dip += np.multiply(op.conj(),op).real
           total_dip = np.sqrt(total_dip)
-          total_dip = total_dip[np.ix_(E_idx,E_idx)] 
+          total_dip = total_dip[np.ix_(non_degens,non_degens)] 
           
           for i in range(len(Es)):
                for j in range(len(Es)):
