@@ -470,7 +470,7 @@ Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const
 }
 
 
-Tensor Tensor::slice(std::vector<std::pair<size_t, size_t>>& idxs)const{
+Tensor Tensor::slice(std::vector<std::pair<size_t, size_t>> idxs)const{
 
     std::vector<size_t> new_shape(idxs.size());
     std::vector<size_t> new_strides(idxs.size());
