@@ -15,7 +15,7 @@ void math_daxpy(
   double* y, 
   const int incy);
 
-// Function declaration for BLAS ZAXPY function (complex version of DAZPY)
+// Function declaration for BLAS ZAXPY function (complex version of DAZPY)    done
 // daxpy: y = alpha * x + y
 void math_zaxpy(
   const int n,
@@ -25,7 +25,7 @@ void math_zaxpy(
   std::complex<double>* y,
   const int incy);
 
-// Function declaration for BLAS ZSCALE function (complex version of DSCAL)
+// Function declaration for BLAS ZSCALE function (complex version of DSCAL)   done
 // zscale: x = alpha * x
 void math_zscale(
   const int n,

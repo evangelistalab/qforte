@@ -56,6 +56,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("canonical_order", &SQOperator::canonical_order)
         .def("simplify", &SQOperator::simplify)
         .def("jw_transform", &SQOperator::jw_transform, py::arg("qubit_excitation") = false)
+        .def("split_by_rank", &SQOperator::split_by_rank)
         .def("str", &SQOperator::str)
         .def("__str__", &SQOperator::str)
         .def("__repr__", &SQOperator::str);
@@ -68,6 +69,8 @@ PYBIND11_MODULE(qforte, m) {
             "is_restricted"_a=false, 
             "Make a TensorOperator")
         .def("add_sqop_of_rank", &TensorOperator::add_sqop_of_rank)    
+        .def("tensors", &TensorOperator::tensors)
+        .def("fill_tensor_from_np_by_rank", &TensorOperator::fill_tensor_from_np_by_rank)
         .def("str", &TensorOperator::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false, 
@@ -227,10 +230,13 @@ PYBIND11_MODULE(qforte, m) {
         .def("ndim", &Tensor::ndim)
         .def("size", &Tensor::size)
         .def("shape", &Tensor::shape)
+        .def("strides", &Tensor::strides)
         .def("set", &Tensor::set)
         .def("get", &Tensor::get)
         .def("fill_from_np", &Tensor::fill_from_np)
         .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)
+        .def("subtract", &Tensor::subtract)
+        .def("norm", &Tensor::norm)
         .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
         .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
         .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 
@@ -239,7 +245,16 @@ PYBIND11_MODULE(qforte, m) {
         .def("antisymmetrize", &Tensor::antisymmetrize) // TODO(Tyler) Need Test 
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
         .def("general_transpose", &Tensor::general_transpose) // TODO(Tyler) Need Test (use numpy)
+        .def("fill_from_nparray", &Tensor::fill_from_nparray)
         .def("zaxpy", &Tensor::zaxpy, "x"_a, "alpha"_a, "incx"_a = 1, "incy"_a = 1) // TODO(Tyler) Need Test (use numpy)
+        .def("zaxpby", &Tensor::zaxpby, "x"_a, "a"_a, "b"_a, "incx"_a = 1, "incy"_a = 1)
+        .def("gemm", &Tensor::gemm, "B"_a, 
+            "transa"_a = 'N', 
+            "transb"_a = 'N', 
+            "alpha"_a = 1.0, 
+            "beta"_a = 1.0, 
+            "mult_B_on_right"_a = false)
+
 
         .def_static("chain", &Tensor::chain, "As"_a, "trans"_a, "alpha"_a = 1.0, "beta"_a = 0.0) // TODO(Tyler) Need Test (use numpy)
 
@@ -262,6 +277,8 @@ PYBIND11_MODULE(qforte, m) {
             "C2"_a,
             "alpha"_a = 1.0,
             "beta"_a = 0.0) 
+
+        .def("slice", &Tensor::slice)
 
         .def("str", &Tensor::str, 
             py::arg("print_data") = true, 

@@ -33,7 +33,11 @@ class TensorOperator {
     /// adds a second quantized operator to the current tensor operator
     void add_sqop_of_rank(const SQOperator& sqo, const int);
 
-    void add_sqop_term(const std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& sqo_term);
+    // void add_sqop_term(const std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& sqo_term);
+
+    std::vector<Tensor> tensors() { return tensors_; };
+
+    void fill_tensor_from_np_by_rank(int, std::vector<std::complex<double>>, std::vector<size_t>);
 
     // /// sets the tensor elements from another tensor operator
     // void set_from_tensor_op(const TensorOperator& to);

@@ -164,6 +164,17 @@ void axpby(const std::shared_ptr<Tensor>& x, double a, double b);
 void add(const Tensor& x);
 
 /**
+ * Subtract one tensor from another
+ * Throw if x is not same shape 
+ **/
+ void subtract(const Tensor& other);
+
+/**
+ * Get the norm of a Tensor
+ **/
+ double norm();
+
+/**
  * Compute the dot product between this and other Tensors,
  * by unrolling this and other Tensor and adding sum of products of
  * elements
@@ -190,6 +201,15 @@ Tensor transpose() const;
  **/
 Tensor general_transpose(const std::vector<size_t>& axes) const;
 
+/**
+ * Create a new tensor based off the given sliced indexes.
+ * 
+ * @param idxs A vector of pairs with the indexes for the respective dimension.
+ * @return a new tensor with new shape, size, and data
+ * Throw if given too many indexes for the dimensions or if given invalid syntax for indexes.
+ **/
+Tensor slice(std::vector<std::pair<size_t, size_t>>& idxs) const;
+
 // => Printing <= //
 
 /**
@@ -208,6 +228,14 @@ std::string str(
     const std::string& data_format = "%12.7f",
     const std::string& header_format = "%12zu"
     ) const; 
+
+/**
+ * Fill a tensor from a Numpy Array
+ * @param arr Numpy array to fill from
+ * @param shape The Shape of the Numpy Array
+ * Throw if the Numpy Array shape isn't the same as the Tensor shape
+ **/
+void fill_from_nparray(std::vector<std::complex<double>>, std::vector<size_t>);
 
 /**
  * Print string representation of this Tensor
@@ -253,6 +281,14 @@ void zaxpby(
     std::complex<double> b,
     const int incx,
     const int incy);
+
+void gemm(
+    const Tensor& B,
+    const char transa,
+    const char transb,
+    const std::complex<double> alpha,
+    const std::complex<double> beta,
+    const bool multOnRight);
 
 /// NICK: Comment out the functions below for now, will need external lib
 // => Tensor Multiplication/Permutation <= //

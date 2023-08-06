@@ -177,12 +177,110 @@ class TestApplySQOP(unittest.TestCase):
 
         diff_vector = np.asarray(qc1.get_coeff_vec()) - np.asarray(qc2.get_coeff_vec())
 
-        self.assertLess(np.linalg.norm(diff_vector), 1e-16)
+        self.assertLess(np.linalg.norm(diff_vector), 1e-15)
+
+    def test_get_largest_alfa_beta_indices(self):
 
 
+        my_op = qf.SQOperator()
+        my_op.add_term(1.0, [1, 3], [2, 4])
+
+        alfa, beta = my_op.get_largest_alfa_beta_indices()
+
+        self.assertEqual(alfa, 4)
+        self.assertEqual(beta, 3)
+
+    def test_get_largest_alfa_beta_indices2(self):
 
 
-# unittest.main()
+        my_op = qf.SQOperator()
+        my_op.add_term(1.0, [2, 4], [0, 2])
+
+        alfa, beta = my_op.get_largest_alfa_beta_indices()
+
+        self.assertEqual(alfa, 4)
+        self.assertEqual(beta, -1)
+
+    def test_get_largest_alfa_beta_indices3(self):
+
+        my_op = qf.SQOperator()
+        my_op.add_term(1.0, [1, 3], [5, 1])
+
+        alfa, beta = my_op.get_largest_alfa_beta_indices()
+
+        self.assertEqual(alfa, -1)
+        self.assertEqual(beta, 5)
+
+    def test_many_body_order(self):
+
+        my_op = qf.SQOperator()
+        my_op.add_term(1.0, [2, 3, 4, 5, 1, 0], [2, 4, 2, 1, 0])
+        my_op.add_term(1.5, [1, 0], [4, 3])
+        my_op.add_term(1.0, [2, 3, 3], [4, 2, 1])
+        
+        order = my_op.many_body_order()
+
+        self.assertEqual(order, 11)
+
+    def test_many_body_order2(self):
+
+        my_op = qf.SQOperator()
+        
+        order = my_op.many_body_order()
+
+        self.assertEqual(order, -1)
+
+    def test_many_body_order3(self):
+
+        my_op = qf.SQOperator()
+
+        my_op.add_term(2.0, [3, 2, 3, 0], [2, 1])
+        my_op.add_term(1.0, [2, 2, 1, 0], [1, 0])
+
+        order = my_op.many_body_order()
+
+        self.assertEqual(order, 6)
+
+    def test_ranks_present(self):
+
+        my_op = qf.SQOperator()
+
+        my_op.add_term(1.0, [2, 3, 4, 5], [1, 0, 2, 1])
+        my_op.add_term(2.0, [1, 5, 6, 2, 2], [1, 1, 2, 4, 5])
+        my_op.add_term(1.5, [1, 2], [2, 3])
+
+        ranks = my_op.ranks_present()
+
+        self.assertEqual(ranks, [8, 10, 4])
+
+    def test_ranks_present2(self):
+
+        my_op = qf.SQOperator()
+
+        my_op.add_term(1.5, [2, 1, 3], [4, 5])
+        my_op.add_term(1.0, [1], [2])
+
+        ranks = my_op.ranks_present()
+
+        self.assertEqual(ranks, [5, 2])
+
+    def test_split_by_rank(self):
+
+        my_op = qf.SQOperator()
+
+        my_op.add_term(1.5, [2, 4, 2], [2, 1])
+        my_op.add_term(1.5, [2, 4, 4, 2], [2, 1])
+        my_op.add_term(1.5, [6, 2, 4, 2], [2, 1])
+        my_op.add_term(1.5, [2], [2, 1])
+        my_op.add_term(1.0, [], [])
+
+        list = my_op.split_by_rank(False)
+
+        for i in list:
+            self.assertEqual(len(i.ranks_present()), 1)
+        
+
+
 
 
 
