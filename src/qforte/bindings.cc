@@ -199,6 +199,8 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<FCIComputer>(m, "FCIComputer")
         .def(py::init<int, int, int>(), "nel"_a, "sz"_a, "norb"_a, "Make a FCIComputer with nel, sz, and norb")
+        .def("hartree_fock", &FCIComputer::hartree_fock)
+        .def("apply_tensor_spin_1bdy", &FCIComputer::apply_tensor_spin_1bdy)
         .def("str", &FCIComputer::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false)
@@ -220,7 +222,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_alfa_map", &FCIGraph::get_alfa_map)
         .def("get_beta_map", &FCIGraph::get_beta_map)
         .def("get_dexca", &FCIGraph::get_dexca)
-        .def("get_dexcb", &FCIGraph::get_dexcb);
+        .def("get_dexcb", &FCIGraph::get_dexcb)
+        .def("get_dexca_vec", &FCIGraph::get_dexca_vec)
+        .def("get_dexcb_vec", &FCIGraph::get_dexcb_vec);
 
 
     py::class_<Tensor>(m, "Tensor")

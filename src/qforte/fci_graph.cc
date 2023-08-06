@@ -100,7 +100,7 @@ Spinmap FCIGraph::build_mapping(
                             sign)
                         );
                 } else if (iorb == jorb && get_bit(string, iorb)) {
-                    std::cout << "I get here B" << std::endl;
+                    // std::cout << "I get here B" << std::endl;
                     value.push_back(std::make_tuple(index.at(string), index.at(string), 1));
                 }
             }

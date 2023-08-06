@@ -70,52 +70,30 @@ FCIComputer::FCIComputer(int nel, int sz, int norb) :
 /// apply a TensorOperator to the current state 
 void apply_tensor_operator(const TensorOperator& top);
 
-/// apply a 1-body TensorOperator to the current state 
-void apply_tensor_spin_1bdy(const TensorOperator& top);
-
-// TODO(Nick): Uncomment, will need someting like the following:
+/// apply a Tensor represending a 1-body spin-orbital indexed operator to the current state 
 void FCIComputer::apply_tensor_spin_1bdy(const Tensor& h1e, size_t norb) {
 
     if(h1e.size() != (norb * 2) * (norb * 2)){
         throw std::invalid_argument("Expecting h1e to be nso x nso for apply_tensor_spin_1bdy");
     }
 
-    // Not sure what this is checking for?
-    // size_t ncol = 0;
-    // size_t jorb = 0;
-    // for (size_t j = 0; j < norb * 2; ++j) {
-    //     bool any_non_zero = false;
-    //     for (int i = 0; i < norb * 2; ++i) {
-    //         if (h1e.read_data()[i + j * (norb * 2)] != 0.0) {
-    //             any_non_zero = true;
-    //             break;
-    //         }
-    //     }
-    //     if (any_non_zero) {
-    //         ncol += 1;
-    //         jorb = j;
-    //     }
-    //     if (ncol > 1) { break; }
-    // }
-
-    // std::vector<double> out;
-    // if (ncol > 1) {
-
     Tensor Cnew({nalfa_strs_, nbeta_strs_}, "Cnew");
-    Tensor h1e_blk1 = h1e.slice({{0, norb_}, {0, norb_}});
-    Tensor h1e_blk2 = h1e.slice({{norb_, 2*norb_}, {norb_, 2*norb_}});
 
-    // Implementation of dense_apply_array_spin1_lm
-    // out = lm_apply_array1(
-    //     coeff, 
-    //     {h1e.begin(), h1e.begin() + norb * norb},
-    //     core._dexca,
-    //     lena(), 
-    //     lenb(), 
-    //     norb, 
-    //     true);
+    Tensor h1e_blk1 = h1e.slice(
+        {
+            std::make_pair(0, norb_), 
+            std::make_pair(0, norb_)
+            }
+        );
 
-    lm_apply_array1_new(
+    Tensor h1e_blk2 = h1e.slice(
+        {
+            std::make_pair(norb_, 2*norb_), 
+            std::make_pair(norb_, 2*norb_)
+            }
+        );
+
+    apply_array_1bdy(
         Cnew,
         graph_.read_dexca_vec(),
         nalfa_strs_,
@@ -125,17 +103,7 @@ void FCIComputer::apply_tensor_spin_1bdy(const Tensor& h1e, size_t norb) {
         norb_,
         true);
 
-    // lm_apply_array1(
-    //     coeff, 
-    //     {h1e.begin() + norb * norb, h1e.end()},
-    //     core._dexcb, 
-    //     lena(), 
-    //     lenb(), 
-    //     norb, 
-    //     false, 
-    //     out);
-
-    lm_apply_array1_new(
+    apply_array_1bdy(
         Cnew,
         graph_.read_dexcb_vec(),
         nalfa_strs_,
@@ -145,28 +113,10 @@ void FCIComputer::apply_tensor_spin_1bdy(const Tensor& h1e, size_t norb) {
         norb_,
         false);
 
-    // } else {
-    // if (jorb < norb) {
-    //     std::vector<double> dvec = calculate_dvec_spin_fixed_j(jorb);
-    //     std::vector<double> h1eview(norb);
-    //     for (int i = 0; i < norb; ++i) {
-    //         h1eview[i] = h1e[i + jorb * (norb * 2)];
-    //     }
-    //     out = tensordot(h1eview, dvec, 1);
-    // } else {
-    //     std::vector<double> dvec = calculate_dvec_spin_fixed_j(jorb);
-    //     std::vector<double> h1eview(norb);
-    //     for (int i = 0; i < norb; ++i) {
-    //         h1eview[i] = h1e[i + jorb * (norb * 2)];
-    //     }
-    //     out = tensordot(h1eview, dvec, 1);
-    // }
-    // }
-
     C_ = Cnew;
 }
 
-void FCIComputer::lm_apply_array1_new(
+void FCIComputer::apply_array_1bdy(
     Tensor& out,
     const std::vector<int>& dexc,
     const int astates,
@@ -182,22 +132,18 @@ void FCIComputer::lm_apply_array1_new(
     const int inc2 = is_alpha ? 1 : bstates;
 
     for (int s1 = 0; s1 < states1; ++s1) {
-        // const int* cdexc = &dexc[3 * s1 * ndexc];
         const int* cdexc = dexc.data() + 3 * s1 * ndexc;
-
-
-
         const int* lim1 = cdexc + 3 * ndexc;
-        // std::complex<double>* cout = &out[s1 * inc1];
         std::complex<double>* cout = out.data().data() + s1 * inc1;
+
         for (; cdexc < lim1; cdexc = cdexc + 3) {
             const int target = cdexc[0];
             const int ijshift = cdexc[1];
             const int parity = cdexc[2];
 
             const std::complex<double> pref = static_cast<double>(parity) * h1e.read_data()[ijshift];
-            // const std::complex<double>* xptr = &coeff[target * inc1];
             const std::complex<double>* xptr = C_.data().data() + target * inc1;
+
             math_zaxpy(states2, pref, xptr, inc2, cout, inc2);
         }
     }
@@ -231,7 +177,8 @@ void FCIComputer::zero() {
 
 /// Sets all coefficeints fo the FCI Computer to Zero except the HF Determinant (set to 1).
 void FCIComputer::hartree_fock() {
-    // Stuff
+    C_.zero();
+    C_.set({0, 0}, 1.0);
 }
 
 

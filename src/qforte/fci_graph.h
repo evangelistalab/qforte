@@ -130,11 +130,14 @@ public:
     Spinmap get_alfa_map() const { return alfa_map_; }
     Spinmap get_beta_map() const { return beta_map_; }
 
-    int get_ndexca() const { return alfa_map_.size(); }
-    int get_ndexcb() const { return beta_map_.size(); }
+    int get_ndexca() const { return dexca_[0].size(); }
+    int get_ndexcb() const { return dexcb_[0].size(); }
 
     std::vector<std::vector<std::vector<int>>> get_dexca() const { return dexca_; }
     std::vector<std::vector<std::vector<int>>> get_dexcb() const { return dexcb_; }
+
+    std::vector<int> get_dexca_vec() const { return dexca_vec_; }
+    std::vector<int> get_dexcb_vec() const { return dexcb_vec_; }
 
     const std::vector<int>& read_dexca_vec() const { return dexca_vec_; }
     const std::vector<int>& read_dexcb_vec() const { return dexcb_vec_; }

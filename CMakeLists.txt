@@ -44,7 +44,7 @@ set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 set(CMAKE_PREFIX_PATH "/Users/nstair/anaconda3/envs/qforte_env_v1")
 set(BLAS_LIBRARIES "${CMAKE_PREFIX_PATH}/lib") 
 set(CBLAS_INCLUDE_DIR "${CMAKE_PREFIX_PATH}/include") #need
-set(OPENBLAS_EXE "${CMAKE_PREFIX_PATH}/lib/libopenblas.dylb") #need, may be libopenblas.so for linux
+set(OPENBLAS_EXE "${CMAKE_PREFIX_PATH}/lib/libopenblas.dylib") #need, may be libopenblas.so for linux
 # find_package(BLAS REQUIRED)
 
 project(qforte)
@@ -101,12 +101,10 @@ include_directories(${CBLAS_INCLUDE_DIR})
 include_directories(lib/catch2/single_include/catch2)
 include_directories(lib/fmt/include)
 
-target_link_libraries(qforte_benchmarks PRIVATE fmt-header-only ${OPENBLAS_EXE})
-
 add_executable("${PROJECT_NAME}_test" ${TESTS})
 
 add_executable("${PROJECT_NAME}_benchmarks"
-    "benchmarks/benchmarks.cc"
+    benchmarks/benchmarks.cc
     "${SOURCE_DIR}/helpers.cc"
     "${SOURCE_DIR}/make_gate.cc"
     "${SOURCE_DIR}/qubit_basis.cc"

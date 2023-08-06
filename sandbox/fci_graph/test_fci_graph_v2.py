@@ -2,7 +2,7 @@ import qforte as qf
 
 na = 2
 nb = 2
-norb = 6
+norb = 4
 
 
 qg = qf.FCIGraph(na, nb, norb)
@@ -33,6 +33,11 @@ for vi in dexca:
     for vj in vi:
         print(vj)
 
+
+dexca_vec = qg.get_dexca_vec()
+
+
+print(dexca_vec)
 
 """
 nel: 4
