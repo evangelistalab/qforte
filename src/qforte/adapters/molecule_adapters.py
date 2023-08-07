@@ -370,7 +370,6 @@ def create_psi_mol(**kwargs):
         with open(json_dump, 'w') as f:
             json.dump(external_data, f, indent = 0)
 
-    print(orb_irreps_to_int)
     return qforte_mol
 
 
