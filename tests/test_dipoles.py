@@ -19,7 +19,8 @@ class TestDipoles:
                               num_frozen_uocc = 1,
                               dipole = True,
                               symmetry = "C1")
-    
+
+        
         H = sq_op_to_scipy(mol1.sq_hamiltonian, N_qubits).todense()
         mu_x = sq_op_to_scipy(mol1.sq_dipole_x, N_qubits).todense()
         mu_y = sq_op_to_scipy(mol1.sq_dipole_y, N_qubits).todense()
