@@ -9,6 +9,7 @@
 #include "gate.h"
 #include "computer.h"
 #include "fci_computer.h"
+#include "fci_graph.h"
 #include "qubit_operator.h"
 #include "sq_operator.h"
 #include "sq_op_pool.h"
@@ -198,6 +199,8 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<FCIComputer>(m, "FCIComputer")
         .def(py::init<int, int, int>(), "nel"_a, "sz"_a, "norb"_a, "Make a FCIComputer with nel, sz, and norb")
+        .def("hartree_fock", &FCIComputer::hartree_fock)
+        .def("apply_tensor_spin_1bdy", &FCIComputer::apply_tensor_spin_1bdy)
         .def("str", &FCIComputer::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false)
@@ -207,6 +210,22 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", &FCIComputer::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false);
+
+    py::class_<FCIGraph>(m, "FCIGraph")
+        .def(py::init<int, int, int>(), "nalfa"_a, "nbeta"_a, "norb"_a, "Make a FCIGraph")
+        .def("get_nalfa", &FCIGraph::get_nalfa)
+        .def("get_nbeta", &FCIGraph::get_nbeta)
+        .def("get_astr", &FCIGraph::get_astr)
+        .def("get_bstr", &FCIGraph::get_bstr)
+        .def("get_aind", &FCIGraph::get_aind)
+        .def("get_bind", &FCIGraph::get_bind)
+        .def("get_alfa_map", &FCIGraph::get_alfa_map)
+        .def("get_beta_map", &FCIGraph::get_beta_map)
+        .def("get_dexca", &FCIGraph::get_dexca)
+        .def("get_dexcb", &FCIGraph::get_dexcb)
+        .def("get_dexca_vec", &FCIGraph::get_dexca_vec)
+        .def("get_dexcb_vec", &FCIGraph::get_dexcb_vec);
+
 
     py::class_<Tensor>(m, "Tensor")
         .def(py::init<std::vector<size_t>, std::string>(), "shape"_a, "name"_a, "Make a Tensor with a particualr shape")

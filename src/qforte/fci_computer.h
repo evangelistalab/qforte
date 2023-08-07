@@ -4,14 +4,17 @@
 #include <string>
 #include <vector>
 
-#include "qforte-def.h" // double_c
-#include "tensor.h" // Tensor
+#include "qforte-def.h" 
+#include "tensor.h" 
+#include "fci_graph.h" 
+
 
 class Gate;
 class QubitBasis;
 class SQOperator;
 class TensorOperator;
 class Tensor;
+class FCIGraph;
 
 class FCIComputer {
   public:
@@ -35,7 +38,36 @@ class FCIComputer {
     void apply_tensor_operator(const TensorOperator& top);
 
     /// apply a 1-body TensorOperator to the current state 
-    void apply_tensor_spin_1bdy(const TensorOperator& top);
+    // void apply_tensor_spin_1bdy(const TensorOperator& top);
+
+    void apply_tensor_spin_1bdy(
+      const Tensor& h1e, 
+      size_t norb);
+
+    void lm_apply_array1(
+      // const double complex *coeff, don't need
+      // double complex *out,
+      const Tensor& out,
+      // const int *dexc,
+      const std::vector<int> dexc,
+      const int astates,
+      const int bstates,
+      const int ndexc,
+      // const double complex *h1e,
+      const Tensor& h1e,
+      const int norbs,
+      const bool is_alpha);
+      // const struct blasfunctions * blasfunc);
+
+    void apply_array_1bdy(
+      Tensor& out,
+      const std::vector<int>& dexc,
+      const int astates,
+      const int bstates,
+      const int ndexc,
+      const Tensor& h1e,
+      const int norbs,
+      const bool is_alpha);
 
     /// apply a 1-body and 2-body TensorOperator to the current state 
     void apply_tensor_spin_12_body(const TensorOperator& top);
@@ -70,11 +102,11 @@ class FCIComputer {
       bool print_complex
       ) const 
     {
-      return state_.str(print_data, print_complex); 
+      return C_.str(print_data, print_complex); 
     }
 
     /// return a tensor of the coeficients
-    Tensor get_state() const { return state_; };
+    Tensor get_state() const { return C_; };
 
     /// return the coefficient corresponding to a alpha-basis / beta-basis 
     std::complex<double> coeff(const QubitBasis& abasis, const QubitBasis& bbasis);
@@ -150,7 +182,10 @@ class FCIComputer {
     const std::string name_ = "FCIComputer State";
 
     /// The coefficients of the starting state in the tensor product basis
-    Tensor state_;
+    Tensor C_;
+
+    /// The corresponding FCIGraph for this computer
+    FCIGraph graph_;
 
     /// the coefficients of the ending state in the tensor product basis
     // std::vector<std::complex<double>> new_coeff_;
