@@ -367,10 +367,13 @@ def create_psi_mol(**kwargs):
         external_data['point_group']['data'] = point_group
         external_data['point_group']['description'] = "point group."
 
+        spin_irreps = []
+        for i in qforte_mol.orb_irreps_to_int:
+            spin_irreps += [i, i]
         external_data['symmetry'] = {}
-        external_data['symmetry']['data'] = qforte_mol.orb_irreps_to_int 
+        external_data['symmetry']['data'] = spin_irreps
         external_data['symmetry']['description'] = "irreps of each spatial orbital"
-
+        
         with open(json_dump, 'w') as f:
             json.dump(external_data, f, indent = 0)
 
@@ -416,6 +419,7 @@ def create_external_mol(**kwargs):
         for int_irrep in external_data['symmetry']['data'][::2]:
             qforte_mol.orb_irreps_to_int.append(int_irrep)
             qforte_mol.orb_irreps.append(irreps[int_irrep])
+    
 
     # build sq hamiltonian
     qforte_sq_hamiltonian = qforte.SQOperator()
