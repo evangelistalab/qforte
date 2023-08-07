@@ -4,8 +4,6 @@ from qforte import system_factory
 from qforte import cisd_manifold
 from qforte import build_Uprep
 from qforte import sq_op_to_scipy
-from qforte import total_spin_z
-from qforte import total_number
 from qforte import q_sc_eom
 import numpy as np
 
