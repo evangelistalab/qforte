@@ -75,9 +75,10 @@ def create_psi_mol(**kwargs):
               'd_convergence': 1e-8,
               'ci_maxiter': 100,
               'num_frozen_docc' : kwargs['num_frozen_docc'],
-              'num_frozen_uocc' : kwargs['num_frozen_uocc'],
-              'frozen_uocc' : kwargs['frozen_uocc'],
               'mp2_type': "conv"})
+    
+    if kwargs['frozen_uocc'] != None:
+        psi4.set_options({'frozen_uocc': kwargs['frozen_uocc']})
 
     # run psi4 caclulation
     p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
