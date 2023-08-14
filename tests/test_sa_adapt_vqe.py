@@ -1,11 +1,8 @@
 from pytest import approx
 from qforte import ADAPTVQE
 from qforte import system_factory
-
 from qforte import sq_op_to_scipy
 from qforte import ritz_eigh
-from qforte import total_spin_z
-from qforte import total_number
 from qforte import cisd_manifold
 from qforte import build_Uprep
 
