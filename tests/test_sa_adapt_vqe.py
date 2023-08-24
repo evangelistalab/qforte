@@ -20,7 +20,7 @@ class TestSAADAPTVQE:
                                num_frozen_uocc = 1,
                                symmetry = "C2v")
         
-          refs = [mol.hf_reference] + cisd_manifold(mol.hf_reference, mol.orb_irreps_to_int)
+          refs = [mol.hf_reference] + cisd_manifold(mol.hf_reference, irreps = mol.orb_irreps_to_int)
           weights = [2**(-i-1) for i in range(len(refs))]
           weights[-1] += 2**(-len(weights))
           
