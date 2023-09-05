@@ -6,6 +6,7 @@
 // #include <lightspeed/math.hpp>
 
 #include <iostream>
+#include <string>
 #include <cmath>
 #include <sstream>
 #include <stdexcept>
@@ -81,6 +82,34 @@ void Tensor::set(
             stride *= shape()[i];
         }
         data_[vidx] = val;
+    } 
+}
+
+void Tensor::add_to_element(
+    const std::vector<size_t>& idxs,
+    const std::complex<double> val
+        )
+{
+    ndim_error(idxs.size());
+
+    if( idxs.size() == 1 ) {
+        data_[idxs[0]] += val;
+    } else if (idxs.size() == 2) {
+        data_[shape()[1]*idxs[0] + idxs[1]] += val;
+    } else {
+        for (int i = 0; i < ndim(); i++) {
+            if (idxs[i] < 0 || idxs[i] >= shape()[i]) {
+                std::cerr << "Index out of bounds for dimension " << i << std::endl;
+            }
+        }      
+        size_t vidx = 0;
+        size_t stride = 1;
+        
+        for (int i = ndim() - 1; i >= 0; i--) {
+            vidx += idxs[i] * stride;
+            stride *= shape()[i];
+        }
+        data_[vidx] = +val;
     } 
 }
 
@@ -473,7 +502,8 @@ Tensor Tensor::general_transpose(const std::vector<size_t>& axes) const
 Tensor Tensor::slice(std::vector<std::pair<size_t, size_t>> idxs)const{
 
     std::vector<size_t> new_shape(idxs.size());
-    std::vector<size_t> new_strides(idxs.size());
+    std::vector<size_t> new_shape2;
+    // std::vector<size_t> new_strides(idxs.size());
     size_t new_size = 1;
 
     if (idxs.size() != ndim()){
@@ -483,17 +513,21 @@ Tensor Tensor::slice(std::vector<std::pair<size_t, size_t>> idxs)const{
 
     for (int i = idxs.size() - 1; i >= 0; i--){
         if (idxs[i].first >= idxs[i].second || idxs[i].second > shape_[i]){
-            throw std::invalid_argument("Invalid slice index.");
+            // throw std::invalid_argument("Invalid slice index.");
+            std::cout << " maybe invalid slice index? " << std::endl;
         }
 
         new_shape[i] = idxs[i].second - idxs[i].first;
-        new_strides[i] = strides_[i];
+        // new_strides[i] = strides_[i];
         new_size *= new_shape[i];
 
     }
 
+    for(size_t dim : new_shape){ 
+        if(dim != 1) { new_shape2.push_back(dim); }
+    }
 
-    Tensor new_tensor(new_shape, name_ + "_sliced");
+    Tensor new_tensor(new_shape2, name_ + "_sliced");
 
     std::vector<size_t> old_tidx(ndim());
     std::fill(old_tidx.begin(), old_tidx.end(), 0);
@@ -633,7 +667,32 @@ std::string Tensor::str(
     return str;
 }
 
+std::string Tensor::print_nonzero() const 
+{   
+    std::string str = "\n Nonzero indices and elements of Tensor: \n";
+    str += " ========================================== ";
 
+    for(size_t i = 0; i < size_; i++) {
+        if(data_[i] != 0.0){
+            std::vector<size_t> tidxs = vidx_to_tidx(i);
+            std::stringstream tidxs_stream;
+            std::copy(
+                tidxs.begin(), 
+                tidxs.end(), 
+                std::ostream_iterator<size_t>(tidxs_stream, " "));
+            
+            std::string tidxs_string = tidxs_stream.str();
+    
+            str += "\n  ( ";
+            str += tidxs_string;
+            str += ")  ";
+            str += std::to_string(data_[i].real());
+            str += " + ";
+            str += std::to_string(data_[i].imag());
+        }
+    }
+    return str;
+}
 // py::array_t<double> array
 // std::vector<std::complex<double>>
 
