@@ -25,7 +25,7 @@ TensorOperator::TensorOperator(
     }
 
     // Initialize the scaler (zero-body) "Tensor"
-    std::vector<size_t> shape0 = {1, 1};
+    std::vector<size_t> shape0 = {1};
     std::string name0 = "0-body";
     Tensor zero_body(shape0, name0);
     tensors_.push_back(zero_body);
@@ -76,96 +76,108 @@ void TensorOperator::add_sqop_of_rank(const SQOperator& sqo, const int rank) {
         throw std::invalid_argument("Odd rank operator not supported");
     }
 
-    // TODO(Nick): Accont for this and remove throw
+    if (rank < 0) {
+        throw std::invalid_argument("Can't have a negative rank");
+    }
+
+    if (rank > 2 * max_nbody_) {
+        throw std::invalid_argument("Trying to add SQOperator of higher rank than permitted by max nbody");
+    }
+
     if (rank == 0) {
-        throw std::invalid_argument("Zero rank not supported at this time");
-    }
+        std::complex<double> h0e = 0.0;
+        for (const auto& term : sqo.terms()) {
+            h0e += std::get<0>(term);
+        }
+        tensors_[0].set({0}, h0e);
 
-    // dimensions of tensor, ex [dim, dim, dim, dim] for a 2-body operator
-    std::vector<size_t> tensor_dim(rank, dim_);
-    std::vector<size_t> index_mask(rank, 0);
+    } else {
+        // dimensions of tensor, ex [dim, dim, dim, dim] for a 2-body operator
+        std::vector<size_t> tensor_dim(rank, dim_);
+        std::vector<size_t> index_mask(rank, 0);
 
-    std::vector<std::vector<int>> index_dict_dagger(std::floor(rank / 2), std::vector<int>(2, 0));
-    std::vector<std::vector<int>> index_dict_nondagger(std::floor(rank / 2), std::vector<int>(2, 0));
+        std::vector<std::vector<int>> index_dict_dagger(std::floor(rank / 2), std::vector<int>(2, 0));
+        std::vector<std::vector<int>> index_dict_nondagger(std::floor(rank / 2), std::vector<int>(2, 0));
 
-    // each n-body operator makes a contribution
-    for (const auto& term : sqo.terms()) {
+        // each n-body operator makes a contribution
+        for (const auto& term : sqo.terms()) {
 
-        if (std::get<1>(term).size() != std::get<2>(term).size()) {
-            throw std::invalid_argument("Each term must have same number of anihilators and creators");
-        }   
+            if (std::get<1>(term).size() != std::get<2>(term).size()) {
+                throw std::invalid_argument("Each term must have same number of anihilators and creators");
+            }   
 
-        std::vector<size_t> ops1(std::get<1>(term));
-        std::vector<size_t> ops2(std::get<2>(term));
-        ops1.insert(ops1.end(), ops2.begin(), ops2.end());
+            std::vector<size_t> ops1(std::get<1>(term));
+            std::vector<size_t> ops2(std::get<2>(term));
+            ops1.insert(ops1.end(), ops2.begin(), ops2.end());
 
-        for (int i = 0; i < rank; ++i) {
-            // index of anihilator or creator
-            int index = ops1[i];
+            for (int i = 0; i < rank; ++i) {
+                // index of anihilator or creator
+                int index = ops1[i];
 
-            int spin = index % 2;
-            int ind;
+                int spin = index % 2;
+                int ind;
 
-            if (spin == 1) {
-                ind = (index - 1) / 2 + (dim_ / 2);
+                if (spin == 1) {
+                    ind = (index - 1) / 2 + (dim_ / 2);
+                }
+                else {
+                    ind = index / 2;
+                }
+
+                if (i < rank / 2) {
+                    index_dict_dagger[i][0] = spin;
+                    index_dict_dagger[i][1] = ind;
+                }
+                else {
+                    index_dict_nondagger[i - rank / 2][0] = spin;
+                    index_dict_nondagger[i - rank / 2][1] = ind;
+                }
             }
-            else {
-                ind = index / 2;
+
+            // May or may not need is if operators are already canonicalized
+            int parity = reverse_bubble_list(index_dict_dagger);
+            parity += reverse_bubble_list(index_dict_nondagger);
+
+            for (int i = 0; i < rank; ++i) {
+                if (i < rank / 2) {
+                    index_mask[i] = index_dict_dagger[i][1];
+                }
+                else {
+                    index_mask[i] = index_dict_nondagger[i - rank / 2][1];
+                }
             }
 
-            if (i < rank / 2) {
-                index_dict_dagger[i][0] = spin;
-                index_dict_dagger[i][1] = ind;
-            }
-            else {
-                index_dict_nondagger[i - rank / 2][0] = spin;
-                index_dict_nondagger[i - rank / 2][1] = ind;
-            }
+            std::complex<double> val = tensors_[rank_index].get(index_mask); 
+            val += pow(-1, parity) * std::get<0>(term);
+            tensors_[rank_index].set(index_mask, val); 
         }
 
-        // May or may not need is if operators are already canonicalized
-        int parity = reverse_bubble_list(index_dict_dagger);
-        parity += reverse_bubble_list(index_dict_nondagger);
-
-        for (int i = 0; i < rank; ++i) {
-            if (i < rank / 2) {
-                index_mask[i] = index_dict_dagger[i][1];
-            }
-            else {
-                index_mask[i] = index_dict_nondagger[i - rank / 2][1];
-            }
+        Tensor tensor2(tensors_[rank_index].shape(), "T2");
+        double length = 0.0;
+        std::vector<size_t> seed(rank / 2);
+        for (size_t i = 0; i < rank / 2; ++i) {
+            seed[i] = i;
         }
 
-        std::complex<double> val = tensors_[rank_index].get(index_mask); 
-        val += pow(-1, parity) * std::get<0>(term);
-        tensors_[rank_index].set(index_mask, val); 
+        do {
+            std::vector<size_t> iperm(seed);
+            std::vector<size_t> jperm(seed);
+
+            for (size_t j = 0; j < rank / 2; ++j) {
+                jperm[j] += rank / 2;
+            }
+
+            iperm.insert(iperm.end(), jperm.begin(), jperm.end());
+
+            Tensor transposed_tensor = tensors_[rank_index].general_transpose(iperm);
+            tensor2.add(transposed_tensor);
+            length += 1.0;
+        } while (next_permutation(seed.begin(), seed.end()));
+
+        tensor2.scale(1.0/length);
+
+        tensors_[rank_index] = tensor2;
     }
-
-    Tensor tensor2(tensors_[rank_index].shape(), "T2");
-    double length = 0.0;
-    std::vector<size_t> seed(rank / 2);
-    for (size_t i = 0; i < rank / 2; ++i) {
-        seed[i] = i;
-    }
-
-    do {
-        std::vector<size_t> iperm(seed);
-        std::vector<size_t> jperm(seed);
-
-        for (size_t j = 0; j < rank / 2; ++j) {
-            jperm[j] += rank / 2;
-        }
-
-        iperm.insert(iperm.end(), jperm.begin(), jperm.end());
-
-        Tensor transposed_tensor = tensors_[rank_index].general_transpose(iperm);
-        tensor2.add(transposed_tensor);
-        length += 1.0;
-    } while (next_permutation(seed.begin(), seed.end()));
-
-    tensor2.scale(1.0/length);
-
-    tensors_[rank_index] = tensor2;
 }
 
 void TensorOperator::fill_tensor_from_np_by_rank(int idx, std::vector<std::complex<double>> arr, std::vector<size_t> shape){

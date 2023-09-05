@@ -201,6 +201,9 @@ PYBIND11_MODULE(qforte, m) {
         .def(py::init<int, int, int>(), "nel"_a, "sz"_a, "norb"_a, "Make a FCIComputer with nel, sz, and norb")
         .def("hartree_fock", &FCIComputer::hartree_fock)
         .def("apply_tensor_spin_1bdy", &FCIComputer::apply_tensor_spin_1bdy)
+        .def("apply_tensor_spin_12bdy", &FCIComputer::apply_tensor_spin_12bdy)
+        .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
+        .def("get_hf_dot", &FCIComputer::get_hf_dot)
         .def("str", &FCIComputer::str, 
             py::arg("print_data") = true, 
             py::arg("print_complex") = false)
@@ -236,6 +239,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("shape", &Tensor::shape)
         .def("strides", &Tensor::strides)
         .def("set", &Tensor::set)
+        .def("add_to_element", &Tensor::add_to_element)
         .def("get", &Tensor::get)
         .def("fill_from_np", &Tensor::fill_from_np)
         .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)

@@ -44,6 +44,17 @@ class FCIComputer {
       const Tensor& h1e, 
       size_t norb);
 
+    void apply_tensor_spin_12bdy(
+      const Tensor& h1e, 
+      const Tensor& h2e, 
+      size_t norb);
+
+    void apply_tensor_spin_012bdy(
+      const Tensor& h0e, 
+      const Tensor& h1e, 
+      const Tensor& h2e, 
+      size_t norb);
+
     void lm_apply_array1(
       // const double complex *coeff, don't need
       // double complex *out,
@@ -68,6 +79,10 @@ class FCIComputer {
       const Tensor& h1e,
       const int norbs,
       const bool is_alpha);
+
+    std::pair<Tensor, Tensor> calculate_dvec_spin_with_coeff();
+
+    Tensor calculate_coeff_spin_with_dvec(std::pair<Tensor, Tensor>& dvec);
 
     /// apply a 1-body and 2-body TensorOperator to the current state 
     void apply_tensor_spin_12_body(const TensorOperator& top);
@@ -106,7 +121,10 @@ class FCIComputer {
     }
 
     /// return a tensor of the coeficients
-    Tensor get_state() const { return C_; };
+    Tensor get_state() const { return C_; }
+
+    /// return the dot product of the current FCIComputer state (as the ket) and the HF state (i.e. <HF|C_>)
+    std::complex<double> get_hf_dot() const { return C_.get({0,0}); }
 
     /// return the coefficient corresponding to a alpha-basis / beta-basis 
     std::complex<double> coeff(const QubitBasis& abasis, const QubitBasis& bbasis);

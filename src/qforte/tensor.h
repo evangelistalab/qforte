@@ -100,6 +100,11 @@ void set(const std::vector<size_t>& idxs,
          const std::complex<double> val
          );
 
+/// Set a particular element of tis Tensor, specified by idxs
+void add_to_element(const std::vector<size_t>& idxs,
+         const std::complex<double> val
+         );
+
 /// Get a particular element of tis Tensor, specified by idxs
 std::complex<double> get(const std::vector<size_t>& idxs) const;
 
@@ -228,6 +233,9 @@ std::string str(
     const std::string& data_format = "%12.7f",
     const std::string& header_format = "%12zu"
     ) const; 
+
+
+std::string print_nonzero() const;
 
 /**
  * Fill a tensor from a Numpy Array

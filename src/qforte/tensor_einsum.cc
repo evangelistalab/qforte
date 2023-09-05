@@ -576,7 +576,15 @@ void Tensor::permute( /// NICK: will try replacement only model here
 
     /// NICK: This seems to work but is obviously super wasteful, 
     /// May want to revise.
-    C2 = C;
+    // C2 = C;
+
+    C2.zaxpy(
+        C,
+        1.0,
+        1,
+        1    
+    );
+
     return;
 } // Well, it compiles at least!
 
@@ -1128,7 +1136,7 @@ void Tensor::einsum(
             }
         } else {
             // C_DGEMM(Ltrans, Rtrans, nrow, ncol, nzip, alpha, Lp, Llda, Rp, Rlda, beta, C2p, Clda);
-            std::cout << "I get to zgemm!" << std::endl;
+            // std::cout << "I get to zgemm!" << std::endl;
 
             math_zgemm(
                 Ltrans, 
@@ -1156,7 +1164,13 @@ void Tensor::einsum(
     if (Cperm) {
         Tensor::permute(Cinds2, Cinds, C2, C3);
     } else {
-        C3 = C2;
+        // C3 = C2;
+        C3.zaxpy(
+            C2,
+            1.0,
+            1,
+            1    
+        );
     }
 
 }
