@@ -327,7 +327,7 @@ void FCIComputer::apply_tensor_spin_012bdy(
 }
 
 // NICK: VERY VERY Slow, will want even a better c++ implementation!
-// Try with einsum once working or perhaps someting like the above...
+// Try with einsum once working or perhaps someting like the above...?
 std::pair<Tensor, Tensor> FCIComputer::calculate_dvec_spin_with_coeff() {
 
     Tensor dveca({norb_, norb_, nalfa_strs_, nbeta_strs_}, "dveca");
@@ -343,8 +343,9 @@ std::pair<Tensor, Tensor> FCIComputer::calculate_dvec_spin_with_coeff() {
                 size_t target = std::get<1>(mapping);
                 std::complex<double> parity = static_cast<std::complex<double>>(std::get<2>(mapping));
                 for (size_t k = 0; k < dveca.shape()[3]; ++k) {
-                    std::complex<double> val = dveca.get({i,j,target,k}) + C_.get({source, k}) * parity;
-                    dveca.set({i,j,target,k}, val);
+                    size_t c_vidxa = k * C_.strides()[1] + source * C_.strides()[0];
+                    size_t d_vidxa = k * dveca.strides()[3] + target * dveca.strides()[2] + j * dveca.strides()[1] + i * dveca.strides()[0];
+                    dveca.data()[d_vidxa] += parity * C_.data()[c_vidxa];
                 }
             }
 
@@ -353,8 +354,9 @@ std::pair<Tensor, Tensor> FCIComputer::calculate_dvec_spin_with_coeff() {
                 size_t target = std::get<1>(mapping);
                 std::complex<double> parity = static_cast<std::complex<double>>(std::get<2>(mapping));
                 for (size_t k = 0; k < dvecb.shape()[2]; ++k) {
-                    std::complex<double> val = dvecb.get({i,j,k,target}) + C_.get({k, source}) * parity;
-                    dvecb.set({i,j,k,target}, val);
+                    size_t c_vidxb = source * C_.strides()[1] + k * C_.strides()[0];
+                    size_t d_vidxb = target * dvecb.strides()[3] + k * dvecb.strides()[2] + j * dvecb.strides()[1] + i * dvecb.strides()[0];
+                    dvecb.data()[d_vidxb] += parity * C_.data()[c_vidxb];
                 }
             }
         }
@@ -362,7 +364,7 @@ std::pair<Tensor, Tensor> FCIComputer::calculate_dvec_spin_with_coeff() {
     return std::make_pair(dveca, dvecb);
 }
 
-// ALSO VERY SLOW
+// ALSO SLOW
 Tensor FCIComputer::calculate_coeff_spin_with_dvec(std::pair<Tensor, Tensor>& dvec) {
     Tensor Cnew({nalfa_strs_, nbeta_strs_}, "Cnew");
 
@@ -377,7 +379,9 @@ Tensor FCIComputer::calculate_coeff_spin_with_dvec(std::pair<Tensor, Tensor>& dv
                 size_t target = std::get<1>(mapping);
                 std::complex<double> parity = static_cast<std::complex<double>>(std::get<2>(mapping));
                 for (size_t k = 0; k < dvec.first.shape()[3]; ++k) {
-                    Cnew.add_to_element({source, k}, dvec.first.get({i,j,target,k}) * parity);
+                    size_t c_vidxa = k * Cnew.strides()[1] + source * Cnew.strides()[0];
+                    size_t d_vidxa = k * dvec.first.strides()[3] + target * dvec.first.strides()[2] + j * dvec.first.strides()[1] + i * dvec.first.strides()[0];
+                    Cnew.data()[c_vidxa] += parity * dvec.first.data()[d_vidxa];
                 }
                 
             }
@@ -386,7 +390,9 @@ Tensor FCIComputer::calculate_coeff_spin_with_dvec(std::pair<Tensor, Tensor>& dv
                 size_t target = std::get<1>(mapping);
                 std::complex<double> parity = static_cast<std::complex<double>>(std::get<2>(mapping));
                 for (size_t k = 0; k < dvec.second.shape()[2]; ++k) {
-                    Cnew.add_to_element({k, source}, dvec.second.get({i,j,k,target}) * parity);
+                    size_t c_vidxb = source * Cnew.strides()[1] + k * Cnew.strides()[0];
+                    size_t d_vidxb = target * dvec.second.strides()[3] + k * dvec.second.strides()[2] + j * dvec.second.strides()[1] + i * dvec.second.strides()[0];
+                    Cnew.data()[c_vidxb] += parity * dvec.second.data()[d_vidxb];
                 }
             }
         }
