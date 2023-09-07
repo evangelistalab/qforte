@@ -216,8 +216,11 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<FCIGraph>(m, "FCIGraph")
         .def(py::init<int, int, int>(), "nalfa"_a, "nbeta"_a, "norb"_a, "Make a FCIGraph")
+        .def("make_mapping_each", &FCIGraph::make_mapping_each)
         .def("get_nalfa", &FCIGraph::get_nalfa)
         .def("get_nbeta", &FCIGraph::get_nbeta)
+        .def("get_lena", &FCIGraph::get_lena)
+        .def("get_lenb", &FCIGraph::get_lenb)
         .def("get_astr", &FCIGraph::get_astr)
         .def("get_bstr", &FCIGraph::get_bstr)
         .def("get_aind", &FCIGraph::get_aind)
