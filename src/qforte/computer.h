@@ -24,6 +24,9 @@ class Computer {
     /// default constructor: create a quantum computer with nqubit qubits
     Computer(int nqubit, double print_threshold = 1.0e-6);
 
+    /// default copy constructor
+    Computer(const Computer& other) = default;
+
     /// applies a matrix representation of a Gate, Gircuit, or QubitOoperator
     /// to the quantum state.
     void apply_matrix(const std::vector<std::vector<std::complex<double>>>& Opmat);
