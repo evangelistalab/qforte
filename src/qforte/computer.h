@@ -105,7 +105,7 @@ class Computer {
     /// return a string representing the state of the computer
     std::string str() const;
 
-    /// return a vector of the coeficients
+    /// return a vector of the coefficients
     const std::vector<std::complex<double>>& get_coeff_vec() const { return coeff_; };
 
     /// return the coefficient of a basis state
@@ -123,7 +123,7 @@ class Computer {
     size_t ntwo_ops() const { return ntwo_ops_; }
 
     // set the coefficient vector directly from another coefficient vector
-    void set_coeff_vec(const std::vector<double_c> c_vec) { coeff_ = c_vec; }
+    void set_coeff_vec(const std::vector<double_c>& c_vec) { coeff_ = c_vec; }
 
     /// set the quantum computer to the state
     /// basis_1 * c_1 + basis_2 * c_2 + ...

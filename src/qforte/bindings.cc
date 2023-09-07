@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
+#include <pybind11/numpy.h>
 
 #include "fmt/format.h"
 
@@ -20,8 +21,9 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(qforte, m) {
-    py::class_<Circuit>(m, "Circuit")
+    py::class_<Circuit, std::shared_ptr<Circuit>>(m, "Circuit")
         .def(py::init<>())
+        .def(py::init<const Circuit&>())
         .def("add", &Circuit::add_gate)
         .def("add", &Circuit::add_circuit)
         .def("add_gate", &Circuit::add_gate)
@@ -31,7 +33,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("swap_gates", &Circuit::swap_gates)
         .def("insert_circuit", &Circuit::insert_circuit)
         .def("remove_gates", &Circuit::remove_gates)
+        .def("replace_gate", &Circuit::replace_gate)
         .def("gates", &Circuit::gates)
+        .def("gate", [](const Circuit& circ, size_t pos) { return circ.gates()[pos]; })
         .def("sparse_matrix", &Circuit::sparse_matrix)
         .def("size", &Circuit::size)
         .def("adjoint", &Circuit::adjoint)
@@ -133,7 +137,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("add", &QubitBasis::add)
         .def("get_bit", &QubitBasis::get_bit);
 
-    py::class_<Computer>(m, "Computer")
+    py::class_<Computer, std::shared_ptr<Computer>>(m, "Computer")
         .def(py::init<size_t, double>(), "nqubits"_a, "print_threshold"_a = 1.0e-6,
              "Make a quantum computer with 'nqubits' qubits")
         .def("apply_circuit_safe", &Computer::apply_circuit_safe)
@@ -159,6 +163,13 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_coeff_vec", &Computer::get_coeff_vec)
         .def("get_nqubit", &Computer::get_nqubit)
         .def("set_coeff_vec", &Computer::set_coeff_vec)
+        .def("set_coeff_vec_from_numpy",
+             [](Computer& computer, py::array_t<std::complex<double>> np_array) {
+                 py::buffer_info buf_info = np_array.request();
+                 std::vector<double_c> c_vec(static_cast<double_c*>(buf_info.ptr),
+                                             static_cast<double_c*>(buf_info.ptr) + buf_info.size);
+                 computer.set_coeff_vec(c_vec);
+             })
         .def("set_state", &Computer::set_state)
         .def("null_state", &Computer::null_state)
         .def("reset", &Computer::reset, "Reset the quantum computer to the state |0>")
@@ -174,9 +185,14 @@ PYBIND11_MODULE(qforte, m) {
         .def("gate_id", &Gate::gate_id)
         .def("sparse_matrix", &Gate::sparse_matrix)
         .def("adjoint", &Gate::adjoint)
+        .def("nqubits", &Gate::nqubits)
         .def("str", &Gate::str)
+        .def("has_parameter", &Gate::has_parameter)
         .def("__str__", &Gate::str)
-        .def("__repr__", &Gate::repr);
+        .def("__repr__", &Gate::repr)
+        .def("update_parameter", [](Gate& gate, std::complex<double> parameter) {
+            return make_gate(gate.gate_id(), gate.target(), gate.control(), parameter);
+        });
 
     py::class_<SparseVector>(m, "SparseVector")
         .def(py::init<>())
@@ -259,6 +275,15 @@ PYBIND11_MODULE(qforte, m) {
             return computer;
         },
         "nqubit"_a, "gates"_a, "Prepare a state from a list of gates.");
+
+    m.def(
+        "add_gate_to_computer",
+        [](const Gate& gate, Computer& computer) {
+            auto new_computer = Computer(computer);
+            new_computer.apply_gate(gate);
+            return new_computer;
+        },
+        "gate"_a, "computer"_a, "Return a new computer with the given gate applied to it.");
 
     m.def("inner_product", &dot, "a"_a, "b"_a,
           "Return the inner product of the states stored in two quantum computers.");

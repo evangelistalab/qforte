@@ -5,8 +5,7 @@
 #include <vector>
 #include <map>
 
-#include "qforte-def.h" // double_c
-// #include "helpers.h"
+#include "qforte-def.h"
 
 class QubitBasis;
 class SparseMatrix;
@@ -17,16 +16,14 @@ using complex_4_4_mat = std::array<std::array<std::complex<double>, 4>, 4>;
 
 class Gate {
   public:
-    /**
-     * @brief Gate
-     * @param label the label for this operator (e.g, "X", "cZ")
-     * @param target the target qubit
-     * @param control the control qubit
-     * @param gate the 4 x 4 matrix representation of the gate
-     */
-    Gate(const std::string& label, size_t target, size_t control,
-                std::complex<double> gate[4][4]);
+    /// @brief Constructor for 1- and 2-qubit gates
+    /// @param label the label for this operator (e.g, "X", "cZ")
+    /// @param target the target qubit
+    /// @param control the control qubit
+    /// @param gate the 4 x 4 matrix representation of the gate
+    Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4]);
 
+    /// default copy constructor
     Gate(const Gate& gate) = default;
 
     /// Return the target qubit
@@ -50,8 +47,13 @@ class Gate {
     /// Return the string specifying what type of gate [X, Y , CNOT, ...]
     std::string gate_id() const;
 
+    /// Return true if this gate depends on a parameter
+    bool has_parameter() const;
+
+    /// The number of qubits this gate acts on
     size_t nqubits() const;
 
+    /// Return the canonical order of the 2-qubit basis
     static const std::vector<std::pair<size_t, size_t>>& two_qubits_basis();
 
     // Return the adjoint of this gate
@@ -75,8 +77,10 @@ class Gate {
     ///     |1> x |0>
     ///     |1> x |1>
     static const std::vector<std::pair<size_t, size_t>> two_qubits_basis_;
+
     /// This vector contains the indices of a 1-qubit basis [0, 1]
     static const std::vector<size_t> index1;
+
     /// This vector contains the indices of a 2-qubit basis [0, 1, 2, 3] where
     /// 0 -> |00>
     /// 1 -> |01>
@@ -85,11 +89,11 @@ class Gate {
     static const std::vector<size_t> index2;
 };
 
-/// Create a quantum gate
-// Gate make_gate(std::string type, size_t target, size_t control,
-//                               double parameter = 0.0, bool mirror = false);
-Gate make_gate(std::string type, size_t target, size_t control, std::complex<double> parameter = 0.0);
+/// Utility function to create a gate from a string
+Gate make_gate(std::string type, size_t target, size_t control,
+               std::complex<double> parameter = 0.0);
 
+/// Utility function to create a controlled version of a gate
 Gate make_control_gate(size_t control, Gate& U);
 
 #endif // _gate_h_

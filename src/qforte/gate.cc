@@ -54,6 +54,12 @@ const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
 
 std::string Gate::gate_id() const { return label_; }
 
+bool Gate::has_parameter() const {
+    return (label_ == "Rx" or label_ == "Ry" or label_ == "Rz" or label_ == "R" or
+            label_ == "rU1" or label_ == "rU2" or label_ == "cRz" or label_ == "cR" or
+            label_ == "A");
+}
+
 std::string Gate::str() const {
     if (target_ == control_) {
         return fmt::format("{}{}", label_, target_);

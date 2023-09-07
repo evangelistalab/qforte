@@ -7,18 +7,22 @@
 #include "computer.h"
 #include "sparse_tensor.h"
 
-void Circuit::set_parameters(const std::vector<double>& params) {
-    // need a loop over only gates in state preparation circuit that
-    // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
-    // TODO: make a indexing funciton using a map (Nick)
+void Circuit::set_parameters(const std::vector<std::complex<double>>& params) {
     size_t param_idx = 0;
+    size_t param_size = params.size();
     for (auto& gate : gates_) {
-        std::string gate_id = gate.gate_id();
-        if (gate_id == "Rz") {
-            size_t target_qubit = gate.target();
-            gate = make_gate(gate_id, target_qubit, target_qubit, params[param_idx]);
+        if (gate.has_parameter()) {
+            if (param_idx < param_size) {
+                size_t target_qubit = gate.target();
+                size_t control_qubit = gate.control();
+                gate = make_gate(gate.gate_id(), target_qubit, control_qubit, params[param_idx]);
+            }
             param_idx++;
         }
+    }
+    if (param_idx != param_size) {
+        throw std::runtime_error("Circuit::set_parameters: number of parameters does not match "
+                                 "number of gates with parameters");
     }
 }
 
@@ -34,6 +38,13 @@ void Circuit::remove_gate(size_t pos) {
         throw std::runtime_error("Circuit::remove_gate: position out of range");
     }
     gates_.erase(gates_.begin() + pos);
+}
+
+void Circuit::replace_gate(size_t pos, const Gate& gate) {
+    if (pos >= gates_.size()) {
+        throw std::runtime_error("Circuit::replace_gate: position out of range");
+    }
+    gates_[pos] = gate;
 }
 
 void Circuit::swap_gates(size_t pos1, size_t pos2) {
@@ -193,23 +204,6 @@ bool Circuit::is_pauli() const {
     }
     return true;
 }
-
-// std::vector<double> Circuit::get_parameters() {
-//     // need a loop over only gates in state preparation circuit that
-//     // have a parameter dependance (if gate_id == Rx, Ry, or Rz)
-//     // TODO: make a indexing funciton using a map (Nick)
-//     size_t param_idx = 0;
-//     std::vector<double> params
-//     for (auto& gate : gates_) {
-//         std::string gate_id = gate.gate_id();
-//         if (gate_id == "Rz") {
-//
-//             double param = gate.gate()[][];
-//             gate = make_gate(gate_id, target_qubit, target_qubit, params[param_idx]);
-//             param_idx++;
-//         }
-//     }
-// }
 
 bool operator==(const Circuit& qc1, const Circuit& qc2) {
     if (qc1.gates().size() == qc2.gates().size()) {

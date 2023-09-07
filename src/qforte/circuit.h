@@ -16,8 +16,10 @@ class Circuit {
      * e.g., CNOT, Hadamard, Rotation.
      * */
   public:
-    /// default constructor: creates an empty circuit
-    Circuit() {}
+    /// default constructor
+    Circuit() = default;
+    /// default copy constructor
+    Circuit(const Circuit& other) = default;
 
     /// append a gate at the end of this circuit
     void add_gate(const Gate& gate) { gates_.push_back(gate); }
@@ -40,6 +42,9 @@ class Circuit {
     /// remove gates in a given range
     void remove_gates(size_t pos1, size_t pos2);
 
+    /// replace a gate at a given position in the circuit
+    void replace_gate(size_t pos, const Gate& gate);
+
     /// return a vector of gates
     const std::vector<Gate>& gates() const { return gates_; }
 
@@ -50,7 +55,7 @@ class Circuit {
     Circuit adjoint();
 
     /// reset the circuit with a new set of parameters
-    void set_parameters(const std::vector<double>& params);
+    void set_parameters(const std::vector<std::complex<double>>& params);
 
     /// For a circuit of Pauli gates, orders gates from those with smallest-index
     /// target to largest-index target AND combines gates with same target.
@@ -64,7 +69,7 @@ class Circuit {
     /// the matrix should always be unitary.
     const SparseMatrix sparse_matrix(size_t nqubit) const;
 
-    /// Return a vector of string representing this circuit.
+    /// Return a vector of string representing this circuit
     std::string str() const;
 
     /// Return the number of qubits pertaining to this circuit. Note this is
@@ -73,6 +78,7 @@ class Circuit {
     /// nine qubits.
     size_t num_qubits() const;
 
+    /// Return true if this circuit is composed of only Pauli gates
     bool is_pauli() const;
 
   private:
