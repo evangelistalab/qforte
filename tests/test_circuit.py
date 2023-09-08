@@ -46,3 +46,64 @@ class TestCircuit:
         print('-----------------------------')
         print('   ', diff_norm)
         assert diff_norm == approx(0, abs=1.0e-16)
+
+    def test_circuit2(self):
+        circ = Circuit()
+        circ.add(gate('X', 0))
+        circ.add(gate('Y', 1))
+
+        # test insert_gate
+        circ.insert_gate(1, gate('Z', 2))
+        assert circ.size() == 3
+        assert circ.gates()[1] == gate('Z', 2)
+        circ.insert_gate(1, gate('X', 3))
+        assert circ.size() == 4
+        assert circ.gates()[1] == gate('X', 3)
+        assert circ.gates()[2] == gate('Z', 2)
+    
+        # test remove_gate
+        circ.remove_gate(2)
+        assert circ.size() == 3
+        assert circ.gates()[1] == gate('X', 3)
+        assert circ.gates()[2] == gate('Y', 1)
+
+        # test swap_gates
+        circ.swap_gates(1, 2)
+        assert circ.size() == 3
+        assert circ.gates()[1] == gate('Y', 1)
+        assert circ.gates()[2] == gate('X', 3)
+
+        # test insert_circuit
+        circ2 = Circuit()
+        circ2.add(gate('Z', 4))
+        circ2.add(gate('X', 5))
+        circ.insert_circuit(1, circ2)
+        assert circ.size() == 5
+        assert circ.gates()[0] == gate('X', 0)
+        assert circ.gates()[1] == gate('Z', 4)
+        assert circ.gates()[2] == gate('X', 5)
+        assert circ.gates()[3] == gate('Y', 1)
+        assert circ.gates()[4] == gate('X', 3)
+
+        # test remove_gates
+        circ.remove_gates(1, 3)
+        assert circ.size() == 3
+        assert circ.gates()[0] == gate('X', 0)
+        assert circ.gates()[1] == gate('Y', 1)
+        assert circ.gates()[2] == gate('X', 3)
+
+        # test replace_gate
+        circ.replace_gate(1, gate('Z', 4))
+        assert circ.size() == 3
+        assert circ.gates()[0] == gate('X', 0)
+        assert circ.gates()[1] == gate('Z', 4)
+        assert circ.gates()[2] == gate('X', 3)
+
+        # test gates
+        assert circ.gates() == [gate('X', 0), gate('Z', 4), gate('X', 3)]
+
+        # test gate
+        assert circ.gate(0) == gate('X', 0)
+        assert circ.gate(1) == gate('Z', 4)
+        assert circ.gate(2) == gate('X', 3)
+        

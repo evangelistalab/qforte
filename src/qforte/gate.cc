@@ -9,8 +9,9 @@ const std::vector<std::pair<size_t, size_t>> Gate::two_qubits_basis_{
 const std::vector<size_t> Gate::index1{0, 1};
 const std::vector<size_t> Gate::index2{0, 1, 2, 3};
 
-Gate::Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4])
-    : label_(label), target_(target), control_(control) {
+Gate::Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4],
+           std::optional<std::complex<double>> parameter)
+    : label_(label), target_(target), control_(control), parameter_(parameter) {
     for (const auto& i : index2) {
         for (const auto& j : index2) {
             gate_[i][j] = gate[i][j];
@@ -22,7 +23,7 @@ size_t Gate::target() const { return target_; }
 
 size_t Gate::control() const { return control_; }
 
-const complex_4_4_mat& Gate::gate() const { return gate_; }
+const complex_4_4_mat& Gate::matrix() const { return gate_; }
 
 const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
     size_t nbasis = std::pow(2, nqubit);
@@ -54,11 +55,9 @@ const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
 
 std::string Gate::gate_id() const { return label_; }
 
-bool Gate::has_parameter() const {
-    return (label_ == "Rx" or label_ == "Ry" or label_ == "Rz" or label_ == "R" or
-            label_ == "rU1" or label_ == "rU2" or label_ == "cRz" or label_ == "cR" or
-            label_ == "A");
-}
+bool Gate::has_parameter() const { return parameter_.has_value(); }
+
+std::optional<std::complex<double>> Gate::parameter() const { return parameter_; }
 
 std::string Gate::str() const {
     if (target_ == control_) {
@@ -97,6 +96,26 @@ Gate Gate::adjoint() const {
         return Gate("adj(" + label_ + ")", target_, control_, adj_gate);
     }
     return Gate(label_, target_, control_, adj_gate);
+}
+
+bool Gate::operator==(const Gate& rhs) const {
+    if (label_ != rhs.label_) {
+        return false;
+    }
+    if (target_ != rhs.target_) {
+        return false;
+    }
+    if (control_ != rhs.control_) {
+        return false;
+    }
+    for (const auto& i : index2) {
+        for (const auto& j : index2) {
+            if (std::norm(gate_[i][j] - rhs.gate_[i][j]) > 1.0e-12) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 const std::vector<std::pair<size_t, size_t>>& Gate::two_qubits_basis() { return two_qubits_basis_; }

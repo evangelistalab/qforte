@@ -39,7 +39,7 @@ class Circuit {
     /// insert a circuit at a given position in the circuit
     void insert_circuit(size_t pos, const Circuit& circ);
 
-    /// remove gates in a given range
+    /// remove gates with index i in [pos1, pos2)
     void remove_gates(size_t pos1, size_t pos2);
 
     /// replace a gate at a given position in the circuit

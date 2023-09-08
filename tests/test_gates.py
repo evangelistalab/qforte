@@ -252,48 +252,30 @@ class TestGates:
         assert coeff2 == approx(0, abs=1.0e-16)
         assert coeff3 == approx(0, abs=1.0e-16)
 
+    def test_gate_ops(self):
+        # test the gate operations
+        gate1 = gate('X',0)
+        assert gate1.nqubits() == 1
+        assert gate1.gate_id() == 'X'
+        assert gate1.has_parameter() == False 
+        assert gate1.parameter() == None
+        with pytest.raises(ValueError):
+            gate1.update_parameter(1.0)
 
-    def test_computer(self):
-        print('\n')
-        # test that 1 - 1 = 0
+        gate2 = gate('cR',0,1,1.0)
+        assert gate2.nqubits() == 2
+        assert gate2.gate_id() == 'cR'
+        assert gate2.has_parameter() == True
+        assert gate2.parameter() == approx(1.0, abs=1.0e-16)
 
-        # print('\n'.join(qc.str()))
-        X = gate('X',0,0);
-        print(X)
-        Y = gate('Y',0,0);
-        print(Y)
-        Z = gate('Z',0,0);
-        print(Z)
-        H = gate('H',0,0);
-        print(H)
-        R = gate('R',0,0,0.1);
-        print(R)
-        S = gate('S',0,0);
-        print(S)
-        T = gate('T',0,0);
-        print(T)
-        cX = gate('cX',0,1);
-        print(cX)
-        cY = gate('cY',0,1);
-        print(cY)
-        cZ = gate('cZ',0,1);
-        print(cZ)
-       # qcircuit = Circuit()
-       # qcircuit.add(qg)
-       # qcircuit.add(Gate(GateType.Hgate,1,1));
-       # print('\n'.join(qcircuit.str()))
-       # self.assertEqual(subtract(1, 1), 0)
+        gate2 = gate2.update_parameter(2.0)
+        assert gate2.nqubits() == 2
+        assert gate2.gate_id() == 'cR'
+        assert gate2.has_parameter() == True
+        assert gate2.parameter() == approx(2.0, abs=1.0e-16)
 
-        computer = Computer(16)
-       # print(repr(computer))
-       # circuit = Circuit()
-       # circuit.add(X)
-        for i in range(3000):
-            computer.apply_gate(X)
-            computer.apply_gate(Y)
-            computer.apply_gate(Z)
-            computer.apply_gate(H)
-       # print(repr(computer))
+
+
 
     def test_op_exp_val_1(self):
         # test direct expectation value measurement

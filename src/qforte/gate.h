@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <optional>
 
 #include "qforte-def.h"
 
@@ -14,14 +15,21 @@ class SparseVector;
 /// alias for a 4 x 4 complex matrix stored as an array of arrays
 using complex_4_4_mat = std::array<std::array<std::complex<double>, 4>, 4>;
 
+/// @brief A class representing a quantum gate
+/// @details The gate is represented by a 4 x 4 complex matrix, which can represent at most a
+/// 2-qubit gate
 class Gate {
   public:
-    /// @brief Constructor for 1- and 2-qubit gates
+    /// @brief Constructor for 1- and 2-qubit gates.
+    /// @details It is not recommended to use this constructor directly, but rather use the
+    /// make_gate function.
     /// @param label the label for this operator (e.g, "X", "cZ")
     /// @param target the target qubit
     /// @param control the control qubit
     /// @param gate the 4 x 4 matrix representation of the gate
-    Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4]);
+    /// @param parameter the parameter associated with this gate (default: none)
+    Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4],
+         std::optional<std::complex<double>> parameter = std::nullopt);
 
     /// default copy constructor
     Gate(const Gate& gate) = default;
@@ -33,7 +41,13 @@ class Gate {
     size_t control() const;
 
     /// Returns the 4X4 matrix representation of the gate
-    const complex_4_4_mat& gate() const;
+    const complex_4_4_mat& matrix() const;
+
+    /// Return true if this gate depends on a parameter
+    bool has_parameter() const;
+
+    /// Return the parameter associated with this gate
+    std::optional<std::complex<double>> parameter() const;
 
     /// Returns the lifted sparse matrix representaion of the gate
     const SparseMatrix sparse_matrix(size_t nqubit) const;
@@ -47,9 +61,6 @@ class Gate {
     /// Return the string specifying what type of gate [X, Y , CNOT, ...]
     std::string gate_id() const;
 
-    /// Return true if this gate depends on a parameter
-    bool has_parameter() const;
-
     /// The number of qubits this gate acts on
     size_t nqubits() const;
 
@@ -59,6 +70,11 @@ class Gate {
     // Return the adjoint of this gate
     Gate adjoint() const;
 
+    /// Gate equality operator
+    /// @details Two gates are equal if they have the same label, target, control, and matrix
+    /// Here we do not check if the parameters are equal
+    bool operator==(const Gate& rhs) const;
+
   private:
     /// the label of this gate
     std::string label_;
@@ -66,6 +82,8 @@ class Gate {
     size_t target_;
     /// the control qubit. For single qubit operators control_ == target_;
     size_t control_;
+    /// the parameter associated with this gate
+    std::optional<std::complex<double>> parameter_;
     /// the matrix representatin of this gate.
     /// 1 qubit operators are represented by the top left 2 x 2 submatrix.
     complex_4_4_mat gate_;

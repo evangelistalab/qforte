@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 
 # optionally use OpenMP, if so use OpenMP compatible compiler
 OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)

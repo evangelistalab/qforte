@@ -189,11 +189,22 @@ PYBIND11_MODULE(qforte, m) {
         .def("nqubits", &Gate::nqubits)
         .def("str", &Gate::str)
         .def("has_parameter", &Gate::has_parameter)
+        .def("parameter", &Gate::parameter,
+             "Return the parameter associated with the gate. Returns None if the gate does not "
+             "have a parameter")
         .def("__str__", &Gate::str)
         .def("__repr__", &Gate::repr)
-        .def("update_parameter", [](Gate& gate, std::complex<double> parameter) {
-            return make_gate(gate.gate_id(), gate.target(), gate.control(), parameter);
-        });
+        .def("__eq__", &Gate::operator==)
+        .def(
+            "update_parameter",
+            [](Gate& gate, std::complex<double> parameter) {
+                if (!gate.has_parameter()) {
+                    throw std::invalid_argument("Gate does not have a parameter.");
+                }
+                return make_gate(gate.gate_id(), gate.target(), gate.control(), parameter);
+            },
+            "Return a new gate with the same target, control, and gate_id, but with the given "
+            "parameter.");
 
     py::class_<SparseVector>(m, "SparseVector")
         .def(py::init<>())
@@ -265,13 +276,9 @@ PYBIND11_MODULE(qforte, m) {
     m.def("control_gate", &make_control_gate, "control"_a, "Gate"_a);
 
     m.def(
-        "prepare_state",
-        [](int nqubit, const std::vector<Gate>& gates) {
+        "prepare_computer_from_circuit",
+        [](int nqubit, const Circuit& circuit) {
             auto computer = Computer(nqubit);
-            auto circuit = Circuit();
-            for (const auto& gate : gates) {
-                circuit.add_gate(gate);
-            }
             computer.apply_circuit(circuit);
             return computer;
         },

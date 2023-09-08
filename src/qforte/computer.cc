@@ -317,11 +317,11 @@ double Computer::perfect_measure_circuit(const Circuit& qc) {
 
 void Computer::apply_1qubit_gate_safe(const Gate& qg) {
     size_t target = qg.target();
-    const auto& gate = qg.gate();
+    const auto& mat = qg.matrix();
 
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
-            auto op_i_j = gate[i][j];
+            auto op_i_j = mat[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
                 for (const QubitBasis& basis_J : basis_) {
                     if (basis_J.get_bit(target) == j) {
@@ -338,16 +338,16 @@ void Computer::apply_1qubit_gate_safe(const Gate& qg) {
 
 void Computer::apply_1qubit_gate(const Gate& qg) {
     size_t target = qg.target();
-    const auto& gate = qg.gate();
+    const auto& mat = qg.matrix();
 
     const size_t block_size = std::pow(2, target);
     const size_t block_offset = 2 * block_size;
 
     // bit target goes from j -> i
-    const auto op_0_0 = gate[0][0];
-    const auto op_0_1 = gate[0][1];
-    const auto op_1_0 = gate[1][0];
-    const auto op_1_1 = gate[1][1];
+    const auto op_0_0 = mat[0][0];
+    const auto op_0_1 = mat[0][1];
+    const auto op_1_0 = mat[1][0];
+    const auto op_1_1 = mat[1][1];
 
     if ((std::abs(op_0_0) + std::abs(op_1_1) > compute_threshold_) and
         (std::abs(op_0_1) + std::abs(op_1_0) > compute_threshold_)) {
@@ -428,7 +428,7 @@ void Computer::apply_2qubit_gate_safe(const Gate& qg) {
 
     size_t target = qg.target();
     size_t control = qg.control();
-    const auto& gate = qg.gate();
+    const auto& mat = qg.matrix();
 
     for (size_t i = 0; i < 4; i++) {
         const auto i_c = two_qubits_basis[i].first;
@@ -436,7 +436,7 @@ void Computer::apply_2qubit_gate_safe(const Gate& qg) {
         for (size_t j = 0; j < 4; j++) {
             const auto j_c = two_qubits_basis[j].first;
             const auto j_t = two_qubits_basis[j].second;
-            auto op_i_j = gate[i][j];
+            auto op_i_j = mat[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
                 // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
                 for (const QubitBasis& basis_J : basis_) {
@@ -457,16 +457,16 @@ void Computer::apply_2qubit_gate_safe(const Gate& qg) {
 void Computer::apply_2qubit_gate(const Gate& qg) {
     const size_t target = qg.target();
     const size_t control = qg.control();
-    const auto& gate = qg.gate();
+    const auto& mat = qg.matrix();
 
     // bit target goes from j -> i
-    const auto op_2_2 = gate[2][2];
-    const auto op_2_3 = gate[2][3];
-    const auto op_3_2 = gate[3][2];
-    const auto op_3_3 = gate[3][3];
+    const auto op_2_2 = mat[2][2];
+    const auto op_2_3 = mat[2][3];
+    const auto op_3_2 = mat[3][2];
+    const auto op_3_3 = mat[3][3];
 
-    if ((std::abs(gate[0][1]) + std::abs(gate[1][0]) < compute_threshold_) and
-        (gate[0][0] == 1.0) and (gate[1][1] == 1.0)) {
+    if ((std::abs(mat[0][1]) + std::abs(mat[1][0]) < compute_threshold_) and (mat[0][0] == 1.0) and
+        (mat[1][1] == 1.0)) {
         // Case 1: 2qubit gate is a control gate
         if (target < control) {
             // Case I-A: target bit index is smaller than control bit index
@@ -734,7 +734,7 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
             for (size_t j = 0; j < 4; j++) {
                 const auto j_c = two_qubits_basis[j].first;
                 const auto j_t = two_qubits_basis[j].second;
-                auto op_i_j = gate[i][j];
+                auto op_i_j = mat[i][j];
                 if (std::abs(op_i_j) > compute_threshold_) {
                     // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { //
                     // C++17
