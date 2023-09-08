@@ -44,7 +44,7 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {1.0, 0.0},
                 {0.0, c},
             };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "Rx") {
             std::complex<double> a = std::cos(0.5 * parameter);
@@ -53,7 +53,7 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {+a, -b},
                 {-b, +a},
             };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "Ry") {
             std::complex<double> a = std::cos(0.5 * parameter);
@@ -62,7 +62,7 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {+a, -b},
                 {+b, +a},
             };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "Rz") {
             std::complex<double> tmp_a = -onei * 0.5 * parameter;
@@ -73,7 +73,7 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {a, 0.0},
                 {0.0, b},
             };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "V") {
             std::complex<double> a = onei * 0.5 + 0.5;
@@ -122,13 +122,11 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {+a, -b},
                 {+b, +a},
             };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
 
     } else {
         if (type == "A") {
-            // std::complex<double> c = std::cos(2.0*parameter);
-            // std::complex<double> s = -onei*std::sin(2.0*parameter);
             std::complex<double> c = std::cos(parameter);
             std::complex<double> s = std::sin(parameter);
             std::complex<double> gate[4][4]{
@@ -137,13 +135,7 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {0.0, s, -c, 0.0},
                 {0.0, 0.0, 0.0, 1.0},
             };
-            // std::complex<double> gate[4][4]{
-            //     {1.0, 0.0, 0.0, 0.0},
-            //     {0.0, c  ,  s,  0.0},
-            //     {0.0, s  ,  c,  0.0},
-            //     {0.0, 0.0, 0.0, 1.0},
-            // };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, false));
         }
         if ((type == "cX") or (type == "CNOT")) {
             std::complex<double> gate[4][4]{
@@ -190,7 +182,7 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {0.0, 0.0, 1.0, 0.0},
                 {0.0, 0.0, 0.0, c},
             };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "cV") {
             std::complex<double> a = onei * 0.5 + 0.5;
@@ -214,7 +206,7 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {0.0, 0.0, a, 0.0},
                 {0.0, 0.0, 0.0, b},
             };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "SWAP") {
             std::complex<double> gate[4][4]{
@@ -234,7 +226,7 @@ Gate make_gate(std::string type, size_t target, size_t control, std::complex<dou
                 {0.0, 0.0, +a, -b},
                 {0.0, 0.0, +b, +a},
             };
-            return Gate(type, target, control, gate, parameter);
+            return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
     }
     // If you reach this section then the gate type is not implemented or it is invalid.
@@ -265,5 +257,8 @@ Gate make_control_gate(size_t control, Gate& U) {
         {0.0, 0.0, mat[0][0], mat[0][1]},
         {0.0, 0.0, mat[1][0], mat[1][1]},
     };
-    return Gate(type, target, control, gate, U.parameter());
+    auto parameter_info =
+        U.has_parameter() ? std::make_pair(U.parameter().value(), U.minus_parameter_on_adjoint())
+                          : std::optional<std::pair<std::complex<double>, bool>>();
+    return Gate(type, target, control, gate, parameter_info);
 }

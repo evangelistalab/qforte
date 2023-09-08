@@ -29,7 +29,7 @@ class Gate {
     /// @param gate the 4 x 4 matrix representation of the gate
     /// @param parameter the parameter associated with this gate (default: none)
     Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4],
-         std::optional<std::complex<double>> parameter = std::nullopt);
+         std::optional<std::pair<std::complex<double>, bool>> parameter = std::nullopt);
 
     /// default copy constructor
     Gate(const Gate& gate) = default;
@@ -48,6 +48,9 @@ class Gate {
 
     /// Return the parameter associated with this gate
     std::optional<std::complex<double>> parameter() const;
+
+    /// Return if the parameter should be multiplied by -1 when taking the adjoint
+    bool minus_parameter_on_adjoint() const;
 
     /// Returns the lifted sparse matrix representaion of the gate
     const SparseMatrix sparse_matrix(size_t nqubit) const;
@@ -71,19 +74,24 @@ class Gate {
     Gate adjoint() const;
 
     /// Gate equality operator
-    /// @details Two gates are equal if they have the same label, target, control, and matrix
-    /// Here we do not check if the parameters are equal
+    /// @details Two gates are equal if they have the same target, control, and matrix
+    /// Here we do not check for the label or parameter
     bool operator==(const Gate& rhs) const;
 
   private:
     /// the label of this gate
     std::string label_;
+
     /// the target qubit
     size_t target_;
+
     /// the control qubit. For single qubit operators control_ == target_;
     size_t control_;
-    /// the parameter associated with this gate
-    std::optional<std::complex<double>> parameter_;
+
+    /// the parameter associated with this gate and a factor indicating if the parameter should be
+    /// multiplied by -1 when taking the adjoint
+    std::optional<std::pair<std::complex<double>, bool>> parameter_;
+
     /// the matrix representatin of this gate.
     /// 1 qubit operators are represented by the top left 2 x 2 submatrix.
     complex_4_4_mat gate_;

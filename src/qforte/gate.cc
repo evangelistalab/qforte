@@ -10,7 +10,7 @@ const std::vector<size_t> Gate::index1{0, 1};
 const std::vector<size_t> Gate::index2{0, 1, 2, 3};
 
 Gate::Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4],
-           std::optional<std::complex<double>> parameter)
+           std::optional<std::pair<std::complex<double>, bool>> parameter)
     : label_(label), target_(target), control_(control), parameter_(parameter) {
     for (const auto& i : index2) {
         for (const auto& j : index2) {
@@ -57,7 +57,13 @@ std::string Gate::gate_id() const { return label_; }
 
 bool Gate::has_parameter() const { return parameter_.has_value(); }
 
-std::optional<std::complex<double>> Gate::parameter() const { return parameter_; }
+std::optional<std::complex<double>> Gate::parameter() const {
+    return has_parameter() ? std::make_optional(parameter_.value().first) : std::nullopt;
+}
+
+bool Gate::minus_parameter_on_adjoint() const {
+    return has_parameter() ? parameter_.value().second : false;
+}
 
 std::string Gate::str() const {
     if (target_ == control_) {
@@ -92,16 +98,25 @@ Gate Gate::adjoint() const {
             }
         }
     }
+    auto parameter_info = has_parameter()
+                              ? std::make_optional(std::make_pair(
+                                    parameter_.value().first *
+                                        std::complex<double>(1 - 2 * minus_parameter_on_adjoint()),
+                                    minus_parameter_on_adjoint()))
+                              : std::nullopt;
     if (not self_adjoint) {
-        return Gate("adj(" + label_ + ")", target_, control_, adj_gate);
+        // check if label_ is of the form adj(x) and if it is then return Gate(x)
+        if (label_.size() > 4 and label_.substr(0, 4) == "adj(" and label_.back() == ')') {
+            return Gate(label_.substr(4, label_.size() - 5), target_, control_, adj_gate,
+                        parameter_info);
+        }
+        return Gate("adj(" + label_ + ")", target_, control_, adj_gate, parameter_info);
     }
-    return Gate(label_, target_, control_, adj_gate);
+
+    return Gate(label_, target_, control_, adj_gate, parameter_info);
 }
 
 bool Gate::operator==(const Gate& rhs) const {
-    if (label_ != rhs.label_) {
-        return false;
-    }
     if (target_ != rhs.target_) {
         return false;
     }

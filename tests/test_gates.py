@@ -27,6 +27,8 @@ class TestGates:
         coeff1 = computer.coeff(basis1)
         assert coeff0 == approx(1, abs=1.0e-16)
         assert coeff1 == approx(0, abs=1.0e-16)
+        Xadj = X.adjoint()
+        assert Xadj == X
 
 
     def test_Y_gate(self):
@@ -262,6 +264,12 @@ class TestGates:
         with pytest.raises(ValueError):
             gate1.update_parameter(1.0)
 
+        gate1 = gate('R',0,0.5)
+        gate1adj = gate1.adjoint()
+        gate1adjadj = gate1adj.adjoint()
+        assert str(gate1adj) == 'adj(R)0'
+        assert str(gate1adjadj) == 'R0'
+
         gate2 = gate('cR',0,1,1.0)
         assert gate2.nqubits() == 2
         assert gate2.gate_id() == 'cR'
@@ -274,8 +282,87 @@ class TestGates:
         assert gate2.has_parameter() == True
         assert gate2.parameter() == approx(2.0, abs=1.0e-16)
 
+        # test equality of gates with and without parameters
+        assert gate('X',0) == gate('X',0)
+        assert gate('X',0) != gate('X',1)
+        assert gate('R',0,0.5) != gate('R',0,1.5)
+        R = gate('R',0,0.5)
+        Radj = R.adjoint()
+        assert Radj.parameter() == approx(-0.5, abs=1.0e-16)
+        Rm = gate('R',0,-0.5)
+        assert Rm.parameter() == approx(-0.5, abs=1.0e-16)
+        assert Radj == Rm
 
+    def test_param_gate(self):
+        R = gate('R',0,0.5)
+        assert R.has_parameter() == True
+        assert R.parameter() == approx(0.5, abs=1.0e-16)
+        Radj = R.adjoint()
+        assert Radj.parameter() == approx(-0.5, abs=1.0e-16)
+        Rm = gate('R',0,-0.5)
+        assert Rm == Radj
 
+        # test the Rx gate
+        Rx = gate('Rx',0,0.7)
+        assert Rx.has_parameter() == True
+        assert Rx.parameter() == approx(0.7, abs=1.0e-16)
+        Rxadj = Rx.adjoint()
+        assert Rxadj.parameter() == approx(-0.7, abs=1.0e-16)
+        Rxm = gate('Rx',0,-0.7)
+        assert Rxadj == Rxm
+
+        # test the Ry gate
+        Ry = gate('Ry',0,0.7)
+        assert Ry.has_parameter() == True
+        assert Ry.parameter() == approx(0.7, abs=1.0e-16)
+        Ryadj = Ry.adjoint()
+        assert Ryadj.parameter() == approx(-0.7, abs=1.0e-16)
+        Rym = gate('Ry',0,-0.7)
+        assert Ryadj == Rym
+
+        # test the Rz gate
+        Rz = gate('Rz',0,0.7)
+        assert Rz.has_parameter() == True
+        assert Rz.parameter() == approx(0.7, abs=1.0e-16)
+        Rzadj = Rz.adjoint()
+        assert Rzadj.parameter() == approx(-0.7, abs=1.0e-16)
+        Rzm = gate('Rz',0,-0.7)
+        assert Rzadj == Rzm
+
+        # test the rU1 gate
+        rU1 = gate('rU1',0,0.7)
+        assert rU1.has_parameter() == True
+        assert rU1.parameter() == approx(0.7, abs=1.0e-16)
+        rU1adj = rU1.adjoint()
+        assert rU1adj.parameter() == approx(-0.7, abs=1.0e-16)
+        rU1m = gate('rU1',0,-0.7)
+        assert rU1adj == rU1m
+
+        # test the cR gate
+        cR = gate('cR',0,1,0.7)
+        assert cR.has_parameter() == True
+        assert cR.parameter() == approx(0.7, abs=1.0e-16)
+        cRadj = cR.adjoint()
+        assert cRadj.parameter() == approx(-0.7, abs=1.0e-16)
+        cRm = gate('cR',0,1,-0.7)
+        assert cRadj == cRm
+
+        # test the cRz gate
+        cRz = gate('cRz',0,1,0.7)
+        assert cRz.has_parameter() == True
+        assert cRz.parameter() == approx(0.7, abs=1.0e-16)
+        cRzadj = cRz.adjoint()
+        assert cRzadj.parameter() == approx(-0.7, abs=1.0e-16)
+        cRzm = gate('cRz',0,1,-0.7)
+        assert cRzadj == cRzm
+
+        # test the A gate (the exception among the parametrized gates)
+        A = gate('A',0,1,0.7)
+        assert A.has_parameter() == True
+        assert A.parameter() == approx(0.7, abs=1.0e-16)
+        Aadj = A.adjoint()
+        assert Aadj.parameter() == approx(0.7, abs=1.0e-16)
+        assert Aadj == A
 
     def test_op_exp_val_1(self):
         # test direct expectation value measurement
