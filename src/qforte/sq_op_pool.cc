@@ -33,20 +33,23 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref, const std::vector<siz
     // compute integer representing reference determiant
     ref_int_ = 0;
     int multiplier = 1;
-    for (int i = 0; i < ref.size(); i++) {
-        ref_int_ += ref[i] * multiplier;
+    for (const auto& occupancy : ref) {
+        ref_int_ += occupancy * multiplier;
         multiplier = multiplier << 1;
     }
 
     // set orbital spaces
     n_spinorb_ = ref.size();
+    if (n_spinorb_%2 != 0) {
+        throw std::invalid_argument("The total number of spinorbitals must be even!");
+    }
 
     n_occ_alpha_ = 0;
     n_occ_beta_ = 0;
     n_vir_alpha_ = 0;
     n_vir_beta_ = 0;
 
-    int is_alpha = 1;
+    int is_alpha = true;
 
 
     for (const auto& occupancy : ref){
@@ -58,7 +61,7 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref, const std::vector<siz
             n_occ_beta_ += occupancy;
             n_vir_beta_ += occupancy ^ 1;
         }
-        is_alpha ^= 1;
+        is_alpha ^= true;
     }
 
     if (orb_irreps_to_int.empty()) {
@@ -109,7 +112,7 @@ QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool c
 
 void SQOpPool::fill_pool(std::string pool_type){
     if(pool_type=="GSD"){
-        size_t norb = static_cast<int>(n_spinorb_/2);
+        size_t norb = n_spinorb_/2;
         for(size_t i=0; i<norb; i++){
             size_t ia = 2*i;
             size_t ib = 2*i+1;
@@ -335,7 +338,7 @@ void SQOpPool::fill_pool(std::string pool_type){
         // To reproduce the results of older versions of QForte, the dets are sorted
         std::sort(dets_int.begin(), dets_int.end());
 
-        for (const uint64_t det_int : dets_int) {
+        for (const auto& det_int : dets_int) {
             // Create the bitstring of created/annihilated orbitals
             std::bitset<64> excit(ref_int_ ^ det_int);
             std::string excit_str = excit.to_string().substr(64-n_spinorb_);
