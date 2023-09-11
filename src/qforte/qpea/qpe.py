@@ -100,7 +100,7 @@ class QPE(Algorithm):
         E_qpe = E_l if abs(E_l - guess_energy) < abs(E_u - guess_energy) else E_u
 
         res = stats.mode(np.asarray(self._phases))
-        self._mode_phase = res.mode[0]
+        self._mode_phase = res.mode
         E_u = -2 * np.pi * (self._mode_phase + self._guess_periods - 1) / t
         E_l = -2 * np.pi * (self._mode_phase + self._guess_periods - 0) / t
         self._mode_energy = E_l if abs(E_l - guess_energy) < abs(E_u - guess_energy) else E_u
