@@ -49,7 +49,7 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref, const std::vector<siz
     n_vir_alpha_ = 0;
     n_vir_beta_ = 0;
 
-    int is_alpha = true;
+    bool is_alpha = true;
 
 
     for (const auto& occupancy : ref){
@@ -61,7 +61,7 @@ void SQOpPool::set_orb_spaces(const std::vector<int>& ref, const std::vector<siz
             n_occ_beta_ += occupancy;
             n_vir_beta_ += occupancy ^ 1;
         }
-        is_alpha ^= true;
+        is_alpha = !is_alpha;
     }
 
     if (orb_irreps_to_int.empty()) {
@@ -297,7 +297,7 @@ void SQOpPool::fill_pool(std::string pool_type){
         }
 
         std::bitset<64> ref_bin(ref_int_);
-        std::string ref_bin_str = ref_bin.to_string().substr(64-n_spinorb_);
+        auto ref_bin_str = ref_bin.to_string().substr(64-n_spinorb_);
         
         std::string alpha_str = "";
         std::string beta_str = "";
@@ -323,8 +323,8 @@ void SQOpPool::fill_pool(std::string pool_type){
         
         // construct N- and Sz-symmetry preserving determinants
         std::vector<uint64_t> dets_int{};
-        for (const std::string& str_alpha : alpha_permutations) {
-            for (const std::string& str_beta : beta_permutations) {
+        for (const auto& str_alpha : alpha_permutations) {
+            for (const auto& str_beta : beta_permutations) {
                 std::string det_str = "";
                 for (size_t i = 0; i < str_alpha.length(); i++) {
                     det_str += str_beta[i];
@@ -341,17 +341,24 @@ void SQOpPool::fill_pool(std::string pool_type){
         for (const auto& det_int : dets_int) {
             // Create the bitstring of created/annihilated orbitals
             std::bitset<64> excit(ref_int_ ^ det_int);
-            std::string excit_str = excit.to_string().substr(64-n_spinorb_);
-            int excit_rank = std::count(excit_str.begin(), excit_str.end(), '1') / 2;
+            auto excit_str = excit.to_string().substr(64-n_spinorb_);
+            int n_excitation_indices = std::count(excit_str.begin(), excit_str.end(), '1');
+            if (n_excitation_indices%2 != 0) {
+                throw std::invalid_argument("The number of excitation indices must be an even number!");
+            }
+            int excit_rank = n_excitation_indices / 2;
             // Confirm excitation number is non-zero and consider operators with rank <= max_excit_rank
             if (excit_rank != 0 && excit_rank <= max_nbody) {
                 // Get the indices of occupied and unoccupied orbitals
                 std::vector<size_t> occ_idx;
                 std::vector<size_t> unocc_idx;
                 for (size_t i = 0; i < excit_str.size(); i++) {
-                    if (excit_str[i] == '1' && ref_bin_str[i] == '1') {
+                    if (excit_str[i] != '1' ) {
+                        continue;
+                    }
+                    if (ref_bin_str[i] == '1') {
                         occ_idx.push_back(n_spinorb_-i-1);
-                    } else if (excit_str[i] == '1' && ref_bin_str[i] == '0') {
+                    } else if (ref_bin_str[i] == '0') {
                         unocc_idx.push_back(n_spinorb_-i-1);
                     }
                 }
