@@ -7,7 +7,6 @@ The abstract base classes inherited by all algorithm subclasses.
 from abc import ABC, abstractmethod
 import qforte as qf
 from qforte.utils.state_prep import *
-from qforte import find_irrep
 
 class Algorithm(ABC):
     """A class that characterizes the most basic functionality for all

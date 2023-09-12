@@ -5,11 +5,6 @@ class TestNonIterativeEnergyCorrections:
     def test_N2_uccsd_pqe(self):
         # This is a regression test
 
-        Rhh = 4
-        # R = 5.7467083952 * 10 /29
-        # R = 1.310011 * 18 / 10
-        R = 2.5
-
         mol = system_factory(system_type = 'molecule',
                 build_type = 'psi4',
                 basis = 'sto-6g',
