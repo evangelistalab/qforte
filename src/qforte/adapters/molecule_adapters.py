@@ -39,6 +39,9 @@ def create_psi_mol(**kwargs):
     if not use_psi4:
         raise ImportError("Psi4 was not imported correctely.")
 
+    # By default, Psi4 will allow any closed-shell solution. 
+    kwargs.setdefault('scf_docc', None)
+
     # By default, the number of frozen orbitals is set to zero
     kwargs.setdefault('num_frozen_docc', 0)
     kwargs.setdefault('num_frozen_uocc', 0)
@@ -78,6 +81,9 @@ def create_psi_mol(**kwargs):
               'num_frozen_uocc' : kwargs['num_frozen_uocc'],
               'mp2_type': "conv"})
     
+    if kwargs['scf_docc'] is not None:
+        psi4.set_options({'docc': kwargs['scf_docc']})
+
     if kwargs['frozen_uocc'] is not None:
         psi4.set_options({'frozen_uocc': kwargs['frozen_uocc']})
 
