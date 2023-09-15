@@ -277,10 +277,13 @@ def create_psi_mol(**kwargs):
 
         external_data = {}
 
+        external_data['hf_reference'] = {}
+        external_data['hf_reference']['data'] = hf_reference
+        external_data['hf_reference']['description'] = "Occupations of the different spin-orbitals"
         external_data['scalar_energy'] = {}
         external_data['scalar_energy']['data'] = p4_Enuc_ref + frozen_core_energy
         external_data['scalar_energy']['description'] = "scalar energy (sum of nuclear repulsion and frozen core energy"
-
+        
         external_data['oei'] = {}
         external_data['oei']['data'] = []
         for p in range(norbs):
@@ -459,11 +462,14 @@ def create_external_mol(**kwargs):
     except:
         print("Dipole data not found.")
         
-    hf_reference = [0] * external_data['nso']['data']
-    for occ_alpha in range(external_data['na']['data']):
-        hf_reference[occ_alpha * 2] = 1
-    for occ_beta in range(external_data['nb']['data']):
-        hf_reference[occ_beta * 2 + 1] = 1
+    try:
+        hf_reference = external_data['hf_reference']['data']
+    except KeyError: 
+        hf_reference = [0] * external_data['nso']['data']
+        for occ_alpha in range(external_data['na']['data']):
+            hf_reference[occ_alpha * 2] = 1
+        for occ_beta in range(external_data['nb']['data']):
+            hf_reference[occ_beta * 2 + 1] = 1
 
     qforte_mol.hf_reference = hf_reference
 
