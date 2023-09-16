@@ -9,4 +9,4 @@ dependencies:
     - boost
     - yaml
     - pytest
-    - pybind11
+    # - pybind11
