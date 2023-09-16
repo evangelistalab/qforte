@@ -9,4 +9,4 @@ dependencies:
     - boost
     - yaml
     - pytest
-    # - pybind11
+    - psi4 -c psi4/label/dev
