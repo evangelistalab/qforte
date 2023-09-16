@@ -43,4 +43,6 @@ jobs:
     - name: Test with pytest
       run: |
         # conda install pytest
+        ls
+        cd tests
         pytest
