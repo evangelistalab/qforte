@@ -26,6 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name base
+        conda install psi4 -c psi4/label/dev
 
     # - name: Lint with flake8
     #   run: |
