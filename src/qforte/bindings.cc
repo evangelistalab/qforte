@@ -41,6 +41,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("adjoint", &Circuit::adjoint)
         .def("canonicalize_pauli_circuit", &Circuit::canonicalize_pauli_circuit)
         .def("set_parameters", &Circuit::set_parameters)
+        .def("set_parameter", &Circuit::set_parameter)
+        .def("get_parameters", &Circuit::get_parameters)
         .def("get_num_cnots", &Circuit::get_num_cnots)
         .def("str", &Circuit::str)
         .def("__str__", &Circuit::str)
@@ -181,9 +183,9 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", &Computer::str);
 
     py::class_<Gate>(m, "Gate")
+        .def("gate_id", &Gate::gate_id)
         .def("target", &Gate::target)
         .def("control", &Gate::control)
-        .def("gate_id", &Gate::gate_id)
         .def("sparse_matrix", &Gate::sparse_matrix)
         .def("adjoint", &Gate::adjoint)
         .def("nqubits", &Gate::nqubits)
@@ -197,7 +199,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("__eq__", &Gate::operator==)
         .def(
             "update_parameter",
-            [](Gate& gate, std::complex<double> parameter) {
+            [](Gate& gate, double parameter) {
                 if (!gate.has_parameter()) {
                     throw std::invalid_argument("Gate does not have a parameter.");
                 }
@@ -227,16 +229,19 @@ PYBIND11_MODULE(qforte, m) {
     m.def(
         "gate",
         [](std::string type, size_t target, std::complex<double> parameter) {
+            if (parameter.imag() != 0.0) {
+                throw std::invalid_argument("Gate parameter must be real.");
+            }
+
             // only single qubit gates accept this synthax
             auto vec = {"X",  "Y", "Z", "H", "R", "Rx",  "Ry",
                         "Rz", "V", "S", "T", "I", "Rzy", "rU1"};
             if (std::find(vec.begin(), vec.end(), type) != vec.end()) {
-                return make_gate(type, target, target, parameter);
+                return make_gate(type, target, target, parameter.real());
             }
-            std::string msg =
-                fmt::format("make_gate()\ttarget = {}, parameter = {} + {} i, is not a valid "
-                            "quantum gate input for type = {}",
-                            target, parameter.real(), parameter.imag(), type);
+            std::string msg = fmt::format("make_gate()\ttarget = {}, parameter = {} is not a valid "
+                                          "quantum gate input for type = {}",
+                                          target, parameter.real(), type);
             throw std::invalid_argument(msg);
         },
         "type"_a, "target"_a, "parameter"_a = 0.0, "Make a gate.");
@@ -269,7 +274,10 @@ PYBIND11_MODULE(qforte, m) {
     m.def(
         "gate",
         [](std::string type, size_t target, size_t control, std::complex<double> parameter) {
-            return make_gate(type, target, control, parameter);
+            if (parameter.imag() != 0.0) {
+                throw std::invalid_argument("Gate parameter must be real.");
+            }
+            return make_gate(type, target, control, parameter.real());
         },
         "type"_a, "target"_a, "control"_a, "parameter"_a = 0.0, "Make a gate.");
 
@@ -282,7 +290,18 @@ PYBIND11_MODULE(qforte, m) {
             computer.apply_circuit(circuit);
             return computer;
         },
-        "nqubit"_a, "gates"_a, "Prepare a state from a list of gates.");
+        "nqubit"_a, "gates"_a, "A convenience function to prepare a state from a list of gates.");
+
+    m.def(
+        "prepare_computer_from_gates",
+        [](int nqubits, const std::vector<Gate>& gates) {
+            auto computer = Computer(nqubits);
+            for (const auto& gate : gates) {
+                computer.apply_gate(gate);
+            }
+            return computer;
+        },
+        "nqubits"_a, "gates"_a, "A convenience function to prepare a state from a list of gates.");
 
     m.def(
         "add_gate_to_computer",

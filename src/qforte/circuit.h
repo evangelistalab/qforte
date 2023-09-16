@@ -55,7 +55,13 @@ class Circuit {
     Circuit adjoint();
 
     /// reset the circuit with a new set of parameters
-    void set_parameters(const std::vector<std::complex<double>>& params);
+    void set_parameters(const std::vector<double>& params);
+
+    /// return the parameters of this circuit
+    std::vector<double> get_parameters() const;
+
+    /// update the parameters of a single gate
+    void set_parameter(size_t pos, double param);
 
     /// For a circuit of Pauli gates, orders gates from those with smallest-index
     /// target to largest-index target AND combines gates with same target.

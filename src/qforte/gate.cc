@@ -10,7 +10,7 @@ const std::vector<size_t> Gate::index1{0, 1};
 const std::vector<size_t> Gate::index2{0, 1, 2, 3};
 
 Gate::Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4],
-           std::optional<std::pair<std::complex<double>, bool>> parameter)
+           std::optional<std::pair<double, bool>> parameter)
     : label_(label), target_(target), control_(control), parameter_(parameter) {
     for (const auto& i : index2) {
         for (const auto& j : index2) {
@@ -57,7 +57,7 @@ std::string Gate::gate_id() const { return label_; }
 
 bool Gate::has_parameter() const { return parameter_.has_value(); }
 
-std::optional<std::complex<double>> Gate::parameter() const {
+std::optional<double> Gate::parameter() const {
     return has_parameter() ? std::make_optional(parameter_.value().first) : std::nullopt;
 }
 
@@ -101,7 +101,7 @@ Gate Gate::adjoint() const {
     auto parameter_info = has_parameter()
                               ? std::make_optional(std::make_pair(
                                     parameter_.value().first *
-                                        std::complex<double>(1 - 2 * minus_parameter_on_adjoint()),
+                                        static_cast<double>(1 - 2 * minus_parameter_on_adjoint()),
                                     minus_parameter_on_adjoint()))
                               : std::nullopt;
     if (not self_adjoint) {

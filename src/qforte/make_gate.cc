@@ -4,7 +4,7 @@
 
 #include "gate.h"
 
-Gate make_gate(std::string type, size_t target, size_t control, std::complex<double> parameter) {
+Gate make_gate(std::string type, size_t target, size_t control, double parameter) {
     // using namespace std::complex_literals;
     std::complex<double> onei(0.0, 1.0);
     if (target == control) {
@@ -259,6 +259,6 @@ Gate make_control_gate(size_t control, Gate& U) {
     };
     auto parameter_info =
         U.has_parameter() ? std::make_pair(U.parameter().value(), U.minus_parameter_on_adjoint())
-                          : std::optional<std::pair<std::complex<double>, bool>>();
+                          : std::optional<std::pair<double, bool>>();
     return Gate(type, target, control, gate, parameter_info);
 }

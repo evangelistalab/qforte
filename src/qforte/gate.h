@@ -29,7 +29,7 @@ class Gate {
     /// @param gate the 4 x 4 matrix representation of the gate
     /// @param parameter the parameter associated with this gate (default: none)
     Gate(const std::string& label, size_t target, size_t control, std::complex<double> gate[4][4],
-         std::optional<std::pair<std::complex<double>, bool>> parameter = std::nullopt);
+         std::optional<std::pair<double, bool>> parameter = std::nullopt);
 
     /// default copy constructor
     Gate(const Gate& gate) = default;
@@ -47,7 +47,7 @@ class Gate {
     bool has_parameter() const;
 
     /// Return the parameter associated with this gate
-    std::optional<std::complex<double>> parameter() const;
+    std::optional<double> parameter() const;
 
     /// Return if the parameter should be multiplied by -1 when taking the adjoint
     bool minus_parameter_on_adjoint() const;
@@ -90,7 +90,7 @@ class Gate {
 
     /// the parameter associated with this gate and a factor indicating if the parameter should be
     /// multiplied by -1 when taking the adjoint
-    std::optional<std::pair<std::complex<double>, bool>> parameter_;
+    std::optional<std::pair<double, bool>> parameter_;
 
     /// the matrix representatin of this gate.
     /// 1 qubit operators are represented by the top left 2 x 2 submatrix.
@@ -116,8 +116,7 @@ class Gate {
 };
 
 /// Utility function to create a gate from a string
-Gate make_gate(std::string type, size_t target, size_t control,
-               std::complex<double> parameter = 0.0);
+Gate make_gate(std::string type, size_t target, size_t control, double parameter = 0.0);
 
 /// Utility function to create a controlled version of a gate
 Gate make_control_gate(size_t control, Gate& U);

@@ -7,15 +7,14 @@
 #include "computer.h"
 #include "sparse_tensor.h"
 
-void Circuit::set_parameters(const std::vector<std::complex<double>>& params) {
+void Circuit::set_parameters(const std::vector<double>& params) {
     size_t param_idx = 0;
     size_t param_size = params.size();
     for (auto& gate : gates_) {
         if (gate.has_parameter()) {
-            if (param_idx < param_size) {
-                size_t target_qubit = gate.target();
-                size_t control_qubit = gate.control();
-                gate = make_gate(gate.gate_id(), target_qubit, control_qubit, params[param_idx]);
+            // check if the parameter is close to the current value. If so, don't update it
+            if (std::abs(gate.parameter().value() - params[param_idx]) > 1e-12) {
+                gate = make_gate(gate.gate_id(), gate.target(), gate.control(), params[param_idx]);
             }
             param_idx++;
         }
@@ -24,6 +23,27 @@ void Circuit::set_parameters(const std::vector<std::complex<double>>& params) {
         throw std::runtime_error("Circuit::set_parameters: number of parameters does not match "
                                  "number of gates with parameters");
     }
+}
+
+void Circuit::set_parameter(size_t pos, double param) {
+    if (pos >= gates_.size()) {
+        throw std::runtime_error("Circuit::set_parameter: position out of range");
+    }
+    if (!gates_[pos].has_parameter()) {
+        throw std::runtime_error("Circuit::set_parameter: gate does not have a parameter");
+    }
+    gates_[pos] =
+        make_gate(gates_[pos].gate_id(), gates_[pos].target(), gates_[pos].control(), param);
+}
+
+std::vector<double> Circuit::get_parameters() const {
+    std::vector<double> params;
+    for (const auto& gate : gates_) {
+        if (gate.has_parameter()) {
+            params.push_back(gate.parameter().value());
+        }
+    }
+    return params;
 }
 
 void Circuit::insert_gate(size_t pos, const Gate& gate) {
