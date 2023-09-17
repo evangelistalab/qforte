@@ -1,4 +1,4 @@
-from qforte import build_circuit, SQOperator, QubitOperator
+from qforte import build_circuit, SQOperator, QubitOperator, Computer
 
 class TestJordanWigner:
     def test_jw1(self):
@@ -151,7 +151,7 @@ class TestJordanWigner:
                 for n_occupied in [3,4]:
                     for qubit_excitations in [False, True]:
                         # create desired qubit state
-                        comp = qf.Computer(4)
+                        comp = Computer(4)
                         for occupied in range(n_occupied):
                             comp.apply_gate(qf.gate('X', occupied))
                         # transform second-quanitzed operators using JW
@@ -165,10 +165,10 @@ class TestJordanWigner:
             # second-quantized fermionic operators and qubit excitation operators.
             # The uniqueness is guaranteed by the normal ordering of second-quantized
             # operators
-            sq_op1 = qf.SQOperator()
+            sq_op1 = SQOperator()
             sq_op1.add(1,[1,0],[])
             q_op1 = sq_op1.jw_transform(True)
-            sq_op2 = qf.SQOperator()
+            sq_op2 = SQOperator()
             sq_op2.add(-1,[0,1],[])
             q_op2 = sq_op2.jw_transform(True)
             assert q_op1 == q_op2
