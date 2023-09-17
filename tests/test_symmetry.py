@@ -1,12 +1,11 @@
-import pytest
-from pytest import approx
+from pytest import approx, mark
 from unittest.mock import patch
 from io import StringIO
 from qforte import system_factory, char_table, irreps_of_point_groups, UCCNVQE, ADAPTVQE, UCCNPQE
 
 class TestPointGroupSymmetry():
 
-    @pytest.mark.myskip
+    @mark.myskip
     def test_symmetry_attributes(self):
 
         groups = ['c1',
@@ -123,7 +122,7 @@ class TestPointGroupSymmetry():
                 char_table([group, irreps[count]])
                 assert fake_out.getvalue() == char_tables[count]
 
-    @pytest.mark.parametrize("method, options", [
+    @mark.parametrize("method, options", [
         (UCCNVQE, {"pool_type" : 'SD'}),
         (ADAPTVQE, {"pool_type" : 'SD', "avqe_thresh" : 1.0e-3}),
         (UCCNPQE, {"pool_type" : 'SD'})
