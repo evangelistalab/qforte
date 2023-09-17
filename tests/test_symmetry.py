@@ -1,11 +1,11 @@
-from pytest import approx, mark
+from pytest import approx, mark, raises
 from unittest.mock import patch
 from io import StringIO
 from qforte import system_factory, char_table, irreps_of_point_groups, UCCNVQE, ADAPTVQE, UCCNPQE
 
 class TestPointGroupSymmetry():
 
-    @mark.myskip
+    @mark.skip(reason="ambiguous test case")
     def test_symmetry_attributes(self):
 
         groups = ['c1',
@@ -167,5 +167,5 @@ class TestPointGroupSymmetry():
         for idx, group in enumerate(groups):
             assert irreps_of_point_groups(group) == irreps[idx]
 
-        with pytest.raises(ValueError, match='The given point group is not supported. Choose one of:\nc1, c2, ci, cs, d2, c2h, c2v, d2h'):
+        with raises(ValueError, match='The given point group is not supported. Choose one of:\nc1, c2, ci, cs, d2, c2h, c2v, d2h'):
             irreps_of_point_groups('d3h')
