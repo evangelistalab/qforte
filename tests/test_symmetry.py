@@ -6,7 +6,7 @@ from qforte import system_factory, char_table, irreps_of_point_groups, UCCNVQE, 
 
 class TestPointGroupSymmetry():
 
-    @pytest.disable()
+    @pytest.mark.myskip
     def test_symmetry_attributes(self):
 
         groups = ['c1',
