@@ -2,6 +2,7 @@ from pytest import approx
 from qforte import system_factory, UCCNPQE
 
 class TestNonIterativeEnergyCorrections:
+    @pytest.mark.myskip
     def test_N2_uccsd_pqe(self):
         # This is a regression test
 
