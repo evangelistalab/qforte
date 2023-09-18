@@ -29,11 +29,15 @@ PYBIND11_MODULE(qforte, m) {
         .def("add_gate", &Circuit::add_gate)
         .def("add_circuit", &Circuit::add_circuit)
         .def("insert_gate", &Circuit::insert_gate)
-        .def("remove_gate", &Circuit::remove_gate)
-        .def("swap_gates", &Circuit::swap_gates)
-        .def("insert_circuit", &Circuit::insert_circuit)
-        .def("remove_gates", &Circuit::remove_gates)
-        .def("replace_gate", &Circuit::replace_gate)
+        .def("remove_gate", &Circuit::remove_gate, "pos"_a, "Remove a gate at position pos")
+        .def("swap_gates", &Circuit::swap_gates, "pos1"_a, "pos2"_a,
+             "Swap the gates at positions pos1 and pos2")
+        .def("insert_circuit", &Circuit::insert_circuit, "pos"_a, "circ"_a,
+             "Insert a circuit at position pos")
+        .def("remove_gates", &Circuit::remove_gates, "pos1"_a, "pos2"_a,
+             "Remove the gates in the range of positions [pos1,pos2)")
+        .def("replace_gate", &Circuit::replace_gate, "pos"_a, "gate"_a,
+             "Replace the gate at position pos with the given gate")
         .def("gates", &Circuit::gates)
         .def("gate", [](const Circuit& circ, size_t pos) { return circ.gates()[pos]; })
         .def("sparse_matrix", &Circuit::sparse_matrix)

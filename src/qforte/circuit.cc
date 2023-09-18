@@ -9,11 +9,12 @@
 
 void Circuit::set_parameters(const std::vector<double>& params) {
     size_t param_idx = 0;
-    size_t param_size = params.size();
+    auto param_size = params.size();
     for (auto& gate : gates_) {
         if (gate.has_parameter()) {
             // check if the parameter is close to the current value. If so, don't update it
-            if (std::abs(gate.parameter().value() - params[param_idx]) > 1e-12) {
+            if ((std::abs(gate.parameter().value() - params[param_idx]) > 1e-12) and
+                (param_idx < param_size)) {
                 gate = make_gate(gate.gate_id(), gate.target(), gate.control(), params[param_idx]);
             }
             param_idx++;
