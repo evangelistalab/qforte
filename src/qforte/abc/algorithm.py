@@ -7,7 +7,6 @@ The abstract base classes inherited by all algorithm subclasses.
 from abc import ABC, abstractmethod
 import qforte as qf
 from qforte.utils.state_prep import *
-from qforte import find_irrep
 
 class Algorithm(ABC):
     """A class that characterizes the most basic functionality for all
@@ -258,6 +257,8 @@ class AnsatzAlgorithm(Algorithm):
         """
 
         if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+            if self._pool_type == 'sa_SD' and self._compact_excitations:
+                raise ValueError('Compact excitation circuits not yet implemented for sa_SD operator pool.')
             self._pool_obj = qf.SQOpPool()
             if hasattr(self._sys, 'orb_irreps_to_int'):
                 self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)

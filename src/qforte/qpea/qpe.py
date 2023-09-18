@@ -100,7 +100,7 @@ class QPE(Algorithm):
         E_qpe = E_l if abs(E_l - guess_energy) < abs(E_u - guess_energy) else E_u
 
         res = stats.mode(np.asarray(self._phases))
-        self._mode_phase = res.mode[0]
+        self._mode_phase = res.mode
         E_u = -2 * np.pi * (self._mode_phase + self._guess_periods - 1) / t
         E_l = -2 * np.pi * (self._mode_phase + self._guess_periods - 0) / t
         self._mode_energy = E_l if abs(E_l - guess_energy) < abs(E_u - guess_energy) else E_u
@@ -158,10 +158,10 @@ class QPE(Algorithm):
     def print_summary_banner(self):
         print('\n\n                        ==> QPE summary <==')
         print('---------------------------------------------------------------')
-        print('Final QPE Energy:                        ',  round(self._Egs, 10))
-        print('Mode QPE Energy:                         ',  round(self._mode_energy, 10))
-        print('Final QPE phase:                          ', round(self._final_phase, 10))
-        print('Mode QPE phase:                           ', round(self._mode_phase, 10))
+        print('Final QPE Energy:                        ',  np.round(self._Egs, 10))
+        print('Mode QPE Energy:                         ',  np.round(self._mode_energy, 10))
+        print('Final QPE phase:                          ', np.round(self._final_phase, 10))
+        print('Mode QPE phase:                           ', np.round(self._mode_phase, 10))
         print('Number of classical parameters used:      ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:  ', self._n_cnot)
         print('Number of Pauli term measurements:        ', self._n_pauli_trm_measures)
