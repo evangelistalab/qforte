@@ -18,6 +18,16 @@ class CMakeExtension(Extension):
         self.sourcedir = os.path.abspath(sourcedir)
 
 class CMakeBuild(build_ext):
+    build_ext.user_options = build_ext.user_options + [
+        # Notes: the first option is the option string
+        #        the second option is an abbreviated form of an option, which we avoid with None
+        ("enable-codecov", None, "enable code coverage"),
+   ]
+
+    def initialize_options(self):
+        self.enable_codecov = "OFF"
+        return build_ext.initialize_options(self)
+
     def run(self):
         try:
             out = subprocess.check_output(['cmake', '--version'])
@@ -54,6 +64,9 @@ class CMakeBuild(build_ext):
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j2']
+
+        print(f"    ENABLE_CODECOV = {str(self.enable_codecov).upper()}")
+        cmake_args += [f"-DENABLE_CODECOV={str(self.enable_codecov).upper()}"]
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
