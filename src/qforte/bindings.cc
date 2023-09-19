@@ -185,7 +185,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("clear_timings", &Computer::clear_timings)
         .def("str", &Computer::str)
         .def("__str__", &Computer::str)
-        .def("__repr__", &Computer::str);
+        .def("__repr__", &Computer::str)
+        .def("__eq__", [](const Computer& a, const Computer& b) { return a == b; });
 
     py::class_<Gate>(m, "Gate")
         .def("gate_id", &Gate::gate_id)
