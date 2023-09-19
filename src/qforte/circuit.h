@@ -48,6 +48,9 @@ class Circuit {
     /// return a vector of gates
     const std::vector<Gate>& gates() const { return gates_; }
 
+    /// return a vector of gates
+    const Gate& gate(size_t n) const { return gates_[n]; }
+
     /// return the number of gates
     size_t size() const { return gates_.size(); }
 

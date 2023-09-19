@@ -973,6 +973,19 @@ std::string Computer::str() const {
     return join(terms, "\n");
 }
 
+bool operator==(const Computer& qc1, const Computer& qc2) {
+
+    if (qc1.get_nqubit() != qc2.get_nqubit()) {
+        return false;
+    }
+    return std::equal(qc1.get_coeff_vec().begin(), qc1.get_coeff_vec().end(),
+                      qc2.get_coeff_vec().begin(),
+                      [](std::complex<double> a, std::complex<double> b) {
+                          constexpr double epsilon = 1.0e-12; // Choose whatever you need here
+                          return std::norm(a - b) < epsilon;
+                      });
+}
+
 std::complex<double> dot(const Computer& qc1, const Computer& qc2) {
     return std::inner_product(
         qc1.get_coeff_vec().begin(), qc1.get_coeff_vec().end(), qc2.get_coeff_vec().begin(),

@@ -73,10 +73,8 @@ class Gate {
     // Return the adjoint of this gate
     Gate adjoint() const;
 
-    /// Gate equality operator
-    /// @details Two gates are equal if they have the same target, control, and matrix
-    /// Here we do not check for the label or parameter
-    bool operator==(const Gate& rhs) const;
+    static const std::vector<size_t>& get_index1() { return index1; }
+    static const std::vector<size_t>& get_index2() { return index2; }
 
   private:
     /// the label of this gate
@@ -114,6 +112,15 @@ class Gate {
     /// 3 -> |11>
     static const std::vector<size_t> index2;
 };
+
+/// Gate equality operator
+/// @details Two gates are equal if they have the same target, control, and matrix
+/// Here we do not check for the label or parameter
+bool operator==(const Gate& lhs, const Gate& rhs);
+/// Gate inequality operator
+bool operator!=(const Gate& lhs, const Gate& rhs);
+/// Gate inequality operator
+bool operator<(const Gate& lhs, const Gate& rhs);
 
 /// Utility function to create a gate from a string
 Gate make_gate(std::string type, size_t target, size_t control, double parameter = 0.0);

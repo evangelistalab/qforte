@@ -106,4 +106,18 @@ class TestCircuit:
         assert circ.gate(0) == gate('X', 0)
         assert circ.gate(1) == gate('Z', 4)
         assert circ.gate(2) == gate('X', 3)
+
+    def test_circuit3(self):
+        # test the Circuit class copy-constructor
+        circ = Circuit()
+        circ.add(gate('X', 0))
+        circ.add(gate('Y', 1))
+        circ2 = Circuit(circ)
+        assert circ2.size() == 2
+        assert circ2.gates()[0] == gate('X', 0)
+        assert circ2.gates()[1] == gate('Y', 1)
+        assert circ == circ2
+        circ2.add(gate('Z', 2))
+        # the equality test should fail
+        assert circ != circ2
         

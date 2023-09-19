@@ -226,37 +226,8 @@ bool Circuit::is_pauli() const {
     return true;
 }
 
-bool operator==(const Circuit& qc1, const Circuit& qc2) {
-    if (qc1.gates().size() == qc2.gates().size()) {
-        for (int k = 0; k < qc1.gates().size(); k++) {
-            if (qc1.gates()[k].gate_id() != qc2.gates()[k].gate_id()) {
-                return false;
-            } else if (qc1.gates()[k].target() != qc2.gates()[k].target()) {
-                return false;
-            } else if (qc1.gates()[k].control() != qc2.gates()[k].control()) {
-                return false;
-            }
-        }
-        return true;
-    } else {
-        return false;
-    }
+bool operator==(const Circuit& circ1, const Circuit& circ2) {
+    return circ1.gates() == circ2.gates();
 }
 
-bool operator<(const Circuit& qc1, const Circuit& qc2) {
-    if (qc1.size() != qc2.size()) {
-        return qc1.size() < qc2.size();
-    }
-    for (int k = 0; k < qc1.size(); k++) {
-        if (qc1.gates()[k].target() != qc2.gates()[k].target()) {
-            return qc1.gates()[k].target() < qc2.gates()[k].target();
-        }
-        if (qc1.gates()[k].gate_id() != qc2.gates()[k].gate_id()) {
-            return qc1.gates()[k].gate_id() < qc2.gates()[k].gate_id();
-        }
-        if (qc1.gates()[k].control() != qc2.gates()[k].control()) {
-            return qc1.gates()[k].control() < qc2.gates()[k].control();
-        }
-    }
-    return false;
-}
+bool operator<(const Circuit& circ1, const Circuit& circ2) { return circ1.gates() < circ2.gates(); }

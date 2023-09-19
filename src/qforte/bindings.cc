@@ -50,7 +50,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("get_num_cnots", &Circuit::get_num_cnots)
         .def("str", &Circuit::str)
         .def("__str__", &Circuit::str)
-        .def("__repr__", &Circuit::str);
+        .def("__repr__", &Circuit::str)
+        .def("__eq__", [](const Circuit& a, const Circuit& b) { return a == b; });
 
     py::class_<SQOperator>(m, "SQOperator")
         .def(py::init<>())
@@ -200,7 +201,8 @@ PYBIND11_MODULE(qforte, m) {
              "have a parameter")
         .def("__str__", &Gate::str)
         .def("__repr__", &Gate::repr)
-        .def("__eq__", &Gate::operator==)
+        .def("__eq__", [](const Gate& a, const Gate& b) { return a == b; })
+        .def("__neq__", [](const Gate& a, const Gate& b) { return a != b; })
         .def(
             "update_parameter",
             [](Gate& gate, double parameter) {

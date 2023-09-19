@@ -111,6 +111,9 @@ class Computer {
     /// return a vector of the coefficients
     const std::vector<std::complex<double>>& get_coeff_vec() const { return coeff_; };
 
+    /// return the vector of basis states
+    const std::vector<QubitBasis>& get_basis_vec() const { return basis_; };
+
     /// return the coefficient of a basis state
     std::complex<double> coeff(const QubitBasis& basis);
 
@@ -159,9 +162,9 @@ class Computer {
     std::vector<std::complex<double>> new_coeff_;
     /// timings and descriptions accessable in python
     std::vector<std::pair<std::string, double>> timings_;
-    /// the number of one-qubit operations
+    /// the number of one-qubit operations (used for tracking operations)
     size_t none_ops_ = 0;
-    /// the number of two-qubit operations
+    /// the number of two-qubit operations (used for tracking operations)
     size_t ntwo_ops_ = 0;
     /// the threshold for priting a determinant
     double print_threshold_;
@@ -180,6 +183,9 @@ class Computer {
     /// apply a 2qubit gate to the quantum computer with optimized algorithm
     void apply_2qubit_gate(const Gate& qg);
 };
+
+/// test the equality of two quantum computers
+bool operator==(const Computer& qc1, const Computer& qc2);
 
 /// return the dot product of two quantum computers
 std::complex<double> dot(const Computer& qc1, const Computer& qc2);

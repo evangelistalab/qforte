@@ -47,6 +47,12 @@ class TestComputer:
         qc1.set_coeff_vec_from_numpy(np.array(qc2.get_coeff_vec()))
         assert inner_product(qc1, qc2) == approx(1, abs=1.0e-12)
 
+        # test copy-constructor and equality
+        qc2 = Computer(qc1)
+        assert qc1 == qc2
+        qc2.apply_gate(gate('H', 0))
+        assert qc1 != qc2
+
 
     def test_computer_prepare(self):
         # test preparing a state
