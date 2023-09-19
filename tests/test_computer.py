@@ -1,5 +1,5 @@
 from pytest import approx
-from qforte import Computer, Circuit, gate, inner_product, prepare_computer_from_circuit, add_gate_to_computer
+from qforte import Computer, Circuit, gate, inner_product, prepare_computer_from_circuit, prepare_computer_from_gates, add_gate_to_computer
 import numpy as np
 
 class TestComputer:
@@ -57,16 +57,22 @@ class TestComputer:
     def test_computer_prepare(self):
         # test preparing a state
         num_qubits = 2
-        qc1 = Computer(num_qubits)
-        circ = Circuit()
-        circ.add(gate('H', 0))
-        circ.add(gate('H', 1))
-        qc2 = prepare_computer_from_circuit(num_qubits, circ)
-        C1 = np.array(qc2.get_coeff_vec())
-        assert C1 == approx([0.5,0.5,0.5,0.5], abs=1.0e-12)
-        
+
+        # test the add_gate_to_computer function
         qc1 = Computer(num_qubits)
         qc1 = add_gate_to_computer(gate('H', 0), qc1)
         qc1 = add_gate_to_computer(gate('H', 1), qc1)
         C1 = np.array(qc1.get_coeff_vec())
+        # verify that the state is |00> + |01> + |10> + |11>
         assert C1 == approx([0.5,0.5,0.5,0.5], abs=1.0e-12)
+
+        # test the prepare_computer_from_circuit function
+        circ = Circuit()
+        circ.add(gate('H', 0))
+        circ.add(gate('H', 1))
+        qc2 = prepare_computer_from_circuit(num_qubits, circ)
+        assert qc2 == qc1
+        
+        # test the prepare_computer_from_gates function
+        qc3 = prepare_computer_from_gates(num_qubits, [gate('H', 0), gate('H', 1)])
+        assert qc1 == qc3
