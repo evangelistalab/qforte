@@ -34,18 +34,30 @@ class QubitBasis {
     /// flip bin in position 'pos' to opposite boolean invalid_argument
     void flip_bit(size_t pos) { state_ ^= maskbit(pos); }
 
+    /// set this state to a give value
     void set(basis_t state);
 
+    /// set this state to zero
     void zero() { state_ = static_cast<basis_t>(0); }
 
-    // TODO: Rename to get_state.
+    /// return the address of the state
     size_t add() const { return state_; }
 
+    /// return the state
+    basis_t get_state() const { return state_; }
+
+    /// return a string representing the state showing up to nqubit qubits
     std::string str(size_t nqubit) const;
 
+    /// return a string representing the state showing the maximum number of qubits
     std::string default_str() const { return str(max_qubits_); }
 
   private:
     /// the state
     basis_t state_;
 };
+
+/// equality operator
+inline bool operator==(const QubitBasis& lhs, const QubitBasis& rhs) {
+    return lhs.get_state() == rhs.get_state();
+}

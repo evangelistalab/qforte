@@ -24,9 +24,12 @@ class Computer {
     /// default constructor: create a quantum computer with nqubit qubits
     Computer(int nqubit, double print_threshold = 1.0e-6);
 
+    /// default copy constructor
+    Computer(const Computer& other) = default;
+
     /// applies a matrix representation of a Gate, Gircuit, or QubitOoperator
     /// to the quantum state.
-    void apply_matrix(const std::vector<std::vector< std::complex<double> >>& Opmat);
+    void apply_matrix(const std::vector<std::vector<std::complex<double>>>& Opmat);
 
     /// applies a sparse matrix representation of a Gate, Gircuit, or QubitOoperator
     /// to the quantum state.
@@ -57,7 +60,8 @@ class Computer {
     std::vector<double> measure_circuit(const Circuit& qc, size_t n_measurements);
 
     /// measure the readout, i.e. the value of all qubits with indices from na to nb
-    std::vector<std::vector<int>> measure_z_readouts_fast(size_t na, size_t nb, size_t n_measurements);
+    std::vector<std::vector<int>> measure_z_readouts_fast(size_t na, size_t nb,
+                                                          size_t n_measurements);
 
     /// measure the readout, i.e. the value of all target qubits, for the state of the
     /// quanum computer with respect to qc
@@ -70,13 +74,14 @@ class Computer {
     std::vector<std::complex<double>> direct_oppl_exp_val(const QubitOpPool& qopl);
 
     /// measure expectation value for specific operators in an operator pool
-    std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QubitOpPool& qopl, const std::vector<int>& idxs);
+    std::vector<std::complex<double>> direct_idxd_oppl_exp_val(const QubitOpPool& qopl,
+                                                               const std::vector<int>& idxs);
 
     /// measure expectaion value of all operators in an operator pool, where the
     /// operator coefficents have been multipild by mults
-    std::vector<std::complex<double>> direct_oppl_exp_val_w_mults(
-        const QubitOpPool& qopl,
-        const std::vector<std::complex<double>>& mults);
+    std::vector<std::complex<double>>
+    direct_oppl_exp_val_w_mults(const QubitOpPool& qopl,
+                                const std::vector<std::complex<double>>& mults);
 
     /// get the expectation value of the sum of many circuits directly
     /// (ie without simulated measurement)
@@ -91,12 +96,10 @@ class Computer {
     std::complex<double> direct_pauli_circ_exp_val(const Circuit& qc);
 
     /// get the idx I with respect to pauli circuit permutations from qc
-    std::pair< int, std::complex<double> > get_pauli_permuted_idx(
-        size_t I,
-        const std::vector<int>& x_idxs,
-        const std::vector<int>& y_idxs,
-        const std::vector<int>& z_idxs
-        );
+    std::pair<int, std::complex<double>> get_pauli_permuted_idx(size_t I,
+                                                                const std::vector<int>& x_idxs,
+                                                                const std::vector<int>& y_idxs,
+                                                                const std::vector<int>& z_idxs);
 
     /// get the expectation value of a single 1qubit gate directly
     /// (without simulated measurement)
@@ -105,8 +108,11 @@ class Computer {
     /// return a string representing the state of the computer
     std::string str() const;
 
-    /// return a vector of the coeficients
-    std::vector<std::complex<double>> get_coeff_vec() const { return coeff_; };
+    /// return a vector of the coefficients
+    const std::vector<std::complex<double>>& get_coeff_vec() const { return coeff_; };
+
+    /// return the vector of basis states
+    const std::vector<QubitBasis>& get_basis_vec() const { return basis_; };
 
     /// return the coefficient of a basis state
     std::complex<double> coeff(const QubitBasis& basis);
@@ -116,14 +122,14 @@ class Computer {
 
     /// return the number of basis states
     size_t get_nbasis() const { return nbasis_; }
-/// return the number of one-qubit operations
+    /// return the number of one-qubit operations
     size_t none_ops() const { return none_ops_; }
 
     /// return the number of two-qubit operations
     size_t ntwo_ops() const { return ntwo_ops_; }
 
     // set the coefficient vector directly from another coefficient vector
-    void set_coeff_vec(const std::vector<double_c> c_vec) { coeff_ = c_vec; }
+    void set_coeff_vec(const std::vector<double_c>& c_vec) { coeff_ = c_vec; }
 
     /// set the quantum computer to the state
     /// basis_1 * c_1 + basis_2 * c_2 + ...
@@ -131,7 +137,11 @@ class Computer {
     ///  [(basis_1, c_1), (basis_2, c_2), ...]
     void set_state(std::vector<std::pair<QubitBasis, double_c>> state);
 
-    void zero_state();
+    /// reset the quantum computer to the null state (all coefficients are 0)
+    void null_state();
+
+    /// reset the quantum computer to the state |0>
+    void reset();
 
     /// get timings
     std::vector<std::pair<std::string, double>> get_timings() { return timings_; }
@@ -152,9 +162,9 @@ class Computer {
     std::vector<std::complex<double>> new_coeff_;
     /// timings and descriptions accessable in python
     std::vector<std::pair<std::string, double>> timings_;
-    /// the number of one-qubit operations
+    /// the number of one-qubit operations (used for tracking operations)
     size_t none_ops_ = 0;
-    /// the number of two-qubit operations
+    /// the number of two-qubit operations (used for tracking operations)
     size_t ntwo_ops_ = 0;
     /// the threshold for priting a determinant
     double print_threshold_;
@@ -173,5 +183,11 @@ class Computer {
     /// apply a 2qubit gate to the quantum computer with optimized algorithm
     void apply_2qubit_gate(const Gate& qg);
 };
+
+/// test the equality of two quantum computers
+bool operator==(const Computer& qc1, const Computer& qc2);
+
+/// return the dot product of two quantum computers
+std::complex<double> dot(const Computer& qc1, const Computer& qc2);
 
 #endif // _computer_h_
