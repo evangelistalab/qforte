@@ -30,7 +30,8 @@ jobs:
 
     - name: Compile
       run: |
-        echo "[CMakeBuild]\nenable_codecov=on" > setup.cfg
+        echo "[CMakeBuild]" > setup.cfg
+        echo "enable_codecov=on" >> setup.cfg
         cat setup.cfg
         python setup.py install
         
