@@ -30,9 +30,17 @@ jobs:
 
     - name: Compile
       run: |
+        echo "[CMakeBuild]" > setup.cfg
+        echo "enable_codecov=on" >> setup.cfg
+        cat setup.cfg
         python setup.py install
         
     - name: Test with pytest
       run: |
         cd tests
         pytest
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

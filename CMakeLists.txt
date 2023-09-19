@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.4)
 set (CMAKE_CXX_STANDARD 14)
 
 # optionally use OpenMP, if so use OpenMP compatible compiler
-OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)
+OPTION(USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)
+OPTION(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
 
 if(USE_OpenMP)
     set(CMAKE_C_COMPILER "/usr/local/Cellar/llvm/10.0.1/bin/clang")
@@ -67,6 +68,10 @@ if(USE_OpenMP)
       target_link_libraries(qforte PUBLIC OpenMP::OpenMP_CXX)
   endif()
 endif(USE_OpenMP)
+
+if(ENABLE_CODECOV)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+endif()
 
 SET(TEST_DIR "tests")
 SET(TESTS ${SOURCES}
