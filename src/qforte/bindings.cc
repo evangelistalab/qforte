@@ -203,6 +203,11 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_tensor_spin_1bdy", &FCIComputer::apply_tensor_spin_1bdy)
         .def("apply_tensor_spin_12bdy", &FCIComputer::apply_tensor_spin_12bdy)
         .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
+        .def("apply_individual_sqop_term", &FCIComputer::apply_individual_sqop_term)
+        .def("apply_sqop", &FCIComputer::apply_sqop)
+        .def("set_state", &FCIComputer::set_state)
+        .def("get_state", &FCIComputer::get_state)
+        .def("get_state_deep", &FCIComputer::get_state_deep)
         .def("get_hf_dot", &FCIComputer::get_hf_dot)
         .def("str", &FCIComputer::str, 
             py::arg("print_data") = true, 

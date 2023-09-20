@@ -440,8 +440,185 @@ void apply_tensor_spin_12_body(const TensorOperator& top){
     // Stuff
 }
 
-void apply_sqop(const SQOperator& sqop){
-    // Stuff
+void FCIComputer::apply_individual_nbody1_accumulate(
+    const std::complex<double> coeff, 
+    const Tensor& Cin,
+    Tensor& Cout,
+    std::vector<int>& sourcea,
+    std::vector<int>& targeta,
+    std::vector<int>& paritya,
+    std::vector<int>& sourceb,
+    std::vector<int>& targetb,
+    std::vector<int>& parityb)
+{
+    if ((targetb.size() != sourceb.size()) or (sourceb.size() != parityb.size())) {
+        throw std::runtime_error("The sizes of btarget, bsource, and bparity must be the same.");
+    }
+
+    if ((targeta.size() != sourcea.size()) or (sourcea.size() != paritya.size())) {
+        throw std::runtime_error("The sizes of atarget, asource, and aparity must be the same.");
+    }
+
+    for (int i = 0; i < targeta.size(); i++) {
+        int ta_idx = targeta[i] * nbeta_strs_;
+        int sa_idx = sourcea[i] * nbeta_strs_;
+        std::complex<double> pref = coeff * static_cast<std::complex<double>>(paritya[i]);
+        for (int j = 0; j < targetb.size(); j++) {
+            Cout.data()[ta_idx + targetb[j]] += pref * static_cast<std::complex<double>>(parityb[j]) * Cin.read_data()[sa_idx + sourceb[j]];
+        }
+    }
+}
+
+// do i even need idata as an argument?
+void FCIComputer::apply_individual_nbody_accumulate(
+    const std::complex<double> coeff,
+    const Tensor& Cin,
+    Tensor& Cout,
+    const std::vector<int>& daga,
+    const std::vector<int>& undaga, 
+    const std::vector<int>& dagb,
+    const std::vector<int>& undagb)
+{
+
+    if((daga.size() != undaga.size()) or (dagb.size() != undagb.size())){
+        throw std::runtime_error("must be same number of alpha anihilators/creators and beta anihilators/creators.");
+    }
+
+    std::tuple<int, std::vector<int>, std::vector<int>, std::vector<int>> ualfamap = graph_.make_mapping_each(
+        true,
+        daga,
+        undaga);
+
+    if (std::get<0>(ualfamap) == 0) {
+        return;
+    }
+
+    std::tuple<int, std::vector<int>, std::vector<int>, std::vector<int>> ubetamap = graph_.make_mapping_each(
+        false,
+        dagb,
+        undagb);
+
+    if (std::get<0>(ubetamap) == 0) {
+        return;
+    }
+
+    std::vector<int> sourcea(std::get<0>(ualfamap));
+    std::vector<int> targeta(std::get<0>(ualfamap));
+    std::vector<int> paritya(std::get<0>(ualfamap));
+    std::vector<int> sourceb(std::get<0>(ubetamap));
+    std::vector<int> targetb(std::get<0>(ubetamap));
+    std::vector<int> parityb(std::get<0>(ubetamap));
+
+    /// NICK: All this can be done in the make_mapping_each fucntion.
+    /// Maybe try like a make_abbrev_mapping_each
+
+    /// NICK: Might be slow, check this out...
+    for (int i = 0; i < std::get<0>(ualfamap); i++) {
+        sourcea[i] = std::get<1>(ualfamap)[i];
+        targeta[i] = graph_.get_aind_for_str(std::get<2>(ualfamap)[i]);
+        paritya[i] = 1.0 - 2.0 * std::get<3>(ualfamap)[i];
+    }
+
+    for (int i = 0; i < std::get<0>(ubetamap); i++) {
+        sourceb[i] = std::get<1>(ubetamap)[i];
+        targetb[i] = graph_.get_bind_for_str(std::get<2>(ubetamap)[i]);
+        parityb[i] = 1.0 - 2.0 * std::get<3>(ubetamap)[i];
+    }
+
+    /// NICK: Going to leave for potential future troubleshooting
+    // print_vector_uint(graph_.get_astr(), "astr_");
+    // print_vector_uint(graph_.get_bstr(), "bstr_");
+
+    // print_vector(std::get<2>(ualfamap), "std::get<2>(ualfamap)");
+    // print_vector(std::get<2>(ubetamap), "std::get<2>(ubetamap)");
+
+    // print_vector(sourcea, "sourcea");
+    // print_vector(targeta, "targeta");
+    // print_vector(paritya, "paritya");
+
+    // print_vector(sourceb, "sourceb");
+    // print_vector(targetb, "targetb");
+    // print_vector(parityb, "parityb");
+
+    apply_individual_nbody1_accumulate(
+        coeff, 
+        Cin,
+        Cout,
+        sourcea,
+        targeta,
+        paritya,
+        sourceb,
+        targetb,
+        parityb);
+
+}
+
+void FCIComputer::apply_individual_sqop_term(
+    const std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& term,
+    const Tensor& Cin,
+    Tensor& Cout)
+{
+
+    std::vector<int> crea;
+    std::vector<int> anna;
+
+    std::vector<int> creb;
+    std::vector<int> annb;
+
+    for(size_t i = 0; i < std::get<1>(term).size(); i++){
+        if(std::get<1>(term)[i]%2 == 0){
+            crea.push_back(std::floor(std::get<1>(term)[i] / 2));
+        } else {
+            creb.push_back(std::floor(std::get<1>(term)[i] / 2));
+        }
+    }
+
+    for(size_t i = 0; i < std::get<2>(term).size(); i++){
+        if(std::get<2>(term)[i]%2 == 0){
+            anna.push_back(std::floor(std::get<2>(term)[i] / 2));
+        } else {
+            annb.push_back(std::floor(std::get<2>(term)[i] / 2));
+        }
+    }
+
+    if (std::get<1>(term).size() != std::get<2>(term).size()) {
+        throw std::invalid_argument("Each term must have same number of anihilators and creators");
+    }   
+
+    std::vector<size_t> ops1(std::get<1>(term));
+    std::vector<size_t> ops2(std::get<2>(term));
+    ops1.insert(ops1.end(), ops2.begin(), ops2.end());
+
+    int nswaps = parity_sort(ops1);
+
+    apply_individual_nbody_accumulate(
+        pow(-1, nswaps) * std::get<0>(term),
+        Cin,
+        Cout,
+        crea,
+        anna, 
+        creb,
+        annb);
+}
+
+void FCIComputer::apply_sqop(const SQOperator& sqop){
+    Tensor Cin = C_;
+    Tensor Cout({C_.shape()[0], C_.shape()[1]}, "Cout");
+    C_.zero();
+    for (const auto& term : sqop.terms()) {
+        Cout.zero();
+
+        apply_individual_sqop_term(
+            term,
+            Cin,
+            Cout);
+
+        C_.zaxpy(
+            Cout,
+            1.0,
+            1,
+            1);
+    }
 }
 
 /// apply a constant to the FCI quantum computer.
@@ -452,18 +629,36 @@ void scale(const std::complex<double> a);
 //     // Stuff
 // }
 
-void FCIComputer::set_state(const Tensor other_state) {
-    // Stuff
-}
-
-void FCIComputer::zero() {
-    // Stuff
+void FCIComputer::set_state(const Tensor& other_state) {
+    C_.copy_in(other_state);
 }
 
 /// Sets all coefficeints fo the FCI Computer to Zero except the HF Determinant (set to 1).
 void FCIComputer::hartree_fock() {
     C_.zero();
     C_.set({0, 0}, 1.0);
+}
+
+void FCIComputer::print_vector(const std::vector<int>& vec, const std::string& name) {
+    std::cout << "\n" << name << ": ";
+    for (size_t i = 0; i < vec.size(); ++i) {
+        std::cout << static_cast<int>(vec[i]);
+        if (i < vec.size() - 1) {
+           std::cout << ", "; 
+        }
+    }
+    std::cout << std::endl;
+}
+
+void FCIComputer::print_vector_uint(const std::vector<uint64_t>& vec, const std::string& name) {
+    std::cout << "\n" << name << ": ";
+    for (size_t i = 0; i < vec.size(); ++i) {
+        std::cout << vec[i];
+        if (i < vec.size() - 1) {
+            std::cout << ", "; 
+        }
+    }
+    std::cout << std::endl;
 }
 
 

@@ -37,7 +37,7 @@ public:
 
     std::vector<std::vector<std::vector<int>>> map_to_deexc(
         const Spinmap& mappings, 
-        int states, 
+        int states,
         int norbs,
         int nele);
 
@@ -143,6 +143,13 @@ public:
     /// return the alfa/beta bitstrings
     std::vector<uint64_t> get_astr() const { return astr_;  }
     std::vector<uint64_t> get_bstr() const { return bstr_;  }
+
+    /// return the alfa/beta bitstrings
+    int get_astr_at_idx(int idx) const { return static_cast<int>(astr_[idx]);  }
+    int get_bstr_at_idx(int idx) const { return static_cast<int>(bstr_[idx]);  }
+
+    int get_aind_for_str(int str) const { return static_cast<int>(aind_.at(static_cast<uint64_t>(str)));  }
+    int get_bind_for_str(int str) const { return static_cast<int>(bind_.at(static_cast<uint64_t>(str)));  }
 
     std::unordered_map<uint64_t, size_t> get_aind() const { return aind_; }
     std::unordered_map<uint64_t, size_t> get_bind() const { return bind_; }
