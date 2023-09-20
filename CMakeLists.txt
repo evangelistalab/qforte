@@ -6,14 +6,24 @@ project(qforte)
 set (CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Add profiling flags for clang
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-endif()
-
 # optionally use OpenMP, if so use OpenMP compatible compiler
 OPTION(USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)
 OPTION(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
+
+# Add profiling flags for clang
+if(ENABLE_CODECOV)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message("-- Enabling code coverage for Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        message("-- Enabling code coverage for GCC")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+    endif()
+endif()
+
+
 
 # if(USE_OpenMP)
 #     set(CMAKE_C_COMPILER "/usr/local/Cellar/llvm/10.0.1/bin/clang")
@@ -48,11 +58,9 @@ set(SOURCE_DIR "src/qforte")
 
 # Tell CMake that headers are also in SOURCE_DIR
 include_directories(${SOURCE_DIR})
-#set(SOURCES "${SOURCE_DIR}/math.cc")
 
 # Generate Python module
 add_subdirectory(lib/pybind11)
-# find_package(pybind11 REQUIRED)
 add_subdirectory(lib/fmt)
 pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
     "${SOURCE_DIR}/helpers.cc"
@@ -71,17 +79,15 @@ pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
 
 target_link_libraries(qforte PRIVATE fmt-header-only)
 
-# # specify open MP flags
-# if(USE_OpenMP)
-#   find_package(OpenMP REQUIRED)
-#   if(OpenMP_CXX_FOUND)
-#       target_link_libraries(qforte PUBLIC OpenMP::OpenMP_CXX)
-#   endif()
-# endif(USE_OpenMP)
+# specify open MP flags
+if(USE_OpenMP)
+  find_package(OpenMP REQUIRED)
+  if(OpenMP_CXX_FOUND)
+      target_link_libraries(qforte PUBLIC OpenMP::OpenMP_CXX)
+  endif()
+endif(USE_OpenMP)
 
-# if(ENABLE_CODECOV)
-#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
-# endif()
+
 
 SET(TEST_DIR "tests")
 SET(TESTS ${SOURCES}
