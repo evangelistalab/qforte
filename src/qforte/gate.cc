@@ -1,4 +1,4 @@
-// #include "fmt/format.h"
+#include "fmt/format.h"
 
 #include "gate.h"
 #include "qubit_basis.h"
