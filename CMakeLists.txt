@@ -69,8 +69,9 @@ if(USE_OpenMP)
   endif()
 endif(USE_OpenMP)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
 if(ENABLE_CODECOV)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 endif()
 
 SET(TEST_DIR "tests")
