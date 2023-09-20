@@ -4,7 +4,7 @@
 #include <functional>
 #include <stdexcept>
 
-// #include "fmt/format.h"
+#include "fmt/format.h"
 
 #include "qubit_basis.h"
 #include "circuit.h"
