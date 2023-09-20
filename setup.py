@@ -69,9 +69,9 @@ class CMakeBuild(build_ext):
         cmake_args += [f"-DENABLE_CODECOV={str(self.enable_codecov).upper()}"]
 
         env = os.environ.copy()
-        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get('CXXFLAGS', ''),
-            self.distribution.get_version())
+        # env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
+        #     env.get('CXXFLAGS', ''),
+        #     self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args,
@@ -79,8 +79,8 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args,
                               cwd=self.build_temp)
         # Copy *_test file to tests directory
-        test_bin = os.path.join(self.build_temp, 'qforte_test')
-        self.copy_test_file(test_bin)
+        # test_bin = os.path.join(self.build_temp, 'qforte_test')
+        # self.copy_test_file(test_bin)
         print() # Add empty line for nicer output
 
     def copy_test_file(self, src_file):

@@ -1,6 +1,6 @@
 #include <stdexcept>
 
-#include "fmt/format.h"
+// #include "fmt/format.h"
 
 #include "gate.h"
 
@@ -231,8 +231,8 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
     }
     // If you reach this section then the gate type is not implemented or it is invalid.
     // So we throw an exception that propagates to Python and return the identity
-    std::string msg = fmt::format("make_gate()\ntype = {} is not a valid quantum gate type", type);
-    throw std::invalid_argument(msg);
+    // std::string msg = fmt::format("make_gate()\ntype = {} is not a valid quantum gate type",
+    // type); throw std::invalid_argument(msg);
     std::complex<double> gate[4][4]{
         {1.0, 0.0, 0.0, 0.0},
         {0.0, 1.0, 0.0, 0.0},
@@ -246,10 +246,10 @@ Gate make_control_gate(size_t control, Gate& U) {
     // using namespace std::complex_literals;
     std::string type = "cU";
     size_t target = U.target();
-    if (target == control) {
-        std::string msg = fmt::format("Cannot create Control-U where targer == control !");
-        throw std::invalid_argument(msg);
-    }
+    // if (target == control) {
+    //     std::string msg = fmt::format("Cannot create Control-U where targer == control !");
+    //     throw std::invalid_argument(msg);
+    // }
     const auto& mat = U.matrix();
     std::complex<double> gate[4][4]{
         {1.0, 0.0, 0.0, 0.0},
