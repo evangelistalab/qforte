@@ -34,10 +34,14 @@ jobs:
         
     - name: Test with pytest
       run: |
+        lcov --directory . --zerocounters
         cd tests
         pytest
-        ls -l
-        cd ..
+        ls -la
+        cd ..        
+        lcov --directory . --capture --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system-files
+        lcov --list coverage.info #debug info
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
