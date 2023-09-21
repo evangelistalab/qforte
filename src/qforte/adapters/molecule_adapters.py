@@ -37,15 +37,23 @@ def create_psi_mol(**kwargs):
                                charge = charge)
 
     if not use_psi4:
-        raise ImportError("Psi4 was not imported correctely.")
+        raise ImportError("Psi4 was not imported correctly.")
 
-    # By default, Psi4 will allow any closed-shell solution. 
+    #The irreps to be doubly occupied in SCF.
+    #e.g. for BeH2 in C2v, we could have:
+    #[2, 0, 0, 1] for an A1A1B2 determinant.
     kwargs.setdefault('scf_docc', None)
+
+    #Avoid rotations of the molecule 
+    kwargs.setdefault('no_reorient', False)
+    #Avoid translations of the molecule 
+    kwargs.setdefault('no_com', False)
 
     # By default, the number of frozen orbitals is set to zero
     kwargs.setdefault('num_frozen_docc', 0)
     kwargs.setdefault('num_frozen_uocc', 0)
     kwargs.setdefault('frozen_uocc', None)
+    
 
     # run_scf is not read, because we always run SCF to get a wavefunction object.
     kwargs.setdefault('run_mp2', False)
@@ -62,6 +70,11 @@ def create_psi_mol(**kwargs):
         p4_geom_str += f"\n{geom_line[0]}  {geom_line[1][0]}  {geom_line[1][1]}  {geom_line[1][2]}"
     p4_geom_str += f"\nsymmetry {kwargs['symmetry']}"
     p4_geom_str += f"\nunits angstrom"
+    if kwargs["no_reorient"] == True:
+        p4_geom_str += f"\nno_reorient"
+    if kwargs["no_com"] == True:
+        p4_geom_str += f"\nno_com"
+    
 
     print(' ==> Psi4 geometry <==')
     print('-------------------------')
