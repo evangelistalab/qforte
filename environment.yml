@@ -9,3 +9,4 @@ dependencies:
     - boost
     - yaml
     - pytest
+    - conda-forge::lcov

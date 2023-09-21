@@ -18,16 +18,6 @@ class CMakeExtension(Extension):
         self.sourcedir = os.path.abspath(sourcedir)
 
 class CMakeBuild(build_ext):
-    build_ext.user_options = build_ext.user_options + [
-        # Notes: the first option is the option string
-        #        the second option is an abbreviated form of an option, which we avoid with None
-        ("enable-codecov", None, "enable code coverage"),
-   ]
-
-    def initialize_options(self):
-        self.enable_codecov = "OFF"
-        return build_ext.initialize_options(self)
-
     def run(self):
         try:
             out = subprocess.check_output(['cmake', '--version'])
@@ -65,15 +55,19 @@ class CMakeBuild(build_ext):
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j2']
 
-        print(f"    ENABLE_CODECOV = {str(self.enable_codecov).upper()}")
-        cmake_args += [f"-DENABLE_CODECOV={str(self.enable_codecov).upper()}"]
-
         env = os.environ.copy()
+
+        my_variable = env.get('QFORTE_CODECOV', 'OFF')
+        print(f"    ENABLE_CODECOV = {my_variable.upper()}")
+        cmake_args += [f"-DCODE_COVERAGE={my_variable.upper()}"]
+
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get('CXXFLAGS', ''),
             self.distribution.get_version())
+
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
+            
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args,
                               cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args,
