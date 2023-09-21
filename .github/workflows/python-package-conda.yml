@@ -30,9 +30,6 @@ jobs:
 
     - name: Compile
       run: |
-        echo "[CMakeBuild]" > setup.cfg
-        echo "enable_codecov=on" >> setup.cfg
-        cat setup.cfg
         QFORTE_CODECOV=ON python setup.py develop
         
     - name: Test with pytest
