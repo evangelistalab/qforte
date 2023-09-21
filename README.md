@@ -2,7 +2,7 @@ Qforte
 ==============================
 [//]: # (Badges)
 
-![Travis Build Status](https://travis-ci.org/evangelistalab/qforte.svg?branch=master)
+[![Python Package using Conda](https://github.com/evangelistalab/qforte/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/evangelistalab/qforte/actions/workflows/python-package-conda.yml)
 [![Documentation Status](https://readthedocs.org/projects/qforte/badge/?version=latest)](https://qforte.readthedocs.io/en/latest/?badge=latest)
 
 
