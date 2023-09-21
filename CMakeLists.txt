@@ -8,10 +8,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # optionally use OpenMP, if so use OpenMP compatible compiler
 OPTION(USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)
-OPTION(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
+OPTION(ENABLE_CODECOV "Enable compilation with code coverage flags" ON)
 
 # Add profiling flags for clang
 if(ENABLE_CODECOV)
+    message("-- Enabling code coverage")
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message("-- Enabling code coverage for Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
