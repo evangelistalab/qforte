@@ -42,9 +42,7 @@ fci_comp2 = qf.FCIComputer(nel=nel, sz=sz, norb=norb)
 # For Random Stae
 random_array = np.random.rand(fci_comp.get_state().shape()[0], fci_comp.get_state().shape()[1])
 random = np.array(random_array, dtype = np.dtype(np.complex128))
-
 Crand = qf.Tensor(fci_comp.get_state().shape(), "Crand")
-
 Crand.fill_from_nparray(random.ravel(), Crand.shape())
 rand_nrm = Crand.norm()
 Crand.scale(1/rand_nrm)

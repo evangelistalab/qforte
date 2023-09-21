@@ -87,6 +87,60 @@ class FCIComputer {
     /// apply a 1-body and 2-body TensorOperator to the current state 
     void apply_tensor_spin_12_body(const TensorOperator& top);
 
+    std::pair<std::vector<int>, std::vector<int>> evaluate_map(
+      const std::vector<int>& crea,
+      const std::vector<int>& anna,
+      const std::vector<int>& creb,
+      const std::vector<int>& annb); 
+
+    // opa : index list for alpha creation operators
+    // oha : index list for alpha annihilation operators
+    // opb : index list for beta creation operators
+    // ohb : index list for beta annihilation operators
+    void apply_cos_inplace(
+      const std::complex<double> time,
+      const std::complex<double> coeff,
+      const std::vector<int>& crea,
+      const std::vector<int>& anna,
+      const std::vector<int>& creb,
+      const std::vector<int>& annb,
+      Tensor& Cout);
+
+    int isolate_number_operators(
+      const std::vector<int>& cre,
+      const std::vector<int>& ann,
+      std::vector<int>& crework,
+      std::vector<int>& annwork,
+      std::vector<int>& number); 
+
+    /// A lower-level helper function that applies the exponential of a
+    /// two-term (hermitian) SQOperator to the FCIComputer.
+    void evolve_individual_nbody_hard(
+      const std::complex<double> time,
+      const std::complex<double> coeff,
+      const Tensor& Cin,
+      Tensor& Cout,
+      const std::vector<int>& crea,
+      const std::vector<int>& anna,
+      const std::vector<int>& creb,
+      const std::vector<int>& annb); 
+
+    /// An intermediate function that applies the exponential of a
+    /// two-term (hermitian) SQOperator to the FCIComputer.
+    void evolve_individual_nbody(
+      const std::complex<double> time,
+      const SQOperator& sqop,
+      const Tensor& Cin,
+      Tensor& Cout);
+
+    /// A function that applies the exponential of a
+    /// two-term (hermitian) SQOperator to the FCIComputer.
+    /// The operator is multipled by by the evolution time
+    /// Onus on the user to assure evolution is unitary.
+    void apply_sqop_evolution(
+      const std::complex<double> time,
+      const SQOperator& sqop);
+
     /// A lower-level helper function that applies a SQOperator
     /// term to the FCIComputer.
     void apply_individual_nbody1_accumulate(

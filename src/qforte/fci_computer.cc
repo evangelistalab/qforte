@@ -401,6 +401,7 @@ Tensor FCIComputer::calculate_coeff_spin_with_dvec(std::pair<Tensor, Tensor>& dv
     return Cnew;
 }
 
+/// NICK: make this more c++ style, not a fan of the raw pointers :(
 void FCIComputer::apply_array_1bdy(
     Tensor& out,
     const std::vector<int>& dexc,
@@ -439,6 +440,266 @@ void FCIComputer::apply_array_1bdy(
 void apply_tensor_spin_12_body(const TensorOperator& top){
     // Stuff
 }
+
+std::pair<std::vector<int>, std::vector<int>> FCIComputer::evaluate_map(
+    const std::vector<int>& crea,
+    const std::vector<int>& anna,
+    const std::vector<int>& creb,
+    const std::vector<int>& annb) 
+{
+    std::vector<int> amap(nalfa_strs_);
+    std::vector<int> bmap(nbeta_strs_);
+
+    uint64_t apmask = graph_.reverse_integer_index(crea);
+    uint64_t ahmask = graph_.reverse_integer_index(anna);
+    uint64_t bpmask = graph_.reverse_integer_index(creb);
+    uint64_t bhmask = graph_.reverse_integer_index(annb);
+
+    int acounter = 0;
+    for (int index = 0; index < nalfa_strs_; ++index) {
+        int current = graph_.get_astr_at_idx(index);
+        if (((~current) & apmask) == 0 && (current & ahmask) == 0) {
+            amap[acounter] = index;
+            acounter++;
+        }
+    }
+
+    int bcounter = 0;
+    for (int index = 0; index < nbeta_strs_; ++index) {
+        int current = graph_.get_bstr_at_idx(index);
+        if (((~current) & bpmask) == 0 && (current & bhmask) == 0) {
+            bmap[bcounter] = index;
+            bcounter++;
+        }
+    }
+    amap.resize(acounter);
+    bmap.resize(bcounter);
+
+    return std::make_pair(amap, bmap);
+}
+
+void FCIComputer::apply_cos_inplace(
+    const std::complex<double> time,
+    const std::complex<double> coeff,
+    const std::vector<int>& crea,
+    const std::vector<int>& anna,
+    const std::vector<int>& creb,
+    const std::vector<int>& annb,
+    Tensor& Cout)
+{
+    const std::complex<double> cabs = std::abs(coeff);
+    const std::complex<double> factor = std::cos(time * cabs);
+
+    std::pair<std::vector<int>, std::vector<int>> maps = evaluate_map(crea, anna, creb, annb);
+
+    if (maps.first.size() != 0 and maps.second.size() != 0){
+        for (size_t i = 0; i < maps.first.size(); i++){
+            for (size_t j = 0; j < maps.second.size(); j++){
+                Cout.data()[maps.first[i] * nbeta_strs_ +  maps.second[j]] *= factor;
+            }
+        }       
+    }
+}
+
+int FCIComputer::isolate_number_operators(
+    const std::vector<int>& cre,
+    const std::vector<int>& ann,
+    std::vector<int>& crework,
+    std::vector<int>& annwork,
+    std::vector<int>& number) 
+{
+
+    int par = 0;
+    for (int current : cre) {
+        if (std::find(ann.begin(), ann.end(), current) != ann.end()) {
+            auto index1 = std::find(crework.begin(), crework.end(), current);
+            auto index2 = std::find(annwork.begin(), annwork.end(), current);
+            par += static_cast<int>(crework.size()) - (index1 - crework.begin() + 1) + (index2 - annwork.begin());
+
+            crework.erase(index1);
+            annwork.erase(index2);
+            number.push_back(current);
+        }
+    }
+    return par;
+}
+
+void FCIComputer::evolve_individual_nbody_hard(
+    const std::complex<double> time,
+    const std::complex<double> coeff,
+    const Tensor& Cin,  
+    Tensor& Cout,       
+    const std::vector<int>& crea,
+    const std::vector<int>& anna,
+    const std::vector<int>& creb,
+    const std::vector<int>& annb) 
+{
+    std::vector<int> dagworka(crea);
+    std::vector<int> dagworkb(creb);
+    std::vector<int> undagworka(anna);
+    std::vector<int> undagworkb(annb);
+    std::vector<int> numbera;
+    std::vector<int> numberb;
+
+    int parity = 0;
+    parity += isolate_number_operators(
+        crea,
+        anna,
+        dagworka,
+        undagworka,
+        numbera);
+
+    parity += isolate_number_operators(
+        creb,
+        annb,
+        dagworkb,
+        undagworkb,
+        numberb);
+
+    std::complex<double> ncoeff = coeff * std::pow(-1.0, parity);
+    std::complex<double> absol = std::abs(ncoeff);
+    std::complex<double> sinfactor = std::sin(time * absol) / absol;
+
+    std::vector<int> numbera_dagworka(numbera.begin(), numbera.end());
+    numbera_dagworka.insert(numbera_dagworka.end(), dagworka.begin(), dagworka.end());
+
+    std::vector<int> numberb_dagworkb(numberb.begin(), numberb.end());
+    numberb_dagworkb.insert(numberb_dagworkb.end(), dagworkb.begin(), dagworkb.end());
+
+    std::cout << "\n Cout Before Cos Application \n" << Cout.str() << std::endl;
+
+    apply_cos_inplace(
+        time,
+        ncoeff,
+        numbera_dagworka,
+        undagworka,
+        numberb_dagworkb,
+        undagworkb,
+        Cout);
+
+    std::vector<int> numbera_undagworka(numbera.begin(), numbera.end());
+    numbera_undagworka.insert(numbera_undagworka.end(), undagworka.begin(), undagworka.end());
+
+    std::vector<int> numberb_undagworkb(numberb.begin(), numberb.end());
+    numberb_undagworkb.insert(numberb_undagworkb.end(), undagworkb.begin(), undagworkb.end());
+
+    apply_cos_inplace(
+        time,
+        ncoeff,
+        numbera_undagworka,
+        dagworka,
+        numberb_undagworkb,
+        dagworkb,
+        Cout);
+
+    std::cout << "\n Cout After Cos Application \n" << Cout.str() << std::endl;
+
+    int phase = std::pow(-1, (crea.size() + anna.size()) * (creb.size() + annb.size()));
+    std::complex<double> work_cof = std::conj(coeff) * static_cast<double>(phase) * std::complex<double>(0.0, -1.0);
+
+    apply_individual_nbody_accumulate(
+        work_cof * sinfactor,
+        Cin,
+        Cout, 
+        anna,
+        crea,
+        annb,
+        creb);
+
+    std::cout << "\n Cout After First Accumulate Application \n" << Cout.str(true, true) << std::endl;
+
+    apply_individual_nbody_accumulate(
+        coeff * std::complex<double>(0.0, -1.0) * sinfactor,
+        Cin,
+        Cout, 
+        crea,
+        anna,
+        creb,
+        annb);
+
+    std::cout << "\n Cout After Second Accumulate Application \n" << Cout.str(true, true) << std::endl;
+}
+
+void FCIComputer::evolve_individual_nbody(
+    const std::complex<double> time,
+    const SQOperator& sqop,
+    const Tensor& Cin,
+    Tensor& Cout) 
+{
+
+    if (sqop.terms().size() != 2) {
+        throw std::invalid_argument("Individual n-body code is called with multiple terms");
+    }
+
+    /// NICK: TODO, implement a hermitian check, at least for two term SQOperators
+    // sqop.hermitian_check();
+
+    const auto term = sqop.terms()[0];
+
+    std::vector<int> crea;
+    std::vector<int> anna;
+    std::vector<int> creb;
+    std::vector<int> annb;
+
+    for(size_t i = 0; i < std::get<1>(term).size(); i++){
+        if(std::get<1>(term)[i]%2 == 0){
+            crea.push_back(std::floor(std::get<1>(term)[i] / 2));
+        } else {
+            creb.push_back(std::floor(std::get<1>(term)[i] / 2));
+        }
+    }
+
+    for(size_t i = 0; i < std::get<2>(term).size(); i++){
+        if(std::get<2>(term)[i]%2 == 0){
+            anna.push_back(std::floor(std::get<2>(term)[i] / 2));
+        } else {
+            annb.push_back(std::floor(std::get<2>(term)[i] / 2));
+        }
+    }
+
+    /// NICK: May not need, or may calculate at one level deeper.
+    // int nswaps = (crea.size() + anna.size()) * (creb.size() + annb.size());
+    // nswaps += crea.size() * (crea.size() - 1) % 2;
+    // nswaps += creb.size() * (creb.size() - 1) % 2;
+    // nswaps += anna.size() * (anna.size() - 1) % 2;
+    // nswaps += annb.size() * (annb.size() - 1) % 2;
+
+    std::vector<size_t> ops1(std::get<1>(term));
+    std::vector<size_t> ops2(std::get<2>(term));
+    ops1.insert(ops1.end(), ops2.begin(), ops2.end());
+
+    int nswaps = parity_sort(ops1);
+
+    std::complex<double> parity = std::pow(-1, nswaps);
+
+    if (crea.size() == anna.size() && creb.size() == annb.size()) {
+        evolve_individual_nbody_hard(
+            time,
+            parity * std::get<0>(term),
+            Cin,
+            Cout,
+            crea,
+            anna, 
+            creb,
+            annb);
+
+    } else {
+        throw std::invalid_argument("Evolved state must remain in spin and particle-number symmetry sector");
+    }
+}
+
+void FCIComputer::apply_sqop_evolution(
+      const std::complex<double> time,
+      const SQOperator& sqop)
+{
+    Tensor Cin = C_;
+    evolve_individual_nbody(
+        time,
+        sqop,
+        Cin,
+        C_); 
+}
+
 
 void FCIComputer::apply_individual_nbody1_accumulate(
     const std::complex<double> coeff, 
@@ -601,23 +862,15 @@ void FCIComputer::apply_individual_sqop_term(
         annb);
 }
 
+/// NICK: Check out  accumulation, don't need to do it this way..
 void FCIComputer::apply_sqop(const SQOperator& sqop){
     Tensor Cin = C_;
-    Tensor Cout({C_.shape()[0], C_.shape()[1]}, "Cout");
     C_.zero();
     for (const auto& term : sqop.terms()) {
-        Cout.zero();
-
         apply_individual_sqop_term(
             term,
             Cin,
-            Cout);
-
-        C_.zaxpy(
-            Cout,
-            1.0,
-            1,
-            1);
+            C_);
     }
 }
 

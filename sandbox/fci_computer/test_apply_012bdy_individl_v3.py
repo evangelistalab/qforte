@@ -54,12 +54,6 @@ elif(reference == 'random'):
     fci_comp.set_state(Crand)
     fci_comp2.set_state(Crand)
 
-
-fock_comp = qf.Computer(norb * 2)
-Uhf = qf.utils.state_prep.build_Uprep(ref, 'occupation_list')
-fock_comp.apply_circuit(Uhf)
- 
-qb_ham = mol.sq_hamiltonian.jw_transform()
  
 dim = 2*norb
 max_nbody = 2
@@ -72,13 +66,6 @@ Top = qf.TensorOperator(
 print("\n SQOP Stuff")
 print("===========================")
 sq0, sq1, sq2 = mol.sq_hamiltonian.split_by_rank(False)
-# sqop = qf.SQOperator()
-# sqop.add_op(sq1)
-# sqop.add_op(sq2)
- 
-t_ap012bdy_fock = time.perf_counter()
-Eo_fock = fock_comp.direct_op_exp_val(qb_ham)
-t_ap012bdy_fock = time.perf_counter() - t_ap012bdy_fock
 
  
 # so all seems to be working except
@@ -99,7 +86,11 @@ Eo_fci = fci_comp.get_hf_dot()
 
 
 t_ap012bdy_fci2 = time.perf_counter()
+
+# Want to try power method!
 fci_comp2.apply_sqop(mol.sq_hamiltonian)
+
+
 t_ap012bdy_fci2 = time.perf_counter() - t_ap012bdy_fci2
 Eo_fci2 = fci_comp2.get_hf_dot() 
  

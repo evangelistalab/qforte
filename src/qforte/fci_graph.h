@@ -122,6 +122,12 @@ public:
         return count;
     }
 
+    uint64_t reverse_integer_index(const std::vector<int>& occupations){
+        uint64_t string = 0;
+        for(int pos : occupations){ string = set_bit(string, pos); }
+        return string;
+    }
+
     uint64_t set_bit(uint64_t string, int pos) {
         return string | (1ULL << pos);
     }

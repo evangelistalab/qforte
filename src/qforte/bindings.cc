@@ -205,6 +205,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
         .def("apply_individual_sqop_term", &FCIComputer::apply_individual_sqop_term)
         .def("apply_sqop", &FCIComputer::apply_sqop)
+        .def("apply_sqop_evolution", &FCIComputer::apply_sqop_evolution)
         .def("set_state", &FCIComputer::set_state)
         .def("get_state", &FCIComputer::get_state)
         .def("get_state_deep", &FCIComputer::get_state_deep)
