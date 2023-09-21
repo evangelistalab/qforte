@@ -8,21 +8,38 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # optionally use OpenMP, if so use OpenMP compatible compiler
 OPTION(USE_OpenMP "Use OpenMP to enamble <omp.h>" OFF)
-OPTION(ENABLE_CODECOV "Enable compilation with code coverage flags" ON)
+OPTION(CODE_COVERAGE "Enable compilation with code coverage flags" OFF)
 
 # Add profiling flags for clang
-if(ENABLE_CODECOV)
-    message("-- Enabling code coverage")
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    message("-- Enabling code coverage for Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-    endif()
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  message("-- Enabling code coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 
-    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        message("-- Enabling code coverage for GCC")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
-    endif()
-endif()
+  # # Add required flags (GCC & LLVM/Clang)
+  # target_compile_options(qforte
+  #   -O0        # no optimization
+  #   -g         # generate debug info
+  #   --coverage # sets all required flags
+  # )
+  # if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+  #   target_link_options(qforte --coverage)
+  # else()
+  #   target_link_libraries(qforte --coverage)
+  # endif()
+endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+
+#if(ENABLE_CODECOV)
+#    message("-- Enabling code coverage")
+#    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#    message("-- Enabling code coverage for Clang")
+#        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+#    endif()
+#
+#    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+#        message("-- Enabling code coverage for GCC")
+#        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+#    endif()
+#endif()
 
 
 

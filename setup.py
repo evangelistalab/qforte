@@ -59,7 +59,7 @@ class CMakeBuild(build_ext):
 
         my_variable = env.get('QFORTE_CODECOV', 'OFF')
         print(f"    ENABLE_CODECOV = {my_variable.upper()}")
-        cmake_args += [f"-DENABLE_CODECOV={my_variable.upper()}"]
+        cmake_args += [f"-DCODE_COVERAGE={my_variable.upper()}"]
 
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get('CXXFLAGS', ''),
