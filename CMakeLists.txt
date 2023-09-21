@@ -12,9 +12,15 @@ OPTION(CODE_COVERAGE "Enable compilation with code coverage flags" OFF)
 
 # Add profiling flags for clang
 if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  message("-- Enabling code coverage")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+   message("-- Enabling code coverage for Clang")
+       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+   endif()
 
+   if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+       message("-- Enabling code coverage for GCC")
+       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -g -O0")
+   endif()  
   # # Add required flags (GCC & LLVM/Clang)
   # target_compile_options(qforte
   #   -O0        # no optimization
