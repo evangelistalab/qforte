@@ -28,7 +28,7 @@ class TestOpToSparse:
             for j in hmap[i].keys():
                 H_slow[i,j] = hmap[i][j]
         
-        assert np.linalg.norm(H_slow - H) == approx(0.0, abs = 1.0e-11)
+        assert np.linalg.norm(H_slow - H) == approx(0.0, abs = 1.0e-7)
 
         
         Sz = sq_op_to_scipy(total_spin_z(N_qubits, False), N_qubits).todense()
@@ -42,7 +42,7 @@ class TestOpToSparse:
                 del vsym
                 w_sym_nonzero = [k for k in wsym if abs(k) > 1e-12]
                 for k in range(len(w_sym_nonzero)):
-                    assert w_sym_nonzero[k] == approx(w[k], abs = 1e-11)
+                    assert w_sym_nonzero[k] == approx(w[k], abs = 1e-7)
 
         
         

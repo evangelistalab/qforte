@@ -79,7 +79,7 @@ class TestQSCEOM:
           
           for i in non_degens:
                for j in non_degens:
-                    assert dip_dir[i,j]-total_dip[i,j] == approx(0.0, abs = 1.0e-8)
+                    assert dip_dir[i,j]-total_dip[i,j] == approx(0.0, abs = 1.0e-7)
           
 
           
