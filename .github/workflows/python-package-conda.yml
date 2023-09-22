@@ -1,0 +1,49 @@
+name: Python Package using Conda
+
+on: [push, pull_request]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'true'    
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        conda env update --file environment.yml --name base
+        conda install psi4 -c psi4/label/dev
+
+    - name: Compile
+      run: |
+        QFORTE_CODECOV=ON python setup.py develop
+        
+    - name: Test with pytest
+      run: |
+        lcov --directory . --zerocounters
+        cd tests
+        pytest
+        ls -la
+        cd ..        
+        lcov --directory . --capture --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system-files
+        lcov --list coverage.info
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

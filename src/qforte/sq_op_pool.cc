@@ -10,6 +10,7 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <bitset>
 
 void SQOpPool::add_term(std::complex<double> coeff, const SQOperator& sq_op ){
     terms_.push_back(std::make_pair(coeff, sq_op));
@@ -29,28 +30,42 @@ const std::vector<std::pair< std::complex<double>, SQOperator>>& SQOpPool::terms
 }
 
 void SQOpPool::set_orb_spaces(const std::vector<int>& ref, const std::vector<size_t>& orb_irreps_to_int){
-    int norb = ref.size();
-    if (norb%2 == 0){
-        norb = static_cast<int>(norb/2);
-    } else {
-        throw std::invalid_argument("QForte does not yet support systems with an odd number of spin orbitals.");
+    // compute integer representing reference determiant
+    ref_int_ = 0;
+    int multiplier = 1;
+    for (const auto& occupancy : ref) {
+        ref_int_ += occupancy * multiplier;
+        multiplier = multiplier << 1;
     }
 
-    nocc_ = 0;
+    // set orbital spaces
+    n_spinorb_ = ref.size();
+    if (n_spinorb_%2 != 0) {
+        throw std::invalid_argument("The total number of spinorbitals must be even!");
+    }
+
+    n_occ_alpha_ = 0;
+    n_occ_beta_ = 0;
+    n_vir_alpha_ = 0;
+    n_vir_beta_ = 0;
+
+    bool is_alpha = true;
+
+
     for (const auto& occupancy : ref){
-        nocc_ += occupancy;
+        if (is_alpha) {
+            n_occ_alpha_ += occupancy;
+            n_vir_alpha_ += occupancy ^ 1;
+        }
+        else {
+            n_occ_beta_ += occupancy;
+            n_vir_beta_ += occupancy ^ 1;
+        }
+        is_alpha = !is_alpha;
     }
-
-    if (nocc_%2 == 0){
-        nocc_ = static_cast<int>(nocc_/2);
-    } else {
-        throw std::invalid_argument("QForte does not yet support systems with an odd number of occupied spin orbitals.");
-    }
-
-    nvir_ = static_cast<int>(norb - nocc_);
 
     if (orb_irreps_to_int.empty()) {
-        orb_irreps_to_int_ = std::vector<size_t>(norb,0);
+        orb_irreps_to_int_ = std::vector<size_t>(n_spinorb_ / 2,0);
     } else {
         orb_irreps_to_int_ = orb_irreps_to_int;
     }
@@ -97,7 +112,7 @@ QubitOperator SQOpPool::get_qubit_operator(const std::string& order_type, bool c
 
 void SQOpPool::fill_pool(std::string pool_type){
     if(pool_type=="GSD"){
-        size_t norb = nocc_ + nvir_;
+        size_t norb = n_spinorb_/2;
         for(size_t i=0; i<norb; i++){
             size_t ia = 2*i;
             size_t ib = 2*i+1;
@@ -281,91 +296,95 @@ void SQOpPool::fill_pool(std::string pool_type){
             throw std::invalid_argument( "Qforte UCC only supports up to Hextuple excitations." );
         }
 
-        int nqb = 2 * (nocc_ + nvir_);
-        int nel = 2 * nocc_;
-
-        // TODO(Nick): incorporate more flexibility into this
-        int na_el = nocc_;
-        int nb_el = nocc_;
-
-        for (int I=0; I<std::pow(2, nqb); I++) {
-
-            // get the basis state (I) | 11001100 > or whatever..
-            QubitBasis basis_I(I);
-
-            int nbody = 0;
-            int pn = 0;
-            int na_I = 0;
-            int nb_I = 0;
-            std::vector<size_t> holes; // i, j, k, ...
-            std::vector<size_t> particles; // a, b, c, ...
-            std::vector<int> parity;
-
-            for (size_t p=0; p<2*nocc_; p++) {
-                int bit_val = static_cast<int>(basis_I.get_bit(p));
-                nbody += ( 1 - bit_val);
-                pn += bit_val;
-                if(p%2==0){
-                    na_I += bit_val;
-                } else {
-                    nb_I += bit_val;
-                }
-
-                if(bit_val-1){
-                    holes.push_back(p);
-                    if(p%2==0){
-                        parity.push_back(1);
-                    } else {
-                        parity.push_back(-1);
-                    }
-                }
+        std::bitset<64> ref_bin(ref_int_);
+        auto ref_bin_str = ref_bin.to_string().substr(64-n_spinorb_);
+        
+        std::string alpha_str = "";
+        std::string beta_str = "";
+        
+        for (size_t i = 0; i < ref_bin_str.length(); i++) {
+            if (i % 2 == 0) {
+                beta_str += ref_bin_str[i];
+            } else {
+                alpha_str += ref_bin_str[i];
             }
-            for (size_t q=2*nocc_; q<nqb; q++) {
-                int bit_val = static_cast<int>(basis_I.get_bit(q));
-                pn += bit_val;
-                if(q%2==0){
-                    na_I += bit_val;
-                } else {
-                    nb_I += bit_val;
+        }
+        
+        std::vector<std::string> alpha_permutations{};
+        std::vector<std::string> beta_permutations{};
+        
+        // compute all possible excitations of the n_occ_alpha_ electrons
+        do alpha_permutations.push_back(alpha_str);
+        while (std::next_permutation(alpha_str.begin(), alpha_str.end()));
+        
+        // compute all possible excitations of the n_occ_beta_ electrons
+        do beta_permutations.push_back(beta_str);
+        while (std::next_permutation(beta_str.begin(), beta_str.end()));
+        
+        // construct N- and Sz-symmetry preserving determinants
+        std::vector<uint64_t> dets_int{};
+        for (const auto& str_alpha : alpha_permutations) {
+            for (const auto& str_beta : beta_permutations) {
+                std::string det_str = "";
+                for (size_t i = 0; i < str_alpha.length(); i++) {
+                    det_str += str_beta[i];
+                    det_str += str_alpha[i];
                 }
-                if(bit_val){
-                    particles.push_back(q);
-                    if(q%2==0){
-                        parity.push_back(1);
-                    } else {
-                        parity.push_back(-1);
-                    }
-                }
+                std::bitset<64> det_bit(det_str);
+                dets_int.push_back(det_bit.to_ullong());
             }
+        }
 
-            std::vector<size_t> excitation_indices;
-            excitation_indices.reserve(holes.size() + particles.size());
-            excitation_indices.insert(excitation_indices.end(), holes.begin(), holes.end());
-            excitation_indices.insert(excitation_indices.end(), particles.begin(), particles.end());
+        // To reproduce the results of older versions of QForte, the dets are sorted
+        std::sort(dets_int.begin(), dets_int.end());
 
-            if(pn==nel && na_I == na_el && nb_I == nb_el && !find_irrep(orb_irreps_to_int_, excitation_indices)){
-
-                if (nbody != 0 && nbody <= max_nbody ) {
-
-                    int total_parity = 1;
-                    for (const auto& z: parity){
-                        total_parity *= z;
+        for (const auto& det_int : dets_int) {
+            // Create the bitstring of created/annihilated orbitals
+            std::bitset<64> excit(ref_int_ ^ det_int);
+            auto excit_str = excit.to_string().substr(64-n_spinorb_);
+            int n_excitation_indices = std::count(excit_str.begin(), excit_str.end(), '1');
+            if (n_excitation_indices%2 != 0) {
+                throw std::invalid_argument("The number of excitation indices must be an even number!");
+            }
+            int excit_rank = n_excitation_indices / 2;
+            // Confirm excitation number is non-zero and consider operators with rank <= max_excit_rank
+            if (excit_rank != 0 && excit_rank <= max_nbody) {
+                // Get the indices of occupied and unoccupied orbitals
+                std::vector<size_t> occ_idx;
+                std::vector<size_t> unocc_idx;
+                for (size_t i = 0; i < excit_str.size(); i++) {
+                    if (excit_str[i] != '1' ) {
+                        continue;
                     }
-
-                    if(total_parity==1){
-                        // need i, j, a, b
-                        SQOperator t_temp;
-                        t_temp.add_term(+1.0, particles, holes);
-                        std::vector<size_t> rparticles(particles.rbegin(), particles.rend());
-                        std::vector<size_t> rholes(holes.rbegin(), holes.rend());
-                        t_temp.add_term(-1.0, rholes, rparticles);
-                        t_temp.simplify();
-                        add_term(1.0, t_temp);
+                    if (ref_bin_str[i] == '1') {
+                        occ_idx.push_back(n_spinorb_-i-1);
+                    } else if (ref_bin_str[i] == '0') {
+                        unocc_idx.push_back(n_spinorb_-i-1);
                     }
+                }
+                // impose spatial symmetry
+                std::vector<size_t> excitation_indices;
+                excitation_indices.reserve(occ_idx.size() + unocc_idx.size());
+                excitation_indices.insert(excitation_indices.end(), occ_idx.begin(), occ_idx.end());
+                excitation_indices.insert(excitation_indices.end(), unocc_idx.begin(), unocc_idx.end());
+                if(!find_irrep(orb_irreps_to_int_, excitation_indices)) {
+                    // construct second-quantized operator and add to pool 
+                    SQOperator t_temp;
+                    t_temp.add_term(+1.0, unocc_idx, occ_idx);
+                    std::vector<size_t> runocc_idx(unocc_idx.rbegin(), unocc_idx.rend());
+                    std::vector<size_t> rocc_idx(occ_idx.rbegin(), occ_idx.rend());
+                    t_temp.add_term(-1.0, rocc_idx, runocc_idx);
+                    t_temp.simplify();
+                    add_term(1.0, t_temp);
                 }
             }
         }
     } else if(pool_type=="sa_SD"){
+        if(n_occ_alpha_ != n_occ_beta_){
+            throw std::invalid_argument( "sa_SD operator pool requires a closed-shell reference determinant!" );
+        }
+        int nocc_ = n_occ_alpha_;
+        int nvir_ = n_vir_alpha_;
         for(size_t i=0; i<nocc_; i++){
             size_t ia = 2*i;
             size_t ib = 2*i+1;

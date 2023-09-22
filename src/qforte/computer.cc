@@ -24,8 +24,8 @@ extern const bool parallelism_enabled = true;
 extern const bool parallelism_enabled = false;
 #endif
 
-
-Computer::Computer(int nqubit, double print_threshold) : nqubit_(nqubit), print_threshold_(print_threshold) {
+Computer::Computer(int nqubit, double print_threshold)
+    : nqubit_(nqubit), print_threshold_(print_threshold) {
     nbasis_ = std::pow(2, nqubit_);
     basis_.assign(nbasis_, QubitBasis());
     coeff_.assign(nbasis_, 0.0);
@@ -36,9 +36,7 @@ Computer::Computer(int nqubit, double print_threshold) : nqubit_(nqubit), print_
     coeff_[0] = 1.;
 }
 
-std::complex<double> Computer::coeff(const QubitBasis& basis) {
-    return coeff_[basis.add()];
-}
+std::complex<double> Computer::coeff(const QubitBasis& basis) { return coeff_[basis.add()]; }
 
 void Computer::set_state(std::vector<std::pair<QubitBasis, double_c>> state) {
     std::fill(coeff_.begin(), coeff_.end(), 0.0);
@@ -47,19 +45,21 @@ void Computer::set_state(std::vector<std::pair<QubitBasis, double_c>> state) {
     }
 }
 
-void Computer::zero_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
+void Computer::null_state() { std::fill(coeff_.begin(), coeff_.end(), 0.0); }
 
-void Computer::apply_matrix(const std::vector<std::vector< std::complex<double> >>& Opmat){
+void Computer::reset() {
+    null_state();
+    coeff_[0] = 1.;
+}
+
+void Computer::apply_matrix(const std::vector<std::vector<std::complex<double>>>& Opmat) {
     // std::vector<std::complex<double>> old_coeff = coeff_;
     std::vector<std::complex<double>> result(nbasis_, 0.0);
 
-    for(size_t I = 0; I < nbasis_; I++){
-        result[I] = std::inner_product(Opmat[I].begin(),
-                                       Opmat[I].end(),
-                                       coeff_.begin(),
-                                       std::complex<double>(0.0, 0.0),
-                                       add_c<double>,
-                                       complex_prod<double>);
+    for (size_t I = 0; I < nbasis_; I++) {
+        result[I] =
+            std::inner_product(Opmat[I].begin(), Opmat[I].end(), coeff_.begin(),
+                               std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
     }
     coeff_ = result;
 }
@@ -68,26 +68,24 @@ void Computer::apply_sparse_matrix(const SparseMatrix& Spmat) {
     // std::vector<std::complex<double>> old_coeff = coeff_;
     std::vector<std::complex<double>> result(nbasis_, 0.0);
 
-    for(auto const& i : Spmat.to_vec_map()){ // i-> [ size_t, SparseVector ]
-        for(auto const& j : i.second.to_map()){ // j-> [size_t, complex double]
+    for (auto const& i : Spmat.to_vec_map()) {    // i-> [ size_t, SparseVector ]
+        for (auto const& j : i.second.to_map()) { // j-> [size_t, complex double]
             result[i.first] += j.second * coeff_[j.first];
         }
     }
     coeff_ = result;
 }
 
-
 void Computer::apply_operator(const QubitOperator& qo) {
     std::vector<std::complex<double>> old_coeff = coeff_;
     std::vector<std::complex<double>> result(nbasis_, 0.0);
-        for (const auto& term : qo.terms()) {
-            apply_circuit(term.second);
-            apply_constant(term.first);
-            std::transform(result.begin(), result.end(), coeff_.begin(),
-                           result.begin(), add_c<double>);
+    for (const auto& term : qo.terms()) {
+        apply_circuit(term.second);
+        apply_constant(term.first);
+        std::transform(result.begin(), result.end(), coeff_.begin(), result.begin(), add_c<double>);
 
-            coeff_ = old_coeff;
-        }
+        coeff_ = old_coeff;
+    }
     coeff_ = result;
 }
 
@@ -130,12 +128,10 @@ void Computer::apply_gate_safe(const Gate& qg) {
 
 void Computer::apply_constant(const std::complex<double> a) {
     std::transform(coeff_.begin(), coeff_.end(), coeff_.begin(),
-                   std::bind(std::multiplies<std::complex<double>>(),
-                   std::placeholders::_1, a));
+                   std::bind(std::multiplies<std::complex<double>>(), std::placeholders::_1, a));
 }
 
-std::vector<double> Computer::measure_circuit(const Circuit& qc,
-                                                     size_t n_measurements) {
+std::vector<double> Computer::measure_circuit(const Circuit& qc, size_t n_measurements) {
     // initialize a "QubitBasis_rotator" QC to represent the corresponding change
     // of basis
     Circuit QubitBasis_rotator;
@@ -194,7 +190,8 @@ std::vector<double> Computer::measure_circuit(const Circuit& qc,
     return results;
 }
 
-std::vector<std::vector<int>> Computer::measure_z_readouts_fast(size_t na, size_t nb, size_t n_measurements) {
+std::vector<std::vector<int>> Computer::measure_z_readouts_fast(size_t na, size_t nb,
+                                                                size_t n_measurements) {
 
     std::vector<double> probs(nbasis_);
     for (size_t k = 0; k < nbasis_; k++) {
@@ -210,16 +207,15 @@ std::vector<std::vector<int>> Computer::measure_z_readouts_fast(size_t na, size_
     for (size_t k = 0; k < n_measurements; k++) {
         size_t measurement = dd(gen);
         std::vector<int> temp_readout;
-        for (size_t l = na; l < nb+1; l++ ) {
-            temp_readout.push_back( static_cast<int>(basis_[measurement].get_bit(l)) );
+        for (size_t l = na; l < nb + 1; l++) {
+            temp_readout.push_back(static_cast<int>(basis_[measurement].get_bit(l)));
         }
         readouts[k] = temp_readout;
     }
     return readouts;
 }
 
-std::vector<std::vector<int>> Computer::measure_readouts(const Circuit& qc,
-                                                     size_t n_measurements) {
+std::vector<std::vector<int>> Computer::measure_readouts(const Circuit& qc, size_t n_measurements) {
     // initialize a "QubitBasis_rotator" QC to represent the corresponding change
     // of basis
     Circuit QubitBasis_rotator;
@@ -266,7 +262,7 @@ std::vector<std::vector<int>> Computer::measure_readouts(const Circuit& qc,
         std::vector<int> temp_readout;
         for (const Gate& gate : qc.gates()) {
             size_t target_qubit = gate.target();
-            temp_readout.push_back( static_cast<int>(basis_[measurement].get_bit(target_qubit)) );
+            temp_readout.push_back(static_cast<int>(basis_[measurement].get_bit(target_qubit)));
         }
         readouts[k] = temp_readout;
     }
@@ -304,7 +300,7 @@ double Computer::perfect_measure_circuit(const Circuit& qc) {
     apply_circuit(QubitBasis_rotator);
 
     double sum = 0.0;
-    for (size_t k = 0; k < nbasis_; k++){
+    for (size_t k = 0; k < nbasis_; k++) {
         double value = 1.0;
         for (const Gate& gate : qc.gates()) {
             size_t target_qubit = gate.target();
@@ -321,11 +317,11 @@ double Computer::perfect_measure_circuit(const Circuit& qc) {
 
 void Computer::apply_1qubit_gate_safe(const Gate& qg) {
     size_t target = qg.target();
-    const auto& gate = qg.gate();
+    const auto& mat = qg.matrix();
 
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
-            auto op_i_j = gate[i][j];
+            auto op_i_j = mat[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
                 for (const QubitBasis& basis_J : basis_) {
                     if (basis_J.get_bit(target) == j) {
@@ -342,20 +338,20 @@ void Computer::apply_1qubit_gate_safe(const Gate& qg) {
 
 void Computer::apply_1qubit_gate(const Gate& qg) {
     size_t target = qg.target();
-    const auto& gate = qg.gate();
+    const auto& mat = qg.matrix();
 
     const size_t block_size = std::pow(2, target);
     const size_t block_offset = 2 * block_size;
 
     // bit target goes from j -> i
-    const auto op_0_0 = gate[0][0];
-    const auto op_0_1 = gate[0][1];
-    const auto op_1_0 = gate[1][0];
-    const auto op_1_1 = gate[1][1];
+    const auto op_0_0 = mat[0][0];
+    const auto op_0_1 = mat[0][1];
+    const auto op_1_0 = mat[1][0];
+    const auto op_1_1 = mat[1][1];
 
     if ((std::abs(op_0_0) + std::abs(op_1_1) > compute_threshold_) and
         (std::abs(op_0_1) + std::abs(op_1_0) > compute_threshold_)) {
-    // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
+        // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
         size_t block_start_0 = 0;
         size_t block_start_1 = block_size;
         size_t block_end_0 = block_start_0 + block_size;
@@ -371,9 +367,9 @@ void Computer::apply_1qubit_gate(const Gate& qg) {
             block_end_0 += block_offset;
         }
     } else if (std::abs(op_0_0) + std::abs(op_1_1) > compute_threshold_) {
-    // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
+        // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
         if (op_0_0 != 1.0) {
-        // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
+            // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
             size_t block_start_0 = 0;
             size_t block_end_0 = block_start_0 + block_size;
             for (; block_end_0 <= nbasis_;) {
@@ -397,9 +393,9 @@ void Computer::apply_1qubit_gate(const Gate& qg) {
             }
         }
     } else {
-    // Case III: this matrix has only off-diagonal elements.
+        // Case III: this matrix has only off-diagonal elements.
         if (op_0_1 == op_1_0 == 1.0) {
-        // Case III-A: Apply optimized algorithm for X gate
+            // Case III-A: Apply optimized algorithm for X gate
             size_t block_start_0 = 0;
             size_t block_end_0 = block_start_0 + block_size;
             for (; block_end_0 <= nbasis_;) {
@@ -410,7 +406,7 @@ void Computer::apply_1qubit_gate(const Gate& qg) {
                 block_end_0 += block_offset;
             }
         } else {
-        // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
+            // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
             size_t block_start_0 = 0;
             size_t block_end_0 = block_start_0 + block_size;
             for (; block_end_0 <= nbasis_;) {
@@ -432,7 +428,7 @@ void Computer::apply_2qubit_gate_safe(const Gate& qg) {
 
     size_t target = qg.target();
     size_t control = qg.control();
-    const auto& gate = qg.gate();
+    const auto& mat = qg.matrix();
 
     for (size_t i = 0; i < 4; i++) {
         const auto i_c = two_qubits_basis[i].first;
@@ -440,7 +436,7 @@ void Computer::apply_2qubit_gate_safe(const Gate& qg) {
         for (size_t j = 0; j < 4; j++) {
             const auto j_c = two_qubits_basis[j].first;
             const auto j_t = two_qubits_basis[j].second;
-            auto op_i_j = gate[i][j];
+            auto op_i_j = mat[i][j];
             if (std::abs(op_i_j) > compute_threshold_) {
                 // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
                 for (const QubitBasis& basis_J : basis_) {
@@ -461,19 +457,19 @@ void Computer::apply_2qubit_gate_safe(const Gate& qg) {
 void Computer::apply_2qubit_gate(const Gate& qg) {
     const size_t target = qg.target();
     const size_t control = qg.control();
-    const auto& gate = qg.gate();
+    const auto& mat = qg.matrix();
 
     // bit target goes from j -> i
-    const auto op_2_2 = gate[2][2];
-    const auto op_2_3 = gate[2][3];
-    const auto op_3_2 = gate[3][2];
-    const auto op_3_3 = gate[3][3];
+    const auto op_2_2 = mat[2][2];
+    const auto op_2_3 = mat[2][3];
+    const auto op_3_2 = mat[3][2];
+    const auto op_3_3 = mat[3][3];
 
-    if(( std::abs(gate[0][1]) + std::abs(gate[1][0]) < compute_threshold_ ) and
-       ( gate[0][0] == 1.0 ) and ( gate[1][1] == 1.0 ) ) {
-    // Case 1: 2qubit gate is a control gate
-        if(target < control){
-        // Case I-A: target bit index is smaller than control bit index
+    if ((std::abs(mat[0][1]) + std::abs(mat[1][0]) < compute_threshold_) and (mat[0][0] == 1.0) and
+        (mat[1][1] == 1.0)) {
+        // Case 1: 2qubit gate is a control gate
+        if (target < control) {
+            // Case I-A: target bit index is smaller than control bit index
             const size_t outer_block_size = std::pow(2, control);
             const size_t outer_block_offset = 2 * outer_block_size;
             const size_t block_size = std::pow(2, target);
@@ -481,15 +477,17 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
 
             if ((std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) and
                 (std::abs(op_2_3) + std::abs(op_3_2) > compute_threshold_)) {
-                // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
+                // Case I: this matrix has diagonal and off-diagonal elements. Apply standard
+                // algorithm
                 size_t outer_block_end = outer_block_offset;
                 size_t block_start_0 = outer_block_size;
                 size_t block_start_1 = outer_block_size + block_size;
                 size_t block_end_0 = outer_block_size + block_size;
 
-                for (; outer_block_end <= nbasis_;){
+                for (; outer_block_end <= nbasis_;) {
                     for (; block_end_0 <= outer_block_end;) {
-                        for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                        for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0;
+                             ++I0, ++I1) {
                             const auto x0 = coeff_[I0];
                             const auto x1 = coeff_[I1];
                             coeff_[I0] = op_2_2 * x0 + op_2_3 * x1;
@@ -507,12 +505,12 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
             } else if (std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) {
                 // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
                 if (op_2_2 != 1.0) {
-                // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
+                    // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
                     size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = outer_block_size;
                     size_t block_end_0 = outer_block_size + block_size;
 
-                    for(; outer_block_end <= nbasis_;){
+                    for (; outer_block_end <= nbasis_;) {
                         for (; block_end_0 <= outer_block_end;) {
                             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
                                 coeff_[I0] = op_2_2 * coeff_[I0];
@@ -531,7 +529,7 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_1 = block_start_1 + block_size;
 
-                    for(; outer_block_end <= nbasis_;){
+                    for (; outer_block_end <= nbasis_;) {
                         for (; block_end_1 <= outer_block_end;) {
                             for (size_t I1 = block_start_1; I1 < block_end_1; ++I1) {
                                 coeff_[I1] = op_3_3 * coeff_[I1];
@@ -553,9 +551,10 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = outer_block_size + block_size;
 
-                    for (; outer_block_end <= nbasis_;){
+                    for (; outer_block_end <= nbasis_;) {
                         for (; block_end_0 <= outer_block_end;) {
-                            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0;
+                                 ++I0, ++I1) {
                                 std::swap(coeff_[I0], coeff_[I1]);
                             }
                             block_start_0 += block_offset;
@@ -568,15 +567,17 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                         outer_block_end += outer_block_offset;
                     }
                 } else {
-                    // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
+                    // Case III-B: this matrix has only off-diagonal elements. Apply optimized
+                    // algorithm
                     size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = outer_block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = outer_block_size + block_size;
 
-                    for (; outer_block_end <= nbasis_;){
+                    for (; outer_block_end <= nbasis_;) {
                         for (; block_end_0 <= outer_block_end;) {
-                            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0;
+                                 ++I0, ++I1) {
                                 const auto x0 = coeff_[I0];
                                 coeff_[I0] = op_2_3 * coeff_[I1];
                                 coeff_[I1] = op_3_2 * x0;
@@ -593,9 +594,9 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                 }
             }
             ntwo_ops_++;
-        }/* end if t < c */
-        if(control < target) {
-        // Case 1-B: control bit idx is smaller than target bit idx
+        } /* end if t < c */
+        if (control < target) {
+            // Case 1-B: control bit idx is smaller than target bit idx
             const size_t outer_block_size = std::pow(2, target);
             const size_t outer_block_offset = 2 * outer_block_size;
             const size_t block_size = std::pow(2, control);
@@ -603,15 +604,17 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
 
             if ((std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) and
                 (std::abs(op_2_3) + std::abs(op_3_2) > compute_threshold_)) {
-                // Case I: this matrix has diagonal and off-diagonal elements. Apply standard algorithm
+                // Case I: this matrix has diagonal and off-diagonal elements. Apply standard
+                // algorithm
                 size_t outer_block_end = outer_block_offset;
                 size_t block_start_0 = block_size;
                 size_t block_start_1 = outer_block_size + block_size;
                 size_t block_end_0 = block_offset;
 
-                for (; outer_block_end <= nbasis_;){
-                    for (; block_end_0 <= outer_block_end-outer_block_size;) {
-                        for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                for (; outer_block_end <= nbasis_;) {
+                    for (; block_end_0 <= outer_block_end - outer_block_size;) {
+                        for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0;
+                             ++I0, ++I1) {
                             const auto x0 = coeff_[I0];
                             const auto x1 = coeff_[I1];
                             coeff_[I0] = op_2_2 * x0 + op_2_3 * x1;
@@ -627,15 +630,15 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                     outer_block_end += outer_block_offset;
                 }
             } else if (std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) {
-            // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
+                // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
                 if (op_2_2 != 1.0) {
-                // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
+                    // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
                     size_t outer_block_end = outer_block_offset;
                     size_t block_start_0 = block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = block_offset;
 
-                    for(; outer_block_end <= nbasis_;){
+                    for (; outer_block_end <= nbasis_;) {
                         for (; block_end_0 < outer_block_end;) {
                             for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
                                 coeff_[I0] = op_2_2 * coeff_[I0];
@@ -649,12 +652,12 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                     }
                 }
                 if (op_3_3 != 1.0) {
-                // Case II-B: changes portion of coeff_ only if g_11 is not 1.0
+                    // Case II-B: changes portion of coeff_ only if g_11 is not 1.0
                     size_t outer_block_end = outer_block_offset;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_1 = block_start_1 + block_size;
 
-                    for(; outer_block_end <= nbasis_;){
+                    for (; outer_block_end <= nbasis_;) {
                         for (; block_end_1 <= outer_block_end;) {
                             for (size_t I1 = block_start_1; I1 < block_end_1; ++I1) {
                                 coeff_[I1] = op_3_3 * coeff_[I1];
@@ -668,17 +671,18 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                     }
                 }
             } else {
-            // Case III: this matrix has only off-diagonal elements.
+                // Case III: this matrix has only off-diagonal elements.
                 if (op_2_3 == op_3_2 == 1.0) {
-                // Case III-A: Apply optimized algorithm for X gate
+                    // Case III-A: Apply optimized algorithm for X gate
                     size_t outer_block_end_0 = outer_block_size;
                     size_t block_start_0 = block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = block_offset;
 
-                    for (; outer_block_end_0 <= nbasis_;){
+                    for (; outer_block_end_0 <= nbasis_;) {
                         for (; block_end_0 <= outer_block_end_0;) {
-                            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0;
+                                 ++I0, ++I1) {
                                 std::swap(coeff_[I0], coeff_[I1]);
                             }
                             block_start_0 += block_offset;
@@ -691,15 +695,17 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                         outer_block_end_0 += outer_block_offset;
                     }
                 } else {
-                    // Case III-B: this matrix has only off-diagonal elements. Apply optimized algorithm
+                    // Case III-B: this matrix has only off-diagonal elements. Apply optimized
+                    // algorithm
                     size_t outer_block_end_0 = outer_block_size;
                     size_t block_start_0 = block_size;
                     size_t block_start_1 = outer_block_size + block_size;
                     size_t block_end_0 = block_offset;
 
-                    for (; outer_block_end_0 <= nbasis_;){
+                    for (; outer_block_end_0 <= nbasis_;) {
                         for (; block_end_0 <= outer_block_end_0;) {
-                            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0; ++I0, ++I1) {
+                            for (size_t I0 = block_start_0, I1 = block_start_1; I0 < block_end_0;
+                                 ++I0, ++I1) {
                                 const auto x0 = coeff_[I0];
                                 coeff_[I0] = op_2_3 * coeff_[I1];
                                 coeff_[I1] = op_3_2 * x0;
@@ -717,9 +723,9 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
             }
             ntwo_ops_++;
         } // end if c < t
-    } // end if controlled unitary
-    else{
-    // Case 2: 2qubit gate is a not a control gate, use standard algorithm
+    }     // end if controlled unitary
+    else {
+        // Case 2: 2qubit gate is a not a control gate, use standard algorithm
         const auto& two_qubits_basis = Gate::two_qubits_basis();
 
         for (size_t i = 0; i < 4; i++) {
@@ -728,11 +734,13 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
             for (size_t j = 0; j < 4; j++) {
                 const auto j_c = two_qubits_basis[j].first;
                 const auto j_t = two_qubits_basis[j].second;
-                auto op_i_j = gate[i][j];
+                auto op_i_j = mat[i][j];
                 if (std::abs(op_i_j) > compute_threshold_) {
-                    // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { // C++17
+                    // if (auto op_i_j = gate[i][j]; std::abs(op_i_j) > compute_threshold_) { //
+                    // C++17
                     for (const QubitBasis& basis_J : basis_) {
-                        if ((basis_J.get_bit(control) == j_c) and (basis_J.get_bit(target) == j_t)) {
+                        if ((basis_J.get_bit(control) == j_c) and
+                            (basis_J.get_bit(target) == j_t)) {
                             QubitBasis basis_I = basis_J;
                             basis_I.set_bit(control, i_c);
                             basis_I.set_bit(target, i_t);
@@ -746,25 +754,21 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
         coeff_ = new_coeff_;
         std::fill(new_coeff_.begin(), new_coeff_.end(), 0.0);
     }
-
 }
 
 std::complex<double> Computer::direct_op_exp_val(const QubitOperator& qo) {
     // local_timer t;
     std::complex<double> result = 0.0;
-    if(parallelism_enabled){
+    if (parallelism_enabled) {
         for (const auto& term : qo.terms()) {
             result += term.first * direct_pauli_circ_exp_val(term.second);
         }
     } else {
         std::vector<std::complex<double>> old_coeff = coeff_;
         apply_operator(qo);
-        result = std::inner_product(old_coeff.begin(),
-                                    old_coeff.end(),
-                                    coeff_.begin(),
-                                    std::complex<double>(0.0, 0.0),
-                                    add_c<double>,
-                                    complex_prod<double>);
+        result =
+            std::inner_product(old_coeff.begin(), old_coeff.end(), coeff_.begin(),
+                               std::complex<double>(0.0, 0.0), add_c<double>, complex_prod<double>);
 
         coeff_ = old_coeff;
     }
@@ -772,8 +776,7 @@ std::complex<double> Computer::direct_op_exp_val(const QubitOperator& qo) {
     return result;
 }
 
-std::vector<std::complex<double>> Computer::direct_oppl_exp_val(
-    const QubitOpPool& qopl) {
+std::vector<std::complex<double>> Computer::direct_oppl_exp_val(const QubitOpPool& qopl) {
 
     std::vector<std::complex<double>> results;
 
@@ -784,52 +787,52 @@ std::vector<std::complex<double>> Computer::direct_oppl_exp_val(
     return results;
 }
 
-std::vector<std::complex<double>> Computer::direct_idxd_oppl_exp_val(
-    const QubitOpPool& qopl, const std::vector<int>& idxs) {
+std::vector<std::complex<double>> Computer::direct_idxd_oppl_exp_val(const QubitOpPool& qopl,
+                                                                     const std::vector<int>& idxs) {
 
     std::vector<std::complex<double>> results;
-    if(parallelism_enabled){
-        for (const auto& idx : idxs){
+    if (parallelism_enabled) {
+        for (const auto& idx : idxs) {
             std::complex<double> val = direct_op_exp_val(qopl.terms()[idx].second);
-            results.push_back(val*qopl.terms()[idx].first);
+            results.push_back(val * qopl.terms()[idx].first);
         }
     } else {
         std::vector<std::complex<double>> old_coeff = coeff_;
-        for (const auto& idx : idxs){
+        for (const auto& idx : idxs) {
             apply_operator(qopl.terms()[idx].second);
-            std::complex<double> val = std::inner_product(old_coeff.begin(),
-                                                          old_coeff.end(),
-                                                          coeff_.begin(),
-                                                          std::complex<double>(0.0, 0.0),
-                                                          add_c<double>, complex_prod<double>);
+            std::complex<double> val = std::inner_product(
+                old_coeff.begin(), old_coeff.end(), coeff_.begin(), std::complex<double>(0.0, 0.0),
+                add_c<double>, complex_prod<double>);
 
-            results.push_back(val*qopl.terms()[idx].first);
+            results.push_back(val * qopl.terms()[idx].first);
             coeff_ = old_coeff;
         }
     }
     return results;
 }
 
-std::vector<std::complex<double>> Computer::direct_oppl_exp_val_w_mults(
-    const QubitOpPool& qopl,
-    const std::vector<std::complex<double>>& mults) {
+std::vector<std::complex<double>>
+Computer::direct_oppl_exp_val_w_mults(const QubitOpPool& qopl,
+                                      const std::vector<std::complex<double>>& mults) {
 
     std::vector<std::complex<double>> results;
-    if(parallelism_enabled){
-        for (const auto& pl_term : qopl.terms()){
+    if (parallelism_enabled) {
+        for (const auto& pl_term : qopl.terms()) {
             std::complex<double> result = 0.0;
-            for (int l=0; l < pl_term.second.terms().size(); l++){
-                std::complex<double> val = mults[l] * pl_term.first * pl_term.second.terms()[l].first;
-                result +=  val * direct_pauli_circ_exp_val(pl_term.second.terms()[l].second);
+            for (int l = 0; l < pl_term.second.terms().size(); l++) {
+                std::complex<double> val =
+                    mults[l] * pl_term.first * pl_term.second.terms()[l].first;
+                result += val * direct_pauli_circ_exp_val(pl_term.second.terms()[l].second);
             }
             results.push_back(result);
         }
     } else {
-        for (const auto& pl_term : qopl.terms()){
+        for (const auto& pl_term : qopl.terms()) {
             std::complex<double> result = 0.0;
-            for (int l=0; l < pl_term.second.terms().size(); l++){
-                std::complex<double> val = mults[l] * pl_term.first * pl_term.second.terms()[l].first;
-                result +=  val * direct_circ_exp_val(pl_term.second.terms()[l].second);
+            for (int l = 0; l < pl_term.second.terms().size(); l++) {
+                std::complex<double> val =
+                    mults[l] * pl_term.first * pl_term.second.terms()[l].first;
+                result += val * direct_circ_exp_val(pl_term.second.terms()[l].second);
             }
             results.push_back(result);
         }
@@ -866,10 +869,10 @@ std::complex<double> Computer::direct_pauli_circ_exp_val(const Circuit& qc) {
      * on them, and the way we order our basis states.
      * Furthermore, these image states are orthogonal to all basis states except themselves.
      * That gives us a very convenient trick to compute the direct product: once you've computed
-     * the image of the basis state leading the first block, find the basis state it's not orthogonal
-     * to, and you know how to do the same for the remaining states in the block. Just take the inner
-     * product, which is nice and easy because it's contiguous in memory. Do this for all
-     * blocks, and you're done.
+     * the image of the basis state leading the first block, find the basis state it's not
+     * orthogonal to, and you know how to do the same for the remaining states in the block. Just
+     * take the inner product, which is nice and easy because it's contiguous in memory. Do this for
+     * all blocks, and you're done.
      */
     std::complex<double> result = 0.0;
     int min_qb_idx = nqubit_ - 1;
@@ -878,50 +881,46 @@ std::complex<double> Computer::direct_pauli_circ_exp_val(const Circuit& qc) {
     std::vector<int> z_idxs;
 
     for (const Gate& gate : qc.gates()) {
-        if( gate.target() < min_qb_idx ) { min_qb_idx = gate.target(); }
-        if( gate.gate_id() == "Z" ) {
+        if (gate.target() < min_qb_idx) {
+            min_qb_idx = gate.target();
+        }
+        if (gate.gate_id() == "Z") {
             z_idxs.push_back(gate.target());
-        } else if( gate.gate_id() == "X" ) {
+        } else if (gate.gate_id() == "X") {
             x_idxs.push_back(gate.target());
-        } else if (gate.gate_id() == "Y" ) {
+        } else if (gate.gate_id() == "Y") {
             y_idxs.push_back(gate.target());
         } else {
-            throw ("Not a valid pauli gate!");
+            throw std::runtime_error("Not a valid pauli gate!");
         }
     }
 
     int block_size = std::pow(2, min_qb_idx);
     int n_blocks = int(nbasis_ / block_size);
 
-    #pragma omp parallel for reduction(+:result)
-    for(size_t n=0; n < n_blocks; n++){
+#pragma omp parallel for reduction(+ : result)
+    for (size_t n = 0; n < n_blocks; n++) {
         int I1 = n * block_size;
         int I2 = I1 + block_size;
 
-        std::pair<int, std::complex<double>> pauli_perms = get_pauli_permuted_idx(I1, x_idxs, y_idxs, z_idxs);
+        std::pair<int, std::complex<double>> pauli_perms =
+            get_pauli_permuted_idx(I1, x_idxs, y_idxs, z_idxs);
 
         std::vector<std::complex<double>>::iterator it1 = std::next(coeff_.begin(), I1);
         std::vector<std::complex<double>>::iterator it2 = std::next(coeff_.begin(), I2);
-        std::vector<std::complex<double>>::iterator it3 = std::next(coeff_.begin(), pauli_perms.first );
+        std::vector<std::complex<double>>::iterator it3 =
+            std::next(coeff_.begin(), pauli_perms.first);
 
-        result += pauli_perms.second * std::inner_product(
-            it1,
-            it2,
-            it3,
-            std::complex<double>(0.0, 0.0),
-            add_c<double>,
-            complex_prod<double>
-        );
+        result +=
+            pauli_perms.second * std::inner_product(it1, it2, it3, std::complex<double>(0.0, 0.0),
+                                                    add_c<double>, complex_prod<double>);
     }
     return result;
 }
 
-std::pair< int, std::complex<double> > Computer::get_pauli_permuted_idx(
-    size_t I,
-    const std::vector<int>& x_idxs,
-    const std::vector<int>& y_idxs,
-    const std::vector<int>& z_idxs
-    ) {
+std::pair<int, std::complex<double>>
+Computer::get_pauli_permuted_idx(size_t I, const std::vector<int>& x_idxs,
+                                 const std::vector<int>& y_idxs, const std::vector<int>& z_idxs) {
 
     QubitBasis basis_I(I);
     std::complex<double> val = 1.0;
@@ -932,12 +931,12 @@ std::pair< int, std::complex<double> > Computer::get_pauli_permuted_idx(
     }
 
     for (const auto& yi : y_idxs) {
-        val *= onei*(1.0 - 2.0*basis_I.get_bit(yi));
+        val *= onei * (1.0 - 2.0 * basis_I.get_bit(yi));
         basis_I.flip_bit(yi);
     }
 
     for (const auto& zi : z_idxs) {
-        val *= (1.0 - 2.0*basis_I.get_bit(zi));
+        val *= (1.0 - 2.0 * basis_I.get_bit(zi));
     }
 
     return std::make_pair(basis_I.add(), val);
@@ -972,4 +971,18 @@ std::string Computer::str() const {
     }
     terms.push_back(")");
     return join(terms, "\n");
+}
+
+bool operator==(const Computer& qc1, const Computer& qc2) {
+    if (qc1.get_nqubit() != qc2.get_nqubit()) {
+        return false;
+    }
+    return qc1.get_coeff_vec() == qc2.get_coeff_vec();
+}
+
+std::complex<double> dot(const Computer& qc1, const Computer& qc2) {
+    return std::inner_product(
+        qc1.get_coeff_vec().begin(), qc1.get_coeff_vec().end(), qc2.get_coeff_vec().begin(),
+        std::complex<double>(0.0), std::plus<>(),
+        [](std::complex<double> a, std::complex<double> b) { return std::conj(a) * b; });
 }

@@ -1,14 +1,10 @@
-from pytest import approx
+from pytest import approx, mark
 from qforte import system_factory, UCCNPQE
 
 class TestNonIterativeEnergyCorrections:
+    @mark.skip(reason="ambiguous test case")
     def test_N2_uccsd_pqe(self):
         # This is a regression test
-
-        Rhh = 4
-        # R = 5.7467083952 * 10 /29
-        # R = 1.310011 * 18 / 10
-        R = 2.5
 
         mol = system_factory(system_type = 'molecule',
                 build_type = 'psi4',

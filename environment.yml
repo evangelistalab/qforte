@@ -1,0 +1,12 @@
+name: forte
+
+dependencies:
+    - python=3.10
+    - pip>=19.0
+    - cmake
+    - numpy
+    - scipy
+    - boost
+    - yaml
+    - pytest
+    - conda-forge::lcov

@@ -56,11 +56,18 @@ class CMakeBuild(build_ext):
             build_args += ['--', '-j2']
 
         env = os.environ.copy()
+
+        my_variable = env.get('QFORTE_CODECOV', 'OFF')
+        print(f"    ENABLE_CODECOV = {my_variable.upper()}")
+        cmake_args += [f"-DCODE_COVERAGE={my_variable.upper()}"]
+
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get('CXXFLAGS', ''),
             self.distribution.get_version())
+
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
+            
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args,
                               cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args,

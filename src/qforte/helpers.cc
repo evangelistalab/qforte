@@ -15,11 +15,11 @@ std::string join(const std::vector<std::string>& vec_str, const std::string& sep
 }
 
 std::string to_string(std::complex<double> value) {
-    if (std::imag(value) == 0.0){
-      return fmt::format("{:+f}", std::real(value));
+    if (std::imag(value) == 0.0) {
+        return fmt::format("{:+f}", std::real(value));
     }
-    if (std::real(value) == 0.0){
-      return fmt::format("{:+f}j", std::imag(value));
+    if (std::real(value) == 0.0) {
+        return fmt::format("{:+f}j", std::imag(value));
     }
     return fmt::format("{:+f} {:+f}i", std::real(value), std::imag(value));
 }

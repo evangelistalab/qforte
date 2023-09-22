@@ -27,6 +27,8 @@ class TestGates:
         coeff1 = computer.coeff(basis1)
         assert coeff0 == approx(1, abs=1.0e-16)
         assert coeff1 == approx(0, abs=1.0e-16)
+        Xadj = X.adjoint()
+        assert Xadj == X
 
 
     def test_Y_gate(self):
@@ -252,48 +254,169 @@ class TestGates:
         assert coeff2 == approx(0, abs=1.0e-16)
         assert coeff3 == approx(0, abs=1.0e-16)
 
+    def test_gate_ops(self):
+        # test the gate operations
+        gate1 = gate('X',0)
+        assert gate1.nqubits() == 1
+        assert gate1.gate_id() == 'X'
+        assert gate1.has_parameter() == False 
+        assert gate1.parameter() == None
+        with pytest.raises(ValueError):
+            gate1.update_parameter(1.0)
 
-    def test_computer(self):
-        print('\n')
-        # test that 1 - 1 = 0
+        gate1 = gate('R',0,0.5)
+        gate1adj = gate1.adjoint()
+        gate1adjadj = gate1adj.adjoint()
+        assert str(gate1adj) == 'R0'
+        assert str(gate1adjadj) == 'R0'
 
-        # print('\n'.join(qc.str()))
-        X = gate('X',0,0);
-        print(X)
-        Y = gate('Y',0,0);
-        print(Y)
-        Z = gate('Z',0,0);
-        print(Z)
-        H = gate('H',0,0);
-        print(H)
-        R = gate('R',0,0,0.1);
-        print(R)
-        S = gate('S',0,0);
-        print(S)
-        T = gate('T',0,0);
-        print(T)
-        cX = gate('cX',0,1);
-        print(cX)
-        cY = gate('cY',0,1);
-        print(cY)
-        cZ = gate('cZ',0,1);
-        print(cZ)
-       # qcircuit = Circuit()
-       # qcircuit.add(qg)
-       # qcircuit.add(Gate(GateType.Hgate,1,1));
-       # print('\n'.join(qcircuit.str()))
-       # self.assertEqual(subtract(1, 1), 0)
+        gate2 = gate('cR',0,1,1.0)
+        assert gate2.nqubits() == 2
+        assert gate2.gate_id() == 'cR'
+        assert gate2.has_parameter() is True
+        assert gate2.parameter() == approx(1.0, abs=1.0e-16)
 
-        computer = Computer(16)
-       # print(repr(computer))
-       # circuit = Circuit()
-       # circuit.add(X)
-        for i in range(3000):
-            computer.apply_gate(X)
-            computer.apply_gate(Y)
-            computer.apply_gate(Z)
-            computer.apply_gate(H)
-       # print(repr(computer))
+        gate2 = gate2.update_parameter(2.0)
+        assert gate2.nqubits() == 2
+        assert gate2.gate_id() == 'cR'
+        assert gate2.has_parameter() is True
+        assert gate2.parameter() == approx(2.0, abs=1.0e-16)
+
+        # test equality of gates with and without parameters
+        assert gate('X',0) == gate('X',0)
+        assert gate('X',0) != gate('X',1)
+        assert gate('R',0,0.5) == gate('R',0,0.5)
+        assert gate('R',0,0.5) != gate('R',0,1.5)
+        R = gate('R',0,0.5)
+        Radj = R.adjoint()
+        assert Radj.parameter() == approx(-0.5, abs=1.0e-16)
+        Rm = gate('R',0,-0.5)
+        assert Rm.parameter() == approx(-0.5, abs=1.0e-16)
+        assert Radj == Rm
+
+    def test_adjoint_gate(self):
+        # 1-qubit self-adjoint gates
+        gates = ['X','Y','Z','H','I']
+        for g in gates:
+            gate1 = gate(g,0)
+            gate2 = gate1.adjoint()
+            assert gate1 == gate2
+
+        # 1-qubit non-self-adjoint gates   
+        gates = ['V','S','T','Rzy']
+        for g in gates:
+            gate1 = gate(g,0)
+            gate2 = gate1.adjoint()
+            assert gate1 != gate2
+
+        # 1-qubit parameterized non-self-adjoint gates
+        gates = ['R','Rx','Ry','Rz','rU1']
+        for g in gates:
+            gate1 = gate(g,0,0.5)
+            gate2 = gate1.adjoint()
+            assert gate1 != gate2
+            assert gate2 == gate(g,0,-0.5)
+
+        # 2-qubit self-adjoint gates
+        gates = ['cX','CNOT','acX','aCNOT','SWAP','cY','cZ']
+        for g in gates:
+            gate1 = gate(g,0,1)
+            gate2 = gate1.adjoint()
+            assert gate1 == gate2
+
+        # 2-qubit non-self-adjoint gates
+        gates = ['cV']
+        for g in gates:
+            gate1 = gate(g,0,1)
+            gate2 = gate1.adjoint()
+            assert gate1 != gate2            
+
+        # 2-qubit parameterized non-self-adjoint gates
+        gates = ['cR','cRz','rU2']
+        for g in gates:
+            gate1 = gate(g,0,1,0.5)
+            gate2 = gate1.adjoint()
+            assert gate1 != gate2
+            assert gate2 == gate(g,0,1,-0.5)
+
+        # 2-qubit parameterized non-self-adjoint gates
+        gates = ['A']
+        for g in gates:
+            gate1 = gate(g,0,1,0.5)
+            gate2 = gate1.adjoint()
+            assert gate1 == gate2
+            assert gate2 == gate(g,0,1,0.5)
+
+    def test_param_gate(self):
+        R = gate('R',0,0.5)
+        assert R.has_parameter() is True
+        assert R.parameter() == approx(0.5, abs=1.0e-16)
+        Radj = R.adjoint()
+        assert Radj.parameter() == approx(-0.5, abs=1.0e-16)
+        Rm = gate('R',0,-0.5)
+        assert Rm == Radj
+
+        # test the Rx gate
+        Rx = gate('Rx',0,0.7)
+        assert Rx.has_parameter() is True
+        assert Rx.parameter() == approx(0.7, abs=1.0e-16)
+        Rxadj = Rx.adjoint()
+        assert Rxadj.parameter() == approx(-0.7, abs=1.0e-16)
+        Rxm = gate('Rx',0,-0.7)
+        assert Rxadj == Rxm
+
+        # test the Ry gate
+        Ry = gate('Ry',0,0.7)
+        assert Ry.has_parameter() is True
+        assert Ry.parameter() == approx(0.7, abs=1.0e-16)
+        Ryadj = Ry.adjoint()
+        assert Ryadj.parameter() == approx(-0.7, abs=1.0e-16)
+        Rym = gate('Ry',0,-0.7)
+        assert Ryadj == Rym
+
+        # test the Rz gate
+        Rz = gate('Rz',0,0.7)
+        assert Rz.has_parameter() is True
+        assert Rz.parameter() == approx(0.7, abs=1.0e-16)
+        Rzadj = Rz.adjoint()
+        assert Rzadj.parameter() == approx(-0.7, abs=1.0e-16)
+        Rzm = gate('Rz',0,-0.7)
+        assert Rzadj == Rzm
+
+        # test the rU1 gate
+        rU1 = gate('rU1',0,0.7)
+        assert rU1.has_parameter() is True
+        assert rU1.parameter() == approx(0.7, abs=1.0e-16)
+        rU1adj = rU1.adjoint()
+        assert rU1adj.parameter() == approx(-0.7, abs=1.0e-16)
+        rU1m = gate('rU1',0,-0.7)
+        assert rU1adj == rU1m
+
+        # test the cR gate
+        cR = gate('cR',0,1,0.7)
+        assert cR.has_parameter() is True
+        assert cR.parameter() == approx(0.7, abs=1.0e-16)
+        cRadj = cR.adjoint()
+        assert cRadj.parameter() == approx(-0.7, abs=1.0e-16)
+        cRm = gate('cR',0,1,-0.7)
+        assert cRadj == cRm
+
+        # test the cRz gate
+        cRz = gate('cRz',0,1,0.7)
+        assert cRz.has_parameter() is True
+        assert cRz.parameter() == approx(0.7, abs=1.0e-16)
+        cRzadj = cRz.adjoint()
+        assert cRzadj.parameter() == approx(-0.7, abs=1.0e-16)
+        cRzm = gate('cRz',0,1,-0.7)
+        assert cRzadj == cRzm
+
+        # test the A gate (the exception among the parametrized gates)
+        A = gate('A',0,1,0.7)
+        assert A.has_parameter() is True
+        assert A.parameter() == approx(0.7, abs=1.0e-16)
+        Aadj = A.adjoint()
+        assert Aadj.parameter() == approx(0.7, abs=1.0e-16)
+        assert Aadj == A
 
     def test_op_exp_val_1(self):
         # test direct expectation value measurement
