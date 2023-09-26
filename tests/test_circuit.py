@@ -125,9 +125,9 @@ class TestCircuit:
         circ = Circuit()
         circ.add(gate('X', 0))
         circ.add(gate('Y', 1))
-        assert circ.is_pauli() == True
+        assert circ.is_pauli() is True
         circ.add(gate('T', 2))
-        assert circ.is_pauli() == False
+        assert circ.is_pauli() is False
 
         
     def test_circuit_parameters(self):
