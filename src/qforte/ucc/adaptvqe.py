@@ -148,6 +148,7 @@ class ADAPTVQE(UCCVQE):
         hit_maxiter = 0
         if adapt_maxiter == 0:
             hit_maxiter = 1
+            self._converged = True
 
         if (self._print_summary_file):
             f = open("summary.dat", "w+", buffering=1)
@@ -191,7 +192,10 @@ class ADAPTVQE(UCCVQE):
         if hit_maxiter:
             self._Egs = self.get_final_energy(hit_max_avqe_iter=1)
             if self._optimizer.lower() != 'jacobi':
-                self._final_result = self._results[-1]
+                if len(self._results) == 0:
+                    self._final_result = None
+                else:
+                    self._final_result = self._results[-1]
 
         self._Egs = self.get_final_energy()
 
@@ -210,17 +214,17 @@ class ADAPTVQE(UCCVQE):
             for k, Ek in enumerate(self._energies):
                 print(f' {k+1:7}    {Ek:+15.9f}    {self._E_mmcc_mp[k]:15.9f}    {self._E_mmcc_en[k]:15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
 
+        if len(self._tamps) > 0:
+            self._n_classical_params = len(self._tamps)
+            self._n_cnot = self._n_cnot_lst[-1]
+            self._n_pauli_trm_measures = sum(self._n_pauli_trm_measures_lst)
 
-        self._n_classical_params = len(self._tamps)
-        self._n_cnot = self._n_cnot_lst[-1]
-        self._n_pauli_trm_measures = sum(self._n_pauli_trm_measures_lst)
+            # Print summary banner (should done for all algorithms).
+            self.print_summary_banner()
 
-        # Print summary banner (should done for all algorithms).
-        self.print_summary_banner()
-
-        # verify that required attributes were defined
-        # (should be called for all algorithms!)
-        self.verify_run()
+            # verify that required attributes were defined
+            # (should be called for all algorithms!)
+            self.verify_run()
 
     # Define Algorithm abstract methods.
     def run_realistic(self):
@@ -517,8 +521,12 @@ class ADAPTVQE(UCCVQE):
             Whether ADAPT-VQE has already hit the maximum number of iterations.
         """
         if hit_max_avqe_iter:
-            print("\nADAPT-VQE at maximum number of iterations!")
-            self._final_energy = self._energies[-1]
+            if len(self._energies) == 0:
+                print("\nADAPT-VQE did no iterations as requested.")
+                self._final_energy = None
+            else:
+                print("\nADAPT-VQE at maximum number of iterations.")
+                self._final_energy = self._energies[-1]
         else:
             return self._final_energy
 
@@ -530,7 +538,12 @@ class ADAPTVQE(UCCVQE):
             Whether ADAPT-VQE has already hit the maximum number of iterations.
         """
         if hit_max_avqe_iter:
-            self._final_result = self._results[-1]
+            if len(self._results) == 0:
+                print("\nADAPT-VQE did no iterations as requested.")
+                self._final_result = None
+            else:
+                print("\nADAPT-VQE at maximum number of iterations.")
+                self._final_result = self._results[-1]
         else:
             return self._final_result
 
