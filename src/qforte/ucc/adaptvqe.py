@@ -94,8 +94,7 @@ class ADAPTVQE(UCCVQE):
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
         self._adapt_maxiter = adapt_maxiter
-        if adapt_maxiter < 1:
-            raise ValueError("ADAPT must have at least one iteration.") 
+        
         self._opt_maxiter = opt_maxiter
         self._stop_E = stop_E
         self._use_analytic_grad = use_analytic_grad
@@ -145,7 +144,10 @@ class ADAPTVQE(UCCVQE):
             print(self._pool_obj.str())
 
         avqe_iter = 0
+        
         hit_maxiter = 0
+        if adapt_maxiter == 0:
+            hit_maxiter = 1
 
         if (self._print_summary_file):
             f = open("summary.dat", "w+", buffering=1)
