@@ -48,7 +48,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("set_parameter", &Circuit::set_parameter)
         .def("get_parameters", &Circuit::get_parameters)
         .def("get_num_cnots", &Circuit::get_num_cnots)
-        .def("num_qubits", &Circuit::num_qubits)
+        .def("is_pauli", &Circuit::is_pauli)
         .def("str", &Circuit::str)
         .def("__str__", &Circuit::str)
         .def("__repr__", &Circuit::str)
