@@ -9,10 +9,10 @@ geom = [
     ('H', (0., 0., 2.0)),
     ('H', (0., 0., 3.0)), 
     ('H', (0., 0., 4.0)),
-    ('H', (0., 0., 5.0)), 
-    ('H', (0., 0., 6.0)),
-    ('H', (0., 0., 7.0)), 
-    ('H', (0., 0., 8.0)),
+    # ('H', (0., 0., 5.0)), 
+    # ('H', (0., 0., 6.0)),
+    # ('H', (0., 0., 7.0)), 
+    # ('H', (0., 0., 8.0)),
     # ('H', (0., 0., 9.0)), 
     # ('H', (0., 0.,10.0))
     ]
@@ -43,6 +43,7 @@ if(reference == 'hf'):
     fci_comp2.hartree_fock()
 
 elif(reference == 'random'):
+    np.random.seed(42)
     random_array = np.random.rand(fci_comp.get_state().shape()[0], fci_comp.get_state().shape()[1])
     random = np.array(random_array, dtype = np.dtype(np.complex128))
 

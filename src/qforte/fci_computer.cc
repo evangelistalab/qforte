@@ -441,6 +441,40 @@ void apply_tensor_spin_12_body(const TensorOperator& top){
     // Stuff
 }
 
+std::pair<std::vector<int>, std::vector<int>> FCIComputer::evaluate_map_number(
+    const std::vector<int>& numa, 
+    const std::vector<int>& numb) 
+{
+    std::vector<int> amap(nalfa_strs_);
+    std::vector<int> bmap(nbeta_strs_);
+
+    uint64_t amask = graph_.reverse_integer_index(numa);
+    uint64_t bmask = graph_.reverse_integer_index(numb);
+
+    int acounter = 0;
+    for (int index = 0; index < nalfa_strs_; ++index) {
+        int current = graph_.get_astr_at_idx(index);
+        if (((~current) & amask) == 0) {
+            amap[acounter] = index;
+            acounter++;
+        }
+    }
+
+    int bcounter = 0;
+    for (int index = 0; index < nbeta_strs_; ++index) {
+        int current = graph_.get_bstr_at_idx(index);
+        if (((~current) & bmask) == 0) {
+            bmap[bcounter] = index;
+            bcounter++;
+        }
+    }
+
+    amap.resize(acounter);
+    bmap.resize(bcounter);
+
+    return std::make_pair(amap, bmap);
+}
+
 std::pair<std::vector<int>, std::vector<int>> FCIComputer::evaluate_map(
     const std::vector<int>& crea,
     const std::vector<int>& anna,
@@ -524,6 +558,28 @@ int FCIComputer::isolate_number_operators(
     return par;
 }
 
+void FCIComputer::evolve_individual_nbody_easy(
+    const std::complex<double> time,
+    const std::complex<double> coeff,
+    const Tensor& Cin,  
+    Tensor& Cout,       
+    const std::vector<int>& crea,
+    const std::vector<int>& anna,
+    const std::vector<int>& creb,
+    const std::vector<int>& annb) 
+{
+    std::complex<double> factor = std::exp(-time * std::real(coeff) * std::complex<double>(0.0, 2.0));
+    std::pair<std::vector<int>, std::vector<int>> maps = evaluate_map_number(anna, annb);
+
+    if (maps.first.size() != 0 and maps.second.size() != 0){
+        for (size_t i = 0; i < maps.first.size(); i++){
+            for (size_t j = 0; j < maps.second.size(); j++){
+                Cout.data()[maps.first[i] * nbeta_strs_ +  maps.second[j]] *= factor;
+            }
+        }       
+    }
+}
+
 void FCIComputer::evolve_individual_nbody_hard(
     const std::complex<double> time,
     const std::complex<double> coeff,
@@ -566,7 +622,7 @@ void FCIComputer::evolve_individual_nbody_hard(
     std::vector<int> numberb_dagworkb(numberb.begin(), numberb.end());
     numberb_dagworkb.insert(numberb_dagworkb.end(), dagworkb.begin(), dagworkb.end());
 
-    std::cout << "\n Cout Before Cos Application \n" << Cout.str() << std::endl;
+    // std::cout << "\n Cout Before Cos Application \n" << Cout.str() << std::endl;
 
     apply_cos_inplace(
         time,
@@ -592,7 +648,14 @@ void FCIComputer::evolve_individual_nbody_hard(
         dagworkb,
         Cout);
 
-    std::cout << "\n Cout After Cos Application \n" << Cout.str() << std::endl;
+    // print_vector(numbera_dagworka, "numbera_dagworka");
+    // print_vector(numberb_dagworkb, "numberb_dagworkb");
+    // print_vector(numbera_undagworka, "numbera_undagworka");
+    // print_vector(numberb_undagworkb, "numberb_undagworkb");
+    // print_vector(numbera, "numbera");
+    // print_vector(numberb, "numberb");
+
+    // std::cout << "\n Cout After 2nd Cos Application \n" << Cout.str() << std::endl;
 
     int phase = std::pow(-1, (crea.size() + anna.size()) * (creb.size() + annb.size()));
     std::complex<double> work_cof = std::conj(coeff) * static_cast<double>(phase) * std::complex<double>(0.0, -1.0);
@@ -606,7 +669,7 @@ void FCIComputer::evolve_individual_nbody_hard(
         annb,
         creb);
 
-    std::cout << "\n Cout After First Accumulate Application \n" << Cout.str(true, true) << std::endl;
+    // std::cout << "\n Cout After First Accumulate Application \n" << Cout.str(true, true) << std::endl;
 
     apply_individual_nbody_accumulate(
         coeff * std::complex<double>(0.0, -1.0) * sinfactor,
@@ -617,7 +680,7 @@ void FCIComputer::evolve_individual_nbody_hard(
         creb,
         annb);
 
-    std::cout << "\n Cout After Second Accumulate Application \n" << Cout.str(true, true) << std::endl;
+    // std::cout << "\n Cout After Second Accumulate Application \n" << Cout.str(true, true) << std::endl;
 }
 
 void FCIComputer::evolve_individual_nbody(
@@ -672,7 +735,17 @@ void FCIComputer::evolve_individual_nbody(
 
     std::complex<double> parity = std::pow(-1, nswaps);
 
-    if (crea.size() == anna.size() && creb.size() == annb.size()) {
+    if (crea == anna && creb == annb) {
+        evolve_individual_nbody_easy(
+            time,
+            parity * std::get<0>(term),
+            Cin,
+            Cout,
+            crea,
+            anna, 
+            creb,
+            annb);
+    } else if (crea.size() == anna.size() && creb.size() == annb.size()) {
         evolve_individual_nbody_hard(
             time,
             parity * std::get<0>(term),

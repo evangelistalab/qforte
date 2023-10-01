@@ -87,6 +87,10 @@ class FCIComputer {
     /// apply a 1-body and 2-body TensorOperator to the current state 
     void apply_tensor_spin_12_body(const TensorOperator& top);
 
+    std::pair<std::vector<int>, std::vector<int>> evaluate_map_number(
+      const std::vector<int>& numa,
+      const std::vector<int>& numb); 
+
     std::pair<std::vector<int>, std::vector<int>> evaluate_map(
       const std::vector<int>& crea,
       const std::vector<int>& anna,
@@ -112,6 +116,18 @@ class FCIComputer {
       std::vector<int>& crework,
       std::vector<int>& annwork,
       std::vector<int>& number); 
+
+    /// A lower-level helper function that applies the exponential of a
+    /// two-term (hermitian) SQOperator to the FCIComputer, only applies number operators.
+    void evolve_individual_nbody_easy(
+      const std::complex<double> time,
+      const std::complex<double> coeff,
+      const Tensor& Cin,
+      Tensor& Cout,
+      const std::vector<int>& crea,
+      const std::vector<int>& anna,
+      const std::vector<int>& creb,
+      const std::vector<int>& annb); 
 
     /// A lower-level helper function that applies the exponential of a
     /// two-term (hermitian) SQOperator to the FCIComputer.
