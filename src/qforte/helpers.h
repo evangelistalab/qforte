@@ -11,6 +11,8 @@ std::string to_string(std::complex<double> value);
 /// returns the parity given a list of creators and anihliators
 int reverse_bubble_list(std::vector<std::vector<int>>& arr);
 
+int parity_sort(std::vector<size_t>& arr);
+
 // class SparseVector {
 //     /* A SparseVector is a custom class based on the standard map for sparse
 //      * vector storage and manipulation.

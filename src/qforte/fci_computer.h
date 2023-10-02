@@ -87,6 +87,107 @@ class FCIComputer {
     /// apply a 1-body and 2-body TensorOperator to the current state 
     void apply_tensor_spin_12_body(const TensorOperator& top);
 
+    std::pair<std::vector<int>, std::vector<int>> evaluate_map_number(
+      const std::vector<int>& numa,
+      const std::vector<int>& numb); 
+
+    std::pair<std::vector<int>, std::vector<int>> evaluate_map(
+      const std::vector<int>& crea,
+      const std::vector<int>& anna,
+      const std::vector<int>& creb,
+      const std::vector<int>& annb); 
+
+    // opa : index list for alpha creation operators
+    // oha : index list for alpha annihilation operators
+    // opb : index list for beta creation operators
+    // ohb : index list for beta annihilation operators
+    void apply_cos_inplace(
+      const std::complex<double> time,
+      const std::complex<double> coeff,
+      const std::vector<int>& crea,
+      const std::vector<int>& anna,
+      const std::vector<int>& creb,
+      const std::vector<int>& annb,
+      Tensor& Cout);
+
+    int isolate_number_operators(
+      const std::vector<int>& cre,
+      const std::vector<int>& ann,
+      std::vector<int>& crework,
+      std::vector<int>& annwork,
+      std::vector<int>& number); 
+
+    /// A lower-level helper function that applies the exponential of a
+    /// two-term (hermitian) SQOperator to the FCIComputer, only applies number operators.
+    void evolve_individual_nbody_easy(
+      const std::complex<double> time,
+      const std::complex<double> coeff,
+      const Tensor& Cin,
+      Tensor& Cout,
+      const std::vector<int>& crea,
+      const std::vector<int>& anna,
+      const std::vector<int>& creb,
+      const std::vector<int>& annb); 
+
+    /// A lower-level helper function that applies the exponential of a
+    /// two-term (hermitian) SQOperator to the FCIComputer.
+    void evolve_individual_nbody_hard(
+      const std::complex<double> time,
+      const std::complex<double> coeff,
+      const Tensor& Cin,
+      Tensor& Cout,
+      const std::vector<int>& crea,
+      const std::vector<int>& anna,
+      const std::vector<int>& creb,
+      const std::vector<int>& annb); 
+
+    /// An intermediate function that applies the exponential of a
+    /// two-term (hermitian) SQOperator to the FCIComputer.
+    void evolve_individual_nbody(
+      const std::complex<double> time,
+      const SQOperator& sqop,
+      const Tensor& Cin,
+      Tensor& Cout);
+
+    /// A function that applies the exponential of a
+    /// two-term (hermitian) SQOperator to the FCIComputer.
+    /// The operator is multipled by by the evolution time
+    /// Onus on the user to assure evolution is unitary.
+    void apply_sqop_evolution(
+      const std::complex<double> time,
+      const SQOperator& sqop);
+
+    /// A lower-level helper function that applies a SQOperator
+    /// term to the FCIComputer.
+    void apply_individual_nbody1_accumulate(
+      const std::complex<double> coeff, 
+      const Tensor& Cin,
+      Tensor& Cout,
+      std::vector<int>& targeta,
+      std::vector<int>& sourcea,
+      std::vector<int>& paritya,
+      std::vector<int>& targetb,
+      std::vector<int>& sourceb,
+      std::vector<int>& parityb);
+
+    /// Apply a single term of a SQOperator to the FCIComputer after
+    /// re-indexing the creators and anihilators. 
+    /// NICK: Still need a top level function which takes a sqop term...
+    void apply_individual_nbody_accumulate(
+      const std::complex<double> coeff,
+      const Tensor& Cin,
+      Tensor& Cout,
+      const std::vector<int>& daga,
+      const std::vector<int>& undaga, 
+      const std::vector<int>& dagb,
+      const std::vector<int>& undagb);
+
+    /// Apply individual sqop term
+    void apply_individual_sqop_term(
+      const std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& term,
+      const Tensor& Cin,
+      Tensor& Cout);
+
     /// apply a second quantized operator, must be number and spin conserving.
     void apply_sqop(const SQOperator& sqop);
 
@@ -123,6 +224,12 @@ class FCIComputer {
     /// return a tensor of the coeficients
     Tensor get_state() const { return C_; }
 
+    /// return a tensor of the coeficients
+    Tensor get_state_deep() const { 
+      Tensor Cprime = C_; 
+      return Cprime; 
+    }
+
     /// return the dot product of the current FCIComputer state (as the ket) and the HF state (i.e. <HF|C_>)
     std::complex<double> get_hf_dot() const { return C_.get({0,0}); }
 
@@ -144,7 +251,7 @@ class FCIComputer {
 
     /// set the coefficient tensor directly from another coefficient tensor
     /// checks the shape, throws if incompatable
-    void set_state(const Tensor other_state);
+    void set_state(const Tensor& other_state);
 
     /// set the quantum computer to the state
     /// basis_1 * c_1 + basis_2 * c_2 + ...
@@ -157,6 +264,10 @@ class FCIComputer {
 
     /// Sets all coefficeints fo the FCI Computer to Zero except the HF Determinant (set to 1).
     void hartree_fock();
+
+    void print_vector(const std::vector<int>& vec, const std::string& name);
+
+    void print_vector_uint(const std::vector<uint64_t>& vec, const std::string& name);
 
     /// get timings
     std::vector<std::pair<std::string, double>> get_timings() { return timings_; }

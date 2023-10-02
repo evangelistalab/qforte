@@ -312,13 +312,12 @@ void Tensor::scale(std::complex<double> a)
     math_zscale(size_, a, data_.data(), 1);
 }
 
-void Tensor::copy(
-    const std::shared_ptr<Tensor>& other
+void Tensor::copy_in(
+    const Tensor& other
     )
 {
-    shape_error(other->shape());
-    
-    std::memcpy(data_.data(), other->data().data(), sizeof(std::complex<double>)*size_);
+    shape_error(other.shape());
+    std::memcpy(data_.data(), other.read_data().data(), sizeof(std::complex<double>)*size_);
 }
 
 void Tensor::add(const Tensor& other) 

@@ -154,7 +154,7 @@ void scale(std::complex<double> a);
  * Throw if other is not same shape 
  * TODO: This is covered by a static Python method, deprecate and remove this function.
  **/
-void copy(const std::shared_ptr<Tensor>& other); 
+void copy_in(const Tensor& other); 
 
 /**
  * Update this Tensor (y) to be y = a * x + b * y

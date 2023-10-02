@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <iostream>
 
+#include <bitset>
+
 /// Custom construcotr
 FCIGraph::FCIGraph(int nalfa, int nbeta, int norb) 
 {
@@ -160,6 +162,71 @@ std::vector<std::vector<std::vector<int>>> FCIGraph::map_to_deexc(
     }
     
     return dexc;
+}
+
+/// NICK: May be an accelerated version of this funciton, may also be important as it comes up in
+// every instance of apply individual op!
+std::tuple<int, std::vector<int>, std::vector<int>, std::vector<int>> FCIGraph::make_mapping_each(
+    bool alpha, 
+    const std::vector<int>& dag, 
+    const std::vector<int>& undag) 
+{
+    std::vector<uint64_t> strings;
+    int length;
+    
+    if (alpha) {
+        strings = get_astr();
+        length = lena_;
+    } else {
+        strings = get_bstr();
+        length = lenb_;
+    }
+
+    std::vector<int> source(length);
+    std::vector<int> target(length);
+    std::vector<int> parity(length);
+
+    uint64_t dag_mask = 0;
+    uint64_t undag_mask = 0;
+    int count = 0;
+
+    for (uint64_t i : dag) {
+        if (std::find(undag.begin(), undag.end(), i) == undag.end()) {
+            dag_mask = set_bit(dag_mask, i);
+        }
+    }
+
+    for (uint64_t i : undag) { undag_mask = set_bit(undag_mask, i); }
+
+    for (uint64_t index = 0; index < length; index++) {
+        uint64_t current = strings[index];
+        bool check = ((current & dag_mask) == 0) && ((current & undag_mask ^ undag_mask) == 0);
+        
+        if (check) {
+            uint64_t tmp = current;
+            uint64_t parity_value = 0;
+            for (size_t i = undag.size(); i > 0; i--) {
+                parity_value += count_bits_above(current, undag[i - 1]);
+                current = unset_bit(current, undag[i - 1]);
+            }
+            
+            for (size_t i = dag.size(); i > 0; i--) {
+                parity_value += count_bits_above(current, dag[i - 1]);
+                current = set_bit(current, dag[i - 1]);
+            }
+            
+            source[count] = static_cast<int>(index);
+            target[count] = static_cast<int>(current);
+            parity[count] = static_cast<int>(parity_value % 2);
+            count++;
+        }
+    }
+
+    return std::make_tuple(
+                    count,
+                    source,
+                    target,
+                    parity);
 }
 
 /// NICK: 1. Consider a faster blas veriosn, 2. consider using qubit basis, 3. rename (too long)

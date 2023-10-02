@@ -37,7 +37,7 @@ public:
 
     std::vector<std::vector<std::vector<int>>> map_to_deexc(
         const Spinmap& mappings, 
-        int states, 
+        int states,
         int norbs,
         int nele);
 
@@ -50,6 +50,11 @@ public:
         const std::vector<std::vector<uint64_t>>& zmat); 
 
     std::vector<std::vector<uint64_t>> get_z_matrix(int norb, int nele);
+
+    std::tuple<int, std::vector<int>, std::vector<int>, std::vector<int>> make_mapping_each(
+        bool alpha, 
+        const std::vector<int>& dag, 
+        const std::vector<int>& undag); 
 
     /// ==> Utility Functions for Bit Math (may need to move) <== ///
 
@@ -89,6 +94,18 @@ public:
 
     constexpr uint64_t maskbit(size_t pos) { return static_cast<uint64_t>(1) << pos; }
 
+    int count_bits_above(uint64_t string, int pos) {
+        uint64_t bitmask = (1 << (pos + 1)) - 1;
+        uint64_t inverted_mask = ~bitmask;
+        uint64_t result = string & inverted_mask;
+        int count = 0;
+        while (result) {
+            result &= (result - 1);
+            count++;
+        }
+        return count;
+    }
+
     int count_bits_between(uint64_t string, int pos1, int pos2) {
 
         uint64_t mask = (((1 << pos1) - 1) ^ ((1 << (pos2 + 1)) - 1)) \
@@ -105,6 +122,12 @@ public:
         return count;
     }
 
+    uint64_t reverse_integer_index(const std::vector<int>& occupations){
+        uint64_t string = 0;
+        for(int pos : occupations){ string = set_bit(string, pos); }
+        return string;
+    }
+
     uint64_t set_bit(uint64_t string, int pos) {
         return string | (1ULL << pos);
     }
@@ -119,10 +142,20 @@ public:
     size_t get_nalfa() const { return nalfa_; }
     size_t get_nbeta() const { return nbeta_; }
 
+    /// return the number of alfa/beta strings
+    size_t get_lena() const { return lena_; }
+    size_t get_lenb() const { return lenb_; }
 
     /// return the alfa/beta bitstrings
     std::vector<uint64_t> get_astr() const { return astr_;  }
     std::vector<uint64_t> get_bstr() const { return bstr_;  }
+
+    /// return the alfa/beta bitstrings
+    int get_astr_at_idx(int idx) const { return static_cast<int>(astr_[idx]);  }
+    int get_bstr_at_idx(int idx) const { return static_cast<int>(bstr_[idx]);  }
+
+    int get_aind_for_str(int str) const { return static_cast<int>(aind_.at(static_cast<uint64_t>(str)));  }
+    int get_bind_for_str(int str) const { return static_cast<int>(bind_.at(static_cast<uint64_t>(str)));  }
 
     std::unordered_map<uint64_t, size_t> get_aind() const { return aind_; }
     std::unordered_map<uint64_t, size_t> get_bind() const { return bind_; }

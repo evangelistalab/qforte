@@ -203,6 +203,12 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_tensor_spin_1bdy", &FCIComputer::apply_tensor_spin_1bdy)
         .def("apply_tensor_spin_12bdy", &FCIComputer::apply_tensor_spin_12bdy)
         .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
+        .def("apply_individual_sqop_term", &FCIComputer::apply_individual_sqop_term)
+        .def("apply_sqop", &FCIComputer::apply_sqop)
+        .def("apply_sqop_evolution", &FCIComputer::apply_sqop_evolution)
+        .def("set_state", &FCIComputer::set_state)
+        .def("get_state", &FCIComputer::get_state)
+        .def("get_state_deep", &FCIComputer::get_state_deep)
         .def("get_hf_dot", &FCIComputer::get_hf_dot)
         .def("str", &FCIComputer::str, 
             py::arg("print_data") = true, 
@@ -216,8 +222,11 @@ PYBIND11_MODULE(qforte, m) {
 
     py::class_<FCIGraph>(m, "FCIGraph")
         .def(py::init<int, int, int>(), "nalfa"_a, "nbeta"_a, "norb"_a, "Make a FCIGraph")
+        .def("make_mapping_each", &FCIGraph::make_mapping_each)
         .def("get_nalfa", &FCIGraph::get_nalfa)
         .def("get_nbeta", &FCIGraph::get_nbeta)
+        .def("get_lena", &FCIGraph::get_lena)
+        .def("get_lenb", &FCIGraph::get_lenb)
         .def("get_astr", &FCIGraph::get_astr)
         .def("get_bstr", &FCIGraph::get_bstr)
         .def("get_aind", &FCIGraph::get_aind)
@@ -239,6 +248,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("shape", &Tensor::shape)
         .def("strides", &Tensor::strides)
         .def("set", &Tensor::set)
+        .def("copy_in", &Tensor::copy_in)
         .def("add_to_element", &Tensor::add_to_element)
         .def("get", &Tensor::get)
         .def("fill_from_np", &Tensor::fill_from_np)
