@@ -622,8 +622,6 @@ void FCIComputer::evolve_individual_nbody_hard(
     std::vector<int> numberb_dagworkb(numberb.begin(), numberb.end());
     numberb_dagworkb.insert(numberb_dagworkb.end(), dagworkb.begin(), dagworkb.end());
 
-    // std::cout << "\n Cout Before Cos Application \n" << Cout.str() << std::endl;
-
     apply_cos_inplace(
         time,
         ncoeff,
@@ -632,6 +630,8 @@ void FCIComputer::evolve_individual_nbody_hard(
         numberb_dagworkb,
         undagworkb,
         Cout);
+
+    // std::cout << "\n Cout After 1st Cos Application \n" << Cout.str(true, true) << std::endl;
 
     std::vector<int> numbera_undagworka(numbera.begin(), numbera.end());
     numbera_undagworka.insert(numbera_undagworka.end(), undagworka.begin(), undagworka.end());
@@ -648,14 +648,7 @@ void FCIComputer::evolve_individual_nbody_hard(
         dagworkb,
         Cout);
 
-    // print_vector(numbera_dagworka, "numbera_dagworka");
-    // print_vector(numberb_dagworkb, "numberb_dagworkb");
-    // print_vector(numbera_undagworka, "numbera_undagworka");
-    // print_vector(numberb_undagworkb, "numberb_undagworkb");
-    // print_vector(numbera, "numbera");
-    // print_vector(numberb, "numberb");
-
-    // std::cout << "\n Cout After 2nd Cos Application \n" << Cout.str() << std::endl;
+    // std::cout << "\n Cout After 2nd Cos Application \n" << Cout.str(true, true) << std::endl;
 
     int phase = std::pow(-1, (crea.size() + anna.size()) * (creb.size() + annb.size()));
     std::complex<double> work_cof = std::conj(coeff) * static_cast<double>(phase) * std::complex<double>(0.0, -1.0);
@@ -719,13 +712,6 @@ void FCIComputer::evolve_individual_nbody(
             annb.push_back(std::floor(std::get<2>(term)[i] / 2));
         }
     }
-
-    /// NICK: May not need, or may calculate at one level deeper.
-    // int nswaps = (crea.size() + anna.size()) * (creb.size() + annb.size());
-    // nswaps += crea.size() * (crea.size() - 1) % 2;
-    // nswaps += creb.size() * (creb.size() - 1) % 2;
-    // nswaps += anna.size() * (anna.size() - 1) % 2;
-    // nswaps += annb.size() * (annb.size() - 1) % 2;
 
     std::vector<size_t> ops1(std::get<1>(term));
     std::vector<size_t> ops2(std::get<2>(term));
@@ -803,7 +789,6 @@ void FCIComputer::apply_individual_nbody1_accumulate(
     }
 }
 
-// do i even need idata as an argument?
 void FCIComputer::apply_individual_nbody_accumulate(
     const std::complex<double> coeff,
     const Tensor& Cin,
@@ -858,21 +843,6 @@ void FCIComputer::apply_individual_nbody_accumulate(
         targetb[i] = graph_.get_bind_for_str(std::get<2>(ubetamap)[i]);
         parityb[i] = 1.0 - 2.0 * std::get<3>(ubetamap)[i];
     }
-
-    /// NICK: Going to leave for potential future troubleshooting
-    // print_vector_uint(graph_.get_astr(), "astr_");
-    // print_vector_uint(graph_.get_bstr(), "bstr_");
-
-    // print_vector(std::get<2>(ualfamap), "std::get<2>(ualfamap)");
-    // print_vector(std::get<2>(ubetamap), "std::get<2>(ubetamap)");
-
-    // print_vector(sourcea, "sourcea");
-    // print_vector(targeta, "targeta");
-    // print_vector(paritya, "paritya");
-
-    // print_vector(sourceb, "sourceb");
-    // print_vector(targetb, "targetb");
-    // print_vector(parityb, "parityb");
 
     apply_individual_nbody1_accumulate(
         coeff, 

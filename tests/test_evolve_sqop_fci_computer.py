@@ -17,13 +17,13 @@ class TestFCICompApply:
         Cfqe.fill_from_nparray(
             loaded_c_fqe.ravel(), 
             Cfqe.shape())
-
+        
         sq_terms = [
             (+0.704645 * 1.0j, [7, 6], [3, 2]), # 2body ab 
             (+0.4 * 1.0j, [6], [0]), # 1bdy-a
             (+0.4 * 1.0j, [7], [3]), # 1bdy-a
-            (+0.704645 * 1.0, [6, 3], [3, 2]), # 2body-nbr ab 
-            (+0.704645 * 1.0, [6, 5], [5, 2]), # 2body-nbr ab (coeff must be REAL)
+            (+0.704645 * 1.0, [4, 5], [5, 4]), # 2body-nbr ab 
+            (+0.704645 * 1.0, [6, 3], [3, 2]), # 2body-nbr ab (coeff must be REAL)
             (+0.704645 * 1.0, [2], [2]), # 1body-nbr ab (coeff must be REAL)
             ]
 
@@ -66,11 +66,7 @@ class TestFCICompApply:
             loaded_inital_state.ravel(), 
             Co.shape())
         
-        co_norm = Co.norm()
-        
         fci_comp.set_state(Co)
-
-        print(fci_comp)
 
         loaded_c_fqe = np.load('zip_files/4e_4o_small_sqop_evo_from_random.npz', allow_pickle=True)['data']
         Cfqe = qf.Tensor(fci_comp.get_state().shape(), "Cfqe")
@@ -82,8 +78,8 @@ class TestFCICompApply:
             (+0.704645 * 1.0j, [7, 6], [3, 2]), # 2body ab 
             (+0.4 * 1.0j, [6], [0]), # 1bdy-a
             (+0.4 * 1.0j, [7], [3]), # 1bdy-a
-            (+0.704645 * 1.0, [6, 3], [3, 2]), # 2body-nbr ab 
-            (+0.704645 * 1.0, [6, 5], [5, 2]), # 2body-nbr ab (coeff must be REAL)
+            (+0.704645 * 1.0, [4, 5], [5, 4]), # 2body-nbr ab 
+            (+0.704645 * 1.0, [6, 3], [3, 2]), # 2body-nbr ab (coeff must be REAL)
             (+0.704645 * 1.0, [2], [2]), # 1body-nbr ab (coeff must be REAL)
             ]
 
@@ -106,9 +102,10 @@ class TestFCICompApply:
         assert norm == approx(1.0, abs=1.0e-14)
         assert cdif_norm == approx(0.0, abs=1.0e-14)
 
-        print(f"||Co||:   {co_norm}")
-        print(f"||Cf||:   {norm}")
-        print(f"||Cdif||: {cdif_norm}")
+        # co_norm = Co.norm()
+        # print(f"||Co||:   {co_norm}")
+        # print(f"||Cf||:   {norm}")
+        # print(f"||Cdif||: {cdif_norm}")
 
-        print(Cdif.str(print_complex=True))
-        print(Cfqe.str(print_complex=True))
+        # print(Cdif.str(print_complex=True))
+        # print(Cfqe.str(print_complex=True))
