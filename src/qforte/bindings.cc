@@ -248,6 +248,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("shape", &Tensor::shape)
         .def("strides", &Tensor::strides)
         .def("set", &Tensor::set)
+        .def("copy_in", &Tensor::copy_in)
         .def("add_to_element", &Tensor::add_to_element)
         .def("get", &Tensor::get)
         .def("fill_from_np", &Tensor::fill_from_np)

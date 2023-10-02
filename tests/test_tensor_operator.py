@@ -1,6 +1,4 @@
 from qforte import *
-from fqe import fqe_decorators
-from openfermion import FermionOperator, hermitian_conjugated
 import qforte as qf
 import numpy as np
 import unittest

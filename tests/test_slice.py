@@ -202,5 +202,3 @@ class TestSlice(unittest.TestCase):
         final_norm = np.linalg.norm(random_arr_sliced) - np.linalg.norm(ref_arr)
 
         self.assertLess(final_norm, 1e-14)
-
-unittest.main()
