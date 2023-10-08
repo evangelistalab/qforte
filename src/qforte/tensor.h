@@ -188,7 +188,8 @@ void add(const Tensor& x);
  * @return the dot product
  * Throw if other is not same shape 
  **/
-double vector_dot(const std::shared_ptr<Tensor>& other) const;
+// double vector_dot(const std::shared_ptr<Tensor>& other) const;
+std::complex<double> vector_dot(const Tensor& other) const;
 
 /**
  * Compute a new copy of this Tensor which is a transpose of this. Works only
@@ -214,6 +215,8 @@ Tensor general_transpose(const std::vector<size_t>& axes) const;
  * Throw if given too many indexes for the dimensions or if given invalid syntax for indexes.
  **/
 Tensor slice(std::vector<std::pair<size_t, size_t>> idxs) const;
+
+std::vector<std::vector<size_t>> get_nonzero_tidxs() const;
 
 // => Printing <= //
 

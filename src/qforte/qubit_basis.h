@@ -41,6 +41,8 @@ class QubitBasis {
     // TODO: Rename to get_state.
     size_t add() const { return state_; }
 
+    size_t get_num_ones() const;
+
     std::string str(size_t nqubit) const;
 
     std::string default_str() const { return str(max_qubits_); }

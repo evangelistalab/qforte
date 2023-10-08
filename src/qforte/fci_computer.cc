@@ -4,6 +4,7 @@
 #include <functional>
 #include <stdexcept>
 #include <cmath>
+#include <iterator>
 
 // #include "fmt/format.h"
 
@@ -15,6 +16,7 @@
 #include "tensor.h"
 #include "tensor_operator.h"
 #include "qubit_op_pool.h"
+#include "sq_op_pool.h"
 #include "timer.h"
 #include "sq_operator.h"
 #include "blas_math.h"
@@ -680,17 +682,33 @@ void FCIComputer::evolve_individual_nbody(
     const std::complex<double> time,
     const SQOperator& sqop,
     const Tensor& Cin,
-    Tensor& Cout) 
+    Tensor& Cout,
+    const bool antiherm,
+    const bool adjoint) 
 {
 
     if (sqop.terms().size() != 2) {
+        std::cout << "This sqop has " << sqop.terms().size() << " terms." << std::endl;
         throw std::invalid_argument("Individual n-body code is called with multiple terms");
     }
 
     /// NICK: TODO, implement a hermitian check, at least for two term SQOperators
     // sqop.hermitian_check();
 
-    const auto term = sqop.terms()[0];
+    auto term = sqop.terms()[0];
+
+    if(std::abs(std::get<0>(term)) < compute_threshold_){
+        return;
+    }
+
+    if(adjoint){
+        std::get<0>(term) *= -1.0;
+    }
+
+    if(antiherm){
+        std::complex<double> onei(0.0, 1.0);
+        std::get<0>(term) *= onei;
+    }
 
     std::vector<int> crea;
     std::vector<int> anna;
@@ -747,16 +765,45 @@ void FCIComputer::evolve_individual_nbody(
     }
 }
 
+void FCIComputer::evolve_pool_trotter_basic(
+      const SQOpPool& pool,
+      const bool antiherm,
+      const bool adjoint)
+
+{
+    if(adjoint){
+        for (int i = pool.terms().size() - 1; i >= 0; --i) {
+            apply_sqop_evolution(
+                pool.terms()[i].first, 
+                pool.terms()[i].second,
+                antiherm,
+                adjoint);
+        }
+    } else {
+        for (const auto& sqop_term : pool.terms()) {
+            apply_sqop_evolution(
+                sqop_term.first, 
+                sqop_term.second,
+                antiherm,
+                adjoint);
+            }
+    }
+}
+
 void FCIComputer::apply_sqop_evolution(
       const std::complex<double> time,
-      const SQOperator& sqop)
+      const SQOperator& sqop,
+      const bool antiherm,
+      const bool adjoint)
 {
     Tensor Cin = C_;
     evolve_individual_nbody(
         time,
         sqop,
         Cin,
-        C_); 
+        C_,
+        antiherm,
+        adjoint); 
 }
 
 
@@ -910,11 +957,30 @@ void FCIComputer::apply_sqop(const SQOperator& sqop){
     Tensor Cin = C_;
     C_.zero();
     for (const auto& term : sqop.terms()) {
+        if(std::abs(std::get<0>(term)) > compute_threshold_){
         apply_individual_sqop_term(
             term,
             Cin,
             C_);
+        }
     }
+}
+
+/// NICK: Check out  accumulation, don't need to do it this way..
+std::complex<double> FCIComputer::get_exp_val(const SQOperator& sqop) {
+    Tensor Cin = C_;
+    C_.zero();
+    for (const auto& term : sqop.terms()) {
+        if(std::abs(std::get<0>(term)) > compute_threshold_){
+        apply_individual_sqop_term(
+            term,
+            Cin,
+            C_);
+        }
+    }
+    std::complex<double> val = C_.vector_dot(Cin);
+    C_ = Cin;
+    return val;
 }
 
 /// apply a constant to the FCI quantum computer.
