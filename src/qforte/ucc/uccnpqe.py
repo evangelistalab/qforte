@@ -80,11 +80,12 @@ class UCCNPQE(UCCPQE):
 
         self.print_options_banner()
 
-        timer = qforte.local_timer()
-        timer.reset()
+        self._timer = qforte.local_timer()
+
+        self._timer.reset()
         self.fill_pool()
-        fill_pool_time = timer.get()
-        print(f"\n fill_pool_time: {fill_pool_time} \n")
+        self._timer.record("fill_pool")
+
 
         if self._verbose:
             print('\n\n-------------------------------------')
@@ -92,30 +93,25 @@ class UCCNPQE(UCCPQE):
             print('-------------------------------------')
             print(self._pool_obj.str())
 
-        timer.reset()
+        self._timer.reset()
         self.initialize_ansatz()
-        init_ansatz_time = timer.get()
-        print(f"\n init_ansatz_time: {init_ansatz_time} \n")
+        self._timer.record("initialize_ansatz")
 
         if(self._verbose):
             print('\nt operators included from pool: \n', self._tops)
             print('Initial tamplitudes for tops: \n', self._tamps)
 
-        timer.reset()
+        self._timer.reset()
         self.fill_excited_dets()
-        fill_ex_det_time = timer.get()
-        print(f"\n fill_ex_det_time: {fill_ex_det_time} \n")
+        self._timer.record("fill_excited_dets")
 
-        timer.reset()
+        self._timer.reset()
         self.build_orb_energies()
-        build_ob_en_time = timer.get()
-        print(f"\n build_ob_en_time: {build_ob_en_time} \n")
-
+        self._timer.record("build_orb_energies")
         
-        timer.reset()
+        self._timer.reset()
         self.solve()
-        solve_time = timer.get()
-        print(f"\n solve time: {solve_time} \n")
+        self._timer.record("solve")
 
         if self._max_moment_rank:
             print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
@@ -202,6 +198,9 @@ class UCCNPQE(UCCPQE):
         print('Number of residual vector evaluations:       ', self._res_vec_evals)
         print('Number of residual element evaluations*:     ', self._res_m_evals)
         print('Number of non-zero res element evaluations:  ', int(self._res_vec_evals)*self._n_nonzero_params)
+
+        print("\n\n")
+        print(self._timer)
 
     def fill_excited_dets(self):
         if(self._computer_type == 'fock'):

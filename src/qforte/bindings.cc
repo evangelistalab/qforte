@@ -355,7 +355,9 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<local_timer>(m, "local_timer")
         .def(py::init<>())
         .def("reset", &local_timer::reset)
-        .def("get", &local_timer::get);
+        .def("get", &local_timer::get)
+        .def("record", &local_timer::record)
+        .def("__str__", &local_timer::str_table);
 
     m.def(
         "gate",

@@ -1,17 +1,24 @@
 import qforte as qf
-r = 0.7
+r = 1.0
+
+# geom = [
+#     ('H', (0., 0., 0.0*r)), 
+#     ('H', (0., 0., 1.0*r)),
+#     ('H', (0., 0., 2.0*r)),
+#     ('H', (0., 0., 3.0*r)),
+#     ('H', (0., 0., 4.0*r)), 
+#     ('H', (0., 0., 5.0*r)),
+#     ('H', (0., 0., 6.0*r)),
+#     ('H', (0., 0., 7.0*r)),
+#     ('H', (0., 0., 8.0*r)),
+#     ('H', (0., 0., 9.0*r)),
+#     # ('H', (0., 0.,10.0*r)),
+#     # ('H', (0., 0.,11.0*r))
+#     ]
 
 geom = [
-    ('H', (0., 0., 0.0*r)), 
-    ('H', (0., 0., 1.0*r)),
-    ('H', (0., 0., 2.0*r)),
-    ('H', (0., 0., 3.0*r)),
-    ('H', (0., 0., 4.0*r)), 
-    ('H', (0., 0., 5.0*r)),
-    ('H', (0., 0., 6.0*r)),
-    ('H', (0., 0., 7.0*r)),
-    ('H', (0., 0., 8.0*r)),
-    ('H', (0., 0., 9.0*r))
+    ('N', (0., 0., 0.0*r)), 
+    ('N', (0., 0., 1.0*r)),
     ]
 
 timer = qf.local_timer()
@@ -20,6 +27,7 @@ timer.reset()
 mol = qf.system_factory(
     build_type='psi4', 
     mol_geometry=geom, 
+    symmetry='d2h',
     basis='sto-3g',
     run_fci=1)
 timer.record("mol build")
@@ -45,11 +53,15 @@ timer.record("alg setup fci")
 
 
 timer.reset()
-alg_fci.run(opt_thresh=1.0e-2, pool_type='SDTQ')
+alg_fci.run(
+    opt_thresh=1.0e-4, 
+    pool_type='SDT',
+    )
 timer.record("run alg fci")
 
 
 print(f' Efci:    {mol.fci_energy:+12.10f}')
+print(f' Edif:    {alg_fci._Egs - mol.fci_energy:+12.10f}')
 
 print("\n Total Script Time \n")
 print(timer)
