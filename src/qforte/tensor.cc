@@ -442,14 +442,27 @@ void Tensor::gemm(
 }
 
 
-// std::complex<double> Tensor::vector_dot(
-//     const std::shared_ptr<Tensor>& other
-//     ) const
-// {
-//     shape_error(other->shape());
+std::complex<double> Tensor::vector_dot(
+    const Tensor& other
+    ) const
+{
+    shape_error(other.shape());
 
-//     return C_DDOT(size_, const_cast<std::complex<double>*>(data_.data()), 1, other->data().data(), 1);
-// }
+    // return math_zdot(
+    //     size_, 
+    //     const_cast<std::complex<double>*>(data_.data()), 
+    //     1, 
+    //     other.read_data().data(), 
+    //     1);
+
+    return math_zdot(
+        size_, 
+        data_.data(), 
+        1, 
+        other.read_data().data(), 
+        1);
+    
+}
 
 // NOTE(Nick) we maywant to return sharred pointer to a tensor instead...
 // std::shared_pointer<Tensor> Tensor::transpose() const
@@ -555,6 +568,18 @@ Tensor Tensor::slice(std::vector<std::pair<size_t, size_t>> idxs)const{
 
 
     return new_tensor;
+}
+
+std::vector<std::vector<size_t>> Tensor::get_nonzero_tidxs() const 
+{   
+    std::vector<std::vector<size_t>> nonzero_tidxs;
+    for(size_t i = 0; i < size_; i++) {
+        if(data_[i] != 0.0){
+            std::vector<size_t> tidxs = vidx_to_tidx(i);
+            nonzero_tidxs.push_back(tidxs);
+        }
+    }
+    return nonzero_tidxs;
 }
 
 // TODO(Tyler?): Column printing is a little clunky for complex

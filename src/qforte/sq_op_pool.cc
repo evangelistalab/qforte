@@ -281,6 +281,10 @@ void SQOpPool::fill_pool(std::string pool_type){
             // get the basis state (I) | 11001100 > or whatever..
             QubitBasis basis_I(I);
 
+            if(basis_I.get_num_ones() != na_el + nb_el) {
+                continue;
+            }
+
             int nbody = 0;
             int pn = 0;
             int na_I = 0;

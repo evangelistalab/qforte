@@ -66,6 +66,7 @@ class Algorithm(ABC):
 
     def __init__(self,
                  system,
+                 computer_type='fock',
                  reference=None,
                  state_prep_type='occupation_list',
                  trotter_order=1,
@@ -82,6 +83,8 @@ class Algorithm(ABC):
         self._sys = system
         self._state_prep_type = state_prep_type
 
+        self._ref_from_hf = True
+
         if self._state_prep_type == 'occupation_list':
             if(reference==None):
                 self._ref = system.hf_reference
@@ -89,6 +92,7 @@ class Algorithm(ABC):
                 if not (isinstance(reference, list)):
                     raise ValueError("occupation_list reference must be list of 1s and 0s.")
                 self._ref = reference
+                self._ref_from_hf = False
 
             self._Uprep = build_Uprep(self._ref, state_prep_type)
 
@@ -99,12 +103,39 @@ class Algorithm(ABC):
             self._ref = system.hf_reference
             self._Uprep = reference
 
+            self._ref_from_hf = False
+
         else:
             raise ValueError("QForte only suppors references as occupation lists and Circuits.")
 
 
         self._nqb = len(self._ref)
+
+        self._nael = 0
+        self._nbel = 0
+
+        self._nspin_orb = len(self._ref)
+        # may cause issues for odd number of orbitals...
+        self._norb = int(self._nspin_orb / 2) 
+
+        for i, occ in enumerate(self._ref):
+            if occ:
+                if (i % 2 == 0):
+                    self._nael += 1
+                else:
+                    self._nbel += 1
+
+        self._nel = self._nael + self._nbel
+        self._tot_spin = 0.5 * np.abs(self._nael - self._nbel)
+        self._2_spin = int(np.abs(self._nael - self._nbel))
+
+        self._mult = int(2 * self._tot_spin + 1)
+
         self._qb_ham = system.hamiltonian
+
+        if(computer_type=='fci'):
+            self._sq_ham = system.sq_hamiltonian
+
         if self._qb_ham.num_qubits() != self._nqb:
             raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
         try:
@@ -116,6 +147,14 @@ class Algorithm(ABC):
         self._trotter_order = trotter_order
         self._trotter_number = trotter_number
         self._fast = fast
+
+        if(computer_type=='fock'):
+            self._computer_type = 'fock'
+        elif(computer_type=='fci'):
+            self._computer_type = 'fci'
+        else:
+            raise ValueError(f"Computer type must be fci or fock.")
+
         self._verbose = verbose
         self._print_summary_file = print_summary_file
 
@@ -257,10 +296,19 @@ class AnsatzAlgorithm(Algorithm):
         """ This function populates an operator pool with SQOperator objects.
         """
 
+        timer2 = qforte.local_timer()
+
         if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
             self._pool_obj = qf.SQOpPool()
+
+            timer2.reset()
             self._pool_obj.set_orb_spaces(self._ref)
+            timer2.record("_pool_obj.set_orb_spaces")
+
+            timer2.reset()
             self._pool_obj.fill_pool(self._pool_type)
+            timer2.record("_pool_obj.fill_pool")
+
         elif isinstance(self._pool_type, qf.SQOpPool):
             self._pool_obj = self._pool_type
         else:
@@ -269,6 +317,7 @@ class AnsatzAlgorithm(Algorithm):
         # If possible, impose symmetry restriction to operator pool
         # Currently, symmetry is supported for system_type='molecule' and build_type='psi4'
         if hasattr(self._sys, 'point_group'):
+            timer2.reset()
             temp_sq_pool = qf.SQOpPool()
             for sq_operator in self._pool_obj.terms():
                 create = sq_operator[1].terms()[0][1]
@@ -276,8 +325,20 @@ class AnsatzAlgorithm(Algorithm):
                 if sq_op_find_symmetry(self._sys.orb_irreps_to_int, create, annihilate) == self._irrep:
                     temp_sq_pool.add(sq_operator[0], sq_operator[1])
             self._pool_obj = temp_sq_pool
+            timer2.record("point_group_considerations")
 
-        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
+        timer2.reset()
+        if(self._computer_type == 'fock'):
+            self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
+        elif(self._computer_type == 'fci'):
+            self._Nm = [0 for _, operator in self._pool_obj]
+            print("\n ==> Warning: resource estimator needs to be implemented for fci computer type <==")
+        else:
+            raise ValueError(f'{self._computer_type} is an unrecognized computer type.')
+
+        timer2.record("jw transform")
+
+        # print(timer2)
 
     def measure_energy(self, Ucirc):
         """
@@ -353,8 +414,52 @@ class AnsatzAlgorithm(Algorithm):
             The dist of (real) floating point number which will characterize
             the state preparation circuit.
         """
+        if(self._computer_type == 'fock'):
+            return self.energy_feval_fock(params)
+        elif(self._computer_type == 'fci'):
+            return self.energy_feval_fci(params)
+        else:
+            raise ValueError(f"{self._computer_type} is an unrecognized computer type.") 
+
+    def energy_feval_fock(self, params):
+        """
+        This function returns the energy expectation value of the state
+        Uprep(params)|0>, where params are parameters that can be optimized
+        for some purpouse such as energy minimizaiton.
+
+        Parameters
+        ----------
+        params : list of floats
+            The dist of (real) floating point number which will characterize
+            the state preparation circuit.
+        """
         Ucirc = self.build_Uvqc(amplitudes=params)
         Energy = self.measure_energy(Ucirc)
 
         self._curr_energy = Energy
         return Energy
+    
+    def energy_feval_fci(self, params):
+        if not self._ref_from_hf:
+            raise ValueError('get_residual_vector_fci_comp only compatible with hf reference at this time.')
+        
+        temp_pool = qforte.SQOpPool()
+
+        # NICK: Write a 'updatte_coeffs' type fucntion for the op-pool.
+        for param, top in zip(params, self._tops):
+            temp_pool.add(param, self._pool_obj[top][1])
+
+        qc = qforte.FCIComputer(
+            self._nel, 
+            self._2_spin, 
+            self._norb)
+        
+        qc.hartree_fock()
+
+        qc.evolve_pool_trotter_basic(
+            temp_pool,
+            antiherm=True,
+            adjoint=False)
+
+        self._curr_energy = np.real(qc.get_exp_val(self._sq_ham))
+        return self._curr_energy

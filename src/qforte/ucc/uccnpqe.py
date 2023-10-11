@@ -71,6 +71,7 @@ class UCCNPQE(UCCPQE):
         self._res_m_evals = 0
         # list: tuple(excited determinant, phase_factor)
         self._excited_dets = []
+        self._excited_dets_fci_comp = []
 
         self._n_classical_params = 0
         self._n_cnot = 0
@@ -78,7 +79,13 @@ class UCCNPQE(UCCPQE):
         # self._results = [] #keep for future implementations
 
         self.print_options_banner()
+
+        self._timer = qforte.local_timer()
+
+        self._timer.reset()
         self.fill_pool()
+        self._timer.record("fill_pool")
+
 
         if self._verbose:
             print('\n\n-------------------------------------')
@@ -86,15 +93,25 @@ class UCCNPQE(UCCPQE):
             print('-------------------------------------')
             print(self._pool_obj.str())
 
+        self._timer.reset()
         self.initialize_ansatz()
+        self._timer.record("initialize_ansatz")
 
         if(self._verbose):
             print('\nt operators included from pool: \n', self._tops)
             print('Initial tamplitudes for tops: \n', self._tamps)
 
+        self._timer.reset()
         self.fill_excited_dets()
+        self._timer.record("fill_excited_dets")
+
+        self._timer.reset()
         self.build_orb_energies()
+        self._timer.record("build_orb_energies")
+        
+        self._timer.reset()
         self.solve()
+        self._timer.record("solve")
 
         if self._max_moment_rank:
             print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
@@ -136,6 +153,9 @@ class UCCNPQE(UCCPQE):
         print('\n\n                 ==> UCC-PQE options <==')
         print('---------------------------------------------------------')
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
+        print('Number of Electrons:                     ',  self._nel)
+        print('Multiplicity:                            ',  self._mult)
+        print('Number spatial orbitals:                 ',  self._norb)
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
         print('Trial state preparation method:          ',  self._state_prep_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
@@ -179,7 +199,18 @@ class UCCNPQE(UCCPQE):
         print('Number of residual element evaluations*:     ', self._res_m_evals)
         print('Number of non-zero res element evaluations:  ', int(self._res_vec_evals)*self._n_nonzero_params)
 
+        print("\n\n")
+        print(self._timer)
+
     def fill_excited_dets(self):
+        if(self._computer_type == 'fock'):
+            self.fill_excited_dets_fock()
+        elif(self._computer_type == 'fci'):
+            self.fill_excited_dets_fci()
+        else:
+            raise ValueError(f"{self._computer_type} is an unrecognized computer type.") 
+
+    def fill_excited_dets_fock(self):
         for _, sq_op in self._pool_obj:
             # 1. Identify the excitation operator
             # occ => i,j,k,...
@@ -235,7 +266,37 @@ class UCCNPQE(UCCPQE):
 
             self._excited_dets.append((I, phase_factor))
 
+    def fill_excited_dets_fci(self):
+        qc = qforte.FCIComputer(
+            self._nel, 
+            self._2_spin, 
+            self._norb)
+        
+        for _, sq_op in self._pool_obj:
+            qc.hartree_fock()
+            qc.apply_sqop(sq_op)
+            non_zero_tidxs = qc.get_state().get_nonzero_tidxs()
+
+            if(len(non_zero_tidxs) != 1):
+                raise ValueError("Pool object elements should only create a single excitation from hf reference.")
+            
+            if(len(non_zero_tidxs[0]) != 2):
+                raise ValueError("Tensor indxs must be from a a matrix.")
+            
+            phase_factor = qc.get_state().get(non_zero_tidxs[0])
+
+            if(phase_factor != 0.0):
+                self._excited_dets_fci_comp.append((non_zero_tidxs[0], phase_factor))
+
     def get_residual_vector(self, trial_amps):
+        if(self._computer_type == 'fock'):
+            return self.get_residual_vector_fock(trial_amps)
+        elif(self._computer_type == 'fci'):
+            return self.get_residual_vector_fci(trial_amps)
+        else:
+            raise ValueError(f"{self._computer_type} is an unrecognized computer type.") 
+
+    def get_residual_vector_fock(self, trial_amps):
         """Returns the residual vector with elements pertaining to all operators
         in the ansatz circuit.
 
@@ -274,6 +335,72 @@ class UCCNPQE(UCCPQE):
         self._res_vec_norm = np.linalg.norm(residuals)
         self._res_vec_evals += 1
         self._res_m_evals += len(self._tamps)
+
+        return residuals
+    
+    def get_residual_vector_fci(self, trial_amps):
+        """Returns the residual vector with elements pertaining to all operators
+        in the ansatz circuit.
+
+        Parameters
+        ----------
+        trial_amps : list of floats
+            The list of (real) floating point numbers which will characterize
+            the state preparation circuit used in calculation of the residuals.
+        """
+        if(self._pool_type == 'sa_SD'):
+            raise ValueError('Must use single term particle-hole nbody operators for residual calculation')
+        
+        if not self._ref_from_hf:
+            raise ValueError('get_residual_vector_fci_comp only compatible with hf reference at this time.')
+        
+        temp_pool = qforte.SQOpPool()
+
+        # NICK: Write a 'updatte_coeffs' type fucntion for the op-pool.
+        for tamp, top in zip(trial_amps, self._tops):
+            temp_pool.add(tamp, self._pool_obj[top][1])
+
+        qc_res = qforte.FCIComputer(
+            self._nel, 
+            self._2_spin, 
+            self._norb)
+        
+        qc_res.hartree_fock()
+
+
+        # function assumers first order trotter, with 1 trotter step, and time = 1.0
+        qc_res.evolve_pool_trotter_basic(
+            temp_pool,
+            antiherm=True,
+            adjoint=False)
+
+        qc_res.apply_sqop(self._sq_ham)
+
+        qc_res.evolve_pool_trotter_basic(
+            temp_pool,
+            antiherm=True,
+            adjoint=True)
+
+        R = qc_res.get_state_deep()
+        residuals = []
+
+        for IaIb, phase_factor in self._excited_dets_fci_comp:
+
+            # Get the residual element, after accounting for numerical noise.
+            res_m = R.get(IaIb) * phase_factor
+            if(np.imag(res_m) != 0.0):
+                raise ValueError("residual has imaginary component, something went wrong!!")
+
+            if(self._noise_factor > 1e-12):
+                res_m = np.random.normal(np.real(res_m), self._noise_factor)
+
+            residuals.append(res_m)
+
+        self._res_vec_norm = np.linalg.norm(residuals)
+        self._res_vec_evals += 1
+        self._res_m_evals += len(self._tamps)
+
+        self._curr_energy = qc_res.get_hf_dot()
 
         return residuals
 
