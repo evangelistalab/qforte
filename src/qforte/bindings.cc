@@ -205,7 +205,18 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
         .def("apply_individual_sqop_term", &FCIComputer::apply_individual_sqop_term)
         .def("apply_sqop", &FCIComputer::apply_sqop)
-        .def("apply_sqop_evolution", &FCIComputer::apply_sqop_evolution)
+        .def("get_exp_val", &FCIComputer::get_exp_val)
+        .def("apply_sqop_evolution", &FCIComputer::apply_sqop_evolution, 
+            py::arg("time"),
+            py::arg("sqop"),
+            py::arg("antiherm") = false,
+            py::arg("adjoint") = false
+            )
+        .def("evolve_pool_trotter_basic", &FCIComputer::evolve_pool_trotter_basic, 
+            py::arg("sqop"),
+            py::arg("antiherm") = false,
+            py::arg("adjoint") = false
+            )
         .def("set_state", &FCIComputer::set_state)
         .def("get_state", &FCIComputer::get_state)
         .def("get_state_deep", &FCIComputer::get_state_deep)
@@ -256,6 +267,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("subtract", &Tensor::subtract)
         .def("norm", &Tensor::norm)
         .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
+        .def("vector_dot", &Tensor::vector_dot) 
         .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
         .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 
         .def("zero_with_shape", &Tensor::zero_with_shape) // TODO(Tyler) Need Test 
@@ -297,6 +309,7 @@ PYBIND11_MODULE(qforte, m) {
             "beta"_a = 0.0) 
 
         .def("slice", &Tensor::slice)
+        .def("get_nonzero_tidxs", &Tensor::get_nonzero_tidxs)
 
         .def("str", &Tensor::str, 
             py::arg("print_data") = true, 
@@ -343,7 +356,9 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<local_timer>(m, "local_timer")
         .def(py::init<>())
         .def("reset", &local_timer::reset)
-        .def("get", &local_timer::get);
+        .def("get", &local_timer::get)
+        .def("record", &local_timer::record)
+        .def("__str__", &local_timer::str_table);
 
     m.def(
         "gate",

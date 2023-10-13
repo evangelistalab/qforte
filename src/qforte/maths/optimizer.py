@@ -99,9 +99,17 @@ def jacobi_solver(self):
     if hasattr(self, '_n_pauli_trm_measures_lst'):
         self._n_pauli_trm_measures_lst.append(self._n_pauli_measures_k)
     if hasattr(self, '_n_cnot'):
-        self._n_cnot = self.build_Uvqc().get_num_cnots()
+        if(self._computer_type == 'fock'):
+            self._n_cnot = self.build_Uvqc().get_num_cnots()
+        else:
+            # TODO: Build resource estimator
+            self._n_cnot = 'N/A'
     if hasattr(self, '_n_cnot_lst'):
-        self._n_cnot_lst.append(self.build_Uvqc().get_num_cnots())
+        if(self._computer_type == 'fock'):
+            self._n_cnot_lst.append(self.build_Uvqc().get_num_cnots())
+        else:
+            # TODO: Build resource estimator
+            self._n_cnot_lst.append('N/A')
 
 def scipy_solver(self, function_to_minimize):
 

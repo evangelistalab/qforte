@@ -15,6 +15,7 @@ class SQOperator;
 class TensorOperator;
 class Tensor;
 class FCIGraph;
+class SQOpPool;
 
 class FCIComputer {
   public:
@@ -147,7 +148,9 @@ class FCIComputer {
       const std::complex<double> time,
       const SQOperator& sqop,
       const Tensor& Cin,
-      Tensor& Cout);
+      Tensor& Cout,
+      const bool antiherm = false,
+      const bool adjoint = false);
 
     /// A function that applies the exponential of a
     /// two-term (hermitian) SQOperator to the FCIComputer.
@@ -155,7 +158,20 @@ class FCIComputer {
     /// Onus on the user to assure evolution is unitary.
     void apply_sqop_evolution(
       const std::complex<double> time,
-      const SQOperator& sqop);
+      const SQOperator& sqop,
+      const bool antiherm = false,
+      const bool adjoint = false);
+
+    /// A function that applies the exponentials of an ordered list of
+    /// two-term (hermitian) SQOperators to the FCIComputer
+    /// The 'basic' implies thet trotterizaiton is 1st order and done in a single step.
+    /// The evolution time is assumend to be 1.0,
+    /// Onus on the user to assure evolution is unitary.
+    /// Primary use of this funcion is for dUCC ansatz
+    void evolve_pool_trotter_basic(
+      const SQOpPool& pool,
+      const bool antiherm = false,
+      const bool adjoint = false);
 
     /// A lower-level helper function that applies a SQOperator
     /// term to the FCIComputer.
@@ -190,6 +206,9 @@ class FCIComputer {
 
     /// apply a second quantized operator, must be number and spin conserving.
     void apply_sqop(const SQOperator& sqop);
+
+    /// apply a second quantized operator, must be number and spin conserving.
+    std::complex<double> get_exp_val(const SQOperator& sqop);
 
     /// apply a constant to the FCI quantum computer.
     void scale(const std::complex<double> a);
@@ -329,7 +348,7 @@ class FCIComputer {
     // size_t ntwo_ops_ = 0;
 
     /// the threshold for doing operations with elements of gate matricies
-    double compute_threshold_ = 1.0e-16;
+    double compute_threshold_ = 1.0e-12;
 };
 
 #endif // _fci_computer_h_

@@ -70,8 +70,9 @@ class UCCPQE(PQE, UCC):
                 f.write('\n#    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
                 f.write('\n#--------------------------------------------------------------------------------------------------')
                 f.close()
-
-        self._curr_energy = self.energy_feval(x)
+        if(self._computer_type == 'fock'):
+            self._curr_energy = self.energy_feval(x)
+        # self._curr_energy = self.energy_feval(x)
         dE = self._curr_energy - self._prev_energy
         print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._res_vec_norm:+12.10f}')
 

@@ -14,4 +14,12 @@ std::string QubitBasis::str(size_t nqubit) const {
     return s;
 }
 
+size_t QubitBasis::get_num_ones() const {
+    size_t num_ones = 0;
+    for(size_t pos = 0; pos < 64; pos++) {
+        num_ones += get_bit(pos);
+    }
+    return num_ones;
+}
+
 void QubitBasis::set(basis_t state) { state_ = state; }

@@ -138,6 +138,7 @@ std::complex<double> math_zdot(
 
   std::complex<double> result;
 
+    /// NICK: Odd that this doesn't have an conjugate option
     cblas_zdotu_sub(
         n, 
         reinterpret_cast<const openblas_complex_double*>(x), 

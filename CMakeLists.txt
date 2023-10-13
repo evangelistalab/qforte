@@ -120,7 +120,7 @@ add_executable("${PROJECT_NAME}_benchmarks"
     "${SOURCE_DIR}/qubit_operator.cc"
     "${SOURCE_DIR}/sq_operator.cc"
     "${SOURCE_DIR}/qubit_op_pool.cc"
-    "${SOURCE_DIR}/sq_operator.cc"
+    "${SOURCE_DIR}/sq_op_pool.cc"
     "${SOURCE_DIR}/sparse_tensor.cc"
     "${SOURCE_DIR}/timer.cc")
 
