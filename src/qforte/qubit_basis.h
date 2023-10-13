@@ -1,5 +1,6 @@
 #include <numeric>
 #include <string>
+#include <cstdint>
 
 /**
  * @brief The QubitBasis class

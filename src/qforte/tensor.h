@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <iterator>
+
+
 
 #include "qforte-def.h"
 
