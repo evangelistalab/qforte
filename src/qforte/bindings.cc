@@ -267,6 +267,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("subtract", &Tensor::subtract)
         .def("norm", &Tensor::norm)
         .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
+        .def("vector_dot", &Tensor::vector_dot) 
         .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
         .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 
         .def("zero_with_shape", &Tensor::zero_with_shape) // TODO(Tyler) Need Test 
