@@ -3,6 +3,7 @@ name: forte
 dependencies:
     - python=3.10
     - pip>=19.0
+    - pybind11
     - cmake
     - numpy
     - scipy

@@ -84,7 +84,7 @@ set(SOURCE_DIR "src/qforte")
 include_directories(${SOURCE_DIR})
 
 # Generate Python module
-add_subdirectory(lib/pybind11)
+find_package(pybind11 CONFIG REQUIRED)
 add_subdirectory(lib/fmt)
 pybind11_add_module(qforte ${SOURCES} "${SOURCE_DIR}/bindings.cc"
     "${SOURCE_DIR}/helpers.cc"
