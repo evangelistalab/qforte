@@ -71,20 +71,28 @@ class UCCNVQE(UCCVQE):
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
+        self._timer = qforte.local_timer()
+
         ######### UCCN-VQE #########
 
+        self._timer.reset()
         self.fill_pool()
+        self._timer.record("fill_pool")
 
         if self._verbose:
             print(self._pool_obj.str())
 
+        self._timer.reset()
         self.initialize_ansatz()
+        self._timer.record("initialize_ansatz")
 
         if(self._verbose):
             print('\nt operators included from pool: \n', self._tops)
             print('\nInitial tamplitudes for tops: \n', self._tamps)
 
+        self._timer.reset()
         self.solve()
+        self._timer.record("solve")
 
         if self._max_moment_rank:
             print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
@@ -169,6 +177,9 @@ class UCCNVQE(UCCVQE):
 
         print('Number of grad vector evaluations:           ', self._res_vec_evals)
         print('Number of individual grad evaluations:       ', self._res_m_evals)
+
+        print("\n\n")
+        print(self._timer)
 
     def solve(self):
         if self._optimizer.lower() == "jacobi":
