@@ -32,6 +32,8 @@ print(t[:,0])
 
 print(t[:,0]/np.linalg.norm(t[:,0]))
 
+
+
 # A = np.random.randn(4,4)
 # print(f'{A}\n')
 
