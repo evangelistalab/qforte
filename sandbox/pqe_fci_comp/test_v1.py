@@ -19,8 +19,8 @@ alg_fock = qf.UCCNPQE(
     computer_type = 'fock'
     )
 
-alg_fock.run(opt_thresh=1.0e-2, pool_type='SDT')
-print(f'\n\n Efci:   {mol.fci_energy:+12.10f}')
+# alg_fock.run(opt_thresh=1.0e-2, pool_type='SDT')
+# print(f'\n\n Efci:   {mol.fci_energy:+12.10f}')
 
 
 alg_fci = qf.UCCNPQE(
