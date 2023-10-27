@@ -11,7 +11,7 @@ import time
     sparse Hermitian matrix (e.g. Hamiltonian)
 '''
 
-n = 20 # was 1200				# Dimension of CI matrix (CI vector will be this size)
+n = 1000 # was 1200				# Dimension of CI matrix (CI vector will be this size)
 tol = 1e-8				# Convergence tolerance
 mmax = n//2				# Maximum number of Davidson iterations	
 
@@ -31,8 +31,8 @@ A = A + sparsity*np.random.randn(n,n)
 A = (A.T + A)/2 # the stand in for the hamiltonain matrix
 
 
-k = 2 # was 8					# number of initial guess vectors 
-eig = 1					# number of eignvalues to solve 
+k = 4 # was 8					# number of initial guess vectors 
+eig = 3 					# number of eignvalues to solve 
 t = np.eye(n,k)			# set of k unit vectors as guess
 V = np.zeros((n,n))		# array of zeros to hold guess vec
 I = np.eye(n)			# identity matrix same dimen as A
