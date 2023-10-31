@@ -4,9 +4,12 @@ Quality-of-life shortcuts to build manifolds for excited state/addition/electron
 import copy
 from itertools import combinations
 import qforte as qf
+from qforte import build_Uprep
 from pytest import approx
+import numpy as np
 
-def ee_ip_ea_manifold(ref, n_ann, n_cre, sz = [0], irreps = None, target_irrep = None):
+def ee_ip_ea_manifold(ref, n_ann, n_cre, sz = [0], irreps = None, 
+                      target_irrep = None, ignore_spin_pairs = False):
     """Compute all excitations where n_ann occupied orbitals are annihilated
       and n_cre virtual electrons are created
       sz is a list of allowed spin changes.
@@ -15,6 +18,7 @@ def ee_ip_ea_manifold(ref, n_ann, n_cre, sz = [0], irreps = None, target_irrep =
       (Defaults to all 0's, i.e. C1)
 
       target_irrep is the target irreducible representation.  If None, no symmetry restriction.
+      ignore_spin_pairs indicates that only determinants unique up to spin-complementation will be included.
       """
     if(irreps==None):
         print("No irreps specified for manifold.  Assuming C1 symmetry.")
@@ -50,20 +54,27 @@ def ee_ip_ea_manifold(ref, n_ann, n_cre, sz = [0], irreps = None, target_irrep =
                     new_det[a] = 1
                 
                 if (target_irrep==None) or qf.find_irrep(irreps, [k for k in range(len(new_det)) if new_det[k] == 1]) == target_irrep:
+                    if ignore_spin_pairs:
+                        sc = [0] * len(new_det)
+                        for j in range(int(len(new_det)/2)):
+                            sc[2*j] = new_det[2*j+1]
+                            sc[2*j+1] = new_det[2*j]
+                        if sc in dets:
+                            continue 
                     dets.append(new_det)
     return dets
 
-def cin_manifold(ref, N, sz = [0], irreps = None, target_irrep = None):    
+def cin_manifold(ref, N, sz = [0], irreps = None, target_irrep = None, ignore_spin_pairs = False):    
     """
     Compute all the N-electron excitations away from an occupation list ref.  (Does not assume HF.)
     """
-    return ee_ip_ea_manifold(ref, N, N, sz = sz, irreps = irreps, target_irrep = target_irrep)
+    return ee_ip_ea_manifold(ref, N, N, sz = sz, irreps = irreps, target_irrep = target_irrep, ignore_spin_pairs = ignore_spin_pairs)
 
-def cis_manifold(ref, sz = [0], irreps = None, target_irrep = None):
+def cis_manifold(ref, sz = [0], irreps = None, target_irrep = None, spin_adapt = False):
     """
     Get the singly excited dets.
     """
-    return cin_manifold(ref, 1, sz = sz, irreps = irreps, target_irrep = target_irrep)
+    return cin_manifold(ref, 1, sz = sz, irreps = irreps, target_irrep = target_irrep, ignore_spin_pairs = spin_adapt)
 
 def cisd_manifold(ref, sz = [0], irreps = None, target_irrep = None):
     """
@@ -71,3 +82,66 @@ def cisd_manifold(ref, sz = [0], irreps = None, target_irrep = None):
     """
     return cin_manifold(ref, 1, sz = sz, irreps = irreps, target_irrep = target_irrep) + cin_manifold(ref, 2, sz = sz, irreps = irreps, target_irrep = target_irrep)
 
+def sa_cis(ref, sz = [0], mult = [1,3], irreps = None, target_irrep = None):
+    """
+    Get list of unitaries to get singlet and/or triplet states (|a>+|b>, |a>-|b>)
+    """  
+    s = np.sum([ref[j] * (j%2 - .5) for j in range(len(ref))])
+    try:
+        assert s == 0 and sz == 0
+    except:
+        print("Spin flips not supported.")
+    dets = cis_manifold(ref, sz = sz, irreps = irreps, target_irrep = target_irrep, spin_adapt = True)
+    Us = []
+    for det in dets:
+        sc = [0] * len(dets)
+        for j in range(int(len(dets)/2)):
+            sc[2*j + 1] = det[2*j]
+            sc[2*j] = det[2*j + 1]
+        if sc == det:
+            Us.append(build_Uprep(det, "occupation_list"))
+        else:
+            diff = [det[i] - ref[i] for i in range(len(det))]
+            inds = [int(diff.index(-1)/2), int(diff.index(1)/2)]
+            pa, pb, qa, qb = 2*inds[0], 2*inds[0] + 1, 2*inds[1], 2*inds[1] + 1
+            if 1 in mult:         
+                do_j = []
+                U = qf.Circuit() 
+                for k in range(int(len(ref)/2)):
+                    if det[2*k] == 1 or det[2*k+1] == 1 or 2*k == pa:
+                        do_j.append(2*k) 
+                        if 2*k+1 not in [pb, qb]:
+                            do_j.append(2*k + 1) 
+                for j in do_j:
+                    U.add(qf.gate('X', j, j)) 
+                U.add(qf.gate("H", pa, pa))
+                U.add(qf.gate("CNOT", pb, pa))
+                U.add(qf.gate("X", pa, pa))
+                U.add(qf.gate("CNOT", qa, pa))
+                U.add(qf.gate("CNOT", qb, pa))
+                Us.append(U)
+
+            if 3 in mult:
+                do_j = []
+                U = qf.Circuit()
+                for k in range(int(len(ref)/2)):
+                    if det[2 * k] == 1 or det[2*k + 1] == 1: 
+                        if 2*k != pa:
+                            do_j.append(2*k) 
+                        if 2*k + 1 not in [pb, qb]:
+                            do_j.append(2*k + 1) 
+                for j in do_j:
+                    U.add(qf.gate('X', j, j))
+                U.add(qf.gate("H", pa, pa))
+                U.add(qf.gate("CNOT", pb, pa))
+                U.add(qf.gate("X", pa, pa))
+                U.add(qf.gate("CNOT", qa, pa))
+                U.add(qf.gate("CNOT", qb, pa)) 
+                Us.append(U)
+                
+            
+                
+    return Us
+                
+                
+                                 

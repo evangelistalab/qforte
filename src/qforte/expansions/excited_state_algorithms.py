@@ -39,7 +39,7 @@ def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
             op_q_sc_eom_basis = (A_plus_ref.T.conj()@op_vqe_basis@A_plus_ref).real        
             op_mats.append(op_q_sc_eom_basis)
     
-    return [E0]+list(Ek), op_mats
+    return [E0]+list(Ek), A_plus_ref, op_mats
 
 def ritz_eigh(n_qubit, H, U, ops_to_compute = []):
     """
