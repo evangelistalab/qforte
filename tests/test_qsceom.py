@@ -43,7 +43,7 @@ class TestQSCEOM:
               det.add_circuit(U_ansatz)
               manifold.append(det)   
           
-          all_Es, ops = q_sc_eom(alg._nqb, mol.hamiltonian, U_hf, manifold, [mol.dipole_x, mol.dipole_y, mol.dipole_z]) 
+          all_Es, A_plus_ref, ops = q_sc_eom(alg._nqb, mol.hamiltonian, U_hf, manifold, [mol.dipole_x, mol.dipole_y, mol.dipole_z]) 
           dip_x, dip_y, dip_z = ops
 
           total_dip = np.zeros(dip_x.shape)
