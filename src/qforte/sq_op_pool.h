@@ -23,12 +23,20 @@ class SQOpPool {
     /// sets the operator pool coefficients
     void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
 
+    /// sets the operator pool coefficients
+    void set_coeffs_to_scaler(std::complex<double> new_coeff);
+
     /// return a vector of terms and their coeficients
     const std::vector<std::pair< std::complex<double>, SQOperator>>& terms() const;
 
     /// set the total number of occupied and virtual spatial orbitals from a reference, from the number
     ///     of occupied spin orbitals of each point group symmetry
     void set_orb_spaces(const std::vector<int>& ref);
+
+    /// onous on caller to pass a sq_op that is actually hermitain, should use a hermitian check funciton...
+    /// for an operator, splits the operator into hermitan pairs where each pair becomes a term
+    /// in the pool vector
+    void add_hermitian_pairs(std::complex<double> coeff, const SQOperator& sq_op );
 
     /// returns a QubitOpPool object with one term for each term in terms_
     QubitOpPool get_qubit_op_pool();
