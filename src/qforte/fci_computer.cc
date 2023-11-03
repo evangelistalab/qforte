@@ -967,6 +967,28 @@ void FCIComputer::apply_sqop(const SQOperator& sqop){
 }
 
 /// NICK: Check out  accumulation, don't need to do it this way..
+void FCIComputer::apply_sqop_pool(const SQOpPool& sqop_pool){
+    Tensor Cin = C_;
+    C_.zero();
+
+    for (const auto& sqop : sqop_pool.terms()) {
+        std::complex<double> outer_coeff = sqop.first;
+        for (const auto& term : sqop.second.terms()) {
+            std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>> temp_term = term;
+
+            std::get<0>(temp_term) *= outer_coeff;
+
+            if(std::abs(std::get<0>(temp_term)) > compute_threshold_){
+                apply_individual_sqop_term(
+                    temp_term,
+                    Cin,
+                    C_);
+            }
+        }
+    }
+}
+
+/// NICK: Check out  accumulation, don't need to do it this way..
 std::complex<double> FCIComputer::get_exp_val(const SQOperator& sqop) {
     Tensor Cin = C_;
     C_.zero();

@@ -208,6 +208,9 @@ class FCIComputer {
     void apply_sqop(const SQOperator& sqop);
 
     /// apply a second quantized operator, must be number and spin conserving.
+    void apply_sqop_pool(const SQOpPool& sqop_pool);
+
+    /// apply a second quantized operator, must be number and spin conserving.
     std::complex<double> get_exp_val(const SQOperator& sqop);
 
     /// apply a constant to the FCI quantum computer.

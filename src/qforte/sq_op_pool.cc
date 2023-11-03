@@ -15,12 +15,67 @@ void SQOpPool::add_term(std::complex<double> coeff, const SQOperator& sq_op ){
     terms_.push_back(std::make_pair(coeff, sq_op));
 }
 
+/// NICK: This funcion is working but needs testing for edge cases!!
+void SQOpPool::add_hermitian_pairs(std::complex<double> coeff, const SQOperator& sq_op ){
+    std::vector<std::pair< std::vector<size_t>, std::vector<size_t>>> h_vec;
+    std::vector<std::pair< std::vector<size_t>, std::vector<size_t>>> hd_vec;
+
+    for (size_t l = 0; l < sq_op.terms().size(); l++){
+        std::pair< std::vector<size_t>, std::vector<size_t>> h;
+        std::pair< std::vector<size_t>, std::vector<size_t>> hd;
+
+        std::complex<double> hl = std::get<0>(sq_op.terms()[l]);
+        h.first  = std::get<1>(sq_op.terms()[l]);
+        h.second = std::get<2>(sq_op.terms()[l]);
+
+        hd.first = h.second;
+        hd.second = h.first;
+
+        std::reverse(hd.first.begin(), hd.first.end());
+        std::reverse(hd.second.begin(), hd.second.end());
+
+        std::sort(h.first.begin(), h.first.end());
+        std::sort(h.second.begin(), h.second.end());
+
+        std::sort(hd.first.begin(), hd.first.end());
+        std::sort(hd.second.begin(), hd.second.end());
+        
+        // Determine if term is in current set of terms or term adjoints
+        // if it isn't found in either then append the vectors
+        if (std::find(h_vec.begin(), h_vec.end(), h) == h_vec.end()){
+            if (std::find(hd_vec.begin(), hd_vec.end(), h) == hd_vec.end()){
+                SQOperator temp;
+                // if term is same as term adjoint add both
+                if(h == hd or h.first == h.second){
+                    temp.add_term(hl/2.0, h.first, h.second);
+                    temp.add_term(hl/2.0, hd.first, hd.second);
+                } else {
+                    temp.add_term(hl, h.first, h.second);
+                    temp.add_term(hl, hd.first, hd.second);
+                }
+
+                terms_.push_back(std::make_pair(coeff, temp));
+
+                h_vec.push_back(h);
+                hd_vec.push_back(hd);
+
+            }
+        }
+    }
+}
+
 void SQOpPool::set_coeffs(const std::vector<std::complex<double>>& new_coeffs){
     if(new_coeffs.size() != terms_.size()){
         throw std::invalid_argument( "Number of new coefficients for quantum operator must equal." );
     }
     for (size_t l = 0; l < new_coeffs.size(); l++){
         terms_[l].first = new_coeffs[l];
+    }
+}
+
+void SQOpPool::set_coeffs_to_scaler(std::complex<double> new_coeff){
+    for (size_t l = 0; l < terms_.size(); l++){
+        terms_[l].first = new_coeff;
     }
 }
 

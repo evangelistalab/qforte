@@ -93,8 +93,10 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<SQOpPool>(m, "SQOpPool")
         .def(py::init<>())
         .def("add", &SQOpPool::add_term)
+        .def("add_hermitian_pairs", &SQOpPool::add_hermitian_pairs)
         .def("add_term", &SQOpPool::add_term)
         .def("set_coeffs", &SQOpPool::set_coeffs)
+        .def("set_coeffs_to_scaler", &SQOpPool::set_coeffs_to_scaler)
         .def("terms", &SQOpPool::terms)
         .def("set_orb_spaces", &SQOpPool::set_orb_spaces)
         .def("get_qubit_op_pool", &SQOpPool::get_qubit_op_pool)
@@ -205,6 +207,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
         .def("apply_individual_sqop_term", &FCIComputer::apply_individual_sqop_term)
         .def("apply_sqop", &FCIComputer::apply_sqop)
+        .def("apply_sqop_pool", &FCIComputer::apply_sqop_pool)
         .def("get_exp_val", &FCIComputer::get_exp_val)
         .def("apply_sqop_evolution", &FCIComputer::apply_sqop_evolution, 
             py::arg("time"),
@@ -271,6 +274,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
         .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 
         .def("zero_with_shape", &Tensor::zero_with_shape) // TODO(Tyler) Need Test 
+        .def("vector_dot", &Tensor::vector_dot) // TODO(Tyler) Need Test 
         .def("symmetrize", &Tensor::symmetrize) // TODO(Tyler) Need Test 
         .def("antisymmetrize", &Tensor::antisymmetrize) // TODO(Tyler) Need Test 
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
