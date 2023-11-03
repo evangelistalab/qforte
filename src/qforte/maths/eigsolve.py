@@ -40,7 +40,7 @@ def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
     s_prime = []
 
     for sii in s:
-        if(np.imag(sii) > 1e-12):
+        if(np.imag(sii) > 1e-5):
             raise ValueError('S may not be hermetian, large imag. eval component.')
         if(np.real(sii) > THRESHOLD):
             s_prime.append(np.real(sii))

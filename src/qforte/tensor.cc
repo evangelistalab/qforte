@@ -455,12 +455,20 @@ std::complex<double> Tensor::vector_dot(
     //     other.read_data().data(), 
     //     1);
 
-    return math_zdot(
-        size_, 
-        data_.data(), 
-        1, 
-        other.read_data().data(), 
-        1);
+    std::complex<double> result = 0.0;
+
+    for (int i = 0; i < size_; i++){
+        result += std::conj(data_[i]) * other.read_data()[i];
+    }
+
+    return result;
+
+    // return math_zdot(
+    //     size_, 
+    //     data_.data(), 
+    //     1, 
+    //     other.read_data().data(), 
+    //     1);
     
 }
 
