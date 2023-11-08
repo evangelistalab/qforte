@@ -88,7 +88,7 @@ def sa_cis(ref, sz = [0], mult = [1,3], irreps = None, target_irrep = None):
     """  
     s = np.sum([ref[j] * (j%2 - .5) for j in range(len(ref))])
     try:
-        assert s == 0 and sz == [0]
+        assert abs(s) < 1e-10 and sz == [0]
     except:
         print("Spin flips not supported.")
         exit()
