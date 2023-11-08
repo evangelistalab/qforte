@@ -88,9 +88,10 @@ def sa_cis(ref, sz = [0], mult = [1,3], irreps = None, target_irrep = None):
     """  
     s = np.sum([ref[j] * (j%2 - .5) for j in range(len(ref))])
     try:
-        assert s == 0 and sz == 0
+        assert s == 0 and sz == [0]
     except:
         print("Spin flips not supported.")
+        exit()
     dets = cis_manifold(ref, sz = sz, irreps = irreps, target_irrep = target_irrep, spin_adapt = True)
     Us = []
     for det in dets:
