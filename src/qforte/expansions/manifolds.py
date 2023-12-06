@@ -139,9 +139,7 @@ def sa_cis(ref, sz = [0], mult = [1,3], irreps = None, target_irrep = None):
                 U.add(qf.gate("CNOT", qa, pa))
                 U.add(qf.gate("CNOT", qb, pa)) 
                 Us.append(U)
-                
-            
-                
+                 
     return Us
                 
                 
