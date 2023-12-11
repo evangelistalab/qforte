@@ -123,10 +123,7 @@ def sa_single(ref, p, q, mult = 1):
     else:
         print("Invalid multiplicity.")
         exit()
-    return U
-        
-    
-     
+    return U     
 
 def sa_cis(ref, sz = [0], mult = [1,3], irreps = None, target_irrep = None):
     """

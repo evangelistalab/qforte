@@ -24,6 +24,10 @@ def create_psi_mol(**kwargs):
         The qforte Molecule object which holds the molecular information.
     """
 
+    kwargs.setdefault('symmetry', 'c1')
+    kwargs.setdefault('charge', 0)
+    kwargs.setdefault('multiplicity', 1)
+
     mol_geometry = kwargs['mol_geometry']
     basis = kwargs['basis']
     multiplicity = kwargs['multiplicity']
@@ -101,7 +105,7 @@ def create_psi_mol(**kwargs):
               'num_frozen_uocc' : kwargs['num_frozen_uocc'],
               'mp2_type': "conv"})
     
-    if kwargs['scf_docc'] is not None and kwargs['casscf'] != None:
+    if kwargs['scf_docc'] != None and kwargs['casscf'] != None:
             print('Cannot use CASSCF and pre-specified irrep occupations')
             exit()
 
@@ -113,12 +117,9 @@ def create_psi_mol(**kwargs):
             print('Cannot use CASSCF and frozen orbitals')
             exit()
             
-    if kwargs['frozen_uocc'] != None:
-        psi4.set_options({'frozen_uocc': kwargs['frozen_uocc']})
- 
     # run psi4 caclulation  
     
-    if kwargs["casscf"] is not None:
+    if kwargs["casscf"] != None:
         p4_Escf, vanilla_wfn = psi4.energy('SCF', return_wfn=True)
         qforte_mol.fci_energy = psi4.energy('FCI')
         psi4.set_options({'restricted_docc': kwargs['casscf'][0]})
@@ -152,10 +153,8 @@ def create_psi_mol(**kwargs):
     # Get integrals using MintsHelper.
     mints = psi4.core.MintsHelper(p4_wfn.basisset())
 
-    if kwargs['casscf'] is not None:
-        C = p4_wfn.Ca_subset("AO", "ALL")
-    else:
-        C = p4_wfn.Ca_subset("AO", "ACTIVE")
+    
+    C = p4_wfn.Ca_subset("AO", "ALL")
     
     scalars = p4_wfn.scalar_variables()
     
@@ -169,10 +168,11 @@ def create_psi_mol(**kwargs):
     mo_oeis = np.einsum('uj,vi,uv', C, C, mo_oeis)
     
 
-    nmo = np.shape(mo_oeis)[0]
-      
+    nmo = np.shape(mo_oeis)[0] 
+    
     nalpha = p4_wfn.nalpha()
     nbeta = p4_wfn.nbeta()
+    nel = nalpha + nbeta  
     
     if kwargs['casscf'] != None:
         frozen_core = vanilla_wfn.frzcpi().sum()
@@ -215,8 +215,7 @@ def create_psi_mol(**kwargs):
         hf_reference.append(int(occ_beta_per_irrep[irrep][count_per_irrep[irrep]]))
         count_per_irrep[irrep] += 1
         hf_orbital_energies.append(orbital_energy)
-        orb_irreps_to_int.append(irrep)
-    
+        orb_irreps_to_int.append(irrep) 
     del orbitals
     
     point_group = p4_mol.symmetry_from_input().lower()
@@ -227,7 +226,7 @@ def create_psi_mol(**kwargs):
     # If frozen_core > 0, compute the frozen core energy and transform one-electron integrals
     
     frozen_core_energy = 0
-
+    
     if frozen_core > 0:
         for i in range(frozen_core):
             frozen_core_energy += 2 * mo_oeis[i, i]
@@ -244,8 +243,6 @@ def create_psi_mol(**kwargs):
             for q in range(frozen_core, nmo - frozen_virtual):
                 for i in range(frozen_core):
                     mo_oeis[p, q] += 2 * mo_teis[p, q, i, i] - mo_teis[p, i, i, q]
-
-    
     
     # Build second quantized Hamiltonian
     Hsq = qforte.SQOperator()
