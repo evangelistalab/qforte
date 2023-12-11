@@ -101,47 +101,38 @@ def create_psi_mol(**kwargs):
               'num_frozen_uocc' : kwargs['num_frozen_uocc'],
               'mp2_type': "conv"})
     
-    if kwargs['scf_docc'] is not None and kwargs['casscf'] is not None:
+    if kwargs['scf_docc'] is not None and kwargs['casscf'] != None:
             print('Cannot use CASSCF and pre-specified irrep occupations')
             exit()
-    if kwargs['num_frozen_docc'] is not None and kwargs['casscf'] is not None:
+
+    if kwargs['num_frozen_docc'] != 0 and kwargs['casscf'] != None:
             print('Cannot use CASSCF and frozen orbitals')
-    if kwargs['num_frozen_uocc'] is not None and kwargs['casscf'] is not None:
+            exit()
+
+    if kwargs['num_frozen_uocc'] != 0 and kwargs['casscf'] != None:
             print('Cannot use CASSCF and frozen orbitals')
+            exit()
             
-    if kwargs['frozen_uocc'] is not None:
+    if kwargs['frozen_uocc'] != None:
         psi4.set_options({'frozen_uocc': kwargs['frozen_uocc']})
  
-    # run psi4 caclulation 
+    # run psi4 caclulation  
     
-    vanilla_E, vanilla_wfn = psi4.energy('SCF', return_wfn=True)
     if kwargs["casscf"] is not None:
-        print("Running CASSCF to obtain MO coefficients.")
-         
-        
+        p4_Escf, vanilla_wfn = psi4.energy('SCF', return_wfn=True)
+        qforte_mol.fci_energy = psi4.energy('FCI')
         psi4.set_options({'restricted_docc': kwargs['casscf'][0]})
         psi4.set_options({'active': kwargs["casscf"][1]})
         psi4.set_options({'diag_method': 'rsp'})  
         psi4.set_options({'mcscf_r_convergence': 1e-12})  
         psi4.set_options({'mcscf_maxiter': 1000})  
         psi4.set_options({'mcscf_diis_start': 50})   
-        p4_Escf, p4_wfn = psi4.energy('casscf', return_wfn=True, ref_wfn = kwargs['ref_wfn'])
-        qforte.ref_wfn = p4_wfn
-        print(f'E_SCF: {vanilla_E}')
-        print(f'E_CASSCF: {p4_Escf}') 
-         
-        #Reset these so FCI works
-        psi4.set_options({'diag_method': 'sem'}) 
-        psi4.set_options({'active': [sum(x) for x in zip(*kwargs['casscf'])]})
-        psi4.set_options({'restricted_docc': [0]*len(kwargs["casscf"][0])})
-                
-        p4_wfn.set_variable("NUCLEAR REPULSION ENERGY", vanilla_wfn.variable("NUCLEAR REPULSION ENERGY"))
-                
+        E_casscf, p4_wfn = psi4.energy('casscf', return_wfn=True, ref_wfn = kwargs['ref_wfn'])   
+        p4_Escf = None
+
     else:  
         p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
-
-    np.set_printoptions(linewidth=np.nan)
-    
+        
     # Run additional computations requested by the user
     if kwargs['run_mp2']:
         qforte_mol.mp2_energy = psi4.energy('MP2')
@@ -152,7 +143,7 @@ def create_psi_mol(**kwargs):
     if kwargs['run_cisd']:
         qforte_mol.cisd_energy = psi4.energy('CISD')
 
-    if kwargs['run_fci']:
+    if kwargs['run_fci'] and kwargs['casscf'] == None:
         if kwargs['num_frozen_uocc'] == 0:
             qforte_mol.fci_energy = psi4.energy('FCI')
         else:
@@ -161,94 +152,64 @@ def create_psi_mol(**kwargs):
     # Get integrals using MintsHelper.
     mints = psi4.core.MintsHelper(p4_wfn.basisset())
 
-
-    
-
     if kwargs['casscf'] is not None:
         C = p4_wfn.Ca_subset("AO", "ALL")
     else:
         C = p4_wfn.Ca_subset("AO", "ACTIVE")
-
-    
     
     scalars = p4_wfn.scalar_variables()
     
-    p4_Enuc_ref = scalars["NUCLEAR REPULSION ENERGY"]
-
+    p4_Enuc_ref = scalars['NUCLEAR REPULSION ENERGY']
     
     p4_dip_nuc = p4_mol.nuclear_dipole()
-
-    
+ 
     # Do MO integral transformation
     mo_teis = np.asarray(mints.mo_eri(C, C, C, C))
     mo_oeis = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
     mo_oeis = np.einsum('uj,vi,uv', C, C, mo_oeis)
-
-    
     
 
     nmo = np.shape(mo_oeis)[0]
-     
-    
+      
     nalpha = p4_wfn.nalpha()
     nbeta = p4_wfn.nbeta()
-
     
-        
-    
-     
-    if kwargs["casscf"] is not None:
+    if kwargs['casscf'] != None:
         frozen_core = vanilla_wfn.frzcpi().sum()
-        frozen_virtual = vanilla_wfn.frzvpi().sum()
-        p4_Escf = 0
-        p4_Escf += p4_Enuc_ref
-        haa = mo_oeis[:nalpha,:nalpha]      
-        hbb = mo_oeis[:nbeta,:nbeta]
-        p4_Escf += np.einsum('ii', haa)
-        p4_Escf += np.einsum('ii', hbb)
-        gaa = mo_teis[:nalpha,:nalpha,:nalpha,:nalpha]
-        gbb = mo_teis[:nbeta,:nbeta,:nbeta,:nbeta]
-        gab = mo_teis[:nalpha,:nalpha,:nbeta,:nbeta]
-        p4_Escf += .5 * np.einsum('iijj', gaa)
-        p4_Escf -= .5 * np.einsum('ijji', gaa)
-        p4_Escf += .5 * np.einsum('iijj', gbb)
-        p4_Escf -= .5 * np.einsum('ijji', gbb) 
-        p4_Escf += np.einsum('iijj', gab) 
-    print(f"CASSCF orbitals {p4_Escf}") 
-
+        frozen_virtual = vanilla_wfn.frzvpi().sum() 
+    else:
+        frozen_core = p4_wfn.frzcpi().sum()
+        frozen_virtual = p4_wfn.frzvpi().sum()
+    
     # Get orbital symmetry information and construct hf reference
     orbitals = []
-    if kwargs['casscf'] is not None:
-        for irrep, block in enumerate(vanilla_wfn.epsilon_a_subset("MO", "ACTIVE").nph):
+    
+    if kwargs['casscf'] != None:    
+        for irrep, block in enumerate(p4_wfn.epsilon_a_subset("MO", "ALL").nph):
             for orbital in block:
-                orbitals.append([orbital, irrep])    
-    else:
+                orbitals.append([orbital, irrep])
+    else: 
         for irrep, block in enumerate(p4_wfn.epsilon_a_subset("MO", "ACTIVE").nph):
             for orbital in block:
-                orbitals.append([orbital, irrep])    
+                orbitals.append([orbital, irrep])
+    orbitals.sort()
     
-    
-    if kwargs['casscf'] is not None:
+    if kwargs['casscf'] != None:
         occ_alpha_per_irrep = vanilla_wfn.occupation_a().nph
-        occ_beta_per_irrep = vanilla_wfn.occupation_b().nph
-
-        
+        occ_beta_per_irrep = vanilla_wfn.occupation_b().nph 
     else:
         occ_alpha_per_irrep = p4_wfn.occupation_a().nph
         occ_beta_per_irrep = p4_wfn.occupation_b().nph
-    
-    
-    
-    if kwargs['casscf'] is not None:
+
+    if kwargs['casscf'] != None:
         count_per_irrep = list(vanilla_wfn.frzcpi().to_tuple())
     else:
         count_per_irrep = list(p4_wfn.frzcpi().to_tuple())
-    
-    
-    
+      
     hf_reference = []
     hf_orbital_energies = []
     orb_irreps_to_int = []
+    
     for [orbital_energy, irrep] in orbitals:
         hf_reference.append(int(occ_alpha_per_irrep[irrep][count_per_irrep[irrep]]))
         hf_reference.append(int(occ_beta_per_irrep[irrep][count_per_irrep[irrep]]))
@@ -285,7 +246,7 @@ def create_psi_mol(**kwargs):
                     mo_oeis[p, q] += 2 * mo_teis[p, q, i, i] - mo_teis[p, i, i, q]
 
     
-
+    
     # Build second quantized Hamiltonian
     Hsq = qforte.SQOperator()
     Hsq.add(p4_Enuc_ref + frozen_core_energy, [], [])
@@ -300,6 +261,7 @@ def create_psi_mol(**kwargs):
             if irrep == 0:
                 Hsq.add(mo_oeis[i,j], [ia], [ja])
                 Hsq.add(mo_oeis[i,j], [ib], [jb])
+            
 
             for k in range(frozen_core, nmo - frozen_virtual):
                 ka = (k - frozen_core)*2

@@ -82,6 +82,52 @@ def cisd_manifold(ref, sz = [0], irreps = None, target_irrep = None):
     """
     return cin_manifold(ref, 1, sz = sz, irreps = irreps, target_irrep = target_irrep) + cin_manifold(ref, 2, sz = sz, irreps = irreps, target_irrep = target_irrep)
 
+def sa_single(ref, p, q, mult = 1):
+    """
+    Get a specific, spin-adapted single excitation a_p^q|ref>.  Mult determines the singlet or triplet CSF.
+    """
+    diff = [0]*len(ref)
+    diff[p] = -1
+    diff[q] = 1
+    new_det = [ref[i] + diff[i] for i in range(len(ref))]
+    pa, pb, qa, qb = 2*p, 2*p + 1, 2*q, 2*q + 1
+    U = qf.Circuit()
+    do_j = []
+    if mult == 1:    
+        for k in range(int(len(ref)/2)):
+            if new_det[2*k] == 1 or det[2*k+1] == 1 or 2*k == pa:
+                do_j.append(2*k) 
+                if 2*k+1 not in [pb, qb]:
+                    do_j.append(2*k + 1) 
+            for j in do_j:
+                U.add(qf.gate('X', j, j)) 
+            U.add(qf.gate("H", pa, pa))
+            U.add(qf.gate("CNOT", pb, pa))
+            U.add(qf.gate("X", pa, pa))
+            U.add(qf.gate("CNOT", qa, pa))
+            U.add(qf.gate("CNOT", qb, pa))
+    elif mult == 3:
+        for k in range(int(len(ref)/2)):
+            if new_det[2 * k] == 1 or new_det[2*k + 1] == 1: 
+                if 2*k != pa:
+                    do_j.append(2*k) 
+                if 2*k + 1 not in [pb, qb]:
+                    do_j.append(2*k + 1) 
+        for j in do_j:
+            U.add(qf.gate('X', j, j))
+        U.add(qf.gate("H", pa, pa))
+        U.add(qf.gate("CNOT", pb, pa))
+        U.add(qf.gate("X", pa, pa))
+        U.add(qf.gate("CNOT", qa, pa))
+        U.add(qf.gate("CNOT", qb, pa))
+    else:
+        print("Invalid multiplicity.")
+        exit()
+    return U
+        
+    
+     
+
 def sa_cis(ref, sz = [0], mult = [1,3], irreps = None, target_irrep = None):
     """
     Get list of unitaries to get singlet and/or triplet states (|a>+|b>, |a>-|b>)

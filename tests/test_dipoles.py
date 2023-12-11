@@ -1,6 +1,5 @@
 from pytest import approx
 from qforte import system_factory, sq_op_to_scipy
-import scipy
 import numpy as np
 import os
 
@@ -27,6 +26,7 @@ class TestDipoles:
         mu_z = sq_op_to_scipy(mol1.sq_dipole_z, N_qubits).todense()
 
         E, C = np.linalg.eigh(H)
+        
         inds = [0, 10, 17, 18, 79]
         dipole = np.zeros((5, 5))
         for i in range(5):
@@ -34,7 +34,8 @@ class TestDipoles:
                 for op in [mu_x, mu_y, mu_z]:
                     dipole[i,j] += ((C[:,inds[i]].T.conj()@op@C[:,inds[j]])[0,0].real)**2
                 dipole[i,j] = np.sqrt(dipole[i,j])
-        #Make sure lowest 5 states consistent with Psi4
+         
+        assert(0 == 1)
         psi4_dipoles = [1.8751853, 1.6664460, 0.0250378, 0.0250378, 3.2070140]
         psi4_tdms = [0.2422177, 1.2959115, 1.2959115, 0.1294187]
         for i in range(5):
