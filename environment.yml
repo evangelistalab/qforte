@@ -1,6 +1,7 @@
 name: forte
 
 dependencies:
+    - conda=23.9.0
     - python=3.10
     - pip>=19.0
     - cmake
