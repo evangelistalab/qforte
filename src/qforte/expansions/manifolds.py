@@ -95,7 +95,7 @@ def sa_single(ref, p, q, mult = 1):
     do_j = []
     if mult == 1:    
         for k in range(int(len(ref)/2)):
-            if new_det[2*k] == 1 or det[2*k+1] == 1 or 2*k == pa:
+            if new_det[2*k] == 1 or new_det[2*k+1] == 1 or 2*k == pa:
                 do_j.append(2*k) 
                 if 2*k+1 not in [pb, qb]:
                     do_j.append(2*k + 1) 
