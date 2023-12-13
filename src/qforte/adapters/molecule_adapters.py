@@ -48,9 +48,6 @@ def create_psi_mol(**kwargs):
     #[2, 0, 0, 1] for an A1A1B2 determinant.
     kwargs.setdefault('scf_docc', None)
 
-    #Reference wavefunction from previous casscf calculation
-    kwargs.setdefault('ref_wfn', None)
-
     #Tuple containing restricted occupied, active, and restricted virtual irrep indices
     #e.g. H4 in D2h symmetry with B2u and B3u orbitals as the active space is
     #([1,0,...0],[0,...,1,1],[0,1,0,...0])
@@ -128,9 +125,9 @@ def create_psi_mol(**kwargs):
         psi4.set_options({'mcscf_r_convergence': 1e-12})  
         psi4.set_options({'mcscf_maxiter': 1000})  
         psi4.set_options({'mcscf_diis_start': 50})   
-        E_casscf, p4_wfn = psi4.energy('casscf', return_wfn=True, ref_wfn = kwargs['ref_wfn'])   
+        E_casscf, p4_wfn = psi4.energy('casscf', return_wfn=True)   
         p4_Escf = None
-
+        print(f"CASSCF Energy: {E_casscf}")
     else:  
         p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
         
