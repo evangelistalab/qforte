@@ -108,8 +108,8 @@ class ADAPTVQE(UCCVQE):
         self._results = []
         self._energies = []
         self._grad_norms = []
-        self._tops = tamps
-        self._tamps = tops
+        self._tops = tops
+        self._tamps = tamps
         self._commutator_pool = []
         self._converged = 0
 
