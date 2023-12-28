@@ -89,7 +89,9 @@ class ADAPTVQE(UCCVQE):
             optimizer='BFGS',
             use_analytic_grad = True,
             use_cumulative_thresh = False,
-            add_equiv_ops = False):
+            add_equiv_ops = False,
+            tamps = [],
+            tops = []):
 
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
@@ -106,8 +108,8 @@ class ADAPTVQE(UCCVQE):
         self._results = []
         self._energies = []
         self._grad_norms = []
-        self._tops = []
-        self._tamps = []
+        self._tops = tamps
+        self._tamps = tops
         self._commutator_pool = []
         self._converged = 0
 
