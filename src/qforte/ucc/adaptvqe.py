@@ -108,8 +108,8 @@ class ADAPTVQE(UCCVQE):
         self._results = []
         self._energies = []
         self._grad_norms = []
-        self._tops = tops
-        self._tamps = tamps
+        self._tops = copy.deepcopy(tops)
+        self._tamps = copy.deepcopy(tamps)
         self._commutator_pool = []
         self._converged = 0
 
@@ -318,7 +318,9 @@ class ADAPTVQE(UCCVQE):
         opts['gtol'] = self._opt_thresh
         opts['disp'] = False
         opts['maxiter'] = self._opt_maxiter
+
         x0 = copy.deepcopy(self._tamps)
+
         init_gues_energy = self.energy_feval(x0)
 
         self._prev_energy = init_gues_energy
@@ -383,6 +385,7 @@ class ADAPTVQE(UCCVQE):
             self._n_cnot_lst.append(max(cnots))
             del U_temp
             del cnots
+
     # Define ADAPT-VQE methods.
     def update_ansatz(self):
         """Adds a parameter and operator to the ADAPT-VQE circuit based on the
