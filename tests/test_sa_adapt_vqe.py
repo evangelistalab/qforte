@@ -79,7 +79,7 @@ class TestSAADAPTVQE:
                     assert dip_dir[i,j]-total_dip[i,j] == approx(0.0, abs = 1e-10)
                     
           circ_refs = [build_Uprep(ref, "occupation_list") for ref in refs]
-
+          #broken here?
           alg = ADAPTVQE(mol,
                print_summary_file = False,
                is_multi_state = True,
@@ -87,12 +87,14 @@ class TestSAADAPTVQE:
                weights = weights,
                compact_excitations = True,
                state_prep_type = "unitary_circ")
-        
+
+
           alg.run(avqe_thresh = 1e-12,
                   pool_type = 'GSD',
                   opt_thresh = 1e-7,
                   opt_maxiter = 1000,
-                  adapt_maxiter = 1)
+                  adapt_maxiter = 1,
+                  )
 
           U = alg.build_Uvqc(amplitudes = alg._tamps)
            
@@ -113,6 +115,7 @@ class TestSAADAPTVQE:
                for j in range(len(Es)):
                     assert dip_dir[i,j]-total_dip[i,j] == approx(0.0, abs = 1e-10)
 
+
           alg = ADAPTVQE(mol,
                print_summary_file = False,
                is_multi_state = True,
@@ -124,7 +127,9 @@ class TestSAADAPTVQE:
                   pool_type = 'GSD',
                   opt_thresh = 1e-7,
                   opt_maxiter = 1000,
-                  adapt_maxiter = 1)
+                  adapt_maxiter = 1,
+                  tamps = [],
+                  tops = [])
 
           U = alg.build_Uvqc(amplitudes = alg._tamps)
            
