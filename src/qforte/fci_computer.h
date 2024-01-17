@@ -173,6 +173,18 @@ class FCIComputer {
       const bool antiherm = false,
       const bool adjoint = false);
 
+    /// A more flexable function that applies the exponentials of an ordered list of
+    /// two-term (hermitian) SQOperators to the FCIComputer
+    /// Onus on the user to assure evolution is unitary.
+    /// Primary use of this funcion is for dUCC ansatz
+    void evolve_pool_trotter(
+      const SQOpPool& pool,
+      const double evolution_time,
+      const int trotter_steps,
+      const int trotter_order,
+      const bool antiherm = false,
+      const bool adjoint = false);
+
     /// A lower-level helper function that applies a SQOperator
     /// term to the FCIComputer.
     void apply_individual_nbody1_accumulate(

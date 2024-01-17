@@ -790,6 +790,90 @@ void FCIComputer::evolve_pool_trotter_basic(
     }
 }
 
+void FCIComputer::evolve_pool_trotter(
+      const SQOpPool& pool,
+      const double evolution_time,
+      const int trotter_steps,
+      const int trotter_order,
+      const bool antiherm,
+      const bool adjoint)
+
+{
+    if(trotter_order == 1){
+
+        std::complex<double> prefactor = evolution_time / static_cast<std::complex<double>>(trotter_steps);
+
+        if(adjoint){
+            for( int r = 0; r < trotter_steps; r++) {
+                for (int i = pool.terms().size() - 1; i >= 0; --i) {
+                    apply_sqop_evolution(
+                        prefactor * pool.terms()[i].first, 
+                        pool.terms()[i].second,
+                        antiherm,
+                        adjoint);
+                }
+            }
+                
+
+        } else {
+            for( int r = 0; r < trotter_steps; r++) {
+                for (const auto& sqop_term : pool.terms()) {
+                    apply_sqop_evolution(
+                        prefactor * sqop_term.first, 
+                        sqop_term.second,
+                        antiherm,
+                        adjoint);
+                }
+            }
+        }
+
+    } else if (trotter_order == 2 ) {
+        std::complex<double> prefactor = 0.5 * evolution_time / static_cast<std::complex<double>>(trotter_steps);
+
+        if(adjoint){
+            for( int r = 0; r < trotter_steps; r++) {
+                for (int i = pool.terms().size() - 1; i >= 0; --i) {
+                    apply_sqop_evolution(
+                        prefactor * pool.terms()[i].first, 
+                        pool.terms()[i].second,
+                        antiherm,
+                        adjoint);
+                }
+
+                for (const auto& sqop_term : pool.terms()) {
+                    apply_sqop_evolution(
+                        prefactor * sqop_term.first, 
+                        sqop_term.second,
+                        antiherm,
+                        adjoint);
+                }
+            }
+                
+
+        } else {
+            for( int r = 0; r < trotter_steps; r++) {
+                for (const auto& sqop_term : pool.terms()) {
+                    apply_sqop_evolution(
+                        prefactor * sqop_term.first, 
+                        sqop_term.second,
+                        antiherm,
+                        adjoint);
+                }
+
+                for (int i = pool.terms().size() - 1; i >= 0; --i) {
+                    apply_sqop_evolution(
+                        prefactor * pool.terms()[i].first, 
+                        pool.terms()[i].second,
+                        antiherm,
+                        adjoint);
+                }
+            }
+        }
+    } else {
+        throw std::runtime_error("Higher than 2nd order trotter not yet implemented"); 
+    }
+}
+
 void FCIComputer::apply_sqop_evolution(
       const std::complex<double> time,
       const SQOperator& sqop,
