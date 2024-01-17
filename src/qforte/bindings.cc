@@ -220,6 +220,14 @@ PYBIND11_MODULE(qforte, m) {
             py::arg("antiherm") = false,
             py::arg("adjoint") = false
             )
+        .def("evolve_pool_trotter", &FCIComputer::evolve_pool_trotter, 
+            py::arg("sqop"),
+            py::arg("evolution_time"),
+            py::arg("trotter_steps"),
+            py::arg("trotter_order"),
+            py::arg("antiherm") = false,
+            py::arg("adjoint") = false
+            )
         .def("set_state", &FCIComputer::set_state)
         .def("get_state", &FCIComputer::get_state)
         .def("get_state_deep", &FCIComputer::get_state_deep)

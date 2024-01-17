@@ -118,9 +118,17 @@ class SRQK(QSD):
 
     def build_qk_mats_fast(self):
         if(self._computer_type == 'fock'):
+            if(self._trotter_order != 1):
+                raise ValueError("fock computer SRQK only compatible with 1st order trotter currently")
+            
             return self.build_qk_mats_fast_fock()
+        
         elif(self._computer_type == 'fci'):
+            if(self._trotter_order not in [1, 2]):
+                raise ValueError("fci computer SRQK only compatible with 1st and 2nd order trotter currently")
+            
             return self.build_qk_mats_fast_fci()
+        
         else:
             raise ValueError(f"{self._computer_type} is an unrecognized computer type.") 
 
@@ -338,16 +346,6 @@ class SRQK(QSD):
 
         return s_mat, h_mat
     
-
-    """
-    Note that this function currently works  differently than build_qk_mats_fast_fock.
-
-    build_qk_mats_fast_fock assumes that the depth of each unitary Um is constant, 
-    invoking larger and larger trotter error as tm = m*dt increases 
-
-    build_qk_mats_fast_fock assumes that the depth of each unitary Um 
-    increases linearly with m, meaning 
-    """
     def build_qk_mats_fast_fci(self):
         """Returns matrices S and H needed for the QK algorithm using the Trotterized
         form of the unitary operators U_n = exp(-i n dt H)
@@ -374,7 +372,9 @@ class SRQK(QSD):
         Homega_lst = []
 
         hermitian_pairs = qforte.SQOpPool()
-        hermitian_pairs.add_hermitian_pairs(self._dt/self._trotter_number, self._sq_ham)
+
+        # this is updated, evolution time is now just 1.0 here
+        hermitian_pairs.add_hermitian_pairs(1.0, self._sq_ham)
 
         QC = qforte.FCIComputer(
                 self._nel, 
@@ -402,9 +402,11 @@ class SRQK(QSD):
 
             if(m>0):
                 # Compute U_m |φ>
-                for _ in range(self._trotter_number):
-                    QC.evolve_pool_trotter_basic(
+                QC.evolve_pool_trotter(
                         hermitian_pairs,
+                        self._dt,
+                        self._trotter_number,
+                        self._trotter_order,
                         antiherm=False,
                         adjoint=False)
 
