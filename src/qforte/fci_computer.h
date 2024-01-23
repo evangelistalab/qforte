@@ -185,6 +185,15 @@ class FCIComputer {
       const bool antiherm = false,
       const bool adjoint = false);
 
+    /// A funciton to apply the exact time evolution of an operator
+    /// usnig a tayler expanson.
+    /// Onus on the user to assure evolution is unitary.
+    void evolve_op_taylor(
+      const SQOperator& op,
+      const double evolution_time,
+      const double convergence_thresh,
+      const int max_taylor_iter);
+
     /// A lower-level helper function that applies a SQOperator
     /// term to the FCIComputer.
     void apply_individual_nbody1_accumulate(

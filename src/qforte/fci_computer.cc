@@ -570,7 +570,7 @@ void FCIComputer::evolve_individual_nbody_easy(
     const std::vector<int>& creb,
     const std::vector<int>& annb) 
 {
-    std::complex<double> factor = std::exp(-time * std::real(coeff) * std::complex<double>(0.0, 2.0));
+    std::complex<double> factor = std::exp(-time * std::real(coeff) * std::complex<double>(0.0, 1.0));
     std::pair<std::vector<int>, std::vector<int>> maps = evaluate_map_number(anna, annb);
 
     if (maps.first.size() != 0 and maps.second.size() != 0){
@@ -742,7 +742,7 @@ void FCIComputer::evolve_individual_nbody(
     if (crea == anna && creb == annb) {
         evolve_individual_nbody_easy(
             time,
-            parity * std::get<0>(term),
+            parity * std::get<0>(term), 
             Cin,
             Cout,
             crea,
@@ -763,6 +763,39 @@ void FCIComputer::evolve_individual_nbody(
     } else {
         throw std::invalid_argument("Evolved state must remain in spin and particle-number symmetry sector");
     }
+}
+
+void FCIComputer::evolve_op_taylor(
+      const SQOperator& op,
+      const double evolution_time,
+      const double convergence_thresh,
+      const int max_taylor_iter)
+
+{
+    Tensor Cevol = C_;
+
+    for (int order = 1; order < max_taylor_iter; ++order) {
+
+        // std::cout << "I get here, order: " << order << std::endl;
+
+        // std::cout << "C_: " << C_.str() << std::endl;
+        // std::cout << "Cevol: " << Cevol.str() << std::endl;
+
+        std::complex<double> coeff(0.0, -evolution_time);
+        apply_sqop(op);
+        scale(coeff);
+
+        Cevol.zaxpy(
+            C_,
+            1.0 / std::tgamma(order+1),
+            1,
+            1);
+        
+        if (C_.norm() * std::abs(coeff) < convergence_thresh) {
+            break;
+        }
+    }
+    C_ = Cevol;
 }
 
 void FCIComputer::evolve_pool_trotter_basic(
@@ -1090,7 +1123,9 @@ std::complex<double> FCIComputer::get_exp_val(const SQOperator& sqop) {
 }
 
 /// apply a constant to the FCI quantum computer.
-void scale(const std::complex<double> a);
+void FCIComputer::scale(const std::complex<double> a){
+    C_.scale(a);
+}
 
 
 // std::vector<std::complex<double>> FCIComputer::direct_expectation_value(const TensorOperator& top){

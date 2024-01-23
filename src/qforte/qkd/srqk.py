@@ -45,6 +45,7 @@ class SRQK(QSD):
             s=3,
             dt=0.5,
             target_root=0,
+            use_exact_evolution=False,
             diagonalize_each_step=True
             ):
 
@@ -52,6 +53,7 @@ class SRQK(QSD):
         self._nstates = s+1
         self._dt = dt
         self._target_root = target_root
+        self._use_exact_evolution = use_exact_evolution
         self._diagonalize_each_step = diagonalize_each_step
 
         self._n_classical_params = 0
@@ -84,6 +86,7 @@ class SRQK(QSD):
         print('Trial state preparation method:          ',  self._state_prep_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
+        print('Use exact time evolution?:               ',  self._use_exact_evolution)
         print('Use fast version of algorithm:           ',  str(self._fast))
         if(self._fast):
             print('Measurement varience thresh:             ',  'NA')
@@ -394,7 +397,7 @@ class SRQK(QSD):
                 f.write(f"#{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}\n")
                 f.write('#-------------------------------------------------------------------------------\n')
 
-        # you are here!
+    
         """In reviewing this there is going to be an inherent ordering probelm. I want to apply 
         based on hermitian paris of SQ operators but the qb hamiltonain has been 'simplified' 
         and looses the exact correspondance to the sq hamiltonain"""
@@ -402,7 +405,15 @@ class SRQK(QSD):
 
             if(m>0):
                 # Compute U_m |φ>
-                QC.evolve_pool_trotter(
+                if(self._use_exact_evolution):
+                    QC.evolve_op_taylor(
+                        self._sq_ham,
+                        self._dt,
+                        1.0e-15,
+                        30)
+
+                else:
+                    QC.evolve_pool_trotter(
                         hermitian_pairs,
                         self._dt,
                         self._trotter_number,
