@@ -27,20 +27,7 @@ mol = qf.system_factory(
 
 
 s = 8
-dt = 0.1
-
-# alg_fock = qf.SRQK(
-#     mol,
-#     computer_type = 'fock',
-#     trotter_number=4
-#     )
-
-# alg_fock.run(
-#     s=s,
-#     dt=dt
-# )
-
-# print(f'\n\n Efci:   {mol.fci_energy:+12.10f}')
+dt = 0.01
 
 r = 1
 order = 2
@@ -50,7 +37,8 @@ alg_fci = qf.SRQK(
     mol,
     computer_type = 'fci',
     trotter_number=r,
-    trotter_order=order
+    trotter_order=order,
+    use_exact_evolution=False
     )
 
 alg_fci.run(
@@ -60,30 +48,11 @@ alg_fci.run(
 
 Eold = alg_fci.get_gs_energy()
 
-alg_fci_new = qf.SRQK(
-    mol,
-    computer_type = 'fci',
-    trotter_number=r,
-    trotter_order=order,
-    )
-
-alg_fci_new.run(
-    s=s,
-    dt=dt,
-    use_exact_evolution=True
-    # test_option='new'
-    )
-
-Enew = alg_fci_new.get_gs_energy()
-
 print('\n\n')
 print(f' Efci:    {mol.fci_energy:+12.10f}')
 print(f' Eold:    {Eold:+12.10f}')
-print(f' Enew:    {Enew:+12.10f}')
+print(f' Eold:    {Eold-mol.fci_energy:+12.10f}')
 
-print(f' ')
-print(f' dEold:   {Eold-mol.fci_energy:+12.10f}')
-print(f' dEnew:   {Enew-mol.fci_energy:+12.10f}')
 
 #LGTM!
 

@@ -209,6 +209,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_sqop", &FCIComputer::apply_sqop)
         .def("apply_sqop_pool", &FCIComputer::apply_sqop_pool)
         .def("get_exp_val", &FCIComputer::get_exp_val)
+        .def("evolve_op_taylor", &FCIComputer::evolve_op_taylor)
         .def("apply_sqop_evolution", &FCIComputer::apply_sqop_evolution, 
             py::arg("time"),
             py::arg("sqop"),
