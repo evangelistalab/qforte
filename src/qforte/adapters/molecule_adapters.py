@@ -98,13 +98,14 @@ def create_psi_mol(**kwargs):
               'e_convergence': 1e-8,
               'd_convergence': 1e-8,
               'ci_maxiter': 100,
+              'docc': kwargs['scf_docc'],
               'num_frozen_docc' : kwargs['num_frozen_docc'],
               'num_frozen_uocc' : kwargs['num_frozen_uocc'],
               'mp2_type': "conv"})
     
-    if kwargs['scf_docc'] != None and kwargs['casscf'] != None:
-            print('Cannot use CASSCF and pre-specified irrep occupations')
-            exit()
+    #if kwargs['scf_docc'] != None and kwargs['casscf'] != None:
+    #        print('Cannot use CASSCF and pre-specified irrep occupations')
+    #        exit()
 
     if kwargs['num_frozen_docc'] != 0 and kwargs['casscf'] != None:
             print('Cannot use CASSCF and frozen orbitals')
@@ -125,7 +126,7 @@ def create_psi_mol(**kwargs):
         psi4.set_options({'mcscf_r_convergence': 1e-12})  
         psi4.set_options({'mcscf_maxiter': 1000})  
         psi4.set_options({'mcscf_diis_start': 50})   
-        E_casscf, p4_wfn = psi4.energy('casscf', return_wfn=True)   
+        E_casscf, p4_wfn = psi4.energy('casscf', return_wfn=True, ref_wfn = vanilla_wfn)   
         p4_Escf = None
         print(f"CASSCF Energy: {E_casscf}")
     else:  

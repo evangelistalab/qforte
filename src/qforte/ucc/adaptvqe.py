@@ -176,8 +176,14 @@ class ADAPTVQE(UCCVQE):
                 self.compute_moment_energies()
 
             if(self._verbose):
-                print('\ntamplitudes for tops post solve: \n', np.real(self._tamps))
-
+                print('\ntamplitudes for tops post solve: \n', list(np.real(self._tamps)))
+                if self._is_multi_state:
+                    E, A, ops = qforte.excited_state_algorithms.ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
+                    diag_string = f"Diagonalized Energies:"
+                    for e in E:
+                        diag_string += f" {e}"
+                    print(diag_string)
+                    
             if (self._print_summary_file):
                 f.write(f'  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
 
