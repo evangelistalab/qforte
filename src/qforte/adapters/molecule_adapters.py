@@ -97,12 +97,13 @@ def create_psi_mol(**kwargs):
               'reference' : scf_ref_type,
               'e_convergence': 1e-8,
               'd_convergence': 1e-8,
-              'ci_maxiter': 100,
-              'docc': kwargs['scf_docc'],
+              'ci_maxiter': 100,          
               'num_frozen_docc' : kwargs['num_frozen_docc'],
               'num_frozen_uocc' : kwargs['num_frozen_uocc'],
               'mp2_type': "conv"})
-    
+    if kwargs['scf_docc'] != None:
+              psi4.set_options({'docc': kwargs['scf_docc']})
+
     #if kwargs['scf_docc'] != None and kwargs['casscf'] != None:
     #        print('Cannot use CASSCF and pre-specified irrep occupations')
     #        exit()
