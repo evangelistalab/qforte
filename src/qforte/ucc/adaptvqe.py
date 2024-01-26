@@ -15,7 +15,7 @@ from qforte.utils.state_prep import *
 from qforte.utils.trotterization import trotterize
 from qforte.utils import moment_energy_corrections
 from qforte.maths import optimizer
-
+from qforte.expansions.excited_state_algorithms import *
 import numpy as np
 from scipy.optimize import minimize
 
@@ -67,6 +67,9 @@ class ADAPTVQE(UCCVQE):
     _energies : list
         The optimized energies from each iteration of ADAPT-VQE.
 
+    _ritz_energies : list of lists
+        The eigenstates in the subspace of H defined by the current ADAPT ansatz acting on multiple references.
+            
     _final_energy : float
         The final ADAPT-VQE energy value.
 
@@ -107,6 +110,7 @@ class ADAPTVQE(UCCVQE):
 
         self._results = []
         self._energies = []
+        self._diag_energies = []
         self._grad_norms = []
         self._tops = copy.deepcopy(tops)
         self._tamps = copy.deepcopy(tamps)
@@ -132,9 +136,10 @@ class ADAPTVQE(UCCVQE):
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
+        
 
         self.fill_pool()
-
+        
         if self._max_moment_rank:
             print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
             self.construct_moment_space()
@@ -157,6 +162,15 @@ class ADAPTVQE(UCCVQE):
             f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
             f.write('#-------------------------------------------------------------------------------\n')
 
+        
+        if self._is_multi_state:
+            E, A, ops = ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
+            self._diag_energies.append(E)
+            diag_string = f"Best Energies {avqe_iter}"
+            for e in E:
+                diag_string += f" {e}"
+            print(diag_string)
+
         while not self._converged:
 
             print('\n\n -----> ADAPT-VQE iteration ', avqe_iter, ' <-----\n')
@@ -175,14 +189,23 @@ class ADAPTVQE(UCCVQE):
                 print('\nComputing non-iterative energy corrections')
                 self.compute_moment_energies()
 
+            if self._is_multi_state:
+                E, A, ops = qforte.excited_state_algorithms.ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
+                self._diag_energies.append(E)
+                 
+
             if(self._verbose):
                 print('\ntamplitudes for tops post solve: \n', list(np.real(self._tamps)))
-                if self._is_multi_state:
-                    E, A, ops = qforte.excited_state_algorithms.ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
+                if self._is_multi_state:     
                     diag_string = f"Diagonalized Energies:"
                     for e in E:
                         diag_string += f" {e}"
                     print(diag_string)
+                    best_string = f"Best Energies {avqe_iter + 1}"
+                    D = np.array(self._diag_energies)
+                    for i in range(len(self._ref)):    
+                        best_string += f" {np.amin(D[:,i])}"
+                    print(best_string)
                     
             if (self._print_summary_file):
                 f.write(f'  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
@@ -204,7 +227,16 @@ class ADAPTVQE(UCCVQE):
                     self._final_result = None
                 else:
                     self._final_result = self._results[-1]
-
+            if self._is_multi_state:
+                #Check that ref and final are included
+                best_Es = []
+                E_arr = np.array(self._diag_energies)
+                for i in range(len(self._ref)):
+                    best_Es.append(np.amin(E_arr[:,i]))
+                self._best_Es = best_Es    
+                
+                    
+        
         self._Egs = self.get_final_energy()
 
         print('\n\n')
