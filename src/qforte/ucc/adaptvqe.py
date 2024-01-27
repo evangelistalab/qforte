@@ -227,15 +227,16 @@ class ADAPTVQE(UCCVQE):
                     self._final_result = None
                 else:
                     self._final_result = self._results[-1]
-            if self._is_multi_state:
-                #Check that ref and final are included
-                best_Es = []
-                E_arr = np.array(self._diag_energies)
-                for i in range(len(self._ref)):
-                    best_Es.append(np.amin(E_arr[:,i]))
-                self._best_Es = best_Es    
+            
                 
                     
+        if self._is_multi_state:
+            #Check that ref and final are included
+            best_diags = []
+            E_arr = np.array(self._diag_energies)
+            for i in range(len(self._ref)):
+                best_diags.append(np.amin(E_arr[:,i]))
+            self._best_diags = best_diags    
         
         self._Egs = self.get_final_energy()
 
