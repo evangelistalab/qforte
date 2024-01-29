@@ -166,9 +166,12 @@ class ADAPTVQE(UCCVQE):
         if self._is_multi_state:
             E, A, ops = ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
             self._diag_energies.append(E)
+            cur_string = f"Current Energies {avqe_iter}"
             diag_string = f"Best Energies {avqe_iter}"
             for e in E:
                 diag_string += f" {e}"
+                cur_string += f" {e}"
+            print(cur_string)
             print(diag_string)
 
         while not self._converged:
@@ -197,7 +200,7 @@ class ADAPTVQE(UCCVQE):
             if(self._verbose):
                 print('\ntamplitudes for tops post solve: \n', list(np.real(self._tamps)))
                 if self._is_multi_state:     
-                    diag_string = f"Diagonalized Energies:"
+                    diag_string = f"Current Energies {avqe_iter + 1}:"
                     for e in E:
                         diag_string += f" {e}"
                     print(diag_string)
