@@ -111,6 +111,7 @@ class ADAPTVQE(UCCVQE):
         self._results = []
         self._energies = []
         self._diag_energies = []
+        self._diag_As = []
         self._grad_norms = []
         self._tops = copy.deepcopy(tops)
         self._tamps = copy.deepcopy(tamps)
@@ -166,6 +167,7 @@ class ADAPTVQE(UCCVQE):
         if self._is_multi_state:
             E, A, ops = ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
             self._diag_energies.append(E)
+            self._diag_As.append(A)
             cur_string = f"Current Energies {avqe_iter}"
             diag_string = f"Best Energies {avqe_iter}"
             for e in E:
@@ -195,7 +197,7 @@ class ADAPTVQE(UCCVQE):
             if self._is_multi_state:
                 E, A, ops = qforte.excited_state_algorithms.ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
                 self._diag_energies.append(E)
-                 
+                self._diag_As.append(A) 
 
             if(self._verbose):
                 print('\ntamplitudes for tops post solve: \n', list(np.real(self._tamps)))
