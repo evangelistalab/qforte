@@ -295,7 +295,7 @@ class AnsatzAlgorithm(Algorithm):
         return val
 
     def __init__(self, *args, qubit_excitations=False, compact_excitations=False, diis_max_dim=8,
-            max_moment_rank = 0, moment_dt=None,
+            max_moment_rank = 0, moment_dt=None, penalty=None,
             **kwargs):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
@@ -313,6 +313,43 @@ class AnsatzAlgorithm(Algorithm):
         self._max_moment_rank = max_moment_rank
         # The moment_dt variable defines the 'residual' state used to measure the residuals for the moment corrections
         self._moment_dt = moment_dt
+        self._penalty = penalty
+
+        if self._penalty is not None:
+            if isinstance(self, qf.UCCNPQE) or isinstance(self, qf.SPQE):
+                raise ValueError("PQE with Hamiltonian penalty terms not yet supported.")
+            expected_keys = {'operators', 'eigenvalues', 'scaling_factors'}
+            if not isinstance(self._penalty, dict):
+                raise ValueError(f"The 'penalty' option must be a dictionary with keys: {expected_keys}")
+            if not set(self._penalty.keys()) == expected_keys:
+                raise ValueError(f"Incorrect keys in 'penalty' dictionary. Expected keys: {expected_keys}")
+            if not all(isinstance(value, list) for value in self._penalty.values()):
+                raise ValueError("All values in the 'penalty' dictionary must be lists.")
+            if not len(self._penalty['operators']) == len(self._penalty['eigenvalues']) == len(self._penalty['scaling_factors']):
+                raise ValueError("Operators, eigenvalues, and scaling factors lists must be of the same length.")
+            if not all(isinstance(op, qf.QubitOperator) for op in self._penalty.get('operators', [])):
+                raise ValueError("All elements in 'operators' must be instances of the QubitOperator class.")
+            if not all(isinstance(eigval, (int, float)) for eigval in self._penalty.get('eigenvalues', [])):
+                raise ValueError("All elements in 'eigenvalues' must be real numbers.")
+            if not all(isinstance(scaling, (int, float)) for scaling in self._penalty.get('scaling_factors', [])):
+                raise ValueError("All elements in 'scaling_factors' must be real numbers.")
+            penalties_qop = qf.QubitOperator()
+            for i in range(len(self._penalty['eigenvalues'])):
+                eig = qf.Circuit()
+                temp_qop = qf.QubitOperator()
+                penalty_qop = qf.QubitOperator()
+                temp_qop.add(self._penalty['operators'][i])
+                temp_qop.add(-self._penalty['eigenvalues'][i], eig)
+                penalty_qop.add(temp_qop)
+                penalty_qop.operator_product(temp_qop, True, True)
+                penalty_qop.mult_coeffs(self._penalty['scaling_factors'][i])
+                penalties_qop.add(penalty_qop)
+                penalties_qop.simplify(True)
+            self._qb_ham = qf.QubitOperator()
+            self._qb_ham.add(self._sys.hamiltonian)
+            self._qb_ham.add(penalties_qop)
+            self._qb_ham.simplify(True)
+            self._Nl = len(self._qb_ham.terms())
 
         kwargs.setdefault('irrep', None)
         if hasattr(self._sys, 'point_group'):
