@@ -72,7 +72,7 @@ class MRSQK(QSD):
     _nstates_per_ref : int
         The number of states for a generated reference :math:`s+1`.
 
-    _reference_generator : {"SRQK"}
+    _reference_generator : {"SRQK", "USER"}
         Specifies an algorithm to choose the reference state.
 
     _s : int
@@ -126,6 +126,8 @@ class MRSQK(QSD):
             mr_dt=0.5,
             target_root=0,
             reference_generator='SRQK',
+            refs_user_defined=None,
+            save_qk_matrices=False,
             use_phase_based_selection=False,
             use_spin_adapted_refs=True,
             s_o=4,
@@ -153,6 +155,9 @@ class MRSQK(QSD):
 
         self._diagonalize_each_step=diagonalize_each_step
 
+        self._sa_ref_lst = []
+        self._save_qk_matrices = save_qk_matrices
+
         if(self._state_prep_type != 'occupation_list'):
             raise ValueError("MRSQK implementation can only handle occupation_list reference.")
 
@@ -178,9 +183,15 @@ class MRSQK(QSD):
             self.build_refs_from_srqk()
 
             print('\n  ==> SRQK reference selection complete.')
+        
+        elif reference_generator.lower()=='user':
+            if refs_user_defined == None:
+                raise ValueError("User-defined spin-adapted references MISSING; set 'refs_user_defined' option.")
+            else:
+                self.get_refs_from_user(refs_user_defined)
 
         else:
-            raise ValueError("Incorrect value passed for reference_generator, can be 'SRQK'.")
+            raise ValueError("Incorrect value passed for reference_generator, can be 'SRQK', 'user'.")
 
         self.common_run()
 
@@ -192,7 +203,8 @@ class MRSQK(QSD):
         if(self._reference_generator=='SRQK'):
             self._n_pauli_trm_measures  = self._nstates * self._Nl + self._srqk._n_pauli_trm_measures
         else:
-            raise ValueError('Can only count number of paulit term measurements when using SRQK.')
+            self._n_pauli_trm_measures  = self._nstates * self._Nl 
+        
         # off-diagonal of Hbar (<X> and <Y> of Hadamard test)
         self._n_pauli_trm_measures += self._nstates*(self._nstates-1) * self._Nl
         # off-diagonal of S (<X> and <Y> of Hadamard test)
@@ -213,8 +225,10 @@ class MRSQK(QSD):
         print('\n\n                 ==> MRSQK options <==')
         print('-----------------------------------------------------------')
         # General algorithm options.
-        print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
-        print('Trial state preparation method:          ',  self._state_prep_type)
+        print('Reference space generator                ',  self._reference_generator.upper())
+        if(self._reference_generator.upper()=='SRQK'):
+            print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
+            print('Trial state preparation method:          ',  self._state_prep_type) 
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
         print('Use fast version of algorithm:           ',  str(self._fast))
@@ -231,10 +245,11 @@ class MRSQK(QSD):
         print('Target root:                             ',  str(self._target_root))
         print('Use det. selection with sign:            ',  str(self._use_phase_based_selection))
         print('Use spin adapted references:             ',  str(self._use_spin_adapted_refs))
+        print('Save final MRSQK matrics:                ',  str(self._save_qk_matrices))
 
-        print('\n\n     ==> Initial QK options (for ref. selection)  <==')
-        print('-----------------------------------------------------------')
         if(self._reference_generator=='SRQK'):
+            print('\n\n     ==> Initial QK options (for ref. selection)  <==')
+            print('-----------------------------------------------------------')
             print('Inital Trotter order (rho_o):            ',  self._trotter_order_o)
             print('Inital Trotter number (m_o):             ',  self._trotter_number_o)
             print('Number of initial time evolutions (s_o): ',  self._s_o)
@@ -325,7 +340,8 @@ class MRSQK(QSD):
                 self._n_pauli_trm_measures += k * (k-1) * self._Nl
                 self._n_pauli_trm_measures += k * (k-1)
 
-                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
+                if len(evals) > self._target_root:
+                    print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         return s_mat, h_mat
 
@@ -424,15 +440,16 @@ class MRSQK(QSD):
 
                 k = p+1
                 self._n_classical_params = k
-                if(k==1):
+                if(k==1) and (self._reference_generator != 'user'):
                     self._n_cnot = self._srqk._n_cnot
                 else:
                     self._n_cnot = 2 * Um.get_num_cnots()
-                self._n_pauli_trm_measures  = k * self._Nl + self._srqk._n_pauli_trm_measures
+                self._n_pauli_trm_measures  = k * self._Nl + self._srqk._n_pauli_trm_measures if self._reference_generator != 'user' else k * self._Nl
                 self._n_pauli_trm_measures += k * (k-1) * self._Nl
                 self._n_pauli_trm_measures += k * (k-1)
 
-                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
+                if len(evals) > self._target_root:
+                    print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         return s_mat, h_mat
 
@@ -641,7 +658,6 @@ class MRSQK(QSD):
         print('\n\n        ==> Final MRSQK reference space summary <==')
         print('-----------------------------------------------------------')
 
-        self._sa_ref_lst = []
         for i in range(self._d):
             print('\nRef ', i+1)
             print('---------------------------')
@@ -659,3 +675,38 @@ class MRSQK(QSD):
                     print('  ', round(temp[0], 4), '     ', basis.str(self._nqb))
 
             self._sa_ref_lst.append(basis_vec)
+    
+
+    def set_sa_ref_lst(self, spin_adapted_ref_list):  
+        """   
+        Parameters
+        ----------
+        spin_adapted_ref_list : list of lists of tuples
+            list of spin adapted references defined by user.
+            Each term in 'spin_adapted_ref_list' represents a configuration state function (CSF);
+            Each CSF comprises a list of tuples, 
+            while each tuple contains the coefficient and determinant (in the occupation list format).
+        As an example:
+        The following list contains two CSF, built from one and two determinants, respectively.
+        spin_adapted_ref_list = [  [(1.0, [1,1,0,0]), ], 
+                                   [(0.7071, [0,1,1,0]), (0.7071, [1,0,0,1])], 
+                                 ]
+        """
+        self._sa_ref_lst = spin_adapted_ref_list  
+
+    def get_refs_from_user(self, refs_user_defined):
+        """Get a list of spin adapted references from user input to be used in the MRSQK procedure.
+        """
+        self.set_sa_ref_lst(refs_user_defined)
+        
+        print('\n\n        ==> MRSQK reference space (User-defined) <==')
+        print('-----------------------------------------------------------')
+
+        for i, csf in enumerate(refs_user_defined):
+            print('\nRef ', i+1)
+            print('---------------------------')
+            for c, det in csf:
+                qf_det_idx = ref_to_basis_idx(det)
+                basis = qforte.QubitBasis(qf_det_idx)
+                print(f'{c:9.4f}     {basis.str(self._nqb)}')
+                
