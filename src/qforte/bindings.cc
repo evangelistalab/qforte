@@ -210,6 +210,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_sqop", &FCIComputer::apply_sqop)
         .def("apply_sqop_pool", &FCIComputer::apply_sqop_pool)
         .def("get_exp_val", &FCIComputer::get_exp_val)
+        .def("evolve_op_taylor", &FCIComputer::evolve_op_taylor)
         .def("apply_sqop_evolution", &FCIComputer::apply_sqop_evolution, 
             py::arg("time"),
             py::arg("sqop"),
@@ -218,6 +219,14 @@ PYBIND11_MODULE(qforte, m) {
             )
         .def("evolve_pool_trotter_basic", &FCIComputer::evolve_pool_trotter_basic, 
             py::arg("sqop"),
+            py::arg("antiherm") = false,
+            py::arg("adjoint") = false
+            )
+        .def("evolve_pool_trotter", &FCIComputer::evolve_pool_trotter, 
+            py::arg("sqop"),
+            py::arg("evolution_time"),
+            py::arg("trotter_steps"),
+            py::arg("trotter_order"),
             py::arg("antiherm") = false,
             py::arg("adjoint") = false
             )
