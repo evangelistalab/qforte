@@ -35,6 +35,16 @@ class FCIComputer {
     /// TODO(Tyler?): implement this...
     // void apply_sq_operator(const QubitOperator& qo);
 
+    /// Set a particular element of tis Tensor, specified by idxs
+    void set_element(const std::vector<size_t>& idxs,
+            const std::complex<double> val
+            );
+
+    /// Set a particular element of tis Tensor, specified by idxs
+    void add_to_element(const std::vector<size_t>& idxs,
+            const std::complex<double> val
+            );
+
     /// apply a TensorOperator to the current state 
     void apply_tensor_operator(const TensorOperator& top);
 

@@ -11,7 +11,7 @@ import time
     sparse Hermitian matrix (e.g. Hamiltonian)
 '''
 
-n = 1000 # was 1200				# Dimension of CI matrix (CI vector will be this size)
+n = 10000 # was 1200				# Dimension of CI matrix (CI vector will be this size)
 tol = 1e-8				# Convergence tolerance
 mmax = n//2				# Maximum number of Davidson iterations	
 
@@ -62,7 +62,7 @@ for m in range(k,mmax,k):
 
 
     # Perform a QR decompositon and set V[:, :m] = Q
-    Q, R = np.linalg.qr(V[:,:m])
+    Q, R = np.linalg.qr(V[:,:m]) # use gram-schmidt to build Q
 
     V[:,:m] = Q
     print(f'  V[:,:m].shape {V[:,:m].shape}')
@@ -90,9 +90,11 @@ for m in range(k,mmax,k):
     # the corresponding expansion coefficeints for each eigen-index idx
     s = S[:,idx]
     print(f'  T.shape {T.shape}')
+    print(f'  s.shape {s.shape}')
 
     # loop j over the k trial vectors
     for j in range(0,k):
+        print(f' s_itr.shape {s[:,j].shape}')
         w = np.dot(
             (A - theta[j]*I), np.dot(V[:,:m], s[:,j])
             ) 
@@ -104,6 +106,7 @@ for m in range(k,mmax,k):
 
         V[:,(m+j)] = q
         print(f'    V[:,(m+j)].shape {V[:,(m+j)].shape}')
+
     norm = np.linalg.norm(theta[:eig] - theta_old)
     if norm < tol:
         break

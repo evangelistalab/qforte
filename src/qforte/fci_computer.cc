@@ -69,6 +69,15 @@ FCIComputer::FCIComputer(int nel, int sz, int norb) :
     graph_ = FCIGraph(nalfa_el_, nbeta_el_, norb_);
 }
 
+/// Set a particular element of the tensor stored in FCIComputer, specified by idxs
+void FCIComputer::set_element(
+    const std::vector<size_t>& idxs,
+    const std::complex<double> val
+        )
+{
+    C_.set(idxs, val);
+}
+
 /// apply a TensorOperator to the current state 
 void apply_tensor_operator(const TensorOperator& top);
 
