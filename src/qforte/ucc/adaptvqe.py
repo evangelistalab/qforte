@@ -480,6 +480,7 @@ class ADAPTVQE(UCCVQE):
         self.conv_status()
 
         if not self._converged:
+            
             if(self._use_cumulative_thresh):
                 temp_order_tops = []
                 grads_sq = [(grads[m] * grads[m], m) for m in range(len(grads))]
@@ -537,7 +538,7 @@ class ADAPTVQE(UCCVQE):
                 self._final_result = self._results[-1]
         else:
             self._converged = False
-
+        print("", flush = True)
     def get_num_ham_measurements(self):
         if not self._is_multi_state:
             factor = 1
