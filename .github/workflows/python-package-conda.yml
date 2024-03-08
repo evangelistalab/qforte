@@ -25,8 +25,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        #conda env update --file environment.yml --name base
+        conda create -n qforte_env python=3.10
+        conda activate qforte_env
         conda install psi4=1.8.2 -c conda-forge/label/libint_dev -c conda-forge
+        conda install pytest pybind11
 
     - name: Compile
       run: |
