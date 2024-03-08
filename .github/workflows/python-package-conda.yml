@@ -13,11 +13,6 @@ jobs:
       with:
         submodules: 'true'    
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'
-
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
@@ -25,10 +20,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        conda create -n qforte_env python=3.10
-        conda activate qforte_env
-        conda install psi4=1.8.2 -c conda-forge/label/libint_dev -c conda-forge
-        conda install pytest pybind11
+        conda env update --file environment.yml --name base
 
     - name: Compile
       run: |
