@@ -26,7 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name base
-        conda install psi4 -c psi4/label/dev
+        conda install psi4=1.8.2 -c conda-forge/label/libint_dev -c conda-forge
 
     - name: Compile
       run: |
