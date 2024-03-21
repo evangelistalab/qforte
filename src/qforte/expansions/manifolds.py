@@ -82,6 +82,47 @@ def cisd_manifold(ref, sz = [0], irreps = None, target_irrep = None):
     """
     return cin_manifold(ref, 1, sz = sz, irreps = irreps, target_irrep = target_irrep) + cin_manifold(ref, 2, sz = sz, irreps = irreps, target_irrep = target_irrep)
 
+def sc_double(ref, p, q, r, s, sign):
+    """
+    Get a specific, spin-complemented double excitation (a_pq^rs (+/-) a_(p'q')^(r's'))|ref>.  Mult determines the sign. 
+    """
+    print("WARNING: Limited Testing of SC Doubles")
+    pa, pb, qa, qb, ra, rb, sa, sb = 2*p, 2*p + 1, 2*q, 2*q + 1, 2*r, 2*r + 1, 2*s, 2*s + 1 
+    diff = [0]*len(ref)
+    diff[pa] = -1
+    diff[qa] = -1
+    diff[ra] = 1
+    diff[sa] = 1
+
+    new_det = [ref[i] + diff[i] for i in range(len(ref))]
+    
+    U = qf.Circuit()
+
+    for i in range(len(ref)):
+        if ref[i] == 1 and i not in [p,q,r,s]: 
+            U.add(qf.gate("X", i, i))
+    if sign == "minus":
+        U.add(qf.gate("X", pa))
+    else:
+        try:
+            assert sign == "plus"
+        except:
+            print("Options are + and -")
+    U.add(qf.gate("H", pa))    
+    U.add(qf.gate("CNOT", pb, pa))
+    U.add(qf.gate("CNOT", qa, pa))
+    U.add(qf.gate("CNOT", qb, pb))
+    U.add(qf.gate("CNOT", ra, pa))
+    U.add(qf.gate("CNOT", rb, pb))
+    U.add(qf.gate("CNOT", sa, qa))
+    U.add(qf.gate("CNOT", sb, qb))    
+    U.add(qf.gate("X", pb))
+    U.add(qf.gate("X", qb))
+    U.add(qf.gate("X", ra))
+    U.add(qf.gate("X", sa))
+    
+    return U     
+    
 def sa_single(ref, p, q, mult = 1):
     """
     Get a specific, spin-adapted single excitation a_p^q|ref>.  Mult determines the singlet or triplet CSF.
@@ -127,6 +168,8 @@ def sa_single(ref, p, q, mult = 1):
         print("Invalid multiplicity.")
         exit()
     return U     
+
+
 
 def sa_cis(ref, sz = [0], mult = [1,3], irreps = None, target_irrep = None):
     """
