@@ -16,6 +16,7 @@ class Algorithm(ABC):
     ----------
     _ref : list
         The set of 1s and 0s indicating the initial quantum state.
+        Will be a list of these sets if _is_multi_state.
 
     _nqb : int
         The number of qubits the calculation empolys.
@@ -61,6 +62,12 @@ class Algorithm(ABC):
 
     _res_m_evals : int
         The total number of times an individual residual element was evaluated.
+
+    _is_multi_state : bool
+        Whether to use a state-averaged approach.
+
+    _weights : list
+        List of weights in the state-averaged approach.  Defaults to an equipartition.
     """
 
     def __init__(self,
@@ -72,6 +79,8 @@ class Algorithm(ABC):
                  fast=True,
                  verbose=False,
                  print_summary_file=False,
+                 is_multi_state=False,
+                 weights=None,
                  **kwargs):
 
         if isinstance(self, qf.QPE) and hasattr(system, 'frozen_core'):
@@ -80,29 +89,81 @@ class Algorithm(ABC):
 
         self._sys = system
         self._state_prep_type = state_prep_type
+        self._is_multi_state = is_multi_state
 
-        if self._state_prep_type == 'occupation_list':
-            if(reference==None):
+        if not self._is_multi_state:
+            if self._state_prep_type == 'occupation_list':
+                if(reference==None):
+                    self._ref = system.hf_reference
+                else:
+                    if not (isinstance(reference, list)):
+                        raise ValueError("occupation_list reference must be list of 1s and 0s.")
+                    for r in reference:
+                        if r != 0 and r != 1:
+                            raise ValueError("occupation_list reference must be list of 1s and 0s.")
+
+                    self._ref = reference
+
+                self._Uprep = build_Uprep(self._ref, state_prep_type)
+
+            elif self._state_prep_type == 'unitary_circ':
+                if not isinstance(reference, qf.Circuit):
+                    raise ValueError("unitary_circ reference must be a Circuit.")
+
                 self._ref = system.hf_reference
+                self._Uprep = reference
+
             else:
-                if not (isinstance(reference, list)):
-                    raise ValueError("occupation_list reference must be list of 1s and 0s.")
-                self._ref = reference
-
-            self._Uprep = build_Uprep(self._ref, state_prep_type)
-
-        elif self._state_prep_type == 'unitary_circ':
-            if not isinstance(reference, qf.Circuit):
-                raise ValueError("unitary_circ reference must be a Circuit.")
-
-            self._ref = system.hf_reference
-            self._Uprep = reference
+                raise ValueError("QForte only suppors references as occupation lists and Circuits.")
 
         else:
-            raise ValueError("QForte only suppors references as occupation lists and Circuits.")
+            #Make self._ref and self._Uprep into lists of references and associated preparation unitaries. 
+            if self._state_prep_type == 'occupation_list':
+                if(reference==None):
+                    self._ref = [system.hf_reference]
+                else:
+                    self._ref = []
+                    if not isinstance(reference, list):
+                        raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]")
+                    for ref in reference:
+                        if not isinstance(ref, list):
+                            raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]")
+                        for r in ref:
+                            if r != 0 and r != 1:
+                                raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]") 
+                        self._ref.append(ref)
+                self._Uprep = []
+                for ref in self._ref:
+                    self._Uprep.append(build_Uprep(ref, state_prep_type))
 
+            elif self._state_prep_type == 'unitary_circ':
+                self._ref = []
+                self._Uprep = []
+                if not isinstance(reference, list):
+                    raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
+                self._ref = [system.hf_reference] * len(reference)
+                for ref in reference:
+                    if not isinstance(ref, qf.Circuit):
+                        raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
+                    self._Uprep.append(ref)
 
-        self._nqb = len(self._ref)
+            else:
+                raise ValueError("QForte only suppors references as occupation lists and Circuits.")
+
+            if(weights==None):
+                print("State-averaging weights not specified.  Assuming equal weights.")
+                self._weights = [1/len(self._ref)] * len(self._ref)
+            else:
+                self._weights = weights
+            if len(self._weights) != len(self._ref):
+                raise ValueError("Number of weights should match number of references.")
+            if abs(sum(self._weights) - 1) > 1e-12:
+                raise ValueError("Reference weights should sum to 1.")
+        if not self._is_multi_state:
+            self._nqb = len(self._ref)
+        else:
+            self._nqb = len(self._ref[0])
+
         self._qb_ham = system.hamiltonian
         if self._qb_ham.num_qubits() != self._nqb:
             raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
@@ -235,7 +296,8 @@ class AnsatzAlgorithm(Algorithm):
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
         """ This function returns the Circuit object built
-        from the appropriate amplitudes (tops)
+        from the appropriate amplitudes (tops),
+        or in the case where _is_multi_state, a list of circuit objects
 
         Parameters
         ----------
@@ -243,55 +305,105 @@ class AnsatzAlgorithm(Algorithm):
             A list of parameters that define the variational degrees of freedom in
             the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
-
+        
         U = self.ansatz_circuit(amplitudes)
 
-        Uvqc = qforte.Circuit()
-        Uvqc.add(self._Uprep)
-        Uvqc.add(U)
-
+        if not self._is_multi_state:
+            Uvqc = qforte.Circuit()
+            Uvqc.add(self._Uprep)
+            Uvqc.add(U)
+        else:
+            Uvqc = []
+            for Uprep in self._Uprep:
+                Uvqc_r = qforte.Circuit()
+                Uvqc_r.add(Uprep)
+                Uvqc_r.add(U)
+                Uvqc.append(Uvqc_r)
         return Uvqc
 
     def fill_pool(self):
         """ This function populates an operator pool with SQOperator objects.
         """
 
-        if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
-            if self._pool_type == 'sa_SD' and self._compact_excitations:
-                raise ValueError('Compact excitation circuits not yet implemented for sa_SD operator pool.')
-            self._pool_obj = qf.SQOpPool()
-            if hasattr(self._sys, 'orb_irreps_to_int'):
-                self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
+        if not self._is_multi_state:
+            if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
+                if self._pool_type == 'sa_SD' and self._compact_excitations:
+                    raise ValueError('Compact excitation circuits not yet implemented for sa_SD operator pool.')
+                self._pool_obj = qf.SQOpPool()
+                if hasattr(self._sys, 'orb_irreps_to_int'):
+                    self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
+                else:
+                    self._pool_obj.set_orb_spaces(self._ref)
+                self._pool_obj.fill_pool(self._pool_type)
+            elif isinstance(self._pool_type, qf.SQOpPool):
+                self._pool_obj = self._pool_type
+
             else:
-                self._pool_obj.set_orb_spaces(self._ref)
-            self._pool_obj.fill_pool(self._pool_type)
-        elif isinstance(self._pool_type, qf.SQOpPool):
-            self._pool_obj = self._pool_type
+                raise ValueError('Invalid operator pool type specified.')
         else:
-            raise ValueError('Invalid operator pool type specified.')
+            if self._sys.point_group[0].upper() != 'C1':
+                if self._state_prep_type != "occupation_list":
+                    print("\nWARNING: Symmetry consistency of references is only checked for occupation lists.\n")
+                for r in range(1, len(self._ref)):
+                    diff = [self._ref[0][i] ^ self._ref[r][i] for i in range(len(self._ref[0]))]
+                    irrep = 0
+                    for i in range(len(diff)):
+                        if diff[i] == 1:
+                            irrep ^= self._sys.orb_irreps_to_int[int(i/2)] 
+                    if irrep != 0:
+                        print("WARNING: References of different irreps. Proceeding with symmetric pool anyway.")
+                    break
+                
+                
+            #Only GSD is well-defined for multiple references.
+            if self._pool_type in {'GSD'}:
+                self._pool_obj = qf.SQOpPool()
+                #o/v spaces are not well-defined: passing the dummy state |0>
+                if hasattr(self._sys, 'orb_irreps_to_int'):
+                    self._pool_obj.set_orb_spaces(self._ref[0], self._sys.orb_irreps_to_int)
+                else:
+                    self._pool_obj.set_orb_spaces(self._ref[0])
+                self._pool_obj.fill_pool(self._pool_type) 
+                
+            else:
+                raise ValueError('Invalid operator pool type specified.')
 
         self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
 
     def measure_energy(self, Ucirc):
         """
         This function returns the energy expectation value of the state
-        Uprep|0>.
+        Uprep|0>, or in the case where _is_multi_state, the weighted average
+        of all Uprep[i]|0>.
 
         Parameters
         ----------
         Ucirc : Circuit
-            The state preparation circuit.
+            The state preparation circuit (or list of circuits).
         """
-        if self._fast:
-            myQC = qforte.Computer(self._nqb)
-            myQC.apply_circuit(Ucirc)
-            val = np.real(myQC.direct_op_exp_val(self._qb_ham))
+        if not self._is_multi_state:
+            if self._fast:
+                myQC = qforte.Computer(self._nqb)
+                myQC.apply_circuit(Ucirc)
+                val = np.real(myQC.direct_op_exp_val(self._qb_ham))
+            else:
+                Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
+                val = Exp.perfect_experimental_avg([])
         else:
-            Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
-            val = Exp.perfect_experimental_avg([])
+            val = 0
+            if self._fast:    
+                for idx, U in enumerate(Ucirc):
+                    myQC = qforte.Computer(self._nqb)
+                    myQC.apply_circuit(U)
+                    
+                    val += self._weights[idx] * np.real(myQC.direct_op_exp_val(self._qb_ham))
+            else:
+                for idx, U in enumerate(Ucirc):
+                    Exp = qforte.Experiment(self._nqb, U, self._qb_ham, 2000)
+                    val += self._weights[idx] * Exp.perfect_experimental_avg([])
 
         assert np.isclose(np.imag(val), 0.0)
-
+        
         return val
 
     def __init__(self, *args, qubit_excitations=False, compact_excitations=False, diis_max_dim=8,
@@ -375,7 +487,8 @@ class AnsatzAlgorithm(Algorithm):
         """
         This function returns the energy expectation value of the state
         Uprep(params)|0>, where params are parameters that can be optimized
-        for some purpouse such as energy minimizaiton.
+        for some purpose such as energy minimization.  If _is_multi_state,
+        this will be the state-averaged energy instead.
 
         Parameters
         ----------
