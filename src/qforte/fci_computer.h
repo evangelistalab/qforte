@@ -238,6 +238,11 @@ class FCIComputer {
     /// apply a second quantized operator, must be number and spin conserving.
     void apply_sqop(const SQOperator& sqop);
 
+    /// apply the diagonal of a second quantized operator, must be number and spin conserving.
+    void apply_diagonal_of_sqop(
+      const SQOperator& sq_op, 
+      const bool invert_coeff = true);
+
     /// apply a second quantized operator, must be number and spin conserving.
     void apply_sqop_pool(const SQOpPool& sqop_pool);
 

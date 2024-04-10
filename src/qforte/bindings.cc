@@ -208,6 +208,10 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
         .def("apply_individual_sqop_term", &FCIComputer::apply_individual_sqop_term)
         .def("apply_sqop", &FCIComputer::apply_sqop)
+        .def("apply_diagonal_of_sqop", &FCIComputer::apply_diagonal_of_sqop, 
+            py::arg("sqop"),
+            py::arg("invert_coeff") = true
+            )
         .def("apply_sqop_pool", &FCIComputer::apply_sqop_pool)
         .def("get_exp_val", &FCIComputer::get_exp_val)
         .def("evolve_op_taylor", &FCIComputer::evolve_op_taylor)

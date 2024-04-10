@@ -1092,6 +1092,39 @@ void FCIComputer::apply_sqop(const SQOperator& sqop){
     }
 }
 
+/// diagonal only 
+void FCIComputer::apply_diagonal_of_sqop(const SQOperator& sqop, const bool invert_coeff){
+    Tensor Cin = C_;
+    C_.zero();
+
+    for(const auto& term : sqop.terms()){
+        std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>> temp_term;
+        std::vector<size_t> ann;
+        std::vector<size_t> cre;
+        cre = std::get<1>(term);
+        ann = std::get<2>(term);
+
+        std::sort(cre.begin(), cre.end());
+        std::sort(ann.begin(), ann.end());
+
+        if(std::equal(cre.begin(), cre.end(), ann.begin(), ann.end()) && std::abs(std::get<0>(term)) > compute_threshold_){
+            std::get<1>(temp_term) = cre;
+            std::get<2>(temp_term) = ann;
+
+            if(invert_coeff){
+                std::get<0>(temp_term) = 1.0 / std::get<0>(term);
+            } else {
+                std::get<0>(temp_term) = std::get<0>(term);
+            }
+
+            apply_individual_sqop_term(
+                temp_term,
+                Cin,
+                C_);
+        }
+    }
+}
+
 /// NICK: Check out  accumulation, don't need to do it this way..
 void FCIComputer::apply_sqop_pool(const SQOpPool& sqop_pool){
     Tensor Cin = C_;
