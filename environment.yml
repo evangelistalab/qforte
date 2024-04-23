@@ -1,14 +1,14 @@
 name: qforte_env
 
 channels:
-  - defaults
-  - conda-forge/label/libint_dev
-  - conda-forge
+    - defaults
+    - conda-forge/label/libint_dev
+    - conda-forge
 
 dependencies:
- - python>=3.10
- - pip>=19.0
- - pybind11
- - yaml
- - pytest
- - psi4=1.8.2
+    - python>=3.10
+    - pip>=19.0
+    - pybind11
+    - yaml
+    - pytest
+    - psi4=1.8.2
