@@ -1,13 +1,15 @@
-name: forte
+name: qforte_env
+
+channels:
+  - defaults
+  - conda-forge/label/libint_dev
+  - conda-forge
 
 dependencies:
-    - conda=23.9.0
+
     - python=3.10
     - pip>=19.0
-    - cmake
-    - numpy
-    - scipy
-    - boost
+    - pybind11
     - yaml
     - pytest
-    - conda-forge::lcov
+    - psi4=1.8.2
