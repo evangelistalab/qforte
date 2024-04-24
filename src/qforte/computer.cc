@@ -597,10 +597,10 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
         } /* end if t < c */
         if (control < target) {
             // Case 1-B: control bit idx is smaller than target bit idx
-            const size_t outer_block_size = std::pow(2, target);
-            const size_t outer_block_offset = 2 * outer_block_size;
-            const size_t block_size = std::pow(2, control);
-            const size_t block_offset = 2 * block_size;
+            const size_t outer_block_size = 1 << target;
+            const size_t outer_block_offset = outer_block_size << 1;
+            const size_t block_size = 1 << control;
+            const size_t block_offset = block_size << 1;
 
             if ((std::abs(op_2_2) + std::abs(op_3_3) > compute_threshold_) and
                 (std::abs(op_2_3) + std::abs(op_3_2) > compute_threshold_)) {
@@ -633,22 +633,12 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                 // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
                 if (op_2_2 != 1.0) {
                     // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
-                    size_t outer_block_end = outer_block_offset;
-                    size_t block_start_0 = block_size;
-                    size_t block_start_1 = outer_block_size + block_size;
-                    size_t block_end_0 = block_offset;
-
-                    for (; outer_block_end <= nbasis_;) {
-                        for (; block_end_0 < outer_block_end;) {
-                            for (size_t I0 = block_start_0; I0 < block_end_0; ++I0) {
+                    for (int outer_block_start = 0; outer_block_start < nbasis_; outer_block_start += outer_block_offset) {
+                        for (int block_start = outer_block_start + block_size; block_start < outer_block_start + outer_block_size; block_start += block_offset) {
+                            for (int I0 = block_start; I0 < block_start + block_size; ++I0) {
                                 coeff_[I0] = op_2_2 * coeff_[I0];
                             }
-                            block_start_0 += block_offset;
-                            block_end_0 += block_offset;
                         }
-                        block_start_0 += outer_block_size;
-                        block_end_0 += outer_block_size;
-                        outer_block_end += outer_block_offset;
                     }
                 }
                 if (op_3_3 != 1.0) {
