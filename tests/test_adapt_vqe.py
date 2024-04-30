@@ -16,7 +16,7 @@ class TestADAPTVQE:
         # The Nuclear repulsion energy
         Enuc =  3.057468328315556
 
-        mol = system_factory(stytem_type = 'molecule',
+        mol = system_factory(system_type = 'molecule',
                                      build_type = 'external',
                                      basis='sto-6g',
                                      filename=data_path)
@@ -58,9 +58,9 @@ class TestADAPTVQE:
                 run_fci=1)
 
         jacobi = ADAPTVQE(mol, compact_excitations=True, qubit_excitations=True, diis_max_dim=8)
-        jacobi.run(optimizer='jacobi', pool_type='GSD', avqe_thresh=0.001)
+        jacobi.run(optimizer='jacobi', pool_type='GSD', avqe_thresh=0.001, tamps = [], tops = [])
 
         bfgs = ADAPTVQE(mol, compact_excitations=True, qubit_excitations=True)
-        bfgs.run(optimizer='BFGS', pool_type='GSD', avqe_thresh=0.001)
+        bfgs.run(optimizer='BFGS', pool_type='GSD', avqe_thresh=0.001, tamps = [], tops = [])
 
         assert jacobi.get_gs_energy() == approx(bfgs.get_gs_energy(), abs=1.0e-8)

@@ -7,6 +7,7 @@ from qforte.abc import *
 from qforte.adapters import *
 from qforte.helper import *
 from qforte.maths import *
+from qforte.expansions import *
 from qforte.experiment import *
 from qforte.ite import *
 from qforte.qkd import *
