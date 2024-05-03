@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <functional>
 #include <stdexcept>
+#include <cmath>
 
 #include "fmt/format.h"
 
@@ -153,7 +154,7 @@ std::vector<double> Computer::measure_circuit(const Circuit& qc, size_t n_measur
             Gate temp = make_gate("H", target_qubit, target_qubit);
             QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
-            Gate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Gate temp = make_gate("Rx", target_qubit, target_qubit, M_PI / 2);
             QubitBasis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // // // std::cout<<'unrecognized gate in operator!'<<std::endl;
@@ -233,7 +234,7 @@ std::vector<std::vector<int>> Computer::measure_readouts(const Circuit& qc, size
             Gate temp = make_gate("H", target_qubit, target_qubit);
             QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
-            Gate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Gate temp = make_gate("Rx", target_qubit, target_qubit, M_PI / 2);
             QubitBasis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // // // std::cout<<'unrecognized gate in operator!'<<std::endl;
@@ -289,7 +290,7 @@ double Computer::perfect_measure_circuit(const Circuit& qc) {
             Gate temp = make_gate("H", target_qubit, target_qubit);
             QubitBasis_rotator.add_gate(temp);
         } else if (gate_id == "Y") {
-            Gate temp = make_gate("Rzy", target_qubit, target_qubit);
+            Gate temp = make_gate("Rx", target_qubit, target_qubit, M_PI / 2);
             QubitBasis_rotator.add_gate(temp);
         } else if (gate_id != "I") {
             // std::cout<<'unrecognized gate in operator!'<<std::endl;

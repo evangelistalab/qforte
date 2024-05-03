@@ -173,11 +173,11 @@ GateType Gate::mapLabelToType(const std::string& label_) {
         {"H", GateType::H}, {"R", GateType::R}, {"Rx", GateType::Rx},
         {"Ry", GateType::Ry}, {"Rz", GateType::Rz}, {"V", GateType::V},
         {"S", GateType::S}, {"T", GateType::T}, {"I", GateType::I},
-        {"Rzy", GateType::Rzy}, {"rU1", GateType::rU1}, {"A", GateType::A},
+        {"A", GateType::A},
         {"CNOT", GateType::cX}, {"cX", GateType::cX}, {"aCNOT", GateType::acX},
         {"acX", GateType::acX}, {"cY", GateType::cY}, {"cZ", GateType::cZ},
         {"cR", GateType::cR}, {"cV", GateType::cV}, {"cRz", GateType::cRz},
-        {"SWAP", GateType::SWAP}, {"rU2", GateType::rU2}
+        {"SWAP", GateType::SWAP}
     };
 
     auto it = labelToType.find(label_);

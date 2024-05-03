@@ -18,7 +18,7 @@ def generic_test_circ_vec_builder(qb_list, id):
     for i, pair in enumerate(ct_lst):
         t = pair[0]
         c = pair[1]
-        if(id in ['A', 'rU2', 'cR', 'cRz']):
+        if(id in ['A', 'cR', 'cRz']):
             circ_vec_ct[i].add(gate(id, t, c, 3.17*t*c))
             circ_vec_tc[i].add(gate(id, c, t, 1.41*t*c))
 
@@ -59,7 +59,7 @@ def circuit_tester(prep, test_circ):
 
 class TestComprehensiveGates:
     def test_gates(self):
-        gate_ids = ['cV', 'cX', 'acX', 'cY', 'cZ', 'cR', 'cRz', 'SWAP', 'A', 'rU2']
+        gate_ids = ['cV', 'cX', 'acX', 'cY', 'cZ', 'cR', 'cRz', 'SWAP', 'A']
 
         for id in gate_ids:
             circ_tc, circ_ct = generic_test_circ_vec_builder(ct_lst, id)
