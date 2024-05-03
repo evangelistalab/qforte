@@ -2,6 +2,9 @@ import pytest
 import qforte as qf
 import os
 
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+reference_tex = os.path.join(THIS_DIR, 'circuit_to_latex_reference.tex')
+
 class TestCircuitToLatex:
     def test_circ2latex_regression(self):
 
@@ -29,7 +32,7 @@ class TestCircuitToLatex:
 
         with open("circuit_to_latex_generated.tex", "r") as generated_file:
             generated_content = generated_file.read()
-        with open("circuit_to_latex_reference.tex", "r") as reference_file:
+        with open(reference_tex, "r") as reference_file:
             reference_content = reference_file.read()
         assert generated_content == reference_content
 
