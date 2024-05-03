@@ -43,8 +43,8 @@ def exponentiate_pauli_string(coefficient, term, Use_cRz=False, ancilla_idx=None
             to_z.add(qforte.gate('H', target, control))
             to_original.add(qforte.gate('H', target, control))
         elif (id == 'Y'):
-            to_z.add(qforte.gate('Rzy', target, control))
-            to_original.add(qforte.gate('Rzy', target, control))
+            to_z.add(qforte.gate('Rx', target, control, np.pi/2))
+            to_original.add(qforte.gate('Rx', target, control, -np.pi/2))
         elif (id == 'I'):
             continue
 

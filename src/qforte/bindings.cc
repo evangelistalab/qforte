@@ -244,7 +244,7 @@ PYBIND11_MODULE(qforte, m) {
 
             // only single qubit gates accept this synthax
             auto vec = {"X",  "Y", "Z", "H", "R", "Rx",  "Ry",
-                        "Rz", "V", "S", "T", "I", "Rzy", "rU1"};
+                        "Rz", "V", "S", "T", "I"};
             if (std::find(vec.begin(), vec.end(), type) != vec.end()) {
                 return make_gate(type, target, target, parameter.real());
             }
@@ -267,7 +267,7 @@ PYBIND11_MODULE(qforte, m) {
             // target and control
             if (target == control) {
                 auto vec2 = {
-                    "X", "Y", "Z", "H", "V", "S", "T", "I", "Rzy",
+                    "X", "Y", "Z", "H", "V", "S", "T", "I",
                 };
                 if (std::find(vec2.begin(), vec2.end(), type) != vec2.end()) {
                     return make_gate(type, target, control, 0.0);

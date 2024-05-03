@@ -259,7 +259,7 @@ class TestGates:
         gate1 = gate('X',0)
         assert gate1.nqubits() == 1
         assert gate1.gate_id() == 'X'
-        assert gate1.has_parameter() == False 
+        assert gate1.has_parameter() == False
         assert gate1.parameter() == None
         with pytest.raises(ValueError):
             gate1.update_parameter(1.0)
@@ -302,15 +302,15 @@ class TestGates:
             gate2 = gate1.adjoint()
             assert gate1 == gate2
 
-        # 1-qubit non-self-adjoint gates   
-        gates = ['V','S','T','Rzy']
+        # 1-qubit non-self-adjoint gates
+        gates = ['V','S','T']
         for g in gates:
             gate1 = gate(g,0)
             gate2 = gate1.adjoint()
             assert gate1 != gate2
 
         # 1-qubit parameterized non-self-adjoint gates
-        gates = ['R','Rx','Ry','Rz','rU1']
+        gates = ['R','Rx','Ry','Rz']
         for g in gates:
             gate1 = gate(g,0,0.5)
             gate2 = gate1.adjoint()
@@ -329,10 +329,10 @@ class TestGates:
         for g in gates:
             gate1 = gate(g,0,1)
             gate2 = gate1.adjoint()
-            assert gate1 != gate2            
+            assert gate1 != gate2
 
         # 2-qubit parameterized non-self-adjoint gates
-        gates = ['cR','cRz','rU2']
+        gates = ['cR','cRz']
         for g in gates:
             gate1 = gate(g,0,1,0.5)
             gate2 = gate1.adjoint()
@@ -382,15 +382,6 @@ class TestGates:
         assert Rzadj.parameter() == approx(-0.7, abs=1.0e-16)
         Rzm = gate('Rz',0,-0.7)
         assert Rzadj == Rzm
-
-        # test the rU1 gate
-        rU1 = gate('rU1',0,0.7)
-        assert rU1.has_parameter() is True
-        assert rU1.parameter() == approx(0.7, abs=1.0e-16)
-        rU1adj = rU1.adjoint()
-        assert rU1adj.parameter() == approx(-0.7, abs=1.0e-16)
-        rU1m = gate('rU1',0,-0.7)
-        assert rU1adj == rU1m
 
         # test the cR gate
         cR = gate('cR',0,1,0.7)
