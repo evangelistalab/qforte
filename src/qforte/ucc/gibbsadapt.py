@@ -9,6 +9,7 @@ from qforte.abc.uccvqeabc import UCCVQE
 
 import numpy as np
 import scipy
+import copy
 
 kb = 3.166811563455546e-06
 
@@ -30,7 +31,7 @@ class Gibbs_ADAPT(UCCVQE):
         self.fill_pool() 
 
 
-    def compute_free_energy(self, x, return_distribution = False):
+    def compute_free_energy(self, x):
         #Get energy expectation values.
         Es = []
         for i, reference in enumerate(self._references):
@@ -47,58 +48,63 @@ class Gibbs_ADAPT(UCCVQE):
             return Es[0]
 
         #Compute energy.
-        b_exp_Es = np.array([np.exp(self.beta*(Es[0]-E)) for E in Es])
-        tot_b_exp_Es = np.sum(b_exp_Es)
-        energy = np.sum(b_exp_Es*Es)/tot_b_exp_Es
-        entropy = np.sum((-self.beta*Es + np.ones(Es.shape)*(self.beta*Es[0] - np.log(tot_b_exp_Es)))*b_exp_Es/tot_b_exp_Es)        
-        if return_distribution == True:
-            return energy + entropy, b_exp_Es/tot_b_exp_Es
-        return energy + entropy
+        deltas = np.ones(Es.shape)*Es[0] - Es
+        gamma = np.exp(deltas*self.beta)
+        tot_gamma = np.sum(gamma)
+        omega = gamma/tot_gamma
+        F = np.sum(omega*Es)
+        #F += np.sum(omega*deltas)
+        #F -= np.log(tot_gamma)/self.beta
+        return F
 
     def compute_free_energy_gradient(self, x):
         #Get energy expectation values and gradients.
         Es = []
-        grads = []
+        E_grads = []
         for i, reference in enumerate(self._references):
             self._Uprep = self._Upreps[i]
             self.energy_feval(x)
             Es.append(self.energy_feval(x))
-            grads.append(self.measure_gradient(x))
+            E_grads.append(self.measure_gradient(x))
 
         Es = np.array(Es)
-        grads = np.array(grads)
+        E_grads = np.array(E_grads)
         
 
         #Re-sort so that E0 is the lowest.
         idx = np.argsort(Es)
         self._Upreps = [self._Upreps[i] for i in idx]
         Es = Es[idx]
-        grads = grads[idx]
+        E_grads = E_grads[idx]
         if self.T == 0:
-            return grads[0]
+            return E_grads[0]
 
-        #Compute gradients w.r.t. parameters.
-        b_exp_Es = np.array([np.exp(self.beta*(Es[0]-E)) for E in Es])
-        tot_b_exp_Es = np.sum(b_exp_Es)
+        #Compute omegas and their derivatives
+        deltas = np.ones(Es.shape)*Es[0] - Es
+        
+        d_deltas = np.ones(E_grads.shape)*E_grads[0,:] - E_grads
+        
+        gamma = np.exp(deltas*self.beta)
+        tot_gamma = np.sum(gamma)
+        omega = gamma/tot_gamma
+        d_omega = (self.beta/tot_gamma) * np.einsum('j,j,ju->ju', gamma, deltas, d_deltas)
+        d_omega -= (self.beta/(tot_gamma**2)) * np.einsum('j,i,i,iu->ju', gamma, gamma, deltas, d_deltas)
 
-        d_b_exp_Es = self.beta * np.einsum('im,i->im', (np.ones(grads.shape)*grads[0] - grads), (np.ones(Es.shape)*Es[0] - Es))
-        tot_d_b_exp_Es = np.einsum('im->m',d_b_exp_Es)
-        print(b_exp_Es)
-        print(d_b_exp_Es)
-        exit()
+        F = np.sum(omega*Es)
+        #F -= np.log(tot_gamma)/self.beta
+        return omega, d_omega
         
-        dF = (1/tot_b_exp_Es) * (np.einsum('im,i->m',d_b_exp_Es,Es))
-        print(tot_b_exp_Es)
+
+        dF = np.einsum('j,ju->u', omega, E_grads)
+        dF += np.einsum('ju,j->u', d_omega, Es)
+        #dF += (1/self.beta)*np.einsum('ju->u', d_omega) 
+        #dF += (self.beta/tot_gamma)*np.einsum('j,j,j,ju->u', gamma, deltas, deltas, d_deltas)
+        #dF -= (np.log(tot_gamma)/tot_gamma)*np.einsum('j,j,ju->u', gamma, deltas, d_deltas)
+        #dF -= (self.beta/tot_gamma**2)*np.einsum('i,iu,j,j->u', deltas, d_deltas, gamma, deltas)
+        #dF += (np.log(tot_gamma)/tot_gamma**2)*np.einsum('i,iu,j->u', deltas, d_deltas, gamma)
         
-        
-        # + np.einsum('i,im->m',b_exp_Es,grads))
-        
-        #dF -= np.einsum('i,i,m->m', b_exp_Es, Es, tot_d_b_exp_Es))/np.multiply(tot_b_exp_Es,tot_b_exp_Es)
-        #dF += np.einsum('im,i->m', tot_b_exp_Es*d_b_exp_Es - np.einsum('i,m->im',b_exp_Es,tot_d_b_exp_Es), (self.beta*np.ones(len(Es))*(self.beta*Es[0] - np.log(tot_b_exp_Es))-Es)/np.multiply(tot_b_exp_Es,tot_b_exp_Es))
-        #dF += (self.beta/tot_b_exp_Es) * np.einsum('i,m->m', b_exp_Es, grads[0,:])
-        #dF -= (self.beta/tot_b_exp_Es) * np.einsum('i,im->m', b_exp_Es, grads)
-        #dF -= (1/tot_b_exp_Es**2)*np.einsum('i,m->m', b_exp_Es, tot_d_b_exp_Es)
-        return dF
+
+        return dF 
         
     def free_energy_vqe(self, x0):
         #Run a VQE to minimize x.
