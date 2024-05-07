@@ -82,14 +82,24 @@ class Gibbs_ADAPT(UCCVQE):
         #Compute omegas and their derivatives
         deltas = np.ones(Es.shape)*Es[0] - Es
         
-        d_deltas = np.ones(E_grads.shape)*E_grads[0,:] - E_grads
+        d_deltas = -E_grads
+        for i in range(len(self._Upreps)):
+            d_deltas[i,:] += E_grads[0,:]
         
         gamma = np.exp(deltas*self.beta)
         tot_gamma = np.sum(gamma)
         omega = gamma/tot_gamma
-        d_omega = (self.beta/tot_gamma) * np.einsum('j,j,ju->ju', gamma, deltas, d_deltas)
-        d_omega -= (self.beta/(tot_gamma**2)) * np.einsum('j,i,i,iu->ju', gamma, gamma, deltas, d_deltas)
-
+        
+        A = self.beta * np.einsum('j,j,ju->ju', omega, deltas, d_deltas) 
+        B = (self.beta) * np.einsum('j,i,i,iu->ju', omega, omega, deltas, d_deltas)
+        d_omega = A - B
+        print(self.beta*np.einsum('j,j,ju->ju', gamma, deltas, d_deltas)[1,0])
+        print(self.beta*deltas[1]*gamma[1]*(E_grads[0,0] - E_grads[1,0])) 
+        return gamma, self.beta*np.einsum('j,j,ju->ju', gamma, deltas, d_deltas)
+        return omega, d_omega
+        
+        
+        
         F = np.sum(omega*Es)
         #F -= np.log(tot_gamma)/self.beta
         return omega, d_omega
