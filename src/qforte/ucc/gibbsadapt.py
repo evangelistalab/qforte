@@ -49,15 +49,14 @@ class Gibbs_ADAPT(UCCVQE):
         idx = np.argsort(Es)
         self._Upreps = [self._Upreps[i] for i in idx]
         Es = Es[idx]
-        
-
         #Compute energy.
         deltas = np.ones(Es.shape)*Es[0] - Es
         gamma = np.exp(deltas*self.beta)
         tot_gamma = np.sum(gamma)
         omega = gamma/tot_gamma
-        F = np.sum(omega*Es)
-        F += np.sum(omega*deltas)
+        #F = np.sum(omega*(Es)
+        #F += np.sum(omega*deltas)
+        F = np.sum(omega * Es[0])
         F -= np.log(tot_gamma)/self.beta
         return F
 
@@ -72,8 +71,6 @@ class Gibbs_ADAPT(UCCVQE):
 
         Es = np.array(Es)
         E_grads = np.array(E_grads)
-        
-
         #Re-sort so that E0 is the lowest.
         idx = np.argsort(Es)
         self._Upreps = [self._Upreps[i] for i in idx]
@@ -88,22 +85,25 @@ class Gibbs_ADAPT(UCCVQE):
             d_deltas[i,:] += E_grads[0,:]
         
         gamma = np.exp(deltas*self.beta)
-        
         tot_gamma = np.sum(gamma)
         omega = gamma/tot_gamma
         d_gamma = self.beta*np.einsum('i,iu->iu', gamma, d_deltas)
         tot_d_gamma = np.einsum('iu->u', d_gamma)
         
+        
         d_omega = (1/tot_gamma)*(d_gamma - np.einsum('i,u->iu', omega, tot_d_gamma))
         
+        
+        dF = np.einsum('iu,i->u', d_omega, Es + deltas - (np.log(tot_gamma)/self.beta)*np.ones(omega.shape))
+        #dF = np.einsum('iu,i->u', d_omega, Es)
+        #dF += np.einsum('iu,i->u', d_omega, deltas)
 
-        dF = np.einsum('iu,i->u', d_omega, Es)
-        dF += np.einsum('i,iu->u', omega, E_grads)
-        dF += np.einsum('iu,i->u', d_omega, deltas)
-        dF += np.einsum('i,iu->u', omega, d_deltas)
-        dF -= (np.log(tot_gamma)/self.beta)*np.einsum('iu->u', d_omega)
+        dF += np.einsum('i,iu->u', omega, E_grads + d_deltas)
+        #dF += np.einsum('i,iu->u', omega, E_grads) 
+        #dF += np.einsum('i,iu->u', omega, d_deltas)
+        #dF -= (np.log(tot_gamma)/self.beta)*np.einsum('iu->u', d_omega)
         dF -= (1/(self.beta*tot_gamma))*np.einsum('i,u->u', omega, tot_d_gamma)
-    
+        
         return dF
 
     def compute_addition_gradient(self):
@@ -139,19 +139,24 @@ class Gibbs_ADAPT(UCCVQE):
         
         d_omega = (1/tot_gamma)*(d_gamma - np.einsum('i,u->iu', omega, tot_d_gamma))
         
-        dF = np.einsum('iu,i->u', d_omega, Es)
-        dF += np.einsum('i,iu->u', omega, E_grads)
-        dF += np.einsum('iu,i->u', d_omega, deltas)
-        dF += np.einsum('i,iu->u', omega, d_deltas)
-        dF -= (np.log(tot_gamma)/self.beta)*np.einsum('iu->u', d_omega)
-        dF -= (1/(self.beta*tot_gamma))*np.einsum('i,u->u', omega, tot_d_gamma)
+        dF = np.einsum('iu,i->u', d_omega, Es + deltas - (np.log(tot_gamma)/self.beta)*np.ones(omega.shape))
+        #dF = np.einsum('iu,i->u', d_omega, Es)
+        #dF += np.einsum('iu,i->u', d_omega, deltas)
 
+        dF += np.einsum('i,iu->u', omega, E_grads + d_deltas)
+        #dF += np.einsum('i,iu->u', omega, E_grads) 
+        #dF += np.einsum('i,iu->u', omega, d_deltas)
+        #dF -= (np.log(tot_gamma)/self.beta)*np.einsum('iu->u', d_omega)
+        dF -= (1/(self.beta*tot_gamma))*np.einsum('i,u->u', omega, tot_d_gamma)
         return dF
 
     def free_energy_vqe(self, x0):
         #Run a VQE to minimize x.
+        print("Running Gibbs VQE...")
         self.vqe_iteration = 0
-        print(f"0 {self.compute_free_energy(x0)}")
+        print(f"Iteration   Energy")
+        print(f"0   {self.compute_free_energy(x0)}")
+        
         res = scipy.optimize.minimize(self.compute_free_energy,
                                       x0,
                                       method = "BFGS",
@@ -184,7 +189,7 @@ class Gibbs_ADAPT(UCCVQE):
 
     def callback(self, x):
         self.vqe_iteration += 1
-        print(f"{self.vqe_iteration} {self.compute_free_energy(x)}")
+        print(f"{self.vqe_iteration}    {self.compute_free_energy(x)}")
         
 
     def get_num_commut_measurements(self):
