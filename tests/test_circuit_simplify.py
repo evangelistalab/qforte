@@ -4,9 +4,9 @@ import numpy as np
 import random
 
 one_qubit_gate_pool = ['X','Y','Z','Rx','Ry','Rz','H','S','T','R','V']
-two_qubit_gate_pool = ['CNOT', 'aCNOT', 'cY', 'cZ', 'cV', 'SWAP', 'cRz', 'cR']
+two_qubit_gate_pool = ['CNOT', 'aCNOT', 'cY', 'cZ', 'cV', 'SWAP', 'cRz', 'cR', 'A']
 
-parametrized_gates = {'Rx','Ry','Rz', 'R', 'cR', 'cRz'}
+parametrized_gates = {'Rx','Ry','Rz', 'R', 'cR', 'cRz', 'A'}
 
 diagonal_1qubit_gates = {'T', 'S', 'Z', 'Rz', 'R'}
 
@@ -137,7 +137,7 @@ class TestEvaluateGateInteraction:
                     two_qubit_gate = qf.gate(two_qubit_gate_type, 0, 1, parameter)
                 else:
                     two_qubit_gate = qf.gate(two_qubit_gate_type, 0, 1)
-                if two_qubit_gate_type == 'SWAP':
+                if two_qubit_gate_type == 'SWAP' or two_qubit_gate_type == 'A':
                     assert(qf.evaluate_gate_interaction(one_qubit_gate_target, two_qubit_gate) == (False, 0))
                     assert(qf.evaluate_gate_interaction(one_qubit_gate_control, two_qubit_gate) == (False, 0))
                     continue
@@ -190,6 +190,17 @@ class TestEvaluateGateInteraction:
                         else:
                             assert (qf.evaluate_gate_interaction(gate1, gate2e) == (False, 0))
                             assert (qf.evaluate_gate_interaction(gate1, gate2f) == (False, 0))
+                elif 'A' in [gatetype1, gatetype2]:
+                    assert (qf.evaluate_gate_interaction(gate1, gate2a) == (False, 0))
+                    assert (qf.evaluate_gate_interaction(gate1, gate2b) == (False, 0))
+                    assert (qf.evaluate_gate_interaction(gate1, gate2c) == (False, 0))
+                    assert (qf.evaluate_gate_interaction(gate1, gate2d) == (False, 0))
+                    if gatetype1 in symmetrical_2qubit_gates or gatetype2 in symmetrical_2qubit_gates:
+                        assert (qf.evaluate_gate_interaction(gate1, gate2e) == (True, 0))
+                        assert (qf.evaluate_gate_interaction(gate1, gate2f) == (True, 0))
+                    else:
+                        assert (qf.evaluate_gate_interaction(gate1, gate2e) == (False, 0))
+                        assert (qf.evaluate_gate_interaction(gate1, gate2f) == (False, 0))
                 else:
                     if tuple(sorted([controlled_2qubit_to_1qubit_gate[gatetype1], controlled_2qubit_to_1qubit_gate[gatetype2]])) in pairs_of_commuting_1qubit_gates:
                         assert (qf.evaluate_gate_interaction(gate1, gate2a) == (True, 0))
@@ -249,6 +260,13 @@ class TestCircuitSimplify:
     def test_simplify_parametrized_gates(self):
 
         for gatetype in parametrized_gates:
+            if gatetype == 'A':
+                circ = qf.Circuit()
+                circ.add(qf.gate(gatetype, 0, 1,  0.5))
+                circ.add(qf.gate(gatetype, 0, 1, -0.2))
+                circ.simplify()
+                assert len(circ.gates()) == 2
+                continue
             if gatetype in one_qubit_gate_pool:
                 circ = qf.Circuit()
                 circ.add(qf.gate(gatetype, 0, 0,  0.5))

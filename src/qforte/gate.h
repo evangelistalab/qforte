@@ -152,7 +152,7 @@ Gate make_control_gate(size_t control, Gate& U);
 /// int: which simplification scheme can be applied
 std::pair<bool, int> evaluate_gate_interaction(const Gate& gate1, const Gate& gate2);
 
-extern std::unordered_set<GateType> phase_1qubit_gates;
-extern std::unordered_map<GateType, GateType> controlled_2qubit_to_1qubit_gate;
+extern const std::unordered_set<GateType> phase_1qubit_gates;
+extern const std::unordered_map<GateType, GateType> controlled_2qubit_to_1qubit_gate;
 
 #endif // _gate_h_
