@@ -174,7 +174,7 @@ int Circuit::get_num_cnots() const {
         if (gate.gate_id() == "CNOT" || gate.gate_id() == "cX" || gate.gate_id() == "aCNOT" ||
             gate.gate_id() == "acX") {
             n_cnots++;
-        } else if (gate.gate_id() == "A") {
+        } else if (gate.gate_id() == "A" || gate.gate_id() == "SWAP") {
             n_cnots += 3;
         }
     }
@@ -228,18 +228,18 @@ bool Circuit::is_pauli() const {
 
 void Circuit::simplify() {
 
-    std::unordered_set<GateType> involutory_gates = {GateType::X, GateType::Y, GateType::Z,
-                                                     GateType::cX, GateType::cY, GateType::cZ,
-                                                     GateType::acX, GateType::H, GateType::SWAP};
+    const std::unordered_set<GateType> involutory_gates = {GateType::X, GateType::Y, GateType::Z,
+                                                           GateType::cX, GateType::cY, GateType::cZ,
+                                                           GateType::acX, GateType::H, GateType::SWAP};
 
-    std::unordered_set<GateType> parametrized_gates = {GateType::Rx, GateType::Ry, GateType::Rz,
-                                                       GateType::R, GateType::cRz, GateType::cR};
+    const std::unordered_set<GateType> parametrized_gates = {GateType::Rx, GateType::Ry, GateType::Rz,
+                                                             GateType::R, GateType::cRz, GateType::cR};
 
-    std::unordered_set<GateType> square_root_gates = {GateType::T, GateType::S, GateType::V,
-                                                      GateType::cV};
+    const std::unordered_set<GateType> square_root_gates = {GateType::T, GateType::S, GateType::V,
+                                                            GateType::cV};
 
-    std::unordered_map<GateType, std::string> simplify_square_root_gates = {{GateType::T, "S"}, {GateType::S, "Z"},
-                                                                         {GateType::V, "X"}, {GateType::cV, "cX"}}; 
+    const std::unordered_map<GateType, std::string> simplify_square_root_gates = {{GateType::T, "S"}, {GateType::S, "Z"},
+                                                                                  {GateType::V, "X"}, {GateType::cV, "cX"}}; 
 
     std::vector<size_t> gate_indices_to_remove;
 
@@ -275,7 +275,7 @@ void Circuit::simplify() {
                     if (square_root_gates.find(gate1.gate_type()) != square_root_gates.end()) {
                         gate_indices_to_remove.push_back(pos1);
                         gates_[pos2] =
-                        make_gate(simplify_square_root_gates[gate2.gate_type()], gates_[pos2].target(), gates_[pos2].control());
+                        make_gate(simplify_square_root_gates.at(gate2.gate_type()), gates_[pos2].target(), gates_[pos2].control());
                         break;
                     }
                 }
@@ -285,7 +285,7 @@ void Circuit::simplify() {
                         gate_indices_to_remove.push_back(pos2);
                         break;
                     }
-                    if (phase_1qubit_gates.find(controlled_2qubit_to_1qubit_gate[gate1.gate_type()]) != phase_1qubit_gates.end()) {
+                    if (phase_1qubit_gates.find(controlled_2qubit_to_1qubit_gate.at(gate1.gate_type())) != phase_1qubit_gates.end()) {
                         gate_indices_to_remove.push_back(pos1);
                         gates_[pos2] =
                         make_gate(gates_[pos2].gate_id(), gates_[pos2].target(), gates_[pos2].control(), *gate1.parameter() + *gate2.parameter());

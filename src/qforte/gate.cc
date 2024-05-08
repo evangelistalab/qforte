@@ -203,7 +203,7 @@ struct pair_equal {
     }
 };
 
-std::unordered_set<std::pair<GateType, GateType>, pair_hash, pair_equal> pairs_of_commuting_1qubit_gates = {
+const std::unordered_set<std::pair<GateType, GateType>, pair_hash, pair_equal> pairs_of_commuting_1qubit_gates = {
     {GateType::X, GateType::X}, {GateType::Rx, GateType::X}, {GateType::V, GateType::X},
     {GateType::Y, GateType::Y}, {GateType::Ry, GateType::Y}, {GateType::Z, GateType::Z},
     {GateType::S, GateType::Z}, {GateType::T, GateType::Z}, {GateType::Rz, GateType::Z},
@@ -215,16 +215,16 @@ std::unordered_set<std::pair<GateType, GateType>, pair_hash, pair_equal> pairs_o
     {GateType::V, GateType::V}
 };
 
-std::unordered_set<GateType> diagonal_1qubit_gates = {GateType::T, GateType::S, GateType::Z, GateType::Rz, GateType::R};
+const std::unordered_set<GateType> diagonal_1qubit_gates = {GateType::T, GateType::S, GateType::Z, GateType::Rz, GateType::R};
 
-std::unordered_set<GateType> phase_1qubit_gates = {GateType::T, GateType::S, GateType::Z, GateType::R};
+const std::unordered_set<GateType> phase_1qubit_gates = {GateType::T, GateType::S, GateType::Z, GateType::R};
 
-std::unordered_map<GateType, GateType> controlled_2qubit_to_1qubit_gate = {
+const std::unordered_map<GateType, GateType> controlled_2qubit_to_1qubit_gate = {
     {GateType::cX, GateType::X}, {GateType::acX, GateType::X}, {GateType::cY, GateType::Y}, {GateType::cZ, GateType::Z},
     {GateType::cRz, GateType::Rz}, {GateType::cR, GateType::R}, {GateType::cV, GateType::V}
 };
 
-std::unordered_set<GateType> symmetrical_2qubit_gates = {GateType::cZ, GateType::cR, GateType::SWAP};
+const std::unordered_set<GateType> symmetrical_2qubit_gates = {GateType::cZ, GateType::cR, GateType::SWAP};
 
 std::pair<bool, int> evaluate_gate_interaction(const Gate& gate1, const Gate& gate2) {
 
@@ -253,14 +253,14 @@ std::pair<bool, int> evaluate_gate_interaction(const Gate& gate1, const Gate& ga
     }
 
     if (product_nqubits == 2) {
-        if (gate1.gate_type() == GateType::SWAP || gate2.gate_type() == GateType::SWAP) {
+        if (gate1.gate_type() == GateType::SWAP || gate2.gate_type() == GateType::SWAP || gate1.gate_type() == GateType::A || gate2.gate_type() == GateType::A) {
             return {false, 0};
         }
         const Gate& single_qubit_gate = (num_qubits_gate1 == 1) ? gate1 : gate2;
         const Gate& two_qubit_gate = (num_qubits_gate1 == 1) ? gate2 : gate1;
 
         if (single_qubit_gate.target() == two_qubit_gate.target()) {
-            std::pair<GateType, GateType> pairGateType = std::make_pair(single_qubit_gate.gate_type(), controlled_2qubit_to_1qubit_gate[two_qubit_gate.gate_type()]);
+            std::pair<GateType, GateType> pairGateType = std::make_pair(single_qubit_gate.gate_type(), controlled_2qubit_to_1qubit_gate.at(two_qubit_gate.gate_type()));
             return {pairs_of_commuting_1qubit_gates.find(pairGateType) != pairs_of_commuting_1qubit_gates.end(), 0};
         }
         return {diagonal_1qubit_gates.find(single_qubit_gate.gate_type()) != diagonal_1qubit_gates.end(), 0};
@@ -268,20 +268,20 @@ std::pair<bool, int> evaluate_gate_interaction(const Gate& gate1, const Gate& ga
 
     if (product_nqubits == 4) {
         if (commonQubitCount == 1) {
-            if (gate1.gate_type() == GateType::SWAP || gate2.gate_type() == GateType::SWAP) {
+            if (gate1.gate_type() == GateType::SWAP || gate2.gate_type() == GateType::SWAP || gate1.gate_type() == GateType::A || gate2.gate_type() == GateType::A) {
                 return {false, 0};
             }
             if (gate1.control() == gate2.control()) {
                 return {true, 0};
             }
             if (gate1.target() == gate2.target()) {
-                std::pair<GateType, GateType> pairGateType = std::make_pair(controlled_2qubit_to_1qubit_gate[gate1.gate_type()], controlled_2qubit_to_1qubit_gate[gate2.gate_type()]);
+                std::pair<GateType, GateType> pairGateType = std::make_pair(controlled_2qubit_to_1qubit_gate.at(gate1.gate_type()), controlled_2qubit_to_1qubit_gate.at(gate2.gate_type()));
                 return {pairs_of_commuting_1qubit_gates.find(pairGateType) != pairs_of_commuting_1qubit_gates.end(), 0};
             }
             if (gate1.target() == gate2.control()) {
-                return {diagonal_1qubit_gates.find(controlled_2qubit_to_1qubit_gate[gate1.gate_type()]) != diagonal_1qubit_gates.end(), 0};
+                return {diagonal_1qubit_gates.find(controlled_2qubit_to_1qubit_gate.at(gate1.gate_type())) != diagonal_1qubit_gates.end(), 0};
             }
-            return {diagonal_1qubit_gates.find(controlled_2qubit_to_1qubit_gate[gate2.gate_type()]) != diagonal_1qubit_gates.end(), 0};
+            return {diagonal_1qubit_gates.find(controlled_2qubit_to_1qubit_gate.at(gate2.gate_type())) != diagonal_1qubit_gates.end(), 0};
         } else {
             if (symmetrical_2qubit_gates.find(gate1.gate_type()) != symmetrical_2qubit_gates.end() && symmetrical_2qubit_gates.find(gate2.gate_type()) != symmetrical_2qubit_gates.end()) {
                 return {true, 2 * (gate1.gate_type() == gate2.gate_type())};
@@ -289,11 +289,18 @@ std::pair<bool, int> evaluate_gate_interaction(const Gate& gate1, const Gate& ga
             if (gate1.gate_type() == GateType::SWAP || gate2.gate_type() == GateType::SWAP) {
                 return {false, 0};
             }
+            if (gate1.gate_type() == GateType::A || gate2.gate_type() == GateType::A) {
+                if (symmetrical_2qubit_gates.find(gate1.gate_type()) != symmetrical_2qubit_gates.end() || symmetrical_2qubit_gates.find(gate2.gate_type()) != symmetrical_2qubit_gates.end()) {
+                    return {true, 0};
+                } else {
+                    return {false, 0};
+                }
+            }
             if (gate1.target() == gate2.target()) {
-                std::pair<GateType, GateType> pairGateType = std::make_pair(controlled_2qubit_to_1qubit_gate[gate1.gate_type()], controlled_2qubit_to_1qubit_gate[gate2.gate_type()]);
+                std::pair<GateType, GateType> pairGateType = std::make_pair(controlled_2qubit_to_1qubit_gate.at(gate1.gate_type()), controlled_2qubit_to_1qubit_gate.at(gate2.gate_type()));
                 return {pairs_of_commuting_1qubit_gates.find(pairGateType) != pairs_of_commuting_1qubit_gates.end(), gate1.gate_type() == gate2.gate_type()};
             }
-            return {diagonal_1qubit_gates.find(controlled_2qubit_to_1qubit_gate[gate1.gate_type()]) != diagonal_1qubit_gates.end() && diagonal_1qubit_gates.find(controlled_2qubit_to_1qubit_gate[gate2.gate_type()]) != diagonal_1qubit_gates.end(), 0};
+            return {diagonal_1qubit_gates.find(controlled_2qubit_to_1qubit_gate.at(gate1.gate_type())) != diagonal_1qubit_gates.end() && diagonal_1qubit_gates.find(controlled_2qubit_to_1qubit_gate.at(gate2.gate_type())) != diagonal_1qubit_gates.end(), 0};
         }
     }
 
