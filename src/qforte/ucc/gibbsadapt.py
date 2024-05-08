@@ -22,8 +22,13 @@ class Gibbs_ADAPT(UCCVQE):
         
         self._references = references
         self.T = T
-        if self.T != 0:
-            self.beta = 1/(kb*T)
+        try:
+            assert(self.T > 0)
+        except:
+            print("T must be positive.")
+            exit()
+
+        self.beta = 1/(kb*T)
         
         self._pool_type = pool_type
         self.verbose = verbose
@@ -44,8 +49,7 @@ class Gibbs_ADAPT(UCCVQE):
         idx = np.argsort(Es)
         self._Upreps = [self._Upreps[i] for i in idx]
         Es = Es[idx]
-        if self.T == 0:
-            return Es[0]
+        
 
         #Compute energy.
         deltas = np.ones(Es.shape)*Es[0] - Es
@@ -53,8 +57,8 @@ class Gibbs_ADAPT(UCCVQE):
         tot_gamma = np.sum(gamma)
         omega = gamma/tot_gamma
         F = np.sum(omega*Es)
-        #F += np.sum(omega*deltas)
-        #F -= np.log(tot_gamma)/self.beta
+        F += np.sum(omega*deltas)
+        F -= np.log(tot_gamma)/self.beta
         return F
 
     def compute_free_energy_gradient(self, x):
@@ -63,7 +67,6 @@ class Gibbs_ADAPT(UCCVQE):
         E_grads = []
         for i, reference in enumerate(self._references):
             self._Uprep = self._Upreps[i]
-            self.energy_feval(x)
             Es.append(self.energy_feval(x))
             E_grads.append(self.measure_gradient(x))
 
@@ -76,9 +79,7 @@ class Gibbs_ADAPT(UCCVQE):
         self._Upreps = [self._Upreps[i] for i in idx]
         Es = Es[idx]
         E_grads = E_grads[idx]
-        if self.T == 0:
-            return E_grads[0]
-
+        
         #Compute omegas and their derivatives
         deltas = np.ones(Es.shape)*Es[0] - Es
         
@@ -87,35 +88,66 @@ class Gibbs_ADAPT(UCCVQE):
             d_deltas[i,:] += E_grads[0,:]
         
         gamma = np.exp(deltas*self.beta)
+        
         tot_gamma = np.sum(gamma)
         omega = gamma/tot_gamma
+        d_gamma = self.beta*np.einsum('i,iu->iu', gamma, d_deltas)
+        tot_d_gamma = np.einsum('iu->u', d_gamma)
         
-        A = self.beta * np.einsum('j,j,ju->ju', omega, deltas, d_deltas) 
-        B = (self.beta) * np.einsum('j,i,i,iu->ju', omega, omega, deltas, d_deltas)
-        d_omega = A - B
-        print(self.beta*np.einsum('j,j,ju->ju', gamma, deltas, d_deltas)[1,0])
-        print(self.beta*deltas[1]*gamma[1]*(E_grads[0,0] - E_grads[1,0])) 
-        return gamma, self.beta*np.einsum('j,j,ju->ju', gamma, deltas, d_deltas)
-        return omega, d_omega
-        
-        
-        
-        F = np.sum(omega*Es)
-        #F -= np.log(tot_gamma)/self.beta
-        return omega, d_omega
+        d_omega = (1/tot_gamma)*(d_gamma - np.einsum('i,u->iu', omega, tot_d_gamma))
         
 
-        dF = np.einsum('j,ju->u', omega, E_grads)
-        dF += np.einsum('ju,j->u', d_omega, Es)
-        #dF += (1/self.beta)*np.einsum('ju->u', d_omega) 
-        #dF += (self.beta/tot_gamma)*np.einsum('j,j,j,ju->u', gamma, deltas, deltas, d_deltas)
-        #dF -= (np.log(tot_gamma)/tot_gamma)*np.einsum('j,j,ju->u', gamma, deltas, d_deltas)
-        #dF -= (self.beta/tot_gamma**2)*np.einsum('i,iu,j,j->u', deltas, d_deltas, gamma, deltas)
-        #dF += (np.log(tot_gamma)/tot_gamma**2)*np.einsum('i,iu,j->u', deltas, d_deltas, gamma)
-        
+        dF = np.einsum('iu,i->u', d_omega, Es)
+        dF += np.einsum('i,iu->u', omega, E_grads)
+        dF += np.einsum('iu,i->u', d_omega, deltas)
+        dF += np.einsum('i,iu->u', omega, d_deltas)
+        dF -= (np.log(tot_gamma)/self.beta)*np.einsum('iu->u', d_omega)
+        dF -= (1/(self.beta*tot_gamma))*np.einsum('i,u->u', omega, tot_d_gamma)
+    
+        return dF
 
-        return dF 
+    def compute_addition_gradient(self):
+        Es = [] 
+        E_grads = []
+        for i, reference in enumerate(self._references):
+            self._Uprep = self._Upreps[i]
+            Es.append(self.energy_feval(self._tamps))
+            E_grads.append(self.measure_gradient3())
+
+        Es = np.array(Es)
+        E_grads = np.array(E_grads)
+         
+        #Re-sort so that E0 is the lowest.
+        idx = np.argsort(Es)
+        self._Upreps = [self._Upreps[i] for i in idx]
+        Es = Es[idx]
+        E_grads = E_grads[idx]
         
+        #Compute omegas and their derivatives
+        deltas = np.ones(Es.shape)*Es[0] - Es
+        
+        d_deltas = -E_grads
+        for i in range(len(self._Upreps)):
+            d_deltas[i,:] += E_grads[0,:]
+        
+        gamma = np.exp(deltas*self.beta)
+        
+        tot_gamma = np.sum(gamma)
+        omega = gamma/tot_gamma
+        d_gamma = self.beta*np.einsum('i,iu->iu', gamma, d_deltas)
+        tot_d_gamma = np.einsum('iu->u', d_gamma)
+        
+        d_omega = (1/tot_gamma)*(d_gamma - np.einsum('i,u->iu', omega, tot_d_gamma))
+        
+        dF = np.einsum('iu,i->u', d_omega, Es)
+        dF += np.einsum('i,iu->u', omega, E_grads)
+        dF += np.einsum('iu,i->u', d_omega, deltas)
+        dF += np.einsum('i,iu->u', omega, d_deltas)
+        dF -= (np.log(tot_gamma)/self.beta)*np.einsum('iu->u', d_omega)
+        dF -= (1/(self.beta*tot_gamma))*np.einsum('i,u->u', omega, tot_d_gamma)
+
+        return dF
+
     def free_energy_vqe(self, x0):
         #Run a VQE to minimize x.
         self.vqe_iteration = 0
@@ -127,8 +159,28 @@ class Gibbs_ADAPT(UCCVQE):
                                       options = {'gtol': 1e-6, 'disp': True},
                                       callback = self.callback
                                       )        
-        assert res.success == True
-        return res.fun, res.x
+        return res.fun, list(res.x)
+
+    def gibbs_adapt_vqe(self, max_depth = 20):
+        adapt_iteration = 0
+
+        Done = False
+        while Done == False:
+            adapt_iteration += 1
+            print(f"ADAPT Iteration {adapt_iteration}")
+            add_grad = self.compute_addition_gradient()
+            idx = np.argsort(-abs(add_grad))
+            add_grad = add_grad[idx]
+            print(f"Adding Operator {idx[0]}")
+            self._tops.append(idx[0])
+            self._tamps.append(0.0)
+            print(f"TOPS: {self._tops}") 
+            E, self._tamps = self.free_energy_vqe(self._tamps)                
+
+            if len(self._tops) == max_depth:
+                Done = True
+
+        return E, self._tamps
 
     def callback(self, x):
         self.vqe_iteration += 1
