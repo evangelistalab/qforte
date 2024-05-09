@@ -41,7 +41,7 @@ def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
     
     return [E0]+list(Ek), A_plus_ref, op_mats
 
-def ritz_eigh(n_qubit, H, U, ops_to_compute = []):
+def ritz_eigh(n_qubit, H, U, ops_to_compute = [], verbose = True):
     """
     Obtains the ritz eigenvalues of H in the space of {U|i>}
 
@@ -53,10 +53,11 @@ def ritz_eigh(n_qubit, H, U, ops_to_compute = []):
     M = qforte.build_effective_symmetric_operator(n_qubit, H, U)
     
     Ek, A = np.linalg.eigh(M)
-    print("Ritz Diagonalization:")
-    print(f"State:  Post-Diagonalized Energy")
-    for i, E in enumerate(Ek):
-        print(f"{(i+1):5}{E:35.16f}")
+    if verbose == True:
+        print("Ritz Diagonalization:")
+        print(f"State:  Post-Diagonalized Energy")
+        for i, E in enumerate(Ek):
+            print(f"{(i+1):5}{E:35.16f}")
 
     op_mats = []
     

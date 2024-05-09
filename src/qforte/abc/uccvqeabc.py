@@ -114,7 +114,7 @@ class UCCVQE(VQE, UCC):
 
         return np.real(grads)
 
-    def measure_gradient(self, params=None):
+    def measure_gradient(self, params=None, return_individual = False):
         """ Returns the disentangled (factorized) UCC gradient, using a
         recursive approach.
 
@@ -199,7 +199,7 @@ class UCCVQE(VQE, UCC):
         else:
             Kmus = []
             Umus = []
-            
+            grads = np.zeros((len(self._Uprep), len(self._pool_obj)))
             for mu in range(0, M):
                 if self._compact_excitations:
                     if params is None:
@@ -241,7 +241,7 @@ class UCCVQE(VQE, UCC):
                     Umus.append(Umu)
                     
 
-            for r in range(len(self._ref)):
+            for r in range(len(self._Uprep)):
                 qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
                 qc_psi.apply_circuit(Utot[r])
                 qc_sig = qforte.Computer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
@@ -253,7 +253,7 @@ class UCCVQE(VQE, UCC):
                 # find <sing_N | K_N | psi_N>
                 Kmu_prev = Kmus[mu]
                 qc_psi.apply_operator(Kmu_prev)
-                grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                grads[r, mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
 
                 #reset Kmu_prev |psi_i> -> |psi_i>
                 qc_psi.set_coeff_vec(psi_i)
@@ -273,18 +273,23 @@ class UCCVQE(VQE, UCC):
                     psi_i = qc_psi.get_coeff_vec()
 
                     qc_psi.apply_operator(Kmu)
-                    grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                    grads[r, mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
 
                     #reset Kmu |psi_i> -> |psi_i>
                     qc_psi.set_coeff_vec(psi_i)
                     Kmu_prev = Kmu
 
+            if return_individual == True:
+                np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
+                return grads
+            else:
+                grads = np.einsum('iu->u', grads)   
 
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-12)
         
         return grads
 
-    def measure_gradient3(self):
+    def measure_gradient3(self, return_individual = False):
         """ Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._pool_obj.
         For antihermitian K_mu, this is equal to <Psi|[H, K_mu]|Psi>.
         In ADAPT-VQE, this is the 'residual gradient' used to determine
@@ -325,9 +330,9 @@ class UCCVQE(VQE, UCC):
                 Kmus.append(Kmu)
 
             U_ansatz = self.ansatz_circuit()
-            grads = np.zeros(len(self._pool_obj))
+            grads = np.zeros((len(self._Uprep), len(self._pool_obj)))
 
-            for r in range(len(self._ref)):
+            for r in range(len(self._Uprep)):
                 qc_psi = qforte.Computer(self._nqb)
                 qc_psi.apply_circuit(self._Uprep[r])
                 qc_psi.apply_circuit(U_ansatz)
@@ -341,10 +346,14 @@ class UCCVQE(VQE, UCC):
                 for mu, (coeff, operator) in enumerate(self._pool_obj):
                     Kmu = Kmus[mu]
                     qc_psi.apply_operator(Kmu)
-                    grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                    grads[r, mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
                     qc_psi.set_coeff_vec(psi_i)
-        
-        
+
+            if return_individual == True:
+                np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
+                return grads
+            else:
+                grads = np.einsum('iu->u', grads)       
 
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
         
