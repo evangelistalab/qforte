@@ -8,9 +8,13 @@ two_qubit_gate_pool = ['CNOT', 'aCNOT', 'cY', 'cZ', 'cV', 'SWAP', 'cRz', 'cR']
 
 parametrized_gates = {'Rx','Ry','Rz', 'R', 'cR', 'cRz'}
 
+parametrized_gate_periods = {'Rx':4*np.pi, 'Ry':4*np.pi, 'Rz':4*np.pi,
+                             'R':2*np.pi, 'cR':2*np.pi, 'cRz':4*np.pi,
+                             'A':2*np.pi}
+
 diagonal_1qubit_gates = {'T', 'S', 'Z', 'Rz', 'R'}
 
-phase_1qubit_gates = {'T', 'S', 'Z', 'R'}
+phase_1qubit_gates = ['T', 'S', 'Z', 'R']
 
 symmetrical_2qubit_gates = {'cZ', 'cR', 'SWAP'}
 
@@ -44,14 +48,16 @@ class TestEvaluateGateInteraction:
         for i in range(len(one_qubit_gate_pool)):
             gatetype1 = one_qubit_gate_pool[i]
             if gatetype1 in parametrized_gates:
-                parameter = random.uniform(0, 2*np.pi)
+                period = parametrized_gate_periods[gatetype1]
+                parameter = random.uniform(-period, period)
                 gate1 = qf.gate(gatetype1, 0, 0, parameter)
             else:
                 gate1 = qf.gate(gatetype1, 0)
             for j in range(i, len(one_qubit_gate_pool)):
                 gatetype2 = one_qubit_gate_pool[j]
                 if gatetype2 in parametrized_gates:
-                    parameter = random.uniform(0, 2*np.pi)
+                    period = parametrized_gate_periods[gatetype2]
+                    parameter = random.uniform(-period, period)
                     gate2 = qf.gate(gatetype2, 1, 1, parameter)
                 else:
                     gate2 = qf.gate(gatetype2, 1)
@@ -60,13 +66,15 @@ class TestEvaluateGateInteraction:
         # single- and two-qubit gates
         for gatetype1 in one_qubit_gate_pool:
             if gatetype1 in parametrized_gates:
-                parameter = random.uniform(0, 2*np.pi)
+                period = parametrized_gate_periods[gatetype1]
+                parameter = random.uniform(-period, period)
                 gate1 = qf.gate(gatetype1, 0, 0, parameter)
             else:
                 gate1 = qf.gate(gatetype1, 0)
             for gatetype2 in two_qubit_gate_pool:
                 if gatetype2 in parametrized_gates:
-                    parameter = random.uniform(0, 2*np.pi)
+                    period = parametrized_gate_periods[gatetype2]
+                    parameter = random.uniform(-period, period)
                     gate2 = qf.gate(gatetype2, 1, 2, parameter)
                 else:
                     gate2 = qf.gate(gatetype2, 1, 2)
@@ -76,14 +84,16 @@ class TestEvaluateGateInteraction:
         for i in range(len(two_qubit_gate_pool)):
             gatetype1 = two_qubit_gate_pool[i]
             if gatetype1 in parametrized_gates:
-                parameter = random.uniform(0, 2*np.pi)
+                period = parametrized_gate_periods[gatetype1]
+                parameter = random.uniform(-period, period)
                 gate1 = qf.gate(gatetype1, 0, 1, parameter)
             else:
                 gate1 = qf.gate(gatetype1, 0, 1)
             for j in range(i, len(two_qubit_gate_pool)):
                 gatetype2 = two_qubit_gate_pool[j]
                 if gatetype2 in parametrized_gates:
-                    parameter = random.uniform(0, 2*np.pi)
+                    period = parametrized_gate_periods[gatetype2]
+                    parameter = random.uniform(-period, period)
                     gate2 = qf.gate(gatetype2, 2, 3, parameter)
                 else:
                     gate2 = qf.gate(gatetype2, 2, 3)
@@ -94,12 +104,14 @@ class TestEvaluateGateInteraction:
             simplifiable = i in pairs_of_simplifiable_1qubit_gates
             gatetype1, gatetype2 = i[0], i[1]
             if gatetype1 in parametrized_gates:
-                parameter = random.uniform(0, 2*np.pi)
+                period = parametrized_gate_periods[gatetype1]
+                parameter = random.uniform(-period, period)
                 gate1 = qf.gate(gatetype1, 0, 0, parameter)
             else:
                 gate1 = qf.gate(gatetype1, 0)
             if gatetype2 in parametrized_gates:
-                parameter = random.uniform(0, 2*np.pi)
+                period = parametrized_gate_periods[gatetype2]
+                parameter = random.uniform(-period, period)
                 gate2 = qf.gate(gatetype2, 0, 0, parameter)
             else:
                 gate2 = qf.gate(gatetype2, 0)
@@ -112,7 +124,8 @@ class TestEvaluateGateInteraction:
         for i in range(len(one_qubit_gate_pool)):
             gatetype1 = one_qubit_gate_pool[i]
             if gatetype1 in parametrized_gates:
-                parameter = random.uniform(0, 2*np.pi)
+                period = parametrized_gate_periods[gatetype1]
+                parameter = random.uniform(-period, period)
                 gate1 = qf.gate(gatetype1, 0, 0, parameter)
             else:
                 gate1 = qf.gate(gatetype1, 0)
@@ -121,7 +134,8 @@ class TestEvaluateGateInteraction:
                 if tuple(sorted((gatetype1, gatetype2))) in pairs_of_commuting_1qubit_gates:
                     continue
                 if gatetype2 in parametrized_gates:
-                    parameter = random.uniform(0, 2*np.pi)
+                    period = parametrized_gate_periods[gatetype2]
+                    parameter = random.uniform(-period, period)
                     gate2 = qf.gate(gatetype2, 0, 0, parameter)
                 else:
                     gate2 = qf.gate(gatetype2, 0)
@@ -130,7 +144,8 @@ class TestEvaluateGateInteraction:
     def test_1qubit_and_2qubit_gate(self):
         for one_qubit_gate_type in one_qubit_gate_pool:
             if one_qubit_gate_type in parametrized_gates:
-                parameter = random.uniform(0, 2*np.pi)
+                period = parametrized_gate_periods[one_qubit_gate_type]
+                parameter = random.uniform(-period, period)
                 one_qubit_gate_target = qf.gate(one_qubit_gate_type, 0, 0, parameter)
                 one_qubit_gate_control = qf.gate(one_qubit_gate_type, 1, 1, parameter)
             else:
@@ -138,7 +153,8 @@ class TestEvaluateGateInteraction:
                 one_qubit_gate_control = qf.gate(one_qubit_gate_type, 1)
             for two_qubit_gate_type in two_qubit_gate_pool:
                 if two_qubit_gate_type in parametrized_gates:
-                    parameter = random.uniform(0, 2*np.pi)
+                    period = parametrized_gate_periods[two_qubit_gate_type]
+                    parameter = random.uniform(-period, period)
                     two_qubit_gate = qf.gate(two_qubit_gate_type, 0, 1, parameter)
                 else:
                     two_qubit_gate = qf.gate(two_qubit_gate_type, 0, 1)
@@ -159,14 +175,16 @@ class TestEvaluateGateInteraction:
         for i in range(len(two_qubit_gate_pool)):
             gatetype1 = two_qubit_gate_pool[i]
             if gatetype1 in parametrized_gates:
-                parameter = random.uniform(0, 2*np.pi)
+                period = parametrized_gate_periods[gatetype1]
+                parameter = random.uniform(-period, period)
                 gate1 = qf.gate(gatetype1, 0, 1, parameter)
             else:
                 gate1 = qf.gate(gatetype1, 0, 1)
             for j in range(i, len(two_qubit_gate_pool)):
                 gatetype2 = two_qubit_gate_pool[j]
                 if gatetype2 in parametrized_gates:
-                    parameter = random.uniform(0, 2*np.pi)
+                    period = parametrized_gate_periods[gatetype2]
+                    parameter = random.uniform(-period, period)
                     gate2a = qf.gate(gatetype2, 0, 2, parameter)
                     gate2b = qf.gate(gatetype2, 2, 1, parameter)
                     gate2c = qf.gate(gatetype2, 2, 0, parameter)
@@ -259,7 +277,7 @@ class TestCircuitSimplify:
                 circ.add(qf.gate(gatetype, 0, 0,  0.5))
                 circ.add(qf.gate(gatetype, 0, 0, -0.2))
                 circ.simplify()
-                assert len(circ.gates()) == 1
+                assert circ.size() == 1
                 assert circ.gates()[0].gate_id() == gatetype
                 assert circ.gates()[0].parameter() == 0.3
             elif gatetype in symmetrical_2qubit_gates:
@@ -267,14 +285,14 @@ class TestCircuitSimplify:
                 circ.add(qf.gate(gatetype, 0, 1,  0.5))
                 circ.add(qf.gate(gatetype, 0, 1, -0.2))
                 circ.simplify()
-                assert len(circ.gates()) == 1
+                assert circ.size() == 1
                 assert circ.gates()[0].gate_id() == gatetype
                 assert circ.gates()[0].parameter() == 0.3
                 circ = qf.Circuit()
                 circ.add(qf.gate(gatetype, 0, 1,  0.5))
                 circ.add(qf.gate(gatetype, 1, 0, -0.2))
                 circ.simplify()
-                assert len(circ.gates()) == 1
+                assert circ.size() == 1
                 assert circ.gates()[0].gate_id() == gatetype
                 assert circ.gates()[0].parameter() == 0.3
             else:
@@ -282,7 +300,7 @@ class TestCircuitSimplify:
                 circ.add(qf.gate(gatetype, 0, 1,  0.5))
                 circ.add(qf.gate(gatetype, 0, 1, -0.2))
                 circ.simplify()
-                assert len(circ.gates()) == 1
+                assert circ.size() == 1
                 assert circ.gates()[0].gate_id() == gatetype
                 assert circ.gates()[0].parameter() == 0.3
 
@@ -294,15 +312,47 @@ class TestCircuitSimplify:
                 circ.add(qf.gate(gatetype, 0))
                 circ.add(qf.gate(gatetype, 0))
                 circ.simplify()
-                assert len(circ.gates()) == 1
+                assert circ.size() == 1
                 assert circ.gates()[0].gate_id() == simplify_square_root_gates[gatetype]
             else:
                 circ = qf.Circuit()
                 circ.add(qf.gate(gatetype, 0, 1))
                 circ.add(qf.gate(gatetype, 0, 1))
                 circ.simplify()
-                assert len(circ.gates()) == 1
+                assert circ.size() == 1
                 assert circ.gates()[0].gate_id() == simplify_square_root_gates[gatetype]
+
+    def test_simplify_1qubit_phase_gates(slef):
+
+        for i in range(len(phase_1qubit_gates)):
+            gatetype1 = phase_1qubit_gates[i]
+            if gatetype1 in parametrized_gates:
+                period = parametrized_gate_periods[gatetype1]
+                parameter1 = random.uniform(-period, period)
+                gate1 = qf.gate(gatetype1, 0, parameter1)
+            else:
+                gate1 = qf.gate(gatetype1, 0)
+            for j in range(i+1, len(phase_1qubit_gates)):
+                gatetype2 = phase_1qubit_gates[j]
+                if gatetype2 in parametrized_gates:
+                    period = parametrized_gate_periods[gatetype2]
+                    parameter2 = random.uniform(-period, period)
+                    gate2 = qf.gate(gatetype2, 0, parameter2)
+                else:
+                    gate2 = qf.gate(gatetype2, 0)
+                circ1 = qf.Circuit()
+                circ1.add(gate1)
+                circ1.add(gate2)
+                circ1.simplify()
+                assert circ1.size() == 1
+                assert circ1.gates()[0].gate_id() == 'R'
+                circ2 = qf.Circuit()
+                circ2.add(gate2)
+                circ2.add(gate1)
+                circ2.simplify()
+                assert circ2.size() == 1
+                assert circ2.gates()[0].gate_id() == 'R'
+
 
     def test_simplify_H6_STO6G_UCCSDT_ansatz_circuit(self):
 
