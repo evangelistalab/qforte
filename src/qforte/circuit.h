@@ -96,6 +96,10 @@ class Circuit {
   private:
     /// the list of gates
     std::vector<Gate> gates_;
+
+    /// helper functions for simplify
+    double get_phase_gate_parameter(const Gate& gate);
+    double simplify_phase_1qubit_gates(const Gate& gate1, const Gate& gate2);
 };
 
 bool operator==(const Circuit& qc1, const Circuit& qc2);

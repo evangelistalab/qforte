@@ -10,6 +10,8 @@ parametrized_gates = {'Rx','Ry','Rz', 'R', 'cR', 'cRz'}
 
 diagonal_1qubit_gates = {'T', 'S', 'Z', 'Rz', 'R'}
 
+phase_1qubit_gates = {'T', 'S', 'Z', 'R'}
+
 symmetrical_2qubit_gates = {'cZ', 'cR', 'SWAP'}
 
 involutory_gates = {'X', 'Y', 'Z', 'H',
@@ -101,6 +103,9 @@ class TestEvaluateGateInteraction:
                 gate2 = qf.gate(gatetype2, 0, 0, parameter)
             else:
                 gate2 = qf.gate(gatetype2, 0)
+            if gatetype1 in phase_1qubit_gates and gatetype2 in phase_1qubit_gates and gatetype2 != gatetype1:
+                assert (qf.evaluate_gate_interaction(gate1, gate2) == (True, 3))
+                continue
             assert (qf.evaluate_gate_interaction(gate1, gate2) == (True, simplifiable))
 
     def test_non_commuting_1qubit_gates(self):
