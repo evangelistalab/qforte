@@ -199,7 +199,7 @@ class UCCVQE(VQE, UCC):
         else:
             Kmus = []
             Umus = []
-            grads = np.zeros((len(self._Uprep), len(self._pool_obj)))
+            grads = np.zeros((len(self._Uprep), len(self._tops)))
             for mu in range(0, M):
                 if self._compact_excitations:
                     if params is None:
@@ -279,12 +279,11 @@ class UCCVQE(VQE, UCC):
                     qc_psi.set_coeff_vec(psi_i)
                     Kmu_prev = Kmu
 
-            if return_individual == True:
-                np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
-                return grads
-            else:
-                grads = np.einsum('iu->u', grads)   
-
+        if return_individual == True:
+            np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
+            return grads
+        else:
+            grads = np.einsum('iu->u', grads)
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-12)
         
         return grads

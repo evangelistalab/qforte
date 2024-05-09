@@ -82,9 +82,9 @@ class Gibbs_ADAPT(UCCVQE):
         U = self.build_Uvqc(amplitudes = x)
         Es, A, ops = qf.ritz_eigh(self._nqb, self._qb_ham, U, [], verbose = False)
         
-        E_grads = self.measure_gradient(params = x, return_individual=True).T
+        E_grads = self.measure_gradient(params = x, return_individual=True)
         
-        E_grads = E_grads@A
+        E_grads = A.T@E_grads
         
 
         Es = np.array(Es)
@@ -121,8 +121,8 @@ class Gibbs_ADAPT(UCCVQE):
         #dF += np.einsum('i,iu->u', omega, d_deltas)
         #dF -= (np.log(tot_gamma)/self.beta)*np.einsum('iu->u', d_omega)
         dF -= (1/(self.beta*tot_gamma))*np.einsum('i,u->u', omega, tot_d_gamma)
-        print("dF shape")
-        print(dF.shape)
+        print(dF)
+        exit() 
         return dF
 
     def compute_addition_gradient(self):
@@ -131,9 +131,9 @@ class Gibbs_ADAPT(UCCVQE):
         
         U = self.build_Uvqc(amplitudes = self._tamps)
         Es, A, ops = qf.ritz_eigh(self._nqb, self._qb_ham, U, [], verbose = False)
-        E_grads = self.measure_gradient3(return_individual = True).T
+        E_grads = self.measure_gradient3(return_individual = True)
         
-        E_grads = E_grads@A
+        E_grads = A.T@E_grads
         #Es = [] 
         #E_grads = []
         #for i, reference in enumerate(self._references):
