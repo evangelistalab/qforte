@@ -245,13 +245,6 @@ double Circuit::get_phase_gate_parameter(const Gate& gate) {
     }
 }
 
-double Circuit::simplify_phase_1qubit_gates(const Gate& gate1, const Gate& gate2) {
-    double parameter1 = get_phase_gate_parameter(gate1);
-    double parameter2 = get_phase_gate_parameter(gate2);
-
-    return parameter1 + parameter2;
-}
-
 void Circuit::simplify() {
 
     std::unordered_set<GateType> involutory_gates = {GateType::X, GateType::Y, GateType::Z,
@@ -321,7 +314,7 @@ void Circuit::simplify() {
                 if (simplification_case == 3) {
                     gate_indices_to_remove.push_back(pos1);
                     gates_[pos2] =
-                        make_gate("R", gates_[pos2].target(), gates_[pos2].control(), simplify_phase_1qubit_gates(gate1, gate2));
+                        make_gate("R", gates_[pos2].target(), gates_[pos2].control(), get_phase_gate_parameter(gate1) + get_phase_gate_parameter(gate2));
                     break;
                 }
             } else {
