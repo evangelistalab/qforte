@@ -1,6 +1,7 @@
 import pytest
 from pytest import approx
 from qforte import Computer, Circuit, gate, QubitBasis, QubitOperator
+import numpy as np
 
 # this function creates a QubitBasis object from a string representation
 def make_basis(str):
@@ -309,6 +310,17 @@ class TestGates:
             gate2 = gate1.adjoint()
             assert gate1 != gate2
 
+        # 1-qubit non-self-adjoint phase gates
+        gate1 = gate('T',0)
+        gate2 = gate1.adjoint()
+        assert gate2.gate_id() == 'R'
+        assert gate2.parameter() == -np.pi/4
+
+        gate1 = gate('S',0)
+        gate2 = gate1.adjoint()
+        assert gate2.gate_id() == 'R'
+        assert gate2.parameter() == -np.pi/2
+
         # 1-qubit parameterized non-self-adjoint gates
         gates = ['R','Rx','Ry','Rz']
         for g in gates:
@@ -408,6 +420,43 @@ class TestGates:
         Aadj = A.adjoint()
         assert Aadj.parameter() == approx(0.7, abs=1.0e-16)
         assert Aadj == A
+
+        # test angle ranges of parametrized gates
+
+        R = gate('R', 0, 5*np.pi/2)
+        assert R.parameter() == approx(np.pi/2, abs=1.0e-16)
+        R = gate('R', 0, -5*np.pi/2)
+        assert R.parameter() == approx(-np.pi/2, abs=1.0e-16)
+
+        Rx = gate('Rx', 0, 9*np.pi/2)
+        assert Rx.parameter() == approx(np.pi/2, abs=1.0e-16)
+        Rx = gate('Rx', 0, -9*np.pi/2)
+        assert Rx.parameter() == approx(-np.pi/2, abs=1.0e-16)
+
+        Ry = gate('Ry', 0, 9*np.pi/2)
+        assert Ry.parameter() == approx(np.pi/2, abs=1.0e-16)
+        Ry = gate('Ry', 0, -9*np.pi/2)
+        assert Ry.parameter() == approx(-np.pi/2, abs=1.0e-16)
+
+        Rz = gate('Rz', 0, 9*np.pi/2)
+        assert Rz.parameter() == approx(np.pi/2, abs=1.0e-16)
+        Rz = gate('Rz', 0, -9*np.pi/2)
+        assert Rz.parameter() == approx(-np.pi/2, abs=1.0e-16)
+
+        A = gate('A', 0, 1, 5*np.pi/2)
+        assert A.parameter() == approx(np.pi/2, abs=1.0e-16)
+        A = gate('A', 0, 1, -5*np.pi/2)
+        assert A.parameter() == approx(-np.pi/2, abs=1.0e-16)
+
+        cR = gate('cR', 0, 1, 5*np.pi/2)
+        assert cR.parameter() == approx(np.pi/2, abs=1.0e-16)
+        cR = gate('cR', 0, 1, -5*np.pi/2)
+        assert cR.parameter() == approx(-np.pi/2, abs=1.0e-16)
+
+        cRz = gate('cRz', 0, 1, 9*np.pi/2)
+        assert cRz.parameter() == approx(np.pi/2, abs=1.0e-16)
+        cRz = gate('cRz', 0, 1, -9*np.pi/2)
+        assert cRz.parameter() == approx(-np.pi/2, abs=1.0e-16)
 
     def test_op_exp_val_1(self):
         # test direct expectation value measurement

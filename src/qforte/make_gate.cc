@@ -4,6 +4,17 @@
 
 #include "gate.h"
 
+double normalize_angle(double angle, double period) {
+    // Normalize the angle to be within [0, period)
+    angle = std::fmod(angle, period);
+    if (angle < -period / 2) {
+        angle += period;
+    } else if (angle > period / 2) {
+        angle -= period;
+    }
+    return angle;
+}
+
 Gate make_gate(std::string type, size_t target, size_t control, double parameter) {
     // using namespace std::complex_literals;
     std::complex<double> onei(0.0, 1.0);
@@ -38,6 +49,7 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
             return Gate(type, target, control, gate);
         }
         if (type == "R") {
+            parameter = normalize_angle(parameter, 2 * M_PI);
             std::complex<double> tmp = onei * parameter;
             std::complex<double> c = std::exp(tmp);
             std::complex<double> gate[4][4]{
@@ -47,6 +59,7 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
             return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "Rx") {
+            parameter = normalize_angle(parameter, 4 * M_PI);
             std::complex<double> a = std::cos(0.5 * parameter);
             std::complex<double> b = onei * std::sin(0.5 * parameter);
             std::complex<double> gate[4][4]{
@@ -56,6 +69,7 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
             return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "Ry") {
+            parameter = normalize_angle(parameter, 4 * M_PI);
             std::complex<double> a = std::cos(0.5 * parameter);
             std::complex<double> b = std::sin(0.5 * parameter);
             std::complex<double> gate[4][4]{
@@ -65,6 +79,7 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
             return Gate(type, target, control, gate, std::make_pair(parameter, true));
         }
         if (type == "Rz") {
+            parameter = normalize_angle(parameter, 4 * M_PI);
             std::complex<double> tmp_a = -onei * 0.5 * parameter;
             std::complex<double> a = std::exp(tmp_a);
             std::complex<double> tmp_b = onei * 0.5 * parameter;
@@ -111,6 +126,7 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
         if (type == "A") {
             // The A gate is the particle-number preserving gate introduced in DOI: 10.1103/PhysRevA.98.022322.
             // Its decomposition in elementary gates requires 3 CNOTs.
+            parameter = normalize_angle(parameter, 2 * M_PI);
             std::complex<double> c = std::cos(parameter);
             std::complex<double> s = std::sin(parameter);
             std::complex<double> gate[4][4]{
@@ -158,6 +174,7 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
             return Gate(type, target, control, gate);
         }
         if (type == "cR") {
+            parameter = normalize_angle(parameter, 2 * M_PI);
             std::complex<double> tmp = onei * parameter;
             std::complex<double> c = std::exp(tmp);
             std::complex<double> gate[4][4]{
@@ -180,6 +197,7 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
             return Gate(type, target, control, gate);
         }
         if (type == "cRz") {
+            parameter = normalize_angle(parameter, 4 * M_PI);
             std::complex<double> tmp_a = -onei * 0.5 * parameter;
             std::complex<double> a = std::exp(tmp_a);
             std::complex<double> tmp_b = onei * 0.5 * parameter;

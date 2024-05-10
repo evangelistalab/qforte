@@ -117,6 +117,15 @@ Gate Gate::adjoint() const {
     // if the gate is self-adjoint then we return the gate itself
     if (self_adjoint) {
         return *this;
+    }
+
+    // To facilitate circuit simplification, the adjoints of S and T are expressed
+    // in terms of the R phase gate.
+    
+    if (type_ == GateType::T) {
+        return Gate("R", target_, control_, adj_gate, std::make_pair(-M_PI / 4, true));
+    } else if (type_ == GateType::S) {
+         return Gate("R", target_, control_, adj_gate, std::make_pair(-M_PI / 2, true));
     } else {
         // check if label_ is of the form adj(x) and if it is then return Gate(x)
         if (label_.size() > 4 and label_.substr(0, 4) == "adj(" and label_.back() == ')') {
@@ -248,6 +257,13 @@ std::pair<bool, int> evaluate_gate_interaction(const Gate& gate1, const Gate& ga
     int product_nqubits = num_qubits_gate1 * num_qubits_gate2;
 
     if (product_nqubits == 1) {
+        if (phase_1qubit_gates.find(gate1.gate_type()) != phase_1qubit_gates.end() && phase_1qubit_gates.find(gate2.gate_type()) != phase_1qubit_gates.end()) {
+            if (gate1.gate_type() == gate2.gate_type()) {
+                return {true, 1};
+            } else {
+                return {true, 3};
+            }
+        }
         std::pair<GateType, GateType> pairGateType = std::make_pair(gate1.gate_type(), gate2.gate_type());
         return {pairs_of_commuting_1qubit_gates.find(pairGateType) != pairs_of_commuting_1qubit_gates.end(), gate1.gate_type() == gate2.gate_type()};
     }

@@ -96,6 +96,9 @@ class Circuit {
   private:
     /// the list of gates
     std::vector<Gate> gates_;
+
+    /// helper function to simplify phase gates
+    double get_phase_gate_parameter(const Gate& gate);
 };
 
 bool operator==(const Circuit& qc1, const Circuit& qc2);
