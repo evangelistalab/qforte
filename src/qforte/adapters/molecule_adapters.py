@@ -4,6 +4,7 @@ the molecular info and properties (hamiltonian, rdms, etc...).
 """
 import operator
 import numpy as np
+import copy
 from abc import ABC, abstractmethod
 
 import qforte
@@ -62,6 +63,9 @@ def create_psi_mol(**kwargs):
     psi4.core.set_output_file(kwargs['filename']+'.out', False)
 
     p4_geom_str =  f"{int(charge)}  {int(multiplicity)}"
+    # p4_geom_str +=  f"\nnocom"
+    # p4_geom_str +=  f"\nnoreorient"
+    
     for geom_line in mol_geometry:
         p4_geom_str += f"\n{geom_line[0]}  {geom_line[1][0]}  {geom_line[1][1]}  {geom_line[1][2]}"
     p4_geom_str += f"\nsymmetry {kwargs['symmetry']}"
@@ -117,8 +121,8 @@ def create_psi_mol(**kwargs):
     mo_teis = np.asarray(mints.mo_eri(C, C, C, C))
     mo_oeis = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
     mo_oeis = np.einsum('uj,vi,uv', C, C, mo_oeis)
-
     nmo = np.shape(mo_oeis)[0]
+    
     nalpha = p4_wfn.nalpha()
     nbeta = p4_wfn.nbeta()
     nel = nalpha + nbeta
@@ -202,7 +206,11 @@ def create_psi_mol(**kwargs):
     qforte_mol.hf_energy = p4_Escf
     qforte_mol.hf_reference = hf_reference
     qforte_mol.sq_hamiltonian = Hsq
-    qforte_mol.hamiltonian = Hsq.jw_transform()
+    if kwargs['build_qb_ham']:
+        qforte_mol.hamiltonian = Hsq.jw_transform()
+    else:
+        qforte_mol.hamiltonian = None
+
     qforte_mol.point_group = [point_group, irreps]
     qforte_mol.orb_irreps = orb_irreps
     qforte_mol.orb_irreps_to_int = orb_irreps_to_int
@@ -210,6 +218,67 @@ def create_psi_mol(**kwargs):
     qforte_mol.frozen_core = frozen_core
     qforte_mol.frozen_virtual = frozen_virtual
     qforte_mol.frozen_core_energy = frozen_core_energy
+
+    if kwargs['store_mo_ints']:
+
+        # print('\n ==> h1e <== \n')
+        # print(mo_oeis)
+        # print('\n ==> h2e <== \n')
+        # print(mo_teis[0,0,:,:])
+
+        # Save data to a file
+        # np.savez(
+        #     "h4_integral_data_of_format_psi4_v2.npz", 
+        #     e_0=p4_Enuc_ref, 
+        #     h1e=mo_oeis, 
+        #     h2e=mo_teis)
+
+        # keep ordering consistant with openfermion eri tensors
+        mo_teis = np.asarray(mo_teis.transpose(0, 2, 3, 1), order='C')
+
+        # need restricted version
+        h2e_rest = copy.deepcopy(np.einsum("ijlk", -0.5 * mo_teis))
+
+        # additoinal manipulation
+        h1e = copy.deepcopy(mo_oeis)
+        h2e = np.moveaxis(copy.deepcopy(h2e_rest), 1, 2) * (-1.0)
+        h1e -= np.einsum('ikkj->ij', h2e)
+
+        # just going to precumpute the einseum (for now)
+        h2e_einsum = copy.deepcopy(h2e + np.einsum('ijkl->klij', h2e))
+
+
+        # h1e = np.ones(shape=(nmo, nmo))
+        # h2e = np.zeros(shape=(nmo, nmo, nmo, nmo))
+        # h2e_einsum = np.zeros(shape=(nmo, nmo, nmo, nmo))
+
+
+        # print('\n ==> h1e <== \n')
+        # print(h1e)
+        # print('\n ==> h2e <== \n')
+        # print(h2e[1,2,:,:])
+
+
+        # allocate qf tensors
+        qf_mo_oeis = qforte.Tensor(shape=np.shape(h1e), name='mo_oeis')
+        qf_mo_teis = qforte.Tensor(shape=np.shape(h2e), name='mo_teis')
+        qf_mo_teis_einsum = qforte.Tensor(shape=np.shape(h2e_einsum), name='mo_teis_einsum')
+        
+        # fill qf tensors
+        qf_mo_oeis.fill_from_nparray(h1e.ravel(), np.shape(h1e))
+        qf_mo_teis.fill_from_nparray(h2e.ravel(), np.shape(h2e)) 
+        qf_mo_teis_einsum.fill_from_nparray(
+            h2e_einsum.ravel(), 
+            np.shape(h2e_einsum)) 
+
+        qforte_mol.mo_oeis = qf_mo_oeis
+        qforte_mol.mo_teis = qf_mo_teis
+        qforte_mol.mo_teis_einsum = qf_mo_teis_einsum
+
+        # if(nmo < 6):
+        #     print(qf_mo_oeis)
+        #     print(qf_mo_teis)
+        #     print(qf_mo_teis_einsum)
 
     # Order Psi4 to delete its temporary files.
     psi4.core.clean()

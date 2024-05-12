@@ -205,6 +205,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_tensor_spin_1bdy", &FCIComputer::apply_tensor_spin_1bdy)
         .def("apply_tensor_spin_12bdy", &FCIComputer::apply_tensor_spin_12bdy)
         .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
+        .def("apply_tensor_spat_12bdy", &FCIComputer::apply_tensor_spat_12bdy)
+        .def("apply_tensor_spat_012bdy", &FCIComputer::apply_tensor_spat_012bdy)
         .def("apply_individual_sqop_term", &FCIComputer::apply_individual_sqop_term)
         .def("apply_sqop", &FCIComputer::apply_sqop)
         .def("apply_sqop_pool", &FCIComputer::apply_sqop_pool)
