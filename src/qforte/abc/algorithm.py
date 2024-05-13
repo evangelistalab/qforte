@@ -67,6 +67,7 @@ class Algorithm(ABC):
     def __init__(self,
                  system,
                  computer_type='fock',
+                 apply_ham_as_tensor=True,
                  reference=None,
                  state_prep_type='occupation_list',
                  trotter_order=1,
@@ -133,8 +134,15 @@ class Algorithm(ABC):
 
         self._qb_ham = system.hamiltonian
 
+        self._nuclear_repulsion_energy = system.nuclear_repulsion_energy
+
         if(computer_type=='fci'):
             self._sq_ham = system.sq_hamiltonian
+            if(apply_ham_as_tensor):
+                self._mo_oeis = system.mo_oeis 
+                self._mo_teis = system.mo_teis 
+                self._mo_teis_einsum = system.mo_teis_einsum
+                
 
         if self._qb_ham.num_qubits() != self._nqb:
             raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
@@ -148,12 +156,19 @@ class Algorithm(ABC):
         self._trotter_number = trotter_number
         self._fast = fast
 
+        apply_ham_as_tensor_temp = apply_ham_as_tensor
+
         if(computer_type=='fock'):
+            if(apply_ham_as_tensor):
+                print(f"Warning, can't apply hamiltonain as tensor for fock computer, setting option to false")
+                apply_ham_as_tensor_temp = False
             self._computer_type = 'fock'
         elif(computer_type=='fci'):
             self._computer_type = 'fci'
         else:
             raise ValueError(f"Computer type must be fci or fock.")
+        
+        self._apply_ham_as_tensor = apply_ham_as_tensor_temp
 
         self._verbose = verbose
         self._print_summary_file = print_summary_file
@@ -460,6 +475,19 @@ class AnsatzAlgorithm(Algorithm):
             temp_pool,
             antiherm=True,
             adjoint=False)
+        
+        if(self._apply_ham_as_tensor):
+            
+            self._curr_energy = np.real(
+                qc.get_exp_val_tensor(
+                    self._nuclear_repulsion_energy, 
+                    self._mo_oeis, 
+                    self._mo_teis, 
+                    self._mo_teis_einsum, 
+                    self._norb)
+            )
+        else:   
+            self._curr_energy = np.real(qc.get_exp_val(self._sq_ham))
 
-        self._curr_energy = np.real(qc.get_exp_val(self._sq_ham))
+        
         return self._curr_energy

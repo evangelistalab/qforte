@@ -374,7 +374,15 @@ class UCCNPQE(UCCPQE):
             antiherm=True,
             adjoint=False)
 
-        qc_res.apply_sqop(self._sq_ham)
+        if(self._apply_ham_as_tensor):
+            qc_res.apply_tensor_spat_012bdy(
+                self._nuclear_repulsion_energy, 
+                self._mo_oeis, 
+                self._mo_teis, 
+                self._mo_teis_einsum, 
+                self._norb)
+        else:   
+            qc_res.apply_sqop(self._sq_ham)
 
         qc_res.evolve_pool_trotter_basic(
             temp_pool,

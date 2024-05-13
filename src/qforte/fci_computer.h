@@ -274,6 +274,14 @@ class FCIComputer {
     /// apply a second quantized operator, must be number and spin conserving.
     std::complex<double> get_exp_val(const SQOperator& sqop);
 
+    /// Get expectaion of restricted tensor operator, must be number and spin conserving.
+    std::complex<double> get_exp_val_tensor(
+      const std::complex<double> h0e, 
+      const Tensor& h1e, 
+      const Tensor& h2e, 
+      const Tensor& h2e_einsum, 
+      size_t norb);  
+
     /// apply a constant to the FCI quantum computer.
     void scale(const std::complex<double> a);
 

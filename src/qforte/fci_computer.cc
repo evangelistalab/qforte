@@ -1339,6 +1339,29 @@ std::complex<double> FCIComputer::get_exp_val(const SQOperator& sqop) {
     return val;
 }
 
+std::complex<double> FCIComputer::get_exp_val_tensor(
+    const std::complex<double> h0e, 
+    const Tensor& h1e, 
+    const Tensor& h2e, 
+    const Tensor& h2e_einsum, 
+    size_t norb)  
+{
+    Tensor Cin = C_;
+
+    apply_tensor_spat_012bdy(
+        h0e,
+        h1e, 
+        h2e, 
+        h2e_einsum, 
+        norb
+    );
+
+    std::complex<double> val = C_.vector_dot(Cin);
+
+    C_ = Cin;
+    return val;
+}
+
 /// apply a constant to the FCI quantum computer.
 void FCIComputer::scale(const std::complex<double> a){
     C_.scale(a);

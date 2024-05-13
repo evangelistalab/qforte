@@ -63,8 +63,6 @@ def create_psi_mol(**kwargs):
     psi4.core.set_output_file(kwargs['filename']+'.out', False)
 
     p4_geom_str =  f"{int(charge)}  {int(multiplicity)}"
-    # p4_geom_str +=  f"\nnocom"
-    # p4_geom_str +=  f"\nnoreorient"
     
     for geom_line in mol_geometry:
         p4_geom_str += f"\n{geom_line[0]}  {geom_line[1][0]}  {geom_line[1][1]}  {geom_line[1][2]}"
@@ -221,11 +219,6 @@ def create_psi_mol(**kwargs):
 
     if kwargs['store_mo_ints']:
 
-        # print('\n ==> h1e <== \n')
-        # print(mo_oeis)
-        # print('\n ==> h2e <== \n')
-        # print(mo_teis[0,0,:,:])
-
         # Save data to a file
         # np.savez(
         #     "h4_integral_data_of_format_psi4_v2.npz", 
@@ -247,18 +240,6 @@ def create_psi_mol(**kwargs):
         # just going to precumpute the einseum (for now)
         h2e_einsum = copy.deepcopy(h2e + np.einsum('ijkl->klij', h2e))
 
-
-        # h1e = np.ones(shape=(nmo, nmo))
-        # h2e = np.zeros(shape=(nmo, nmo, nmo, nmo))
-        # h2e_einsum = np.zeros(shape=(nmo, nmo, nmo, nmo))
-
-
-        # print('\n ==> h1e <== \n')
-        # print(h1e)
-        # print('\n ==> h2e <== \n')
-        # print(h2e[1,2,:,:])
-
-
         # allocate qf tensors
         qf_mo_oeis = qforte.Tensor(shape=np.shape(h1e), name='mo_oeis')
         qf_mo_teis = qforte.Tensor(shape=np.shape(h2e), name='mo_teis')
@@ -274,11 +255,6 @@ def create_psi_mol(**kwargs):
         qforte_mol.mo_oeis = qf_mo_oeis
         qforte_mol.mo_teis = qf_mo_teis
         qforte_mol.mo_teis_einsum = qf_mo_teis_einsum
-
-        # if(nmo < 6):
-        #     print(qf_mo_oeis)
-        #     print(qf_mo_teis)
-        #     print(qf_mo_teis_einsum)
 
     # Order Psi4 to delete its temporary files.
     psi4.core.clean()
