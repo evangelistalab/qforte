@@ -186,6 +186,30 @@ class Molecule(System):
     @property
     def hf_orbital_energies(self):
         return self._hf_orbital_energies
+    
+    @property
+    def mo_oeis(self):
+        return self._mo_oeis
+    
+    @mo_oeis.setter
+    def mo_oeis(self, mo_oeis):
+        self._mo_oeis = mo_oeis
+    
+    @property
+    def mo_teis(self):
+        return self._mo_teis
+    
+    @mo_teis.setter
+    def mo_teis(self, mo_teis):
+        self._mo_teis = mo_teis
+
+    @property
+    def mo_teis_einsum(self):
+        return self._mo_teis_einsum
+    
+    @mo_teis_einsum.setter
+    def mo_teis_einsum(self, mo_teis_einsum):
+        self._mo_teis_einsum = mo_teis_einsum
 
     @hf_orbital_energies.setter
     def hf_orbital_energies(self, hf_orbital_energies):

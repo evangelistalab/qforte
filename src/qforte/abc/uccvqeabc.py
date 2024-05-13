@@ -233,16 +233,7 @@ class UCCVQE(VQE, UCC):
             raise ValueError('get_residual_vector_fci_comp only compatible with hf reference at this time.')
 
         M = len(self._tamps)
-
         grads = np.zeros(M)
-
-        # print(f"\n Grads before: {grads}")
-
-        # if params is None:
-        #     Utot = self.build_Uvqc()
-        # else:
-        #     Utot = self.build_Uvqc(params)
-
         vqc_ops = qforte.SQOpPool()
 
         if params is None:
@@ -251,16 +242,6 @@ class UCCVQE(VQE, UCC):
         else:
             for tamp, top in zip(params, self._tops):
                 vqc_ops.add(tamp, self._pool_obj[top][1])
-
-        # for tamp, top in zip(params, self._tops):
-        #     vqc_ops.add(tamp, self._pool_obj[top][1])
-
-        # qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
-        # qc_psi.apply_circuit(Utot)
-        # qc_sig = qforte.Computer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
-        # psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
-        # qc_sig.set_coeff_vec(copy.deepcopy(psi_i)) # not sure if copy is faster or reapplication of state
-        # qc_sig.apply_operator(self._qb_ham)
 
         # build | sig_N > according ADAPT-VQE analytical grad section
         qc_psi = qforte.FCIComputer(
@@ -277,36 +258,39 @@ class UCCVQE(VQE, UCC):
             adjoint=False)
 
         # build | psi_N > according ADAPT-VQE analytical grad section
-        # qc_sig = qforte.Computer(self._nqb) 
         qc_sig = qforte.FCIComputer(
             self._nel, 
             self._2_spin, 
             self._norb) 
 
-        # psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
         psi_i = qc_psi.get_state_deep()
 
         # not sure if copy is faster or reapplication of state
         qc_sig.set_state(psi_i) 
 
-        qc_sig.apply_sqop(self._sq_ham)
+        if(self._apply_ham_as_tensor):
+            qc_sig.apply_tensor_spat_012bdy(
+                self._nuclear_repulsion_energy, 
+                self._mo_oeis, 
+                self._mo_teis, 
+                self._mo_teis_einsum, 
+                self._norb)
+        else:   
+            qc_sig.apply_sqop(self._sq_ham)
 
         mu = M-1
 
         # find <sing_N | K_N | psi_N>
-        # Kmu_prev = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
         Kmu_prev = self._pool_obj[self._tops[mu]][1]
 
         Kmu_prev.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
         qc_psi.apply_sqop(Kmu_prev)
-        # grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
         grads[mu] = 2.0 * np.real(
             qc_sig.get_state().vector_dot(qc_psi.get_state())
             )
 
         #reset Kmu_prev |psi_i> -> |psi_i>
-        # qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
         qc_psi.set_state(psi_i)
 
         for mu in reversed(range(M-1)):
@@ -328,14 +312,6 @@ class UCCVQE(VQE, UCC):
 
             # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
             # (see original ADAPT-VQE paper)
-            # Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
-
-            # if (pmu != 1.0 + 0.0j):
-            #     raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
-
-            # qc_sig.apply_circuit(Umu)
-            # qc_psi.apply_circuit(Umu)
-
             qc_psi.apply_sqop_evolution(
                 -1.0*tamp,
                 Kmu_prev,
@@ -348,25 +324,18 @@ class UCCVQE(VQE, UCC):
                 antiherm=True,
                 adjoint=False)
 
-
-            # psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
             psi_i = qc_psi.get_state_deep()
 
             qc_psi.apply_sqop(Kmu)
-            # grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
             grads[mu] = 2.0 * np.real(
                 qc_sig.get_state().vector_dot(qc_psi.get_state())
                 )
 
             #reset Kmu |psi_i> -> |psi_i>
-            # qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
             qc_psi.set_state(psi_i)
             Kmu_prev = Kmu
 
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
-
-        # print(f"\n Grads after: {grads}")
-
         return grads
 
     def measure_gradient3(self):

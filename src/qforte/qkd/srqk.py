@@ -233,6 +233,8 @@ class SRQK(QSD):
 
         return s_mat, h_mat
     
+    # This function is a legacy and uses the same logic for handeling trotterizaiotn as the
+    # fock implementation, build_qk_mats_fast_fci should be used in most cases.
     def build_qk_mats_fast_fci2(self):
         """Returns matrices S and H needed for the QK algorithm using the Trotterized
         form of the unitary operators U_n = exp(-i n dt H)
@@ -349,6 +351,7 @@ class SRQK(QSD):
 
         return s_mat, h_mat
     
+
     def build_qk_mats_fast_fci(self):
         """Returns matrices S and H needed for the QK algorithm using the Trotterized
         form of the unitary operators U_n = exp(-i n dt H)
@@ -425,7 +428,15 @@ class SRQK(QSD):
          
             self._omega_lst.append(C)
 
-            QC.apply_sqop(self._sq_ham)
+            if(self._apply_ham_as_tensor):
+                QC.apply_tensor_spat_012bdy(
+                    self._nuclear_repulsion_energy, 
+                    self._mo_oeis, 
+                    self._mo_teis, 
+                    self._mo_teis_einsum, 
+                    self._norb)
+            else:   
+                QC.apply_sqop(self._sq_ham)
 
             Sig = QC.get_state_deep()
 

@@ -37,8 +37,10 @@ def system_factory(system_type = 'molecule', build_type = 'psi4', **kwargs):
         kwargs.setdefault('multiplicity', 1)
         kwargs.setdefault('charge', 0)
         kwargs.setdefault('description', "")
+        kwargs.setdefault('build_qb_ham', True)
         kwargs.setdefault('filename', "output")
         kwargs.setdefault('hdf5_dir', None)
+        kwargs.setdefault('store_mo_ints', 1)
         try:
             adapter = molecule_adapters[build_type]
         except:
