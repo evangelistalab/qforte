@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 # set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 
 # optionally use OpenMP, if so use OpenMP compatible compiler
@@ -37,14 +37,14 @@ cmake_policy(SET CMP0074 NEW)
 set(BLA_VENDOR "Generic")
 
 # (Nick) I need the following, may be elsewhere or unneeded on other os. 
-set(CMAKE_C_COMPILER "/usr/bin/clang")
-set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+set(CMAKE_C_COMPILER "/usr/bin/gcc")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 
 # Use these if installing to anaconda
-set(CMAKE_PREFIX_PATH "/Users/nstair/anaconda3/envs/qforte_env_v1")
+set(CMAKE_PREFIX_PATH "/home/vlita/anaconda3/envs/qforte_env")
 set(BLAS_LIBRARIES "${CMAKE_PREFIX_PATH}/lib") 
 set(CBLAS_INCLUDE_DIR "${CMAKE_PREFIX_PATH}/include") #need
-set(OPENBLAS_EXE "${CMAKE_PREFIX_PATH}/lib/libopenblas.dylib") #need, may be libopenblas.so for linux
+set(OPENBLAS_EXE "${CMAKE_PREFIX_PATH}/lib/libopenblas.so") #need, may be libopenblas.so for linux
 # find_package(BLAS REQUIRED)
 
 project(qforte)

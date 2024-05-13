@@ -202,6 +202,7 @@ PYBIND11_MODULE(qforte, m) {
     py::class_<FCIComputer>(m, "FCIComputer")
         .def(py::init<int, int, int>(), "nel"_a, "sz"_a, "norb"_a, "Make a FCIComputer with nel, sz, and norb")
         .def("hartree_fock", &FCIComputer::hartree_fock)
+        .def("set_element", &FCIComputer::set_element)
         .def("apply_tensor_spin_1bdy", &FCIComputer::apply_tensor_spin_1bdy)
         .def("apply_tensor_spin_12bdy", &FCIComputer::apply_tensor_spin_12bdy)
         .def("apply_tensor_spin_012bdy", &FCIComputer::apply_tensor_spin_012bdy)
@@ -209,6 +210,10 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_tensor_spat_012bdy", &FCIComputer::apply_tensor_spat_012bdy)
         .def("apply_individual_sqop_term", &FCIComputer::apply_individual_sqop_term)
         .def("apply_sqop", &FCIComputer::apply_sqop)
+        .def("apply_diagonal_of_sqop", &FCIComputer::apply_diagonal_of_sqop, 
+            py::arg("sqop"),
+            py::arg("invert_coeff") = true
+            )
         .def("apply_sqop_pool", &FCIComputer::apply_sqop_pool)
         .def("get_exp_val", &FCIComputer::get_exp_val)
         .def("get_exp_val_tensor", &FCIComputer::get_exp_val_tensor)
@@ -282,6 +287,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("subtract", &Tensor::subtract)
         .def("norm", &Tensor::norm)
         .def("scale", &Tensor::scale) // TODO(Tyler) Need Test (use numpy)
+        .def("vector_dot", &Tensor::vector_dot) 
         .def("identity", &Tensor::identity) // TODO(Tyler) Need Test 
         .def("zero", &Tensor::zero) // TODO(Tyler) Need Test 
         .def("zero_with_shape", &Tensor::zero_with_shape) // TODO(Tyler) Need Test 

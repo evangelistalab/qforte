@@ -69,6 +69,15 @@ FCIComputer::FCIComputer(int nel, int sz, int norb) :
     graph_ = FCIGraph(nalfa_el_, nbeta_el_, norb_);
 }
 
+/// Set a particular element of the tensor stored in FCIComputer, specified by idxs
+void FCIComputer::set_element(
+    const std::vector<size_t>& idxs,
+    const std::complex<double> val
+        )
+{
+    C_.set(idxs, val);
+}
+
 /// apply a TensorOperator to the current state 
 void apply_tensor_operator(const TensorOperator& top);
 
@@ -1296,6 +1305,39 @@ void FCIComputer::apply_sqop(const SQOperator& sqop){
             term,
             Cin,
             C_);
+        }
+    }
+}
+
+/// diagonal only 
+void FCIComputer::apply_diagonal_of_sqop(const SQOperator& sqop, const bool invert_coeff){
+    Tensor Cin = C_;
+    C_.zero();
+
+    for(const auto& term : sqop.terms()){
+        std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>> temp_term;
+        std::vector<size_t> ann;
+        std::vector<size_t> cre;
+        cre = std::get<1>(term);
+        ann = std::get<2>(term);
+
+        std::sort(cre.begin(), cre.end());
+        std::sort(ann.begin(), ann.end());
+
+        if(std::equal(cre.begin(), cre.end(), ann.begin(), ann.end()) && std::abs(std::get<0>(term)) > compute_threshold_){
+            std::get<1>(temp_term) = cre;
+            std::get<2>(temp_term) = ann;
+
+            if(invert_coeff){
+                std::get<0>(temp_term) = 1.0 / std::get<0>(term);
+            } else {
+                std::get<0>(temp_term) = std::get<0>(term);
+            }
+
+            apply_individual_sqop_term(
+                temp_term,
+                Cin,
+                C_);
         }
     }
 }
