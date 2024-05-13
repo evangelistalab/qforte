@@ -28,7 +28,7 @@ class TestOpenShellSystems:
         alg = UCCNPQE(mol, compact_excitations = True)
         alg.run(pool_type='SD')
 
-        assert alg._Egs == approx(-2.4998604383361855, abs=1.0e-12)
+        assert alg._Egs == approx(-2.4998604454039635, abs=1.0e-12)
 
     def test_H5_fci(self):
 

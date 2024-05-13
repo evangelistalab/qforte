@@ -64,6 +64,12 @@ def jacobi_solver(self):
 
         self._tamps = list(np.add(self._tamps, r_k))
 
+        t_diis.append(copy.deepcopy(self._tamps))
+        e_diis.append(np.subtract(copy.deepcopy(self._tamps), t_old))
+
+        if(k >= 1 and self._diis_max_dim >= 2):
+            self._tamps = diis(self._diis_max_dim, t_diis, e_diis)
+
         Ek = self.energy_feval(self._tamps)
         dE = Ek - Ek0
         Ek0 = Ek
@@ -78,12 +84,6 @@ def jacobi_solver(self):
             if(self._curr_grad_norm < self._opt_thresh):
                 self._Egs = Ek
                 break
-
-        t_diis.append(copy.deepcopy(self._tamps))
-        e_diis.append(np.subtract(copy.deepcopy(self._tamps), t_old))
-
-        if(k >= 1 and self._diis_max_dim >= 2):
-            self._tamps = diis(self._diis_max_dim, t_diis, e_diis)
 
     self._Egs = Ek
     if k == self._opt_maxiter:
