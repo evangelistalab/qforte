@@ -18,7 +18,7 @@ class SparseVector;
 
 /// useful for type safety and efficient comparisons
 enum class GateType {
-    X, Y, Z, H, R, Rx, Ry, Rz, V, S, T, I, A, cX, acX, cY, cZ, cR, cV, cRz, SWAP, Undefined
+    X, Y, Z, H, R, Rx, Ry, Rz, V, adjV, S, T, I, A, cX, acX, cY, cZ, cR, cV, adjcV, cRz, SWAP, Undefined
 };
 
 /// alias for a 4 x 4 complex matrix stored as an array of arrays

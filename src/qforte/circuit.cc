@@ -255,10 +255,11 @@ void Circuit::simplify() {
                                                              GateType::R, GateType::cRz, GateType::cR};
 
     const std::unordered_set<GateType> square_root_gates = {GateType::T, GateType::S, GateType::V,
-                                                            GateType::cV};
+                                                            GateType::cV, GateType::adjV, GateType::adjcV};
 
     const std::unordered_map<GateType, std::string> simplify_square_root_gates = {{GateType::T, "S"}, {GateType::S, "Z"},
-                                                                                  {GateType::V, "X"}, {GateType::cV, "cX"}}; 
+                                                                                  {GateType::V, "X"}, {GateType::cV, "cX"},
+                                                                                  {GateType::adjV, "X"}, {GateType::adjcV, "cX"}}; 
 
     std::vector<size_t> gate_indices_to_remove;
 
@@ -315,6 +316,11 @@ void Circuit::simplify() {
                     gate_indices_to_remove.push_back(pos1);
                     gates_[pos2] =
                         make_gate("R", gates_[pos2].target(), gates_[pos2].control(), get_phase_gate_parameter(gate1) + get_phase_gate_parameter(gate2));
+                    break;
+                }
+                if (simplification_case == 4) {
+                    gate_indices_to_remove.push_back(pos1);
+                    gate_indices_to_remove.push_back(pos2);
                     break;
                 }
             } else {
