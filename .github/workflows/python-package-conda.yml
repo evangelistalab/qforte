@@ -16,21 +16,28 @@ jobs:
     - name: Install lcov
       run: sudo apt-get update && sudo apt-get install -y lcov
 
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true  # Ensure conda is updated to the latest version
+        miniforge-variant: "Mambaforge"
 
-    - name: Install dependencies
+    - name: Create conda environment
       run: |
-        conda env update --file environment.yml --name base
+        source /usr/share/miniconda3/etc/profile.d/conda.sh
+        conda env create --file environment.yml --name qforte_env
+        echo "CONDA_ENV_NAME=qforte_env" >> $GITHUB_ENV
 
     - name: Compile
       run: |
+        source /usr/share/miniconda3/etc/profile.d/conda.sh
+        conda activate $CONDA_ENV_NAME
         QFORTE_CODECOV=ON python setup.py develop
         
     - name: Test with pytest
       run: |
+        source /usr/share/miniconda3/etc/profile.d/conda.sh
+        conda activate $CONDA_ENV_NAME
         lcov --directory . --zerocounters
         cd tests
         pytest
