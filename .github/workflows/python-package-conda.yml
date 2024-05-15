@@ -28,6 +28,19 @@ jobs:
         conda env create --file environment.yml --name qforte_env
         echo "CONDA_ENV_NAME=qforte_env" >> $GITHUB_ENV
 
+    - name: Install pre-commit and hooks
+      run: |
+        source /usr/share/miniconda3/etc/profile.d/conda.sh
+        conda activate $CONDA_ENV_NAME
+        pip install pre-commit
+        pre-commit install-hooks
+
+    - name: Run pre-commit on all files
+      run: |
+        source /usr/share/miniconda3/etc/profile.d/conda.sh
+        conda activate $CONDA_ENV_NAME
+        pre-commit run --all-files
+
     - name: Compile
       run: |
         source /usr/share/miniconda3/etc/profile.d/conda.sh
