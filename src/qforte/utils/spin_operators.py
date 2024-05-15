@@ -6,6 +6,7 @@ total spin ladder operators
 
 import qforte as qf
 
+
 def total_spin_squared(n_qubits):
     """
     This function constructs the operator representing the square of the total spin
@@ -42,6 +43,7 @@ def total_spin_squared(n_qubits):
 
     return q_Sigma_squared
 
+
 def total_spin_z(n_qubits):
     """
     This function constructs the operator representing the projection of the
@@ -68,6 +70,7 @@ def total_spin_z(n_qubits):
 
     return sq_Sigma_z.jw_transform()
 
+
 def total_spin_lowering(n_qubits):
     """
     This function constructs the lowering operator of the total spin
@@ -92,6 +95,7 @@ def total_spin_lowering(n_qubits):
         sq_Sigma_minus.add(1, [i + 1], [i])
 
     return sq_Sigma_minus.jw_transform()
+
 
 def total_spin_raising(n_qubits):
     """

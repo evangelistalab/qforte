@@ -5,6 +5,7 @@ Classes for system information, e.g., molecule or model.
 # TODO: Documentation needs to be fixed, attributes should be listed below
 #       as opposed to arguments for __init__() (Nick).
 
+
 class System(object):
     """Class for a generic quantum many-body system."""
 
@@ -39,6 +40,7 @@ class System(object):
     @hf_reference.setter
     def hf_reference(self, hf_reference):
         self._hf_reference = hf_reference
+
 
 class Molecule(System):
     """Class for storing moleucular information. Should be instatiated using using
@@ -97,8 +99,9 @@ class Molecule(System):
 
     """
 
-    def __init__(self, mol_geometry=None, basis='sto-3g', multiplicity=1, charge=0,
-                 filename=""):
+    def __init__(
+        self, mol_geometry=None, basis="sto-3g", multiplicity=1, charge=0, filename=""
+    ):
         """Initialize a qforte molecule object.
 
         Arguments

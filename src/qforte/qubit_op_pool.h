@@ -21,7 +21,7 @@ class QubitOpPool {
     void set_terms(std::vector<std::pair<std::complex<double>, QubitOperator>>& new_terms);
 
     /// add one set of anihilators and/or creators to the second quantized operator pool
-    void add_term(std::complex<double> coeff, const QubitOperator& q_op );
+    void add_term(std::complex<double> coeff, const QubitOperator& q_op);
 
     /// sets the operator pool coefficeints
     void set_coeffs(const std::vector<std::complex<double>>& new_coeffs);
@@ -33,7 +33,7 @@ class QubitOpPool {
     const std::vector<std::pair<std::complex<double>, QubitOperator>>& terms() const;
 
     /// return a vector of QubitOperators multiplied by thier coefficients
-    const std::vector<std::pair< std::complex<double>, QubitOperator>>& operator_terms() const;
+    const std::vector<std::pair<std::complex<double>, QubitOperator>>& operator_terms() const;
 
     /// join an operator to all terms from the right as (i.e. term -> term*Op)
     /// without simplifying
@@ -66,7 +66,6 @@ class QubitOpPool {
 
     /// fixes the number of preceding zeros in I_str based on nqb
     std::string pauli_idx_str(std::string I_str, int nqb);
-
 };
 
 #endif // _qubit_op_pool_h_

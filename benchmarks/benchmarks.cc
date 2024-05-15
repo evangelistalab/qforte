@@ -11,7 +11,6 @@
 
 QubitBasis qb;
 
-
 Circuit qcirc_18;
 
 Circuit qcirc2_18;
@@ -19,7 +18,6 @@ Circuit qcirc2_18;
 Circuit qcirc_2qb_18;
 
 Circuit qcirc2_2qb_18;
-
 
 std::vector<Computer> computers;
 
@@ -39,21 +37,21 @@ void prepare_circ2(Circuit& qcirc, size_t start, size_t end) {
 
 void prepare_2q_circ(Circuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end - 1; i++) {
-        qcirc.add_gate(make_gate("cX", i, i+1));
-        qcirc.add_gate(make_gate("cX", i+1, i));
+        qcirc.add_gate(make_gate("cX", i, i + 1));
+        qcirc.add_gate(make_gate("cX", i + 1, i));
     }
 }
 
 void prepare_2q_circ2(Circuit& qcirc, size_t start, size_t end) {
     for (size_t i = start; i < end - 1; i++) {
-        qcirc.add_gate(make_gate("cX", i, i+1));
-        qcirc.add_gate(make_gate("cX", i+1, i));
-        qcirc.add_gate(make_gate("cY", i, i+1));
-        qcirc.add_gate(make_gate("cY", i+1, i));
-        qcirc.add_gate(make_gate("cZ", i, i+1));
-        qcirc.add_gate(make_gate("cZ", i+1, i));
-        qcirc.add_gate(make_gate("cR", i, i+1, 3.14159 / (i+1.0)));
-        qcirc.add_gate(make_gate("cR", i+1, i, 2.17284 / (i+1.0)));
+        qcirc.add_gate(make_gate("cX", i, i + 1));
+        qcirc.add_gate(make_gate("cX", i + 1, i));
+        qcirc.add_gate(make_gate("cY", i, i + 1));
+        qcirc.add_gate(make_gate("cY", i + 1, i));
+        qcirc.add_gate(make_gate("cZ", i, i + 1));
+        qcirc.add_gate(make_gate("cZ", i + 1, i));
+        qcirc.add_gate(make_gate("cR", i, i + 1, 3.14159 / (i + 1.0)));
+        qcirc.add_gate(make_gate("cR", i + 1, i, 2.17284 / (i + 1.0)));
     }
 }
 

@@ -124,8 +124,9 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
 
     } else {
         if (type == "A") {
-            // The A gate is the particle-number preserving gate introduced in DOI: 10.1103/PhysRevA.98.022322.
-            // Its decomposition in elementary gates requires 3 CNOTs.
+            // The A gate is the particle-number preserving gate introduced in
+            // DOI: 10.1103/PhysRevA.98.022322. Its decomposition in elementary gates requires 3
+            // CNOTs.
             parameter = normalize_angle(parameter, 2 * M_PI);
             std::complex<double> c = std::cos(parameter);
             std::complex<double> s = std::sin(parameter);

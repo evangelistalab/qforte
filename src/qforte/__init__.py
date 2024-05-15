@@ -1,6 +1,6 @@
-__version__ = '0.1'
-__author__ = 'Qforte Dev'
-#sys.path.insert(1, os.path.abspath('.'))
+__version__ = "0.1"
+__author__ = "Qforte Dev"
+# sys.path.insert(1, os.path.abspath('.'))
 
 from .qforte import *
 from qforte.abc import *

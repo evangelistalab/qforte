@@ -8,7 +8,8 @@
 #include "qubit_operator.h"
 #include "sq_operator.h"
 
-void SQOperator::add_term(std::complex<double> circ_coeff, const std::vector<size_t>& cre_ops, const std::vector<size_t>& ann_ops) {
+void SQOperator::add_term(std::complex<double> circ_coeff, const std::vector<size_t>& cre_ops,
+                          const std::vector<size_t>& ann_ops) {
     terms_.push_back(std::make_tuple(circ_coeff, cre_ops, ann_ops));
 }
 
@@ -17,8 +18,8 @@ void SQOperator::add_op(const SQOperator& qo) {
 }
 
 void SQOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs) {
-    if(new_coeffs.size() != terms_.size()){
-        throw std::invalid_argument( "number of new coefficients for quantum operator must equal " );
+    if (new_coeffs.size() != terms_.size()) {
+        throw std::invalid_argument("number of new coefficients for quantum operator must equal ");
     }
     for (auto l = 0; l < new_coeffs.size(); l++) {
         std::get<0>(terms_[l]) = new_coeffs[l];
@@ -26,12 +27,13 @@ void SQOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs)
 }
 
 void SQOperator::mult_coeffs(const std::complex<double>& multiplier) {
-    for (auto& term : terms_){
+    for (auto& term : terms_) {
         std::get<0>(term) *= multiplier;
     }
 }
 
-const std::vector<std::tuple<std::complex<double>, std::vector<size_t>, std::vector<size_t>>>& SQOperator::terms() const {
+const std::vector<std::tuple<std::complex<double>, std::vector<size_t>, std::vector<size_t>>>&
+SQOperator::terms() const {
     return terms_;
 }
 
@@ -42,19 +44,16 @@ int SQOperator::canonicalize_helper(std::vector<size_t>& op_list) const {
         std::vector<int> temp(length);
         std::iota(std::begin(temp), std::end(temp), 0);
         std::sort(temp.begin(), temp.end(),
-            [&](const int& i, const int& j) {
-                return (temp_op[i] > temp_op[j]);
-            }
-        );
+                  [&](const int& i, const int& j) { return (temp_op[i] > temp_op[j]); });
         for (int i = 0; i < length; i++) {
             op_list[i] = temp_op[temp[i]];
         }
         return (permutation_phase(temp)) ? -1 : 1;
     }
-
 }
 
-void SQOperator::canonical_order_single_term(std::tuple< std::complex<double>, std::vector<size_t>, std::vector<size_t>>& term ){
+void SQOperator::canonical_order_single_term(
+    std::tuple<std::complex<double>, std::vector<size_t>, std::vector<size_t>>& term) {
     std::get<0>(term) *= canonicalize_helper(std::get<1>(term));
     std::get<0>(term) *= canonicalize_helper(std::get<2>(term));
 }
@@ -67,44 +66,49 @@ void SQOperator::canonical_order() {
 
 void SQOperator::simplify() {
     canonical_order();
-    std::map<std::pair<std::vector<size_t>, std::vector<size_t>>, std::complex<double>> unique_terms;
+    std::map<std::pair<std::vector<size_t>, std::vector<size_t>>, std::complex<double>>
+        unique_terms;
     for (const auto& term : terms_) {
         auto pair = std::make_pair(std::get<1>(term), std::get<2>(term));
-        if (unique_terms.find(pair) == unique_terms.end() ) {
+        if (unique_terms.find(pair) == unique_terms.end()) {
             unique_terms.insert(std::make_pair(pair, std::get<0>(term)));
         } else {
             unique_terms[pair] += std::get<0>(term);
         }
     }
     terms_.clear();
-    for (const auto &unique_term : unique_terms){
-        if (std::abs(unique_term.second) > 1.0e-12){
-            terms_.push_back(std::make_tuple(unique_term.second, unique_term.first.first, unique_term.first.second));
+    for (const auto& unique_term : unique_terms) {
+        if (std::abs(unique_term.second) > 1.0e-12) {
+            terms_.push_back(std::make_tuple(unique_term.second, unique_term.first.first,
+                                             unique_term.first.second));
         }
     }
 }
 
 bool SQOperator::permutation_phase(std::vector<int> p) const {
     std::vector<int> a(p.size());
-    std::iota (std::begin(a), std::end(a), 0);
+    std::iota(std::begin(a), std::end(a), 0);
     size_t cnt = 0;
     for (size_t i = 0; i < a.size(); ++i) {
         while (i != p[i]) {
             ++cnt;
-            std::swap (a[i], a[p[i]]);
-            std::swap (p[i], p[p[i]]);
+            std::swap(a[i], a[p[i]]);
+            std::swap(p[i], p[p[i]]);
         }
     }
-    if(cnt % 2 == 0) {
+    if (cnt % 2 == 0) {
         return false;
     } else {
         return true;
     }
 }
 
-void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& operators, bool creator, bool qubit_excitation) const {
+void SQOperator::jw_helper(QubitOperator& holder, const std::vector<size_t>& operators,
+                           bool creator, bool qubit_excitation) const {
     std::complex<double> halfi(0.0, 0.5);
-    if (creator) { halfi *= -1; };
+    if (creator) {
+        halfi *= -1;
+    };
 
     for (const auto& sq_op : operators) {
         QubitOperator temp;
@@ -170,10 +174,10 @@ std::string SQOperator::str() const {
     for (const auto& term : terms_) {
         s.push_back(to_string(std::get<0>(term)));
         s.push_back("(");
-        for (auto k: std::get<1>(term)) {
+        for (auto k : std::get<1>(term)) {
             s.push_back(std::to_string(k) + "^");
         }
-        for (auto k: std::get<2>(term)) {
+        for (auto k : std::get<2>(term)) {
             s.push_back(std::to_string(k));
         }
         s.push_back(")\n");

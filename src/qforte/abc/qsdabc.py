@@ -10,6 +10,7 @@ from qforte.maths.eigsolve import canonical_geig_solve
 
 import numpy as np
 
+
 class QSD(Algorithm):
     """The abstract base class inherited by any algorithm that seeks to find
     eigenstates of the Hamiltonian in a (generally) non-orthogonal basis of
@@ -89,16 +90,14 @@ class QSD(Algorithm):
         self._Scond = np.linalg.cond(self._S)
 
         # Get eigenvalues and eigenvectors
-        self._eigenvalues, self._eigenvectors \
-        = canonical_geig_solve(self._S,
-                               self._Hbar,
-                               print_mats=self._verbose,
-                               sort_ret_vals=True)
+        self._eigenvalues, self._eigenvectors = canonical_geig_solve(
+            self._S, self._Hbar, print_mats=self._verbose, sort_ret_vals=True
+        )
 
-        print(f'\n       ==> {type(self).__name__} eigenvalues <==')
-        print('----------------------------------------')
+        print(f"\n       ==> {type(self).__name__} eigenvalues <==")
+        print("----------------------------------------")
         for i, val in enumerate(self._eigenvalues):
-            print('  root  {}  {:.8f}    {:.8f}j'.format(i, np.real(val), np.imag(val)))
+            print("  root  {}  {:.8f}    {:.8f}j".format(i, np.real(val), np.imag(val)))
 
         # Set ground state energy.
         self._Egs = np.real(self._eigenvalues[0])
@@ -116,8 +115,7 @@ class QSD(Algorithm):
         self.verify_run()
 
     def get_ts_energy(self):
-        """Returns the energy of the target state.
-        """
+        """Returns the energy of the target state."""
         return self._Ets
 
     def get_qk_eigenvalues(self):
@@ -137,19 +135,31 @@ class QSD(Algorithm):
         in concrete class implementations.
         """
         if self._Ets is None:
-            raise NotImplementedError('Concrete QK Algorithm class must define self._Ets attribute.')
+            raise NotImplementedError(
+                "Concrete QK Algorithm class must define self._Ets attribute."
+            )
 
         if self._eigenvalues is None:
-            raise NotImplementedError('Concrete QK Algorithm class must define self._eigenvalues attribute.')
+            raise NotImplementedError(
+                "Concrete QK Algorithm class must define self._eigenvalues attribute."
+            )
 
         if self._S is None:
-            raise NotImplementedError('Concrete QK Algorithm class must define self._S attribute.')
+            raise NotImplementedError(
+                "Concrete QK Algorithm class must define self._S attribute."
+            )
 
         if self._Hbar is None:
-            raise NotImplementedError('Concrete QK Algorithm class must define self._Hbar attribute.')
+            raise NotImplementedError(
+                "Concrete QK Algorithm class must define self._Hbar attribute."
+            )
 
         if self._Scond is None:
-            raise NotImplementedError('Concrete QK Algorithm class must define self._Scond attribute.')
+            raise NotImplementedError(
+                "Concrete QK Algorithm class must define self._Scond attribute."
+            )
 
         if self._diagonalize_each_step is None:
-            raise NotImplementedError('Concrete QK Algorithm class must define self._diagonalize_each_step attribute.')
+            raise NotImplementedError(
+                "Concrete QK Algorithm class must define self._diagonalize_each_step attribute."
+            )

@@ -8,10 +8,10 @@ import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import expm, expm_multiply
 
-def get_scipy_csc_from_op(Hop, factor):
 
+def get_scipy_csc_from_op(Hop, factor):
     nqubits = Hop.num_qubits()
-    nbasis = 2 ** nqubits
+    nbasis = 2**nqubits
     sp_mat = Hop.sparse_matrix(nqubits)
 
     Ivals = []
@@ -28,7 +28,6 @@ def get_scipy_csc_from_op(Hop, factor):
 
 
 def apply_time_evolution_op(qc, Hcsc, tn, nstates):
-
     qc_vec = np.array(qc.get_coeff_vec())
 
     return expm_multiply(Hcsc, qc_vec, start=0.0, stop=tn, num=nstates, endpoint=True)
