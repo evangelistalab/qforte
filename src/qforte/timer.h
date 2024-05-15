@@ -1,5 +1,6 @@
 #include <chrono>
 #include <vector>
+#include <string>
 
 /**
  * @brief A timer class that returns the elapsed time

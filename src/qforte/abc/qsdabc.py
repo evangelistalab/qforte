@@ -101,7 +101,7 @@ class QSD(Algorithm):
             print('  root  {}  {:.8f}    {:.8f}j'.format(i, np.real(val), np.imag(val)))
 
         # Set ground state energy.
-        self._Egs = np.real(self._eigenvalues[0])
+        # self._Egs = np.real(self._eigenvalues[0])
 
         # Set target state energy.
         self._Ets = np.real(self._eigenvalues[self._target_root])

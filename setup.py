@@ -20,7 +20,7 @@ class CMakeExtension(Extension):
         # Add BLAS options
         self.cmake_args = []
         # self.cmake_args.extend([
-        #     '-DBLAS_LIBRARIES=/Users/nstair/anaconda3/envs/qforte_env_v1/lib/libopenblas.dylib',  # Replace with actual BLAS library path
+        #     '-DBLAS_LIBRARIES=/home/vlita/anaconda3/envs/qforte_env/lib/libopenblas.dylib',  # Replace with actual BLAS library path
         #     # '-DLAPACK_LIBRARIES=/path/to/lapack/libraries'  # Replace with actual LAPACK library path
         # ])
 
