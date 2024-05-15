@@ -44,7 +44,8 @@ class NTSRQK(QSD):
             s=3,
             dt=0.5,
             target_root=0,
-            diagonalize_each_step=True
+            diagonalize_each_step=True,
+            save_qk_matrices=False,
             ):
 
         if not self._fast:
@@ -59,6 +60,8 @@ class NTSRQK(QSD):
         self._n_classical_params = 0
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
+
+        self._save_qk_matrices = save_qk_matrices
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -181,10 +184,12 @@ class NTSRQK(QSD):
                 self._n_pauli_trm_measures  = k * self._Nl
                 self._n_pauli_trm_measures += k * (k-1) * self._Nl
                 self._n_pauli_trm_measures += k * (k-1)
-
-                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {0:10}        {self._n_pauli_trm_measures:12}')
-                if (self._print_summary_file):
-                    f.write(f'  {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {0:10}        {self._n_pauli_trm_measures:12}\n')
+                
+                if len(evals) > self._target_root:
+                    string = f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {0:10}        {self._n_pauli_trm_measures:12}'
+                    print(string)
+                    if (self._print_summary_file):
+                        f.write(f'{string}\n')
 
         if (self._diagonalize_each_step and self._print_summary_file):
             f.close()

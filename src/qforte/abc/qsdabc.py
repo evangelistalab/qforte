@@ -94,6 +94,11 @@ class QSD(Algorithm):
                                self._Hbar,
                                print_mats=self._verbose,
                                sort_ret_vals=True)
+        
+        if self._save_qk_matrices:
+            print(f'\n\n    Save S, Hbar, evals, evecs to `qk_matrices.npz` file.\n')
+            np.savez('qk_matrices', overlap=self._S, hbar=self._Hbar, \
+                    evals=self._eigenvalues, evecs=self._eigenvectors )
 
         print(f'\n       ==> {type(self).__name__} eigenvalues <==')
         print('----------------------------------------')
