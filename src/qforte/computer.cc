@@ -634,8 +634,11 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                 // Case II: this matrix has no off-diagonal elements. Apply optimized algorithm
                 if (op_2_2 != 1.0) {
                     // Case II-A: changes portion of coeff_ only if g_00 is not 1.0
-                    for (int outer_block_start = 0; outer_block_start < nbasis_; outer_block_start += outer_block_offset) {
-                        for (int block_start = outer_block_start + block_size; block_start < outer_block_start + outer_block_size; block_start += block_offset) {
+                    for (int outer_block_start = 0; outer_block_start < nbasis_;
+                         outer_block_start += outer_block_offset) {
+                        for (int block_start = outer_block_start + block_size;
+                             block_start < outer_block_start + outer_block_size;
+                             block_start += block_offset) {
                             for (int I0 = block_start; I0 < block_start + block_size; ++I0) {
                                 coeff_[I0] = op_2_2 * coeff_[I0];
                             }

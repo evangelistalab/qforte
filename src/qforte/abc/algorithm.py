@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 import qforte as qf
 from qforte.utils.state_prep import *
 
+
 class Algorithm(ABC):
     """A class that characterizes the most basic functionality for all
     other algorithms.
@@ -63,35 +64,38 @@ class Algorithm(ABC):
         The total number of times an individual residual element was evaluated.
     """
 
-    def __init__(self,
-                 system,
-                 reference=None,
-                 state_prep_type='occupation_list',
-                 trotter_order=1,
-                 trotter_number=1,
-                 fast=True,
-                 verbose=False,
-                 print_summary_file=False,
-                 **kwargs):
-
-        if isinstance(self, qf.QPE) and hasattr(system, 'frozen_core'):
+    def __init__(
+        self,
+        system,
+        reference=None,
+        state_prep_type="occupation_list",
+        trotter_order=1,
+        trotter_number=1,
+        fast=True,
+        verbose=False,
+        print_summary_file=False,
+        **kwargs,
+    ):
+        if isinstance(self, qf.QPE) and hasattr(system, "frozen_core"):
             if system.frozen_core + system.frozen_virtual > 0:
                 raise ValueError("QPE with frozen orbitals is not currently supported.")
 
         self._sys = system
         self._state_prep_type = state_prep_type
 
-        if self._state_prep_type == 'occupation_list':
-            if(reference==None):
+        if self._state_prep_type == "occupation_list":
+            if reference == None:
                 self._ref = system.hf_reference
             else:
                 if not (isinstance(reference, list)):
-                    raise ValueError("occupation_list reference must be list of 1s and 0s.")
+                    raise ValueError(
+                        "occupation_list reference must be list of 1s and 0s."
+                    )
                 self._ref = reference
 
             self._Uprep = build_Uprep(self._ref, state_prep_type)
 
-        elif self._state_prep_type == 'unitary_circ':
+        elif self._state_prep_type == "unitary_circ":
             if not isinstance(reference, qf.Circuit):
                 raise ValueError("unitary_circ reference must be a Circuit.")
 
@@ -99,13 +103,16 @@ class Algorithm(ABC):
             self._Uprep = reference
 
         else:
-            raise ValueError("QForte only suppors references as occupation lists and Circuits.")
-
+            raise ValueError(
+                "QForte only suppors references as occupation lists and Circuits."
+            )
 
         self._nqb = len(self._ref)
         self._qb_ham = system.hamiltonian
         if self._qb_ham.num_qubits() != self._nqb:
-            raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
+            raise ValueError(
+                f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent."
+            )
         try:
             self._hf_energy = system.hf_energy
         except AttributeError:
@@ -127,23 +134,19 @@ class Algorithm(ABC):
         self._n_cnot = None
         self._n_pauli_trm_measures = None
 
-
     @abstractmethod
     def print_options_banner(self):
-        """Prints the run options used for algorithm.
-        """
+        """Prints the run options used for algorithm."""
         pass
 
     @abstractmethod
     def print_summary_banner(self):
-        """Prints a summary of the post-run information.
-        """
+        """Prints a summary of the post-run information."""
         pass
 
     @abstractmethod
     def run(self):
-        """Executes the algorithm.
-        """
+        """Executes the algorithm."""
         pass
 
     @abstractmethod
@@ -155,13 +158,11 @@ class Algorithm(ABC):
 
     @abstractmethod
     def verify_run(self):
-        """Verifies that the abstract sub-class(es) define the required attributes.
-        """
+        """Verifies that the abstract sub-class(es) define the required attributes."""
         pass
 
     def get_gs_energy(self):
-        """Returns the final ground state energy.
-        """
+        """Returns the final ground state energy."""
         return self._Egs
 
     def get_Umaxdepth(self):
@@ -177,22 +178,30 @@ class Algorithm(ABC):
         pass
 
     def verify_required_attributes(self):
-        """Verifies that the concrete sub-class(es) define the required attributes.
-        """
+        """Verifies that the concrete sub-class(es) define the required attributes."""
         if self._Egs is None:
-            raise NotImplementedError('Concrete Algorithm class must define self._Egs attribute.')
+            raise NotImplementedError(
+                "Concrete Algorithm class must define self._Egs attribute."
+            )
 
-#         if self._Umaxdepth is None:
-#             raise NotImplementedError('Concrete Algorithm class must define self._Umaxdepth attribute.')
+        #         if self._Umaxdepth is None:
+        #             raise NotImplementedError('Concrete Algorithm class must define self._Umaxdepth attribute.')
 
         if self._n_classical_params is None:
-            raise NotImplementedError('Concrete Algorithm class must define self._n_classical_params attribute.')
+            raise NotImplementedError(
+                "Concrete Algorithm class must define self._n_classical_params attribute."
+            )
 
         if self._n_cnot is None:
-            raise NotImplementedError('Concrete Algorithm class must define self._n_cnot attribute.')
+            raise NotImplementedError(
+                "Concrete Algorithm class must define self._n_cnot attribute."
+            )
 
         if self._n_pauli_trm_measures is None:
-            raise NotImplementedError('Concrete Algorithm class must define self._n_pauli_trm_measures attribute.')
+            raise NotImplementedError(
+                "Concrete Algorithm class must define self._n_pauli_trm_measures attribute."
+            )
+
 
 class AnsatzAlgorithm(Algorithm):
     """A class that characterizes the most basic functionality for all
@@ -234,7 +243,7 @@ class AnsatzAlgorithm(Algorithm):
 
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
-        """ This function returns the Circuit object built
+        """This function returns the Circuit object built
         from the appropriate amplitudes (tops)
 
         Parameters
@@ -253,14 +262,15 @@ class AnsatzAlgorithm(Algorithm):
         return Uvqc
 
     def fill_pool(self):
-        """ This function populates an operator pool with SQOperator objects.
-        """
+        """This function populates an operator pool with SQOperator objects."""
 
-        if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
-            if self._pool_type == 'sa_SD' and self._compact_excitations:
-                raise ValueError('Compact excitation circuits not yet implemented for sa_SD operator pool.')
+        if self._pool_type in {"sa_SD", "GSD", "SD", "SDT", "SDTQ", "SDTQP", "SDTQPH"}:
+            if self._pool_type == "sa_SD" and self._compact_excitations:
+                raise ValueError(
+                    "Compact excitation circuits not yet implemented for sa_SD operator pool."
+                )
             self._pool_obj = qf.SQOpPool()
-            if hasattr(self._sys, 'orb_irreps_to_int'):
+            if hasattr(self._sys, "orb_irreps_to_int"):
                 self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
             else:
                 self._pool_obj.set_orb_spaces(self._ref)
@@ -268,9 +278,11 @@ class AnsatzAlgorithm(Algorithm):
         elif isinstance(self._pool_type, qf.SQOpPool):
             self._pool_obj = self._pool_type
         else:
-            raise ValueError('Invalid operator pool type specified.')
+            raise ValueError("Invalid operator pool type specified.")
 
-        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
+        self._Nm = [
+            len(operator.jw_transform().terms()) for _, operator in self._pool_obj
+        ]
 
     def measure_energy(self, Ucirc):
         """
@@ -294,9 +306,17 @@ class AnsatzAlgorithm(Algorithm):
 
         return val
 
-    def __init__(self, *args, qubit_excitations=False, compact_excitations=False, diis_max_dim=8,
-            max_moment_rank = 0, moment_dt=None, penalty=None,
-            **kwargs):
+    def __init__(
+        self,
+        *args,
+        qubit_excitations=False,
+        compact_excitations=False,
+        diis_max_dim=8,
+        max_moment_rank=0,
+        moment_dt=None,
+        penalty=None,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
         self._Nm = []
@@ -317,32 +337,59 @@ class AnsatzAlgorithm(Algorithm):
 
         if self._penalty is not None:
             if isinstance(self, qf.UCCNPQE) or isinstance(self, qf.SPQE):
-                raise ValueError("PQE with Hamiltonian penalty terms not yet supported.")
-            expected_keys = {'operators', 'eigenvalues', 'scaling_factors'}
+                raise ValueError(
+                    "PQE with Hamiltonian penalty terms not yet supported."
+                )
+            expected_keys = {"operators", "eigenvalues", "scaling_factors"}
             if not isinstance(self._penalty, dict):
-                raise ValueError(f"The 'penalty' option must be a dictionary with keys: {expected_keys}")
+                raise ValueError(
+                    f"The 'penalty' option must be a dictionary with keys: {expected_keys}"
+                )
             if not set(self._penalty.keys()) == expected_keys:
-                raise ValueError(f"Incorrect keys in 'penalty' dictionary. Expected keys: {expected_keys}")
+                raise ValueError(
+                    f"Incorrect keys in 'penalty' dictionary. Expected keys: {expected_keys}"
+                )
             if not all(isinstance(value, list) for value in self._penalty.values()):
-                raise ValueError("All values in the 'penalty' dictionary must be lists.")
-            if not len(self._penalty['operators']) == len(self._penalty['eigenvalues']) == len(self._penalty['scaling_factors']):
-                raise ValueError("Operators, eigenvalues, and scaling factors lists must be of the same length.")
-            if not all(isinstance(op, qf.QubitOperator) for op in self._penalty.get('operators', [])):
-                raise ValueError("All elements in 'operators' must be instances of the QubitOperator class.")
-            if not all(isinstance(eigval, (int, float)) for eigval in self._penalty.get('eigenvalues', [])):
+                raise ValueError(
+                    "All values in the 'penalty' dictionary must be lists."
+                )
+            if (
+                not len(self._penalty["operators"])
+                == len(self._penalty["eigenvalues"])
+                == len(self._penalty["scaling_factors"])
+            ):
+                raise ValueError(
+                    "Operators, eigenvalues, and scaling factors lists must be of the same length."
+                )
+            if not all(
+                isinstance(op, qf.QubitOperator)
+                for op in self._penalty.get("operators", [])
+            ):
+                raise ValueError(
+                    "All elements in 'operators' must be instances of the QubitOperator class."
+                )
+            if not all(
+                isinstance(eigval, (int, float))
+                for eigval in self._penalty.get("eigenvalues", [])
+            ):
                 raise ValueError("All elements in 'eigenvalues' must be real numbers.")
-            if not all(isinstance(scaling, (int, float)) for scaling in self._penalty.get('scaling_factors', [])):
-                raise ValueError("All elements in 'scaling_factors' must be real numbers.")
+            if not all(
+                isinstance(scaling, (int, float))
+                for scaling in self._penalty.get("scaling_factors", [])
+            ):
+                raise ValueError(
+                    "All elements in 'scaling_factors' must be real numbers."
+                )
             penalties_qop = qf.QubitOperator()
-            for i in range(len(self._penalty['eigenvalues'])):
+            for i in range(len(self._penalty["eigenvalues"])):
                 eig = qf.Circuit()
                 temp_qop = qf.QubitOperator()
                 penalty_qop = qf.QubitOperator()
-                temp_qop.add(self._penalty['operators'][i])
-                temp_qop.add(-self._penalty['eigenvalues'][i], eig)
+                temp_qop.add(self._penalty["operators"][i])
+                temp_qop.add(-self._penalty["eigenvalues"][i], eig)
                 penalty_qop.add(temp_qop)
                 penalty_qop.operator_product(temp_qop, True, True)
-                penalty_qop.mult_coeffs(self._penalty['scaling_factors'][i])
+                penalty_qop.mult_coeffs(self._penalty["scaling_factors"][i])
                 penalties_qop.add(penalty_qop)
                 penalties_qop.simplify(True)
             self._qb_ham = qf.QubitOperator()
@@ -351,25 +398,35 @@ class AnsatzAlgorithm(Algorithm):
             self._qb_ham.simplify(True)
             self._Nl = len(self._qb_ham.terms())
 
-        kwargs.setdefault('irrep', None)
-        if hasattr(self._sys, 'point_group'):
+        kwargs.setdefault("irrep", None)
+        if hasattr(self._sys, "point_group"):
             irreps = list(range(len(self._sys.point_group[1])))
-            if kwargs['irrep'] is None:
-                print('\nWARNING: The {0} point group was detected, but no irreducible representation was specified.\n'
-                        '         Proceeding with totally symmetric.\n'.format(self._sys.point_group[0].capitalize()))
+            if kwargs["irrep"] is None:
+                print(
+                    "\nWARNING: The {0} point group was detected, but no irreducible representation was specified.\n"
+                    "         Proceeding with totally symmetric.\n".format(
+                        self._sys.point_group[0].capitalize()
+                    )
+                )
                 self._irrep = 0
-            elif kwargs['irrep'] in irreps:
-                self._irrep = kwargs['irrep']
+            elif kwargs["irrep"] in irreps:
+                self._irrep = kwargs["irrep"]
             else:
-                raise ValueError("{0} is not an irreducible representation of {1}.\n"
-                                 "               Choose one of {2} corresponding to the\n"
-                                 "               {3} irreducible representations of {1}".format(kwargs['irrep'],
-                                     self._sys.point_group[0].capitalize(),
-                                     irreps,
-                                     self._sys.point_group[1]))
-        elif kwargs['irrep'] is not None:
-            print('\nWARNING: Point group information not found.\n'
-                    '         Ignoring "irrep" and proceeding without symmetry.\n')
+                raise ValueError(
+                    "{0} is not an irreducible representation of {1}.\n"
+                    "               Choose one of {2} corresponding to the\n"
+                    "               {3} irreducible representations of {1}".format(
+                        kwargs["irrep"],
+                        self._sys.point_group[0].capitalize(),
+                        irreps,
+                        self._sys.point_group[1],
+                    )
+                )
+        elif kwargs["irrep"] is not None:
+            print(
+                "\nWARNING: Point group information not found.\n"
+                '         Ignoring "irrep" and proceeding without symmetry.\n'
+            )
 
     def energy_feval(self, params):
         """

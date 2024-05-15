@@ -45,12 +45,14 @@ class QubitOperator {
 
     /// Put all operators in the linear combination in canonical form AND THEN
     /// combine like terms.
-    void simplify(bool combine_like_terms=true);
+    void simplify(bool combine_like_terms = true);
 
     /// Multiply this operator (on the right) by rqo.
     /// pre_simplify simplifies this operator before the multiplication.
-    /// post_simplify simplifies this operator after the multiplication, as opposed to just canoncalizing.
-    void operator_product(const QubitOperator& rqo, bool pre_simplify = true, bool post_simplify = true);
+    /// post_simplify simplifies this operator after the multiplication, as opposed to just
+    /// canoncalizing.
+    void operator_product(const QubitOperator& rqo, bool pre_simplify = true,
+                          bool post_simplify = true);
 
     /// check if this operator is equivalent to another operator qo
     /// mostly used for testing

@@ -9,20 +9,19 @@
 
 namespace std {
 
-    template <>
-    struct hash<Circuit>{
-        std::size_t operator()(const Circuit& qc) const {
-            std::string hash_value = "";
+template <> struct hash<Circuit> {
+    std::size_t operator()(const Circuit& qc) const {
+        std::string hash_value = "";
 
-            for (const auto& gate : qc.gates()){
-                hash_value += gate.gate_id();
-                hash_value += std::to_string(gate.control());
-                hash_value += std::to_string(gate.target());
-            }
-            return hash<string>{}(hash_value);
+        for (const auto& gate : qc.gates()) {
+            hash_value += gate.gate_id();
+            hash_value += std::to_string(gate.control());
+            hash_value += std::to_string(gate.target());
         }
-    };
-}
+        return hash<string>{}(hash_value);
+    }
+};
+} // namespace std
 
 void QubitOperator::add_term(std::complex<double> circ_coeff, const Circuit& circuit) {
     terms_.push_back(std::make_pair(circ_coeff, circuit));
@@ -35,16 +34,16 @@ void QubitOperator::add_op(const QubitOperator& qo) {
 }
 
 void QubitOperator::set_coeffs(const std::vector<std::complex<double>>& new_coeffs) {
-    if(new_coeffs.size() != terms_.size()){
-        throw std::invalid_argument( "number of new coefficients for quantum operator must equal " );
+    if (new_coeffs.size() != terms_.size()) {
+        throw std::invalid_argument("number of new coefficients for quantum operator must equal ");
     }
-    for (size_t l = 0; l < new_coeffs.size(); l++){
+    for (size_t l = 0; l < new_coeffs.size(); l++) {
         terms_[l].first = new_coeffs[l];
     }
 }
 
 void QubitOperator::mult_coeffs(const std::complex<double>& multiplier) {
-    for (size_t l = 0; l < terms_.size(); l++){
+    for (size_t l = 0; l < terms_.size(); l++) {
         terms_[l].first *= multiplier;
     }
 }
@@ -52,25 +51,24 @@ void QubitOperator::mult_coeffs(const std::complex<double>& multiplier) {
 void QubitOperator::order_terms() {
     simplify();
     std::sort(terms_.begin(), terms_.end(),
-        [&](const std::pair<std::complex<double>, Circuit>& a,
-            const std::pair<std::complex<double>, Circuit>& b) {
-                int a_sz = a.second.gates().size();
-                int b_sz = b.second.gates().size();
-                // 1. sort by qb
-                for (int k=0; k<std::min(a_sz, b_sz); k++){
-                    if( a.second.gates()[k].target() != b.second.gates()[k].target()){
-                        return (a.second.gates()[k].target() < b.second.gates()[k].target());
-                    }
-                }
-                // 2. sort by gate id
-                for (int k=0; k<std::min(a_sz, b_sz); k++){
-                    if(a.second.gates()[k].gate_id() != b.second.gates()[k].gate_id()){
-                        return (a.second.gates()[k].gate_id() < b.second.gates()[k].gate_id());
-                    }
-                }
-                return (a.second.gates().size() < a.second.gates().size());
-        }
-    );
+              [&](const std::pair<std::complex<double>, Circuit>& a,
+                  const std::pair<std::complex<double>, Circuit>& b) {
+                  int a_sz = a.second.gates().size();
+                  int b_sz = b.second.gates().size();
+                  // 1. sort by qb
+                  for (int k = 0; k < std::min(a_sz, b_sz); k++) {
+                      if (a.second.gates()[k].target() != b.second.gates()[k].target()) {
+                          return (a.second.gates()[k].target() < b.second.gates()[k].target());
+                      }
+                  }
+                  // 2. sort by gate id
+                  for (int k = 0; k < std::min(a_sz, b_sz); k++) {
+                      if (a.second.gates()[k].gate_id() != b.second.gates()[k].gate_id()) {
+                          return (a.second.gates()[k].gate_id() < b.second.gates()[k].gate_id());
+                      }
+                  }
+                  return (a.second.gates().size() < a.second.gates().size());
+              });
 }
 
 void QubitOperator::canonical_order() {
@@ -91,27 +89,28 @@ void QubitOperator::simplify(bool combine_like_terms) {
         }
     }
     terms_.clear();
-    if(combine_like_terms){
-        for (const auto &uniqe_trm : uniqe_trms){
+    if (combine_like_terms) {
+        for (const auto& uniqe_trm : uniqe_trms) {
             if (std::abs(uniqe_trm.second) > 1.0e-12) {
                 terms_.emplace_back(uniqe_trm.second, uniqe_trm.first);
             }
         }
     } else {
-        for (const auto &uniqe_trm : uniqe_trms){
+        for (const auto& uniqe_trm : uniqe_trms) {
             terms_.emplace_back(uniqe_trm.second, uniqe_trm.first);
         }
     }
 }
 
-void QubitOperator::operator_product(const QubitOperator& rqo, bool pre_simplify, bool post_simplify) {
+void QubitOperator::operator_product(const QubitOperator& rqo, bool pre_simplify,
+                                     bool post_simplify) {
     if (pre_simplify) {
         simplify();
     }
 
     QubitOperator LR;
     for (auto& term_l : terms_) {
-        for (auto& term_r : rqo.terms()){
+        for (auto& term_r : rqo.terms()) {
             Circuit temp_circ;
             temp_circ.add_circuit(term_l.second);
             temp_circ.add_circuit(term_r.second);
@@ -132,15 +131,15 @@ const std::vector<std::pair<std::complex<double>, Circuit>>& QubitOperator::term
 }
 
 bool QubitOperator::check_op_equivalence(QubitOperator qo, bool reorder) {
-    if(reorder){
+    if (reorder) {
         order_terms();
         qo.order_terms();
     }
-    if (terms_.size() != qo.terms().size()){
+    if (terms_.size() != qo.terms().size()) {
         return false;
     }
-    for (size_t l = 0; l < terms_.size(); l++){
-        if(std::abs(terms_[l].first-qo.terms()[l].first) > 1.0e-10){
+    for (size_t l = 0; l < terms_.size(); l++) {
+        if (std::abs(terms_[l].first - qo.terms()[l].first) > 1.0e-10) {
             return false;
         }
         if (!(terms_[l].second == qo.terms()[l].second)) {
@@ -152,13 +151,13 @@ bool QubitOperator::check_op_equivalence(QubitOperator qo, bool reorder) {
 
 const SparseMatrix QubitOperator::sparse_matrix(size_t nqubit) const {
     SparseMatrix Rmat = SparseMatrix();
-    if (terms_.empty()){
+    if (terms_.empty()) {
         size_t nbasis = std::pow(2, nqubit);
         Rmat.make_identity(nbasis);
         return Rmat;
     }
 
-    for(const auto& term : terms_){ // term -> [complex, Circuit]
+    for (const auto& term : terms_) { // term -> [complex, Circuit]
         SparseMatrix Lmat = term.second.sparse_matrix(nqubit);
         Rmat.add(Lmat, term.first);
     }

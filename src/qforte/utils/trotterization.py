@@ -8,7 +8,6 @@ import copy
 
 
 def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
-
     """
     returns a circuit equivalent to an exponentiated QubitOperator
 
@@ -26,34 +25,46 @@ def trotterize(operator, factor=1.0, trotter_number=1, trotter_order=1):
     trotterized_operator = qforte.Circuit()
 
     if (trotter_number == 1) and (trotter_order == 1):
-        #loop over terms in operator
+        # loop over terms in operator
         for term in operator.terms():
-            term_generator, phase = qforte.exponentiate_pauli_string(factor*term[0],term[1])
+            term_generator, phase = qforte.exponentiate_pauli_string(
+                factor * term[0], term[1]
+            )
             for gate in term_generator.gates():
                 trotterized_operator.add(gate)
             total_phase *= phase
 
-
     else:
-        if(trotter_order > 1):
-            raise NotImplementedError("Higher order trotterization is not yet implemented.")
+        if trotter_order > 1:
+            raise NotImplementedError(
+                "Higher order trotterization is not yet implemented."
+            )
 
         ho_op = qforte.QubitOperator()
 
-        for k in range(1, trotter_number+1):
+        for k in range(1, trotter_number + 1):
             for term in operator.terms():
-                ho_op.add( factor * term[0] / float(trotter_number) , term[1])
+                ho_op.add(factor * term[0] / float(trotter_number), term[1])
 
         for trot_term in ho_op.terms():
-            term_generator, phase = qforte.exponentiate_pauli_string(trot_term[0],trot_term[1])
+            term_generator, phase = qforte.exponentiate_pauli_string(
+                trot_term[0], trot_term[1]
+            )
             for gate in term_generator.gates():
                 trotterized_operator.add(gate)
             total_phase *= phase
 
     return (trotterized_operator, total_phase)
 
-def trotterize_w_cRz(operator, ancilla_qubit_idx, factor=1.0, Use_open_cRz=False, trotter_number=1, trotter_order=1):
 
+def trotterize_w_cRz(
+    operator,
+    ancilla_qubit_idx,
+    factor=1.0,
+    Use_open_cRz=False,
+    trotter_number=1,
+    trotter_order=1,
+):
     """
     Returns a circuit equivalent to an exponentiated QubitOperator in which each term
     in the trotterization exp(-i * theta_k ) only acts on the register if the ancilla
@@ -80,22 +91,36 @@ def trotterize_w_cRz(operator, ancilla_qubit_idx, factor=1.0, Use_open_cRz=False
 
     if (trotter_number == 1) and (trotter_order == 1):
         for term in operator.terms():
-            term_generator, phase = qforte.exponentiate_pauli_string(factor*term[0],term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx, Use_open_cRz=Use_open_cRz)
+            term_generator, phase = qforte.exponentiate_pauli_string(
+                factor * term[0],
+                term[1],
+                Use_cRz=True,
+                ancilla_idx=ancilla_qubit_idx,
+                Use_open_cRz=Use_open_cRz,
+            )
             for gate in term_generator.gates():
                 trotterized_operator.add(gate)
             total_phase *= phase
 
     else:
-        if(trotter_order > 1):
-            raise NotImplementedError("Higher order trotterization is not yet implemented.")
+        if trotter_order > 1:
+            raise NotImplementedError(
+                "Higher order trotterization is not yet implemented."
+            )
         ho_op = qforte.QubitOperator()
-        for k in range(1, trotter_number+1):
+        for k in range(1, trotter_number + 1):
             k = float(k)
             for term in operator.terms():
-                ho_op.add( factor*term[0] / float(trotter_number) , term[1])
+                ho_op.add(factor * term[0] / float(trotter_number), term[1])
 
         for trot_term in ho_op.terms():
-            term_generator, phase = qforte.exponentiate_pauli_string(trot_term[0],trot_term[1], Use_cRz=True, ancilla_idx=ancilla_qubit_idx, Use_open_cRz=Use_open_cRz)
+            term_generator, phase = qforte.exponentiate_pauli_string(
+                trot_term[0],
+                trot_term[1],
+                Use_cRz=True,
+                ancilla_idx=ancilla_qubit_idx,
+                Use_open_cRz=Use_open_cRz,
+            )
             for gate in term_generator.gates():
                 trotterized_operator.add(gate)
             total_phase *= phase

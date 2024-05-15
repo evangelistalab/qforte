@@ -9,7 +9,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-
 #include "qforte-def.h"
 
 class QubitBasis;
@@ -18,7 +17,30 @@ class SparseVector;
 
 /// useful for type safety and efficient comparisons
 enum class GateType {
-    X, Y, Z, H, R, Rx, Ry, Rz, V, adjV, S, T, I, A, cX, acX, cY, cZ, cR, cV, adjcV, cRz, SWAP, Undefined
+    X,
+    Y,
+    Z,
+    H,
+    R,
+    Rx,
+    Ry,
+    Rz,
+    V,
+    adjV,
+    S,
+    T,
+    I,
+    A,
+    cX,
+    acX,
+    cY,
+    cZ,
+    cR,
+    cV,
+    adjcV,
+    cRz,
+    SWAP,
+    Undefined
 };
 
 /// alias for a 4 x 4 complex matrix stored as an array of arrays
@@ -145,7 +167,6 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
 
 /// Utility function to create a controlled version of a gate
 Gate make_control_gate(size_t control, Gate& U);
-
 
 /// Evaluate interaction of two gates
 /// bool: whether the gates commute
