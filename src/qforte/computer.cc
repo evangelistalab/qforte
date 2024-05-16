@@ -717,7 +717,7 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
             }
             ntwo_ops_++;
         } // end if c < t
-    }     // end if controlled unitary
+    } // end if controlled unitary
     else {
         // Case 2: 2qubit gate is a not a control gate, use standard algorithm
         const auto& two_qubits_basis = Gate::two_qubits_basis();
