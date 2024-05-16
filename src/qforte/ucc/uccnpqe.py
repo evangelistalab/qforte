@@ -251,7 +251,7 @@ class UCCNPQE(UCCPQE):
                     "no ops should destroy reference, something went wrong!!"
                 )
 
-            I = excited_det.add()
+            I = excited_det.index()
 
             qc_temp = qforte.Computer(self._nqb)
             qc_temp.apply_circuit(self._Uprep)
