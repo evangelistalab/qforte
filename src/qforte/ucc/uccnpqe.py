@@ -202,6 +202,7 @@ class UCCNPQE(UCCPQE):
         )
 
     def fill_excited_dets(self):
+        """ Populate self._excited_dets. """
         for _, sq_op in self._pool_obj:
             # 1. Identify the excitation operator
             # occ => i,j,k,...

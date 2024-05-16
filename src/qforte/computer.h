@@ -96,7 +96,7 @@ class Computer {
     std::complex<double> direct_pauli_circ_exp_val(const Circuit& qc);
 
     /// get the idx I with respect to pauli circuit permutations from qc
-    std::pair<int, std::complex<double>> get_pauli_permuted_idx(size_t I,
+    std::pair<size_t, std::complex<double>> get_pauli_permuted_idx(size_t I,
                                                                 const std::vector<int>& x_idxs,
                                                                 const std::vector<int>& y_idxs,
                                                                 const std::vector<int>& z_idxs);
