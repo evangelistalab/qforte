@@ -143,7 +143,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("__repr__", &QubitBasis::default_str)
         .def("flip_bit", &QubitBasis::flip_bit)
         .def("set_bit", &QubitBasis::set_bit)
-        .def("add", &QubitBasis::add)
+        .def("index", &QubitBasis::index)
         .def("get_bit", &QubitBasis::get_bit);
 
     py::class_<Computer, std::shared_ptr<Computer>>(m, "Computer")

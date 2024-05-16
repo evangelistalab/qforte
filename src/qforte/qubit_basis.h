@@ -40,8 +40,8 @@ class QubitBasis {
     /// set this state to zero
     void zero() { state_ = static_cast<basis_t>(0); }
 
-    /// return the address of the state
-    size_t add() const { return state_; }
+    /// Convenience function to return state_ as an index.
+    size_t index() const { return static_cast<size_t>(state_); }
 
     /// return the state
     basis_t get_state() const { return state_; }

@@ -45,7 +45,7 @@ const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
                     if (basis_I.get_bit(target_) == j) {
                         QubitBasis basis_J = basis_I;
                         basis_J.set_bit(target_, i);
-                        Spmat.set_element(basis_J.add(), basis_I.add(), op_i_j);
+                        Spmat.set_element(basis_J.index(), basis_I.index(), op_i_j);
                     }
                 }
             }

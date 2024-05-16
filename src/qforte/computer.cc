@@ -37,12 +37,12 @@ Computer::Computer(int nqubit, double print_threshold)
     coeff_[0] = 1.;
 }
 
-std::complex<double> Computer::coeff(const QubitBasis& basis) { return coeff_[basis.add()]; }
+std::complex<double> Computer::coeff(const QubitBasis& basis) { return coeff_[basis.index()]; }
 
 void Computer::set_state(std::vector<std::pair<QubitBasis, double_c>> state) {
     std::fill(coeff_.begin(), coeff_.end(), 0.0);
     for (const auto& basis_c : state) {
-        coeff_[basis_c.first.add()] = basis_c.second;
+        coeff_[basis_c.first.index()] = basis_c.second;
     }
 }
 
@@ -328,7 +328,7 @@ void Computer::apply_1qubit_gate_safe(const Gate& qg) {
                     if (basis_J.get_bit(target) == j) {
                         QubitBasis basis_I = basis_J;
                         basis_I.set_bit(target, i);
-                        new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
+                        new_coeff_[basis_I.index()] += op_i_j * coeff_[basis_J.index()];
                     }
                 }
             }
@@ -445,7 +445,7 @@ void Computer::apply_2qubit_gate_safe(const Gate& qg) {
                         QubitBasis basis_I = basis_J;
                         basis_I.set_bit(control, i_c);
                         basis_I.set_bit(target, i_t);
-                        new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
+                        new_coeff_[basis_I.index()] += op_i_j * coeff_[basis_J.index()];
                     }
                 }
             }
@@ -738,7 +738,7 @@ void Computer::apply_2qubit_gate(const Gate& qg) {
                             QubitBasis basis_I = basis_J;
                             basis_I.set_bit(control, i_c);
                             basis_I.set_bit(target, i_t);
-                            new_coeff_[basis_I.add()] += op_i_j * coeff_[basis_J.add()];
+                            new_coeff_[basis_I.index()] += op_i_j * coeff_[basis_J.index()];
                         }
                     }
                 }
@@ -931,7 +931,7 @@ Computer::get_pauli_permuted_idx(size_t I, const std::vector<int>& x_idxs,
         val *= (1.0 - 2.0 * basis_I.get_bit(zi));
     }
 
-    return std::make_pair(basis_I.add(), val);
+    return std::make_pair(basis_I.index(), val);
 }
 
 std::complex<double> Computer::direct_gate_exp_val(const Gate& qg) {
