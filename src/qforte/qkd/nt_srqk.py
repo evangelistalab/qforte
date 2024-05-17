@@ -80,13 +80,8 @@ class NTSRQK(QSD):
 
         print("\n\n                   ==> NTQK options <==")
         print("-----------------------------------------------------------")
-        # General algorithm options.
-        print(
-            "Trial reference state:                   ",
-            ref_string(self._ref, self._nqb),
-        )
-        print("Number of Hamiltonian Pauli terms:       ", self._Nl)
-        print("Trial state preparation method:          ", self._state_prep_type)
+
+        self.print_generic_options()
 
         # Specific SRQK options.
         print("Dimension of Krylov space (N):           ", self._nstates)

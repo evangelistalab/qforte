@@ -1,5 +1,6 @@
 import qforte
 from qforte.abc.algorithm import Algorithm
+from qforte.abc.mixin import Trotterizable
 from qforte.utils.transforms import (
     circuit_to_organizer,
     organizer_to_circuit,
@@ -15,7 +16,7 @@ import numpy as np
 from scipy import stats
 
 
-class QPE(Algorithm):
+class QPE(Trotterizable, Algorithm):
     def run(
         self, guess_energy: float, t=1.0, nruns=20, success_prob=0.5, num_precise_bits=4
     ):
@@ -147,15 +148,7 @@ class QPE(Algorithm):
         print("\n\n                 ==> QPE options <==")
         print("-----------------------------------------------------------")
         # General algorithm options.
-        print(
-            "Trial reference state:                   ",
-            ref_string(self._ref, self._nqb),
-        )
-        print("Trial state preparation method:          ", self._state_prep_type)
-        print("Trotter order (rho):                     ", self._trotter_order)
-        print("Trotter number (m):                      ", self._trotter_number)
-        print("Use fast version of algorithm:           ", str(self._fast))
-        print("Measurement variance thresh:             ", "NA" if self._fast else 0.01)
+        self.print_generic_options()
 
         # Specific QPE options.
         print("Target success probability:              ", self._success_prob)
