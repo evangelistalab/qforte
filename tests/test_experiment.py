@@ -55,8 +55,7 @@ class TestExperiment:
         circ.add(gate("X", 1, 1))
 
         TestExperiment = Experiment(4, circ, H2_qubit_hamiltonian, 1000000)
-        params2 = []
-        avg_energy = TestExperiment.experimental_avg(params2)
+        avg_energy = TestExperiment.experimental_avg()
         print("Measured H2 Experimental Avg. Energy")
         print(avg_energy)
         print("H2 RHF Energy")
@@ -118,8 +117,7 @@ class TestExperiment:
         circ.add(gate("X", 1, 1))
 
         TestExperiment = Experiment(4, circ, H2_qubit_hamiltonian, 1000000)
-        params2 = []
-        avg_energy = TestExperiment.perfect_experimental_avg(params2)
+        avg_energy = TestExperiment.perfect_experimental_avg()
         print("Perfectly Measured H2 Experimental Avg. Energy")
         print(avg_energy)
         print("H2 RHF Energy")

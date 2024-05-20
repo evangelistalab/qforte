@@ -24,7 +24,7 @@ class QSD(Algorithm):
     such as the Hartree-Fock state.
 
     Quantum subspace diagonalization methods work by constructing an effective
-    Hamiltonain :math:`\mathbf{H}` with matrix elements given by
+    Hamiltonian :math:`\mathbf{H}` with matrix elements given by
 
     .. math::
         H_{mn} = \\langle \Psi_m | \hat{H} | \Psi_n \\rangle,

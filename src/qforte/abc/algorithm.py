@@ -302,7 +302,7 @@ class AnsatzAlgorithm(Algorithm):
             val = np.real(myQC.direct_op_exp_val(self._qb_ham))
         else:
             Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
-            val = Exp.perfect_experimental_avg([])
+            val = Exp.perfect_experimental_avg()
 
         assert np.isclose(np.imag(val), 0.0)
 

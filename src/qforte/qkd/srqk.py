@@ -127,22 +127,13 @@ class SRQK(Trotterizable, QSD):
 
         if self._diagonalize_each_step:
             print("\n\n")
-
-            print(
-                f"{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}"
-            )
-            print(
-                "-------------------------------------------------------------------------------"
-            )
+            string = f"{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}\n"
+            string += "-------------------------------------------------------------------------------"
+            print(string)
 
             if self._print_summary_file:
                 f = open("summary.dat", "w+", buffering=1)
-                f.write(
-                    f"#{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}\n"
-                )
-                f.write(
-                    "#-------------------------------------------------------------------------------\n"
-                )
+                f.write(string + "\n")
 
         for m in range(self._nstates):
             # Compute U_m = exp(-i m dt H)
@@ -226,7 +217,7 @@ class SRQK(Trotterizable, QSD):
 
         return s_mat, h_mat
 
-    # TODO depricate this function
+    # TODO deprecate this function
     def matrix_element(self, m, n, use_op=False):
         """Returns a single matrix element M_mn based on the evolution of
         two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt * H)
@@ -314,9 +305,8 @@ class SRQK(Trotterizable, QSD):
             X_exp = qforte.Experiment(self._nqb + 1, cir, X_op, 100)
             Y_exp = qforte.Experiment(self._nqb + 1, cir, Y_op, 100)
 
-            params = [1.0]
-            x_value = X_exp.perfect_experimental_avg(params)
-            y_value = Y_exp.perfect_experimental_avg(params)
+            x_value = X_exp.perfect_experimental_avg()
+            y_value = Y_exp.perfect_experimental_avg()
 
             value = (x_value + 1.0j * y_value) * phase1 * np.conj(phase2)
 
@@ -362,10 +352,8 @@ class SRQK(Trotterizable, QSD):
                 X_exp = qforte.Experiment(self._nqb + 1, cir, X_op, 100)
                 Y_exp = qforte.Experiment(self._nqb + 1, cir, Y_op, 100)
 
-                # TODO (cleanup): Remove params as required arg (Nick)
-                params = [1.0]
-                x_value = X_exp.perfect_experimental_avg(params)
-                y_value = Y_exp.perfect_experimental_avg(params)
+                x_value = X_exp.perfect_experimental_avg()
+                y_value = Y_exp.perfect_experimental_avg()
 
                 element = (x_value + 1.0j * y_value) * phase1 * np.conj(phase2)
                 value += c * element
