@@ -7,6 +7,7 @@ quantum Krylov algorithm.
 """
 
 import qforte
+from qforte.abc.mixin import Trotterizable
 from qforte.abc.qsdabc import QSD
 from qforte.qkd.srqk import SRQK
 from qforte.helper.printing import matprint
@@ -27,7 +28,7 @@ import numpy as np
 from scipy.linalg import eig
 
 
-class MRSQK(QSD):
+class MRSQK(Trotterizable, QSD):
     """A quantum subspace diagonalization algorithm that generates the many-body
     basis from :math:`s` real time evolutions of :math:`d` differnt orthogonal
     reference states :math:`| \Phi_I \\rangle`:
@@ -224,19 +225,8 @@ class MRSQK(QSD):
 
         print("\n\n                 ==> MRSQK options <==")
         print("-----------------------------------------------------------")
-        # General algorithm options.
-        print(
-            "Trial reference state:                   ",
-            ref_string(self._ref, self._nqb),
-        )
-        print("Trial state preparation method:          ", self._state_prep_type)
-        print("Trotter order (rho):                     ", self._trotter_order)
-        print("Trotter number (m):                      ", self._trotter_number)
-        print("Use fast version of algorithm:           ", str(self._fast))
-        if self._fast:
-            print("Measurement varience thresh:             ", "NA")
-        else:
-            print("Measurement varience thresh:             ", 0.01)
+
+        self.print_generic_options()
 
         # Specific QITE options.
         print("Dimension of reference space (d):        ", self._d)

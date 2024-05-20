@@ -6,6 +6,7 @@ out the quantum imaginary time evolution algorithm.
 """
 import qforte as qf
 from qforte.abc.algorithm import Algorithm
+from qforte.abc.mixin import Trotterizable
 from qforte.utils.transforms import get_jw_organizer, organizer_to_circuit
 
 from qforte.utils.state_prep import *
@@ -20,7 +21,7 @@ from qforte.maths.eigsolve import canonical_geig_solve
 ### Throughout this file, we'll refer to DOI 10.1038/s41567-019-0704-4 as Motta.
 
 
-class QITE(Algorithm):
+class QITE(Trotterizable, Algorithm):
     """This class implements the quantum imaginary time evolution (QITE)
     algorithm in a fashion amenable to non k-local hamiltonains, which is
     the focus of the origional algorithm (see DOI 10.1038/s41567-019-0704-4).
@@ -185,18 +186,8 @@ class QITE(Algorithm):
 
         print("\n\n                 ==> QITE options <==")
         print("-----------------------------------------------------------")
-        # General algorithm options.
-        print(
-            "Trial reference state:                   ",
-            ref_string(self._ref, self._nqb),
-        )
-        print("Number of Hamiltonian Pauli terms:       ", self._Nl)
-        print("Trial state preparation method:          ", self._state_prep_type)
-        print("Trotter order (rho):                     ", self._trotter_order)
-        print("Trotter number (m):                      ", self._trotter_number)
-        print("Use fast version of algorithm:           ", str(self._fast))
-        if not self._fast:
-            print("Measurement variance thresh:             ", 0.01)
+
+        self.print_generic_options()
 
         # Specific QITE options.
         print("Total imaginary evolution time (beta):   ", self._beta)

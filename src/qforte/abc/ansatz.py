@@ -11,12 +11,16 @@ import qforte as qf
 from qforte.utils.state_prep import build_Uprep
 from qforte.utils.trotterization import trotterize
 from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
+from qforte.abc.mixin import Trotterizable
 
 
-class UCC:
+class UCC(Trotterizable):
     """A mixin class for implementing the UCC circuit ansatz, to be inherited by a
     concrete class UCC+algorithm class.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def ansatz_circuit(self, amplitudes=None):
         """This function returns the Circuit object built

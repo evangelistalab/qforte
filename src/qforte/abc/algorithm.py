@@ -7,6 +7,7 @@ The abstract base classes inherited by all algorithm subclasses.
 from abc import ABC, abstractmethod
 import qforte as qf
 from qforte.utils.state_prep import *
+from qforte.abc.mixin import Trotterizable
 
 
 class Algorithm(ABC):
@@ -29,16 +30,6 @@ class Algorithm(ABC):
         Whether or not to use a faster version of the algorithm that bypasses
         measurment (unphysical for quantum computer). Most algorithms only
         have a fast implentation.
-
-    _trotter_order : int
-        The Trotter order to use for exponentiated operators.
-        (exact in the infinite limit).
-
-    _trotter_number : int
-        The number of trotter steps (m) to perform when approximating the matrix
-        exponentials (Um or Un). For the exponential of two non commuting terms
-        e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
-        exact in the infinite m limit.
 
     _Egs : float
         The final ground state energy value.
@@ -69,8 +60,6 @@ class Algorithm(ABC):
         system,
         reference=None,
         state_prep_type="occupation_list",
-        trotter_order=1,
-        trotter_number=1,
         fast=True,
         verbose=False,
         print_summary_file=False,
@@ -119,8 +108,7 @@ class Algorithm(ABC):
             self._hf_energy = 0.0
 
         self._Nl = len(self._qb_ham.terms())
-        self._trotter_order = trotter_order
-        self._trotter_number = trotter_number
+
         self._fast = fast
         self._verbose = verbose
         self._print_summary_file = print_summary_file
@@ -201,6 +189,20 @@ class Algorithm(ABC):
             raise NotImplementedError(
                 "Concrete Algorithm class must define self._n_pauli_trm_measures attribute."
             )
+
+    def print_generic_options(self):
+        """Print options applicable to any algorithm."""
+        print(
+            "Trial reference state:                   ",
+            ref_string(self._ref, self._nqb),
+        )
+        print("Number of Hamiltonian Pauli terms:       ", self._Nl)
+        print("Trial state preparation method:          ", self._state_prep_type)
+        if isinstance(self, Trotterizable):
+            self.print_trotter_options()
+        print("Use fast version of algorithm:           ", str(self._fast))
+        if not self._fast:
+            print("Measurement variance thresh:             ", 0.01)
 
 
 class AnsatzAlgorithm(Algorithm):

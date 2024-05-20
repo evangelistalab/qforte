@@ -19,7 +19,7 @@ from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
 import numpy as np
 
 
-class UCCVQE(VQE, UCC):
+class UCCVQE(UCC, VQE):
     """The abstract base class inheritied by any algorithm that seeks to find
     eigenstates by variational minimization of the Energy
 
@@ -69,6 +69,9 @@ class UCCVQE(VQE, UCC):
         gradients from finite differences (if BFGS algorithm is used).
 
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @abstractmethod
     def get_num_ham_measurements(self):

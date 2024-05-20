@@ -18,7 +18,7 @@ from qforte.utils.trotterization import trotterize
 import numpy as np
 
 
-class UCCPQE(PQE, UCC):
+class UCCPQE(UCC, PQE):
     """The abstract base class inheritied by any algorithm that seeks to find
     eigenstates by minimization of the residual condition
 
