@@ -73,7 +73,7 @@ class Algorithm(ABC):
         self._state_prep_type = state_prep_type
 
         if self._state_prep_type == "occupation_list":
-            if reference == None:
+            if reference is None:
                 self._ref = system.hf_reference
             else:
                 if not (isinstance(reference, list)):

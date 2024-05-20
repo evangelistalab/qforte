@@ -1,5 +1,5 @@
 from pytest import approx
-from qforte import Circuit, build_circuit, QubitOperator, Molecule, MRSQK, SRQK
+from qforte import Circuit, build_circuit, QubitOperator, Molecule, MRSQK, SRQK, gate
 
 
 class TestPhysicalQKD:
@@ -394,6 +394,7 @@ class TestPhysicalQKD:
         # make test with algorithm class
         mol = Molecule()
         mol.hamiltonian = H4_qubit_hamiltonian
+        mol.hf_reference = ref.copy()
 
         # SRQK
         alg1 = SRQK(mol, reference=ref, trotter_number=1, fast=False)
@@ -402,3 +403,24 @@ class TestPhysicalQKD:
 
         Egs1_fast = -1.9982299799
         assert Egs1 == approx(Egs1_fast, abs=1.0e-9)
+
+        ref = Circuit()
+        ref.add_gate(gate("X", 0, 0))
+        ref.add_gate(gate("X", 1, 1))
+        ref.add_gate(gate("X", 2, 2))
+        ref.add_gate(gate("X", 3, 3))
+        ref.add_gate(gate("Ry", 0, 0, 0.1))
+        ref.add_gate(gate("Ry", 1, 1, 0.1))
+
+        alg2 = SRQK(
+            mol,
+            reference=ref,
+            trotter_number=1,
+            fast=False,
+            state_prep_type="unitary_circ",
+        )
+        alg2.run(s=3)
+        Egs2 = alg2.get_gs_energy()
+
+        Egs2_fast = -1.9977703813619807
+        assert Egs2 == approx(Egs2_fast, abs=1.0e-9)

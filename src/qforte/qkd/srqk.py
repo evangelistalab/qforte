@@ -137,8 +137,7 @@ class SRQK(Trotterizable, QSD):
 
         for m in range(self._nstates):
             # Compute U_m = exp(-i m dt H)
-            Um = qforte.Circuit()
-            Um.add(self._Uprep)
+            Um = qforte.Circuit(self._Uprep)
             phase1 = 1.0
 
             if m > 0:
@@ -234,6 +233,9 @@ class SRQK(Trotterizable, QSD):
         n : int
             The number of time steps for the Un evolution.
 
+        use_op : bool
+            Should the matrix element be of H (true) or S (false)?
+
         Returns
         -------
         value : complex
@@ -277,11 +279,7 @@ class SRQK(Trotterizable, QSD):
             Ub.add(gate)
 
         if not use_op:
-            # TODO (opt): use Uprep
-            cir = qforte.Circuit()
-            for j in range(self._nqb):
-                if self._ref[j] == 1:
-                    cir.add(qforte.gate("X", j, j))
+            cir = qforte.Circuit(self._Uprep)
 
             cir.add(qforte.gate("H", ancilla_idx, ancilla_idx))
 
@@ -323,11 +321,7 @@ class SRQK(Trotterizable, QSD):
                     control_gate_str = "c" + gate_str
                     cV_l.add(qforte.gate(control_gate_str, target, ancilla_idx))
 
-                cir = qforte.Circuit()
-                # TODO (opt): use Uprep
-                for j in range(self._nqb):
-                    if self._ref[j] == 1:
-                        cir.add(qforte.gate("X", j, j))
+                cir = qforte.Circuit(self._Uprep)
 
                 cir.add(qforte.gate("H", ancilla_idx, ancilla_idx))
 
