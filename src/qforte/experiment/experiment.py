@@ -38,7 +38,7 @@ class Experiment(object):
         self.N_samples_ = N_samples
         self.prepare_each_time_ = prepare_each_time
 
-    def experimental_avg(self, params = []):
+    def experimental_avg(self, params=[]):
         """
         calculates the experimental average of the operator the Experiment object was initialized with
 
@@ -75,7 +75,7 @@ class Experiment(object):
                 "No support yet for measurement with multiple state preparations"
             )
 
-    def perfect_experimental_avg(self, params = []):
+    def perfect_experimental_avg(self, params=[]):
         """
         calculates the exact experimental result of the operator the Experiment object was initialized with
 
