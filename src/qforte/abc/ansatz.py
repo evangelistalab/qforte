@@ -31,21 +31,31 @@ class UCC:
         temp_pool = qf.SQOpPool()
         tamps = self._tamps if amplitudes is None else amplitudes
 
+        if self._pool_type == "sa_SD":
+            for tamp, top in zip(tamps, self._tops):
+                sa_sq_op = self._pool_obj[top][1].terms()
+                half_length = len(sa_sq_op) // 2
+                for coeff, cr, ann in sa_sq_op[:half_length]:
+                    sq_op = qf.SQOperator()
+                    sq_op.add_term(coeff, cr, ann)
+                    sq_op.add_term(-coeff, ann, cr)
+                    temp_pool.add(tamp, sq_op)
+        else:
+            for tamp, top in zip(tamps, self._tops):
+                temp_pool.add(tamp, self._pool_obj[top][1])
+
         if self._compact_excitations:
             U = qf.Circuit()
-            for tamp, top in zip(tamps, self._tops):
+            for tamp, sq_op in temp_pool:
                 U.add(
                     compact_excitation_circuit(
-                        tamp * self._pool_obj[top][1].terms()[1][0],
-                        self._pool_obj[top][1].terms()[1][1],
-                        self._pool_obj[top][1].terms()[1][2],
+                        tamp * sq_op.terms()[1][0],
+                        sq_op.terms()[1][1],
+                        sq_op.terms()[1][2],
                         self._qubit_excitations,
                     )
                 )
             return U
-
-        for tamp, top in zip(tamps, self._tops):
-            temp_pool.add(tamp, self._pool_obj[top][1])
 
         A = temp_pool.get_qubit_operator(
             "commuting_grp_lex", qubit_excitations=self._qubit_excitations
