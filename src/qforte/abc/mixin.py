@@ -1,3 +1,12 @@
+"""
+Lightweight Mixin Classes
+====================================
+This file contains several mixin classes.
+Such classes are intended for multiple inheritance and should always
+call super().__init__ in their constructors.
+"""
+
+
 class Trotterizable:
     """
     A mixin class for methods that employ Trotter approximation.
