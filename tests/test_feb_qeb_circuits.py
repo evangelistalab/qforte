@@ -8,6 +8,7 @@ class TestEfficientCircuits:
         "method, options",
         [
             (UCCNVQE, {"pool_type": "SD"}),
+            (UCCNVQE, {"pool_type": "sa_SD"}),
             (ADAPTVQE, {"pool_type": "SD", "avqe_thresh": 1.0e-3}),
             (UCCNPQE, {"pool_type": "SD"}),
             (SPQE, {"spqe_thresh": 0.01}),
