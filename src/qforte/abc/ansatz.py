@@ -8,7 +8,7 @@ the ansatz circut and potential supporting utility functions.
 
 import qforte as qf
 
-from qforte.utils.state_prep import build_Uprep
+from qforte.utils.state_prep import build_refprep
 from qforte.utils.trotterization import trotterize
 from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
 from qforte.abc.mixin import Trotterizable
@@ -82,12 +82,12 @@ class UCC(Trotterizable):
             print("\nBuilding single-particle energies:")
             print("---------------------------------------", flush=True)
             qc = qf.Computer(self._nqb)
-            qc.apply_circuit(build_Uprep(self._ref, "occupation_list"))
+            qc.apply_circuit(self._refprep)
             E0 = qc.direct_op_exp_val(self._qb_ham)
 
             for i in range(self._nqb):
                 qc = qf.Computer(self._nqb)
-                qc.apply_circuit(build_Uprep(self._ref, "occupation_list"))
+                qc.apply_circuit(self._refprep)
                 qc.apply_gate(qf.gate("X", i, i))
                 Ei = qc.direct_op_exp_val(self._qb_ham)
 

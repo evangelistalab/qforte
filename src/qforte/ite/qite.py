@@ -96,7 +96,7 @@ class QITE(Trotterizable, Algorithm):
         solve the corresponding generailzed eigenvalue problem.
 
     _Ekb : list of float
-        The list of after each additional time step.
+        The list of energies after each additional time step.
 
     _expansion_type: {'complete_qubit', 'cqoy', 'SD', 'GSD', 'SDT', SDTQ', 'SDTQP', 'SDTQPH'}
         The family of operators that each evolution operator :math:`\hat{A}` will be built of.

@@ -7,7 +7,7 @@ for traditional coupled-cluster approaches can be found in:
     DOI: 10.1063/1.481769
     DOI: 10.1063/1.2137318
 The use of such moment corrections in the UCC case is experimental
-and a publication will appear in the future.
+and preliminary data is published in 10.1021/acs.jpca.3c02781
 """
 
 import qforte as qf
@@ -92,7 +92,7 @@ def construct_moment_space(self):
     for i in self._mmcc_pool.terms():
         sq_op = i[1]
         qc = qf.Computer(self._nqb)
-        qc.apply_circuit(self._Uprep)
+        qc.apply_circuit(self._refprep)
         # This could be replaced by set_bit?
         qc.apply_operator(sq_op.jw_transform(self._qubit_excitations))
         self._epstein_nesbet.append(qc.direct_op_exp_val(self._qb_ham))

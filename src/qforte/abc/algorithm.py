@@ -82,13 +82,15 @@ class Algorithm(ABC):
                     )
                 self._ref = reference
 
-            self._Uprep = build_Uprep(self._ref, state_prep_type)
+            self._refprep = build_refprep(self._ref)
+            self._Uprep = qf.Circuit(self._refprep)
 
         elif self._state_prep_type == "unitary_circ":
             if not isinstance(reference, qf.Circuit):
                 raise ValueError("unitary_circ reference must be a Circuit.")
 
             self._ref = system.hf_reference
+            self._refprep = build_refprep(self._ref)
             self._Uprep = reference
 
         else:
