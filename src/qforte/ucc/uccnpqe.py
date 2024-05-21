@@ -199,10 +199,7 @@ class UCCNPQE(UCCPQE):
             # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
 
             temp_idx = sq_op.terms()[0][2][-1]
-            # TODO: This code assumes that the first N orbitals are occupied, and the others are virtual.
-            # Use some other mechanism to identify the occupied orbitals, so we can use use PQE on excited
-            # determinants.
-            if temp_idx < int(sum(self._ref) / 2):  # if temp_idx is an occupied idx
+            if self._ref[temp_idx]:  # if temp_idx is an occupied idx
                 sq_creators = sq_op.terms()[0][1]
                 sq_annihilators = sq_op.terms()[0][2]
             else:
