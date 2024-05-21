@@ -4,8 +4,8 @@ import numpy as np
 
 def build_refprep(ref):
     refprep = qforte.Circuit()
-    for j in range(len(ref)):
-        if ref[j] == 1:
+    for j, occupied in enumerate(ref):
+        if occupied:
             refprep.add(qforte.gate("X", j, j))
 
     return refprep
