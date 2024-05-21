@@ -379,7 +379,6 @@ class ADAPTVQE(UCCVQE):
 
         curr_norm = 0.0
         lgrst_grad = 0.0
-        Uvqc = self.build_Uvqc()
 
         if self._verbose:
             print(
