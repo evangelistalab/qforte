@@ -52,7 +52,7 @@ class QubitOpPool {
     void square(bool upper_triangle_only);
 
     /// builds the quantum operator pool, will be used in qite
-    void fill_pool(std::string pool_type, const std::vector<int>& ref);
+    void fill_pool(std::string pool_type, const size_t nqb);
 
     /// return a vector of strings representing this quantum operator pool
     std::string str() const;

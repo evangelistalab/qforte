@@ -220,10 +220,10 @@ class QITE(Trotterizable, Algorithm):
                 raise ValueError(
                     "Using complete qubits expansion will result in a very large number of terms!"
                 )
-            self._sig.fill_pool("complete_qubit", self._ref)
+            self._sig.fill_pool("complete_qubit", self._nqb)
 
         elif self._expansion_type == "cqoy":
-            self._sig.fill_pool("cqoy", self._ref)
+            self._sig.fill_pool("cqoy", self._nqb)
 
         elif self._expansion_type in {"SD", "GSD", "SDT", "SDTQ", "SDTQP", "SDTQPH"}:
             P = qf.SQOpPool()

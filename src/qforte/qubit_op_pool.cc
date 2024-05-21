@@ -121,21 +121,21 @@ void QubitOpPool::join_as_commutator(const QubitOperator& q_op) {
     terms_ = std::move(temp_terms);
 }
 
-void QubitOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref) {
+void QubitOpPool::fill_pool(std::string pool_type, const size_t nqb) {
     if (pool_type == "complete_qubit") {
         std::map<std::string, std::string> paulis = {
             {"0", "I"}, {"1", "X"}, {"2", "Y"}, {"3", "Z"}};
-        int nterms = static_cast<int>(std::pow(4, ref.size()));
+        int nterms = static_cast<int>(std::pow(4, nqb));
 
         for (int I = 0; I < nterms; I++) {
             QubitOperator AI;
             Circuit aI;
-            std::string paulistr = pauli_idx_str(to_base4(I), ref.size());
-            if (paulistr.length() != ref.size()) {
-                throw std::invalid_argument("paulistr.length() != ref.size()");
+            auto paulistr = pauli_idx_str(to_base4(I), nqb);
+            if (paulistr.length() != nqb) {
+                throw std::invalid_argument("paulistr.length() != nqb");
             }
 
-            for (int k = 0; k < ref.size(); k++) {
+            for (size_t k = 0; k < nqb; k++) {
                 if (paulistr.substr(k, 1) != "0") {
                     aI.add_gate(make_gate(paulis[paulistr.substr(k, 1)], k, k));
                 }
@@ -146,17 +146,17 @@ void QubitOpPool::fill_pool(std::string pool_type, const std::vector<int>& ref) 
     } else if (pool_type == "cqoy") {
         std::map<std::string, std::string> paulis = {
             {"0", "I"}, {"1", "X"}, {"2", "Y"}, {"3", "Z"}};
-        int nterms = static_cast<int>(std::pow(4, ref.size()));
+        int nterms = static_cast<int>(std::pow(4, nqb));
 
         for (int I = 0; I < nterms; I++) {
             QubitOperator AI;
             Circuit aI;
-            std::string paulistr = pauli_idx_str(to_base4(I), ref.size());
-            if (paulistr.length() != ref.size()) {
-                throw std::invalid_argument("paulistr.length() != ref.size()");
+            auto paulistr = pauli_idx_str(to_base4(I), nqb);
+            if (paulistr.length() != nqb) {
+                throw std::invalid_argument("paulistr.length() != nqb");
             }
             int nygates = 0;
-            for (int k = 0; k < ref.size(); k++) {
+            for (size_t k = 0; k < nqb; k++) {
                 if (paulistr.substr(k, 1) == "2") {
                     nygates++;
                 }
