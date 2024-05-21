@@ -186,28 +186,60 @@ class UCCVQE(UCC, VQE):
             Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
             if self._compact_excitations:
-                Umu = qf.Circuit()
-                # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
-                # (see original ADAPT-VQE paper)
-                Umu.add(
-                    compact_excitation_circuit(
-                        -tamp * self._pool_obj[self._tops[mu + 1]][1].terms()[1][0],
-                        self._pool_obj[self._tops[mu + 1]][1].terms()[1][1],
-                        self._pool_obj[self._tops[mu + 1]][1].terms()[1][2],
-                        self._qubit_excitations,
+                if self._pool_type == "sa_SD":
+                    sa_sq_op = self._pool_obj[self._tops[mu + 1]][1].terms()
+                    half_length = len(sa_sq_op) // 2
+                    Umu = qf.Circuit()
+                    for coeff, cr, ann in sa_sq_op[:half_length]:
+                        # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                        # (see original ADAPT-VQE paper)
+                        # In this particular case, the minus sign is already incorporated
+                        Umu.add(
+                            compact_excitation_circuit(
+                                tamp * coeff, ann, cr, self._qubit_excitations
+                            )
+                        )
+                else:
+                    Umu = qf.Circuit()
+                    # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                    # (see original ADAPT-VQE paper)
+                    Umu.add(
+                        compact_excitation_circuit(
+                            -tamp * self._pool_obj[self._tops[mu + 1]][1].terms()[1][0],
+                            self._pool_obj[self._tops[mu + 1]][1].terms()[1][1],
+                            self._pool_obj[self._tops[mu + 1]][1].terms()[1][2],
+                            self._qubit_excitations,
+                        )
                     )
-                )
             else:
-                # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
-                # (see original ADAPT-VQE paper)
-                Umu, pmu = trotterize(
-                    Kmu_prev, factor=-tamp, trotter_number=self._trotter_number
-                )
-
-                if pmu != 1.0 + 0.0j:
-                    raise ValueError(
-                        "Encountered phase change, phase not equal to (1.0 + 0.0i)"
+                if self._pool_type == "sa_SD":
+                    sa_sq_op = self._pool_obj[self._tops[mu + 1]][1].terms()
+                    half_length = len(sa_sq_op) // 2
+                    Umu = qf.Circuit()
+                    for coeff, cr, ann in sa_sq_op[:half_length]:
+                        sq_op = qf.SQOperator()
+                        sq_op.add_term(coeff, cr, ann)
+                        sq_op.add_term(-coeff, ann, cr)
+                        q_op = sq_op.jw_transform(self._qubit_excitations)
+                        U, p = trotterize(
+                            q_op, factor=-tamp, trotter_number=self._trotter_number
+                        )
+                        if p != 1.0 + 0.0j:
+                            raise ValueError(
+                                "Encountered phase change, phase not equal to (1.0 + 0.0i)"
+                            )
+                        Umu.add(U)
+                else:
+                    # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                    # (see original ADAPT-VQE paper)
+                    Umu, pmu = trotterize(
+                        Kmu_prev, factor=-tamp, trotter_number=self._trotter_number
                     )
+
+                    if pmu != 1.0 + 0.0j:
+                        raise ValueError(
+                            "Encountered phase change, phase not equal to (1.0 + 0.0i)"
+                        )
 
             qc_sig.apply_circuit(Umu)
             qc_psi.apply_circuit(Umu)
