@@ -8,7 +8,7 @@ the ansatz circut and potential supporting utility functions.
 
 import qforte as qf
 
-from qforte.utils.state_prep import build_Uprep
+from qforte.utils.state_prep import build_refprep
 from qforte.utils.trotterization import trotterize
 from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
 from qforte.abc.mixin import Trotterizable
@@ -101,12 +101,12 @@ class UCC(Trotterizable):
             print("\nBuilding single-particle energies:")
             print("---------------------------------------", flush=True)
             qc = qf.Computer(self._nqb)
-            qc.apply_circuit(build_Uprep(self._ref, "occupation_list"))
+            qc.apply_circuit(self._refprep)
             E0 = qc.direct_op_exp_val(self._qb_ham)
 
             for i in range(self._nqb):
                 qc = qf.Computer(self._nqb)
-                qc.apply_circuit(build_Uprep(self._ref, "occupation_list"))
+                qc.apply_circuit(self._refprep)
                 qc.apply_gate(qf.gate("X", i, i))
                 Ei = qc.direct_op_exp_val(self._qb_ham)
 
@@ -119,7 +119,7 @@ class UCC(Trotterizable):
                 self._orb_e.append(ei)
 
     def get_res_over_mpdenom(self, residuals):
-        """This function returns a vector given by the residuals dividied by the
+        """This function returns a vector given by the residuals divided by the
         respective Moller Plesset denominators.
 
         Parameters
@@ -136,7 +136,7 @@ class UCC(Trotterizable):
             sq_op = self._pool_obj[m][1]
 
             temp_idx = sq_op.terms()[0][2][-1]
-            if temp_idx < int(sum(self._ref) / 2):  # if temp_idx is an occupied idx
+            if self._ref[temp_idx]:  # if temp_idx is an occupied idx
                 sq_creators = sq_op.terms()[0][1]
                 sq_annihilators = sq_op.terms()[0][2]
             else:

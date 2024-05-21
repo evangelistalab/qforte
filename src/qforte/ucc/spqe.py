@@ -403,7 +403,7 @@ class SPQE(UCCPQE):
                 # sq_op is 1.0(a^ b^ i j) - 1.0(j^ i^ b a)
 
                 qc_temp = qforte.Computer(self._nqb)
-                qc_temp.apply_circuit(self._Uprep)
+                qc_temp.apply_circuit(self._refprep)
                 qc_temp.apply_operator(sq_op.jw_transform(self._qubit_excitations))
                 sign_adjust = qc_temp.get_coeff_vec()[self._pool_idx_to_coeff_idx[m]]
 

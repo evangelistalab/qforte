@@ -2,16 +2,13 @@ import qforte
 import numpy as np
 
 
-def build_Uprep(ref, state_prep_type):
-    Uprep = qforte.Circuit()
-    if state_prep_type == "occupation_list":
-        for j in range(len(ref)):
-            if ref[j] == 1:
-                Uprep.add(qforte.gate("X", j, j))
-    else:
-        raise ValueError("Only 'occupation_list' supported as state preparation type")
+def build_refprep(ref):
+    refprep = qforte.Circuit()
+    for j, occupied in enumerate(ref):
+        if occupied:
+            refprep.add(qforte.gate("X", j, j))
 
-    return Uprep
+    return refprep
 
 
 def ref_string(ref, nqb):
