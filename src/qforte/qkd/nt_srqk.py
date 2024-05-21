@@ -23,7 +23,7 @@ class NTSRQK(QSD):
     basis from different durations of non-Trotterized real time evolution:
 
     .. math::
-        | \Psi_n \\rangle = e^{-i n \Delta t \hat{H}} | \Phi_0 \\rangle
+        | \\Psi_n \\rangle = e^{-i n \\Delta t \\hat{H}} | \\Phi_0 \\rangle
 
     In practice Trotterization is used to approximate the time evolution operator.
 

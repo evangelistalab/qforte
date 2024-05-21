@@ -31,15 +31,15 @@ class ADAPTVQE(UCCVQE):
     In ADAPT-VQE, the unitary ansatz at macro-iteration :math:`k` is defined as
 
     .. math::
-        \hat{U}_\mathrm{ADAPT}^{(k)}(\mathbf{t}) = \prod_\\nu^{k} e^{ t_\\nu^{(k)} \hat{\kappa}_\\nu^{(k)} },
+        \\hat{U}_\\mathrm{ADAPT}^{(k)}(\\mathbf{t}) = \\prod_\\nu^{k} e^{ t_\\nu^{(k)} \\hat{\\kappa}_\\nu^{(k)} },
 
     where the index :math:`\\nu` is likewise a index corresponding to unique operators
-    :math:`\hat{\kappa}_\\nu` in a pool of operators.
+    :math:`\\hat{\\kappa}_\\nu` in a pool of operators.
     Note that the parameters :math:`t_\\nu^{(k)}` are re-optimized at each macro-iteration.
     New operators are determined from the pool by computing the energy gradient
 
     .. math::
-        g_\\nu = \\langle \Psi_\mathrm{VQE} | [ \hat{H}, \hat{\kappa}_\\nu ] | \Psi_\mathrm{VQE} \\rangle,
+        g_\\nu = \\langle \\Psi_\\mathrm{VQE} | [ \\hat{H}, \\hat{\\kappa}_\\nu ] | \\Psi_\\mathrm{VQE} \\rangle,
 
     with respect to :math:`t_\\nu` of each operator in the pool and selecting
     the operator with the largest gradient magnitude to place at the end of

@@ -24,15 +24,15 @@ class UCCVQE(UCC, VQE):
     eigenstates by variational minimization of the Energy
 
     .. math::
-        E(\mathbf{t}) = \langle \Phi_0 | \hat{U}^\dagger(\mathbf{\mathbf{t}}) \hat{H} \hat{U}(\mathbf{\mathbf{t}}) | \Phi_0 \\rangle
+        E(\\mathbf{t}) = \\langle \\Phi_0 | \\hat{U}^\\dagger(\\mathbf{\\mathbf{t}}) \\hat{H} \\hat{U}(\\mathbf{\\mathbf{t}}) | \\Phi_0 \\rangle
 
     using a disentagled UCC type ansatz
 
     .. math::
-        \hat{U}(\mathbf{t}) = \prod_\mu e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger)},
+        \\hat{U}(\\mathbf{t}) = \\prod_\\mu e^{t_\\mu (\\hat{\\tau}_\\mu - \\hat{\\tau}_\\mu^\\dagger)},
 
-    were :math:`\hat{\\tau}_\mu` is a Fermionic excitation operator and
-    :math:`t_\mu` is a cluster amplitude.
+    were :math:`\\hat{\\tau}_\\mu` is a Fermionic excitation operator and
+    :math:`t_\\mu` is a cluster amplitude.
 
     Attributes
     ----------

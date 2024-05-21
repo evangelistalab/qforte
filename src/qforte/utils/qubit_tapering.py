@@ -190,14 +190,14 @@ def find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx):
         ### Find a non-zero row
         nonzero_indices = np.argwhere(prt_chck_mtrx_aug[row, idx:])
         if nonzero_indices.shape[0] > 0:
-            column_to_be_CEFed = int(nonzero_indices[0]) + idx
+            column_to_be_CEFed = nonzero_indices[0].item() + idx
             ### The first column that is non-zero in this row is the next column to "CEF" - swap positions accordingly
             prt_chck_mtrx_aug[:, [column_to_be_CEFed, idx]] = prt_chck_mtrx_aug[
                 :, [idx, column_to_be_CEFed]
             ]
             ### Eliminate remaining non-zero row elements in the part of the parity check matrix that is not in CEF
             for i in range(1, nonzero_indices.shape[0]):
-                column_not_in_CEF = int(nonzero_indices[i]) + idx
+                column_not_in_CEF = nonzero_indices[i].item() + idx
                 prt_chck_mtrx_aug[:, column_not_in_CEF] = np.bitwise_xor(
                     prt_chck_mtrx_aug[:, idx], prt_chck_mtrx_aug[:, column_not_in_CEF]
                 )
@@ -377,7 +377,7 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, commute, taper_from_least):
         nonzero_indices = np.argwhere(generators_binary[:, column])
         if nonzero_indices.shape[0] == 1:
             if nonzero_indices[0] not in lst:
-                lst.append(int(nonzero_indices[0]))
+                lst.append(nonzero_indices[0].item())
                 idx += 1
         else:
             for i in range(nonzero_indices.shape[0]):
@@ -455,7 +455,7 @@ def taper_operator(tapered_qubits, sign, operator, unitary):
         # List that will store the coefficients modified according to the sign structure provided by the user
         for pauli in circuit.gates():
             if pauli.target() in tapered_qubits:
-                coeff *= sign[int(np.argwhere(tapered_qubits == pauli.target()))]
+                coeff *= sign[np.argwhere(tapered_qubits == pauli.target()).item()]
             else:
                 # Adjust gate targets to account for tapered qubits
                 idx = np.count_nonzero(pauli.target() > tapered_qubits)

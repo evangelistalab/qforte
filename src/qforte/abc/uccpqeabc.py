@@ -23,15 +23,15 @@ class UCCPQE(UCC, PQE):
     eigenstates by minimization of the residual condition
 
     .. math::
-        r_\mu = \langle \Phi_\mu | \hat{U}^\dagger(\mathbf{t}) \hat{H} \hat{U}(\mathbf{t}) | \Phi_0 \\rangle \\rightarrow 0
+        r_\\mu = \\langle \\Phi_\\mu | \\hat{U}^\\dagger(\\mathbf{t}) \\hat{H} \\hat{U}(\\mathbf{t}) | \\Phi_0 \\rangle \\rightarrow 0
 
     using a disentagled UCC type ansatz
 
     .. math::
-        \hat{U}(\mathbf{t}) = \prod_\mu e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger)},
+        \\hat{U}(\\mathbf{t}) = \\prod_\\mu e^{t_\\mu (\\hat{\\tau}_\\mu - \\hat{\\tau}_\\mu^\\dagger)},
 
-    were :math:`\hat{\\tau}_\mu` is a Fermionic excitation operator and
-    :math:`t_\mu` is a cluster amplitude.
+    were :math:`\\hat{\\tau}_\\mu` is a Fermionic excitation operator and
+    :math:`t_\\mu` is a cluster amplitude.
 
     Attributes
     ----------
@@ -101,8 +101,9 @@ class UCCPQE(UCC, PQE):
     def get_sum_residual_square(self, tamps):
         # This function is passed to scipy minimize for residual minimization
         residual_vector = self.get_residual_vector(tamps)
-        sum_residual_vector_square = np.sum(np.square(residual_vector))
-        return sum_residual_vector_square
+        sum_residual_vector_square = np.sum(np.square(np.abs(residual_vector)))
+        assert sum_residual_vector_square.imag < 1.0e-14
+        return np.real(sum_residual_vector_square)
 
     def solve(self):
         if self._optimizer.lower() == "jacobi":

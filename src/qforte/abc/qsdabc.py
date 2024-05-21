@@ -14,32 +14,32 @@ import numpy as np
 class QSD(Algorithm):
     """The abstract base class inherited by any algorithm that seeks to find
     eigenstates of the Hamiltonian in a (generally) non-orthogonal basis of
-    many-body states :math:`\{ | \Psi_n \\rangle \}`. The basis is generated
+    many-body states :math:`\\{ | \\Psi_n \\rangle \\}`. The basis is generated
     by a corresponding family of unitary operators
 
     .. math::
-        | \Psi_n \\rangle = \hat{U}_n | \Phi_0 \\rangle
+        | \\Psi_n \\rangle = \\hat{U}_n | \\Phi_0 \\rangle
 
-    where :math:`| \Phi \\rangle` is (usually) an unentangled reference
+    where :math:`| \\Phi \\rangle` is (usually) an unentangled reference
     such as the Hartree-Fock state.
 
     Quantum subspace diagonalization methods work by constructing an effective
-    Hamiltonian :math:`\mathbf{H}` with matrix elements given by
+    Hamiltonian :math:`\\mathbf{H}` with matrix elements given by
 
     .. math::
-        H_{mn} = \\langle \Psi_m | \hat{H} | \Psi_n \\rangle,
+        H_{mn} = \\langle \\Psi_m | \\hat{H} | \\Psi_n \\rangle,
 
-    and overlap matrix :math:`\mathbf{S}` with elemets given by
+    and overlap matrix :math:`\\mathbf{S}` with elemets given by
 
     .. math::
-        S_{mn} = \\langle \Psi_m | \Psi_n \\rangle,
+        S_{mn} = \\langle \\Psi_m | \\Psi_n \\rangle,
 
     both of which can be measured on a quantum device.
 
     These two matrices then comprise a generalized eigenvalue probelm
 
     .. math::
-        \mathbf{H}\mathbf{c} = E \mathbf{S} \mathbf{c},
+        \\mathbf{H}\\mathbf{c} = E \\mathbf{S} \\mathbf{c},
 
     where E is an approximation to an eigenvalue of the Hamiltonian.
 
@@ -75,8 +75,8 @@ class QSD(Algorithm):
 
     @abstractmethod
     def build_qk_mats(self):
-        """Constructs the effective Hamiltonian (:math:`\mathbf{H}`) and overlap
-        (:math:`\mathbf{S}`) matricies in an efficient maner.
+        """Constructs the effective Hamiltonian (:math:`\\mathbf{H}`) and overlap
+        (:math:`\\mathbf{S}`) matricies in an efficient maner.
 
         """
         pass
