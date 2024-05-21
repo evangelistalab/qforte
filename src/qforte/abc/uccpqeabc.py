@@ -101,8 +101,9 @@ class UCCPQE(UCC, PQE):
     def get_sum_residual_square(self, tamps):
         # This function is passed to scipy minimize for residual minimization
         residual_vector = self.get_residual_vector(tamps)
-        sum_residual_vector_square = np.sum(np.square(residual_vector))
-        return sum_residual_vector_square
+        sum_residual_vector_square = np.sum(np.square(np.abs(residual_vector)))
+        assert sum_residual_vector_square.imag < 1.0e-14
+        return np.real(sum_residual_vector_square)
 
     def solve(self):
         if self._optimizer.lower() == "jacobi":
