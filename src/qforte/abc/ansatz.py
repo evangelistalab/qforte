@@ -32,12 +32,12 @@ class UCC:
         tamps = self._tamps if amplitudes is None else amplitudes
 
         if self._pool_type == "sa_SD":
-        # The elements of the sa_SD pool are typically linear combinations of 
-        # second-quantized, fermionic, anti-Hermitian excitation operators.
-        # To avoid breaking particle number and Sz symmetry, a temporary 
-        # SQOpPool is created where each spin-orbital, anti-Hermitian, 
-        # second-quantized operator is treated as a single element 
-        # (first-order Trotterization).
+            # The elements of the sa_SD pool are typically linear combinations of 
+            # second-quantized, fermionic, anti-Hermitian excitation operators.
+            # To avoid breaking particle number and Sz symmetry, a temporary 
+            # SQOpPool is created where each spin-orbital, anti-Hermitian, 
+            # second-quantized operator is treated as a single element 
+            # (first-order Trotterization).
             for tamp, top in zip(tamps, self._tops):
                 sa_sq_op = self._pool_obj[top][1].terms()
                 # The first half of the terms encode the de-excitation
