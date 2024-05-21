@@ -31,27 +31,27 @@ from scipy.linalg import eig
 class MRSQK(Trotterizable, QSD):
     """A quantum subspace diagonalization algorithm that generates the many-body
     basis from :math:`s` real time evolutions of :math:`d` differnt orthogonal
-    reference states :math:`| \Phi_I \\rangle`:
+    reference states :math:`| \\Phi_I \\rangle`:
 
     .. math::
-        | \Psi_n^I \\rangle = e^{-i n \Delta t \hat{H}} | \Phi_I \\rangle
+        | \\Psi_n^I \\rangle = e^{-i n \\Delta t \\hat{H}} | \\Phi_I \\rangle
 
     In practice Trotterization is used to approximate the time evolution operator.
 
     The reference states are determined using an initial single-reference QK
-    calculation with its own specified values for the time step :math:`\Delta t_0`
+    calculation with its own specified values for the time step :math:`\\Delta t_0`
     and number of SRQK time evolutions :math:`s_0`. One can then determine from
     the target SRQK eigenvector :math:`\\vec{C}` an estimate of the most important
     determinats via the importance value
 
     .. math::
-        P_I = \sum_n^{s_0 + 1} | \\langle \Phi_I | \Psi_n \\rangle |^2 |C_n|^2.
+        P_I = \\sum_n^{s_0 + 1} | \\langle \\Phi_I | \\Psi_n \\rangle |^2 |C_n|^2.
 
-    The quantity :math:`| \\langle \Phi_I | \Psi_n \\rangle |^2` can be
+    The quantity :math:`| \\langle \\Phi_I | \\Psi_n \\rangle |^2` can be
     approximated by measuring each of time evolved states in the computational
     basis (if the Jordan Wigner transform was used).
 
-    Onece a set of important determinants :math:`\{ \Phi_I \}` is determined it
+    Onece a set of important determinants :math:`\\{ \\Phi_I \\}` is determined it
     is (optionally) augmented to additionally include spin any complements and
     the Hamiltonain is diagonalized in space of the new spin-complement list.
     The final reference states (if _use_spin_adapted_refs==True) are then given
@@ -62,7 +62,7 @@ class MRSQK(Trotterizable, QSD):
     ----------
 
     _d : int
-        The number of reference states :math:`\Phi_I` to use.
+        The number of reference states :math:`\\Phi_I` to use.
 
     _diagonalize_each_step : bool
         For diagnostic purposes, should the eigenvalue of the target root of the
@@ -108,7 +108,7 @@ class MRSQK(Trotterizable, QSD):
     Prelimenary SRQK Reference Specific Keywords
 
     _dt_o : float
-        The time step :math:`\Delta t` to use for SRQK.
+        The time step :math:`\\Delta t` to use for SRQK.
 
     _s_o : int
         The :math:`s` value for SRQK.

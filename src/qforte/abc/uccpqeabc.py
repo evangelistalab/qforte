@@ -23,15 +23,15 @@ class UCCPQE(UCC, PQE):
     eigenstates by minimization of the residual condition
 
     .. math::
-        r_\mu = \langle \Phi_\mu | \hat{U}^\dagger(\mathbf{t}) \hat{H} \hat{U}(\mathbf{t}) | \Phi_0 \\rangle \\rightarrow 0
+        r_\\mu = \\langle \\Phi_\\mu | \\hat{U}^\\dagger(\\mathbf{t}) \\hat{H} \\hat{U}(\\mathbf{t}) | \\Phi_0 \\rangle \\rightarrow 0
 
     using a disentagled UCC type ansatz
 
     .. math::
-        \hat{U}(\mathbf{t}) = \prod_\mu e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger)},
+        \\hat{U}(\\mathbf{t}) = \\prod_\\mu e^{t_\\mu (\\hat{\\tau}_\\mu - \\hat{\\tau}_\\mu^\\dagger)},
 
-    were :math:`\hat{\\tau}_\mu` is a Fermionic excitation operator and
-    :math:`t_\mu` is a cluster amplitude.
+    were :math:`\\hat{\\tau}_\\mu` is a Fermionic excitation operator and
+    :math:`t_\\mu` is a cluster amplitude.
 
     Attributes
     ----------

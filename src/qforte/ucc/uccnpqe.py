@@ -30,17 +30,17 @@ class UCCNPQE(UCCPQE):
     representing the wave function to be simulated, (2) evaluates the residuals
 
     .. math::
-        r_\mu = \langle \Phi_\mu | \hat{U}^\dagger(\mathbf{t}) \hat{H} \hat{U}(\mathbf{t}) | \Phi_0 \\rangle
+        r_\\mu = \\langle \\Phi_\\mu | \\hat{U}^\\dagger(\\mathbf{t}) \\hat{H} \\hat{U}(\\mathbf{t}) | \\Phi_0 \\rangle
 
     and (3) optimizes the wave fuction via projective solution of
     the UCC Schrodinger Equation via a quazi-Newton update equation.
-    Using this strategy, an amplitude :math:`t_\mu^{(k+1)}` for iteration :math:`k+1`
+    Using this strategy, an amplitude :math:`t_\\mu^{(k+1)}` for iteration :math:`k+1`
     is given by
 
     .. math::
-        t_\mu^{(k+1)} = t_\mu^{(k)} + \\frac{r_\mu^{(k)}}{\Delta_\mu}
+        t_\\mu^{(k+1)} = t_\\mu^{(k)} + \\frac{r_\\mu^{(k)}}{\\Delta_\\mu}
 
-    where :math:`\Delta_\mu` is the standard Moller Plesset denominator.
+    where :math:`\\Delta_\\mu` is the standard Moller Plesset denominator.
 
     Attributes
     ----------

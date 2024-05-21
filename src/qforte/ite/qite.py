@@ -27,45 +27,45 @@ class QITE(Trotterizable, Algorithm):
     the focus of the origional algorithm (see DOI 10.1038/s41567-019-0704-4).
 
     In QITE one attepmts to approximate the action of the imaginary time evolution
-    operator on a state :math:`| \Phi \\rangle` with a parameterized unitary
+    operator on a state :math:`| \\Phi \\rangle` with a parameterized unitary
     operation:
 
     .. math::
-        c(\\Delta \\beta)^{-1/2} e^{-\\Delta \\beta \hat{H}} | \Phi \\rangle \\approx e^{-i \\Delta \\beta \hat{A}(\\vec{\\theta})} | \Phi \\rangle,
+        c(\\Delta \\beta)^{-1/2} e^{-\\Delta \\beta \\hat{H}} | \\Phi \\rangle \\approx e^{-i \\Delta \\beta \\hat{A}(\\vec{\\theta})} | \\Phi \\rangle,
 
     where :math:`\\Delta \\beta` is a small time step and
     :math:`c(\\Delta \\beta)^{-1/2}` is a normalization coefficient approximated
-    by :math:`1-2\\Delta \\beta \\langle \Phi | \hat{H} | \Phi \\rangle`.
+    by :math:`1-2\\Delta \\beta \\langle \\Phi | \\hat{H} | \\Phi \\rangle`.
 
-    The parameterized anti-hermetian operator :math:`\hat{A}(\\vec{\\theta})`
-    is given by the linear combination of :math:`N_\mu` operators
+    The parameterized anti-hermetian operator :math:`\\hat{A}(\\vec{\\theta})`
+    is given by the linear combination of :math:`N_\\mu` operators
 
     .. math::
-        \hat{A}(\\vec{\\theta}) = \sum_\mu^{N_\mu} \\theta_\mu \hat{P}_\mu,
+        \\hat{A}(\\vec{\\theta}) = \\sum_\\mu^{N_\\mu} \\theta_\\mu \\hat{P}_\\mu,
 
-    where :math:`\hat{P}_\mu` is a product of Pauli operators. In practice the
+    where :math:`\\hat{P}_\\mu` is a product of Pauli operators. In practice the
     operators that enter in to the sum are a subset of an operator pool specified
     by the user.
 
-    To determine the parameters :math:`\\theta_\mu` one seeks to satisfy the
+    To determine the parameters :math:`\\theta_\\mu` one seeks to satisfy the
     condition:
 
     .. math::
-        c(\\beta)^{-1/2} \\langle \Phi |  \sum_{\mu} \\theta_\mu \hat{P}_\mu^\dagger \hat{H} | \Phi \\rangle
-        \\approx -i  \\langle \Phi | \sum_{\mu} \\theta_\mu \\theta_\\nu \hat{P}_\mu^\dagger  \hat{P}_\\nu | \Phi \\rangle
+        c(\\beta)^{-1/2} \\langle \\Phi |  \\sum_{\\mu} \\theta_\\mu \\hat{P}_\\mu^\\dagger \\hat{H} | \\Phi \\rangle
+        \\approx -i  \\langle \\Phi | \\sum_{\\mu} \\theta_\\mu \\theta_\\nu \\hat{P}_\\mu^\\dagger  \\hat{P}_\\nu | \\Phi \\rangle
 
     which corresponding to solving the linear systems
 
     .. math::
-        \mathbf{S} \\vec{\\theta} = \\vec{b}
+        \\mathbf{S} \\vec{\\theta} = \\vec{b}
 
     where the elements
 
     .. math::
-        S_{\mu \\nu} = \\langle \Phi | \hat{P}_\mu^\dagger \hat{P}_\\nu | \Phi \\rangle,
+        S_{\\mu \\nu} = \\langle \\Phi | \\hat{P}_\\mu^\\dagger \\hat{P}_\\nu | \\Phi \\rangle,
 
     .. math::
-        b_\mu = \\frac{-i}{\sqrt{c(\Delta \\beta)}} \\langle \Phi | \hat{P}_\mu^\dagger \hat{H} | \Phi \\rangle
+        b_\\mu = \\frac{-i}{\\sqrt{c(\\Delta \\beta)}} \\langle \\Phi | \\hat{P}_\\mu^\\dagger \\hat{H} | \\Phi \\rangle
 
     can be measured on a quantum device.
 
@@ -76,14 +76,14 @@ class QITE(Trotterizable, Algorithm):
     ----------
 
     _b_thresh : float
-        The minimum threshold absolute vale for the elements of :math:`b_\mu` to be included
-        in the solving of the linear system. Operators :math:`\hat{P}_\mu`
-        corresponding to elements of :math:`|b_\mu|` < _b_thresh will not enter
-        into the operator :math:`\hat{A}`.
+        The minimum threshold absolute vale for the elements of :math:`b_\\mu` to be included
+        in the solving of the linear system. Operators :math:`\\hat{P}_\\mu`
+        corresponding to elements of :math:`|b_\\mu|` < _b_thresh will not enter
+        into the operator :math:`\\hat{A}`.
 
     _x_thresh : float
-        Operators :math:`\hat{P}_\mu` corresponding to elements of :math:`|\\theta_\mu|`
-        < _b_thresh will not enter into the operator :math:`\hat{A}`.
+        Operators :math:`\\hat{P}_\\mu` corresponding to elements of :math:`|\\theta_\\mu|`
+        < _b_thresh will not enter into the operator :math:`\\hat{A}`.
 
     _beta : float
         The target total evolution time.
@@ -99,7 +99,7 @@ class QITE(Trotterizable, Algorithm):
         The list of after each additional time step.
 
     _expansion_type: {'complete_qubit', 'cqoy', 'SD', 'GSD', 'SDT', SDTQ', 'SDTQP', 'SDTQPH'}
-        The family of operators that each evolution operator :math:`\hat{A}` will be built of.
+        The family of operators that each evolution operator :math:`\\hat{A}` will be built of.
 
     _lanczos_gap : int
         The number of time steps between generation of Lanczos basis vectors.
