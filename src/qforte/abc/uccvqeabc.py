@@ -313,9 +313,11 @@ class UCCVQE(UCC, VQE):
 
         if self._k_counter == 1:
             header = "\n    k iteration         Energy               dE"
-            if self._use_analytic_grad: header += "           Ngvec ev      Ngm ev*         ||g||"
+            if self._use_analytic_grad:
+                header += "           Ngvec ev      Ngm ev*         ||g||"
             header += "\n------------------------------------------------------"
-            if self._use_analytic_grad: header += "--------------------------------------------"
+            if self._use_analytic_grad:
+                header += "--------------------------------------------"
             print(header)
             if self._print_summary_file:
                 header.replace("\n ", "\n#  ").replace("\n-", "\n#--")
@@ -325,7 +327,8 @@ class UCCVQE(UCC, VQE):
         # else:
         dE = self._curr_energy - self._prev_energy
         update = f"     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}"
-        if self._use_analytic_grad: update += f"      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.10f}"
+        if self._use_analytic_grad:
+            update += f"      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.10f}"
         print(update)
 
         if self._print_summary_file:
