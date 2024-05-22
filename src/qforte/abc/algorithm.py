@@ -93,6 +93,26 @@ class Algorithm(ABC):
             self._refprep = build_refprep(self._ref)
             self._Uprep = reference
 
+        elif self._state_prep_type == "computer":
+            if not isinstance(reference, qf.Computer):
+                raise ValueError("unitary_circ reference must be a Circuit.")
+            if not fast:
+                raise ValueError(
+                    "User specified they want to simulate a quantum computer but not specify how to prepare the initial state. That's inconsistent."
+                )
+            if reference.get_nqubit() != len(system.hf_reference):
+                raise ValueError(f"Computer needs {len(system.hf_reference)} qubits, found {reference.get_nqubit()}.")
+            if (
+                not hasattr(self, "computer_initializable")
+                and self.computer_initializable
+            ):
+                raise ValueError("Class cannot be initialized with a computer.")
+
+            self._ref = system.hf_reference
+            self._refprep = build_refprep(self._ref)
+            self._Uprep = qf.Circuit()
+            self.computer = reference
+
         else:
             raise ValueError(
                 "QForte only suppors references as occupation lists and Circuits."
@@ -284,10 +304,10 @@ class AnsatzAlgorithm(Algorithm):
             len(operator.jw_transform().terms()) for _, operator in self._pool_obj
         ]
 
-    def measure_energy(self, Ucirc):
+    def measure_energy(self, Ucirc, computer=None):
         """
         This function returns the energy expectation value of the state
-        Uprep|0>.
+        Ucirc|Ψ>.
 
         Parameters
         ----------
@@ -295,10 +315,15 @@ class AnsatzAlgorithm(Algorithm):
             The state preparation circuit.
         """
         if self._fast:
-            myQC = qforte.Computer(self._nqb)
-            myQC.apply_circuit(Ucirc)
-            val = np.real(myQC.direct_op_exp_val(self._qb_ham))
+            if computer is None:
+                computer = qf.Computer(self._nqb)
+            computer.apply_circuit(Ucirc)
+            val = np.real(computer.direct_op_exp_val(self._qb_ham))
         else:
+            if compute is not None:
+                raise TypeError(
+                    "measure_energy in slow mode does not support custom Computer."
+                )
             Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
             val = Exp.perfect_experimental_avg()
 
@@ -431,8 +456,8 @@ class AnsatzAlgorithm(Algorithm):
     def energy_feval(self, params):
         """
         This function returns the energy expectation value of the state
-        Uprep(params)|0>, where params are parameters that can be optimized
-        for some purpouse such as energy minimizaiton.
+        Uprep(params)|Ψ>, where params are parameters that can be optimized
+        for some purpouse such as energy minimization.
 
         Parameters
         ----------
@@ -441,7 +466,13 @@ class AnsatzAlgorithm(Algorithm):
             the state preparation circuit.
         """
         Ucirc = self.build_Uvqc(amplitudes=params)
-        Energy = self.measure_energy(Ucirc)
+        Energy = self.measure_energy(Ucirc, self.get_initial_computer())
 
         self._curr_energy = Energy
         return Energy
+
+    def get_initial_computer(self) -> qf.Computer:
+        if hasattr(self, "computer"):
+            return qf.Computer(self.computer)
+        else:
+            return qf.Computer(self._nqb)
