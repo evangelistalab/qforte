@@ -27,25 +27,67 @@ size_t Gate::control() const { return control_; }
 const complex_4_4_mat& Gate::matrix() const { return gate_; }
 
 const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
-    size_t nbasis = std::pow(2, nqubit);
-    if (target_ != control_) {
-        throw std::runtime_error("Gate must be a Pauli to convert to matrix!");
-    } else if (target_ >= nqubit) {
+    if (target_ >= nqubit) {
         throw std::runtime_error("Target index is too large for specified nqbits!");
     }
+    if (control_ >= nqubit) {
+        throw std::runtime_error("Control index is too large for specified nqbits!");
+    }
 
+    size_t nbasis = std::pow(2, nqubit);
     SparseMatrix Spmat = SparseMatrix();
 
-    for (size_t i = 0; i < 2; i++) {
-        for (size_t j = 0; j < 2; j++) {
-            auto op_i_j = gate_[i][j];
-            if (std::abs(op_i_j) > 1.0e-16) {
-                for (size_t I = 0; I < nbasis; I++) {
-                    QubitBasis basis_I = QubitBasis(I);
-                    if (basis_I.get_bit(target_) == j) {
-                        QubitBasis basis_J = basis_I;
-                        basis_J.set_bit(target_, i);
-                        Spmat.set_element(basis_J.index(), basis_I.index(), op_i_j);
+    if (target_ == control_) {
+        // single-qubit case
+        // Iterate over the gate matrix elements
+        for (size_t i = 0; i < 2; i++) {
+            for (size_t j = 0; j < 2; j++) {
+                auto op_i_j = gate_[i][j];
+                // Consider only non-zero elements (within a tolerance)
+                if (std::abs(op_i_j) > 1.0e-14) {
+                    // Iterate over all basis states
+                    for (size_t I = 0; I < nbasis; I++) {
+                        QubitBasis basis_I = QubitBasis(I);
+                        // Check if the target qubit is in the correct state
+                        if (basis_I.get_bit(target_) == j) {
+                            QubitBasis basis_J = basis_I;
+                            // Set the target qubit to the new state
+                            basis_J.set_bit(target_, i);
+                            // Set the corresponding element in the sparse matrix
+                            Spmat.set_element(basis_J.index(), basis_I.index(), op_i_j);
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        // two-qubit gate
+        for (size_t i = 0; i < 4; i++) {
+            for (size_t j = 0; j < 4; j++) {
+                auto op_i_j = gate_[i][j];
+                if (std::abs(op_i_j) > 1.0e-14) {
+                    for (size_t I = 0; I < nbasis; I++) {
+                        QubitBasis basis_I = QubitBasis(I);
+                        size_t target_bit = basis_I.get_bit(target_);
+                        size_t control_bit = basis_I.get_bit(control_);
+
+                        // Combine the target and control bits into a 2-bit state
+                        size_t combined_state = (control_bit << 1) | target_bit;
+
+                        // Check if the combined state matches the gate matrix column index
+                        if (combined_state == j) {
+                            QubitBasis basis_J = basis_I;
+
+                            // Extract the new states for control and target bits
+                            size_t new_control_bit = (i >> 1) & 1;
+                            size_t new_target_bit = i & 1;
+
+                            // Set the target and control qubits to the new states
+                            basis_J.set_bit(target_, new_target_bit);
+                            basis_J.set_bit(control_, new_control_bit);
+
+                            Spmat.set_element(basis_J.index(), basis_I.index(), op_i_j);
+                        }
                     }
                 }
             }
