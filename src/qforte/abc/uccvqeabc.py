@@ -312,34 +312,29 @@ class UCCVQE(UCC, VQE):
         self._k_counter += 1
 
         if self._k_counter == 1:
-            print(
-                "\n    k iteration         Energy               dE           Ngvec ev      Ngm ev*         ||g||"
-            )
-            print(
-                "--------------------------------------------------------------------------------------------------"
-            )
+            header = "\n    k iteration         Energy               dE"
+            if self._use_analytic_grad:
+                header += "           Ngvec ev      Ngm ev*         ||g||"
+            header += "\n------------------------------------------------------"
+            if self._use_analytic_grad:
+                header += "--------------------------------------------"
+            print(header)
             if self._print_summary_file:
-                f = open("summary.dat", "w+", buffering=1)
-                f.write(
-                    "\n#    k iteration         Energy               dE           Ngvec ev      Ngm ev*         ||g||"
-                )
-                f.write(
-                    "\n#--------------------------------------------------------------------------------------------------"
-                )
-                f.close()
+                header.replace("\n ", "\n#  ").replace("\n-", "\n#--")
+                with open("summary.dat", "w+", buffering=1) as f:
+                    f.write(header)
 
         # else:
         dE = self._curr_energy - self._prev_energy
-        print(
-            f"     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.10f}"
-        )
+        update = f"     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}"
+        if self._use_analytic_grad:
+            update += f"      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.10f}"
+        print(update)
 
         if self._print_summary_file:
-            f = open("summary.dat", "a", buffering=1)
-            f.write(
-                f"\n       {self._k_counter:7}        {self._curr_energy:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.12f}"
-            )
-            f.close()
+            with open("summary.dat", "a", buffering=1) as f:
+                update = "\n  " + update
+                f.write(header)
 
         self._prev_energy = self._curr_energy
 

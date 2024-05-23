@@ -96,6 +96,13 @@ class ADAPTVQE(UCCVQE):
         self._opt_maxiter = opt_maxiter
         self._use_analytic_grad = use_analytic_grad
         self._optimizer = optimizer
+        if self._use_analytic_grad and self._optimizer in {
+            "nelder-mead",
+            "powell",
+            "cobyla",
+        }:
+            print(f"{self._optimizer} optimizer doesn't support analytic grads.")
+            self._use_analytic_grad = False
         self._pool_type = pool_type
         self._use_cumulative_thresh = use_cumulative_thresh
         self._add_equiv_ops = add_equiv_ops
