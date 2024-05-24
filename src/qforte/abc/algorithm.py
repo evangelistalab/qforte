@@ -101,7 +101,9 @@ class Algorithm(ABC):
                     "User specified they want to simulate a quantum computer but not specify how to prepare the initial state. That's inconsistent."
                 )
             if reference.get_nqubit() != len(system.hf_reference):
-                raise ValueError(f"Computer needs {len(system.hf_reference)} qubits, found {reference.get_nqubit()}.")
+                raise ValueError(
+                    f"Computer needs {len(system.hf_reference)} qubits, found {reference.get_nqubit()}."
+                )
             if (
                 not hasattr(self, "computer_initializable")
                 and self.computer_initializable
