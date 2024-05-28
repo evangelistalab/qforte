@@ -95,7 +95,7 @@ class Algorithm(ABC):
 
         elif self._state_prep_type == "computer":
             if not isinstance(reference, qf.Computer):
-                raise ValueError("unitary_circ reference must be a Circuit.")
+                raise ValueError("computer reference must be a Computer.")
             if not fast:
                 raise ValueError(
                     "User specified they want to simulate a quantum computer but not specify how to prepare the initial state. That's inconsistent."
@@ -106,7 +106,7 @@ class Algorithm(ABC):
                 )
             if (
                 not hasattr(self, "computer_initializable")
-                and self.computer_initializable
+                or not self.computer_initializable
             ):
                 raise ValueError("Class cannot be initialized with a computer.")
 
@@ -117,7 +117,7 @@ class Algorithm(ABC):
 
         else:
             raise ValueError(
-                "QForte only suppors references as occupation lists and Circuits."
+                "QForte only supports references as occupation lists, Circuits, or Computers."
             )
 
         self._nqb = len(self._ref)
