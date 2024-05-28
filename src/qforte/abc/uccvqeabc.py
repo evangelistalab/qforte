@@ -26,7 +26,7 @@ class UCCVQE(UCC, VQE):
     .. math::
         E(\\mathbf{t}) = \\langle \\Phi_0 | \\hat{U}^\\dagger(\\mathbf{\\mathbf{t}}) \\hat{H} \\hat{U}(\\mathbf{\\mathbf{t}}) | \\Phi_0 \\rangle
 
-    using a disentagled UCC type ansatz
+    using a disentangled UCC type ansatz
 
     .. math::
         \\hat{U}(\\mathbf{t}) = \\prod_\\mu e^{t_\\mu (\\hat{\\tau}_\\mu - \\hat{\\tau}_\\mu^\\dagger)},
@@ -71,6 +71,7 @@ class UCCVQE(UCC, VQE):
     """
 
     def __init__(self, *args, **kwargs):
+        self.computer_initializable = True
         super().__init__(*args, **kwargs)
 
     @abstractmethod
@@ -104,7 +105,7 @@ class UCCVQE(UCC, VQE):
         """
 
         if self._fast:
-            myQC = qforte.Computer(self._nqb)
+            myQC = self.get_initial_computer()
             myQC.apply_circuit(Ucirc)
             if not idxs:
                 grads = myQC.direct_oppl_exp_val(operators)
@@ -120,7 +121,8 @@ class UCCVQE(UCC, VQE):
 
     def measure_gradient(self, params=None):
         """Returns the disentangled (factorized) UCC gradient, using a
-        recursive approach.
+        recursive approach, as described in Section D of the Appendix of
+        10.1038/s41467-019-10988-2
 
         Parameters
         ----------
@@ -140,18 +142,11 @@ class UCCVQE(UCC, VQE):
         else:
             Utot = self.build_Uvqc(params)
 
-        qc_psi = qforte.Computer(
-            self._nqb
-        )  # build | sig_N > according ADAPT-VQE analytical grad section
+        qc_psi = self.get_initial_computer()
         qc_psi.apply_circuit(Utot)
-        qc_sig = qforte.Computer(
-            self._nqb
-        )  # build | psi_N > according ADAPT-VQE analytical grad section
-        psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
-        qc_sig.set_coeff_vec(
-            copy.deepcopy(psi_i)
-        )  # not sure if copy is faster or reapplication of state
+        qc_sig = qf.Computer(qc_psi)
         qc_sig.apply_operator(self._qb_ham)
+        qc_temp = qf.Computer(qc_psi)
 
         mu = M - 1
 
@@ -161,15 +156,13 @@ class UCCVQE(UCC, VQE):
         )
         Kmu_prev.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
-        qc_psi.apply_operator(Kmu_prev)
+        qc_temp.apply_operator(Kmu_prev)
         grads[mu] = 2.0 * np.real(
-            np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec())
+            np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec())
         )
 
-        # reset Kmu_prev |psi_i> -> |psi_i>
-        qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
-
         for mu in reversed(range(M - 1)):
+            qc_temp = qf.Computer(qc_psi)
             # mu => N-1 => M-2
             # mu+1 => N => M-1
             # Kmu => KN-1
@@ -243,15 +236,14 @@ class UCCVQE(UCC, VQE):
 
             qc_sig.apply_circuit(Umu)
             qc_psi.apply_circuit(Umu)
-            psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
+            qc_temp = qf.Computer(qc_psi)
 
-            qc_psi.apply_operator(Kmu)
+            qc_temp.apply_operator(Kmu)
             grads[mu] = 2.0 * np.real(
-                np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec())
+                np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec())
             )
 
             # reset Kmu |psi_i> -> |psi_i>
-            qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
             Kmu_prev = Kmu
 
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
@@ -269,25 +261,22 @@ class UCCVQE(UCC, VQE):
             raise ValueError("self._fast must be True for gradient measurement.")
 
         Utot = self.build_Uvqc()
-        qc_psi = qforte.Computer(self._nqb)
+        qc_psi = self.get_initial_computer()
         qc_psi.apply_circuit(Utot)
-        psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
 
-        qc_sig = qforte.Computer(self._nqb)
-        # TODO: Check if it's faster to recompute psi_i or copy it.
-        qc_sig.set_coeff_vec(copy.deepcopy(psi_i))
+        qc_sig = qforte.Computer(qc_psi)
         qc_sig.apply_operator(self._qb_ham)
 
         grads = np.zeros(len(self._pool_obj))
 
         for mu, (coeff, operator) in enumerate(self._pool_obj):
+            qc_temp = qf.Computer(qc_psi)
             Kmu = operator.jw_transform(self._qubit_excitations)
             Kmu.mult_coeffs(coeff)
-            qc_psi.apply_operator(Kmu)
+            qc_temp.apply_operator(Kmu)
             grads[mu] = 2.0 * np.real(
-                np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec())
+                np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec())
             )
-            qc_psi.set_coeff_vec(copy.deepcopy(psi_i))
 
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
 
