@@ -98,7 +98,7 @@ class Algorithm(ABC):
                 raise ValueError("computer reference must be a Computer.")
             if not fast:
                 raise ValueError(
-                    "User specified they want to simulate a quantum computer but not specify how to prepare the initial state. That's inconsistent."
+                    "`self._fast = False` specifies not to skip steps, but `self._state_prep_type = computer` specifies to skip state initialization. That's inconsistent."
                 )
             if reference.get_nqubit() != len(system.hf_reference):
                 raise ValueError(
