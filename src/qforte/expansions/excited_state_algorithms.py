@@ -16,6 +16,7 @@ def q_sc_eom(n_qubit, H, U_ref, U_manifold, ops_to_compute = []):
     ops_to_compute is a list of JW-transformed operators
     We will convert all of them into numpy arrays in the basis of {U_ref, U_manifold_i|0>}.
 
+    NEEDS TO BE REVISITED FOR INEXACT REFERENCES
     """
     
     myQC = qforte.Computer(n_qubit)

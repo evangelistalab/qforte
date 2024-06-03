@@ -114,7 +114,7 @@ class UCCVQE(VQE, UCC):
 
         return np.real(grads)
 
-    def measure_gradient(self, params=None, return_individual = False):
+    def measure_gradient(self, params=None, return_individual = False, couplings = False):
         """ Returns the disentangled (factorized) UCC gradient, using a
         recursive approach.
 
@@ -196,7 +196,8 @@ class UCCVQE(VQE, UCC):
                 #reset Kmu |psi_i> -> |psi_i>
                 qc_psi.set_coeff_vec(psi_i)
                 Kmu_prev = Kmu
-        else:
+
+        elif couplings == False:
             Kmus = []
             Umus = []
             grads = np.zeros((len(self._Uprep), len(self._tops)))
@@ -239,8 +240,7 @@ class UCCVQE(VQE, UCC):
                     if (pmu != 1.0 + 0.0j):
                         raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
                     Umus.append(Umu)
-                    
-
+        
             for r in range(len(self._Uprep)):
                 qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
                 qc_psi.apply_circuit(Utot[r])
@@ -279,16 +279,110 @@ class UCCVQE(VQE, UCC):
                     qc_psi.set_coeff_vec(psi_i)
                     Kmu_prev = Kmu
 
-        if return_individual == True:
-            np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
-            return grads
+            if return_individual == True:
+                np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
+                return grads
+            else:
+                grads = np.einsum('iu->u', grads)
+
+
         else:
-            grads = np.einsum('iu->u', grads)
+            Kmus = []
+            Umus = []
+            grads = np.zeros((len(self._Uprep), len(self._Uprep), len(self._tops)))
+            for mu in range(0, M):
+                if self._compact_excitations:
+                    if params is None:
+                        tamp = self._tamps[mu]
+                    else:
+                        tamp = params[mu]
+                     
+                    Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
+                    Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0]) 
+                    Kmus.append(Kmu)
+
+                    if params is None:
+                        tamp = self._tamps[mu]
+                    else:
+                        tamp = params[mu]
+                    
+                    
+                    Umu = qf.Circuit()
+                    # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                    # (see original ADAPT-VQE paper)
+                    
+                    Umu.add(compact_excitation_circuit(-tamp * self._pool_obj[self._tops[mu]][1].terms()[1][0],
+                                                                   self._pool_obj[self._tops[mu]][1].terms()[1][1],
+                                                                   self._pool_obj[self._tops[mu]][1].terms()[1][2],
+                                                                   self._qubit_excitations))
+                    Umus.append(Umu)
+
+                else: 
+                    Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
+                    Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
+                    Kmus.append(Kmu)
+                    if params is None:
+                        tamp = self._tamps[mu]
+                    else:
+                        tamp = params[mu]
+                    Umu, pmu = trotterize(Kmu, factor=-tamp, trotter_number=self._trotter_number)
+                    if (pmu != 1.0 + 0.0j):
+                        raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+                    Umus.append(Umu)
+
+            for r in range(len(self._Uprep)): 
+                for r2 in range(0, len(self._Uprep)):
+                    qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
+                    qc_psi.apply_circuit(Utot[r])
+                    qc_sig = qforte.Computer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
+                    qc_sig.apply_circuit(Utot[r2]) 
+                    qc_sig.apply_operator(self._qb_ham)
+                    psi_i = qc_psi.get_coeff_vec()
+                    
+
+                    mu = M-1
+                    # find <sing_N | K_N | psi_N>
+                    Kmu_prev = Kmus[mu]
+                    qc_psi.apply_operator(Kmu_prev)
+                    grads[r, r2, mu] += np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                    grads[r2, r, mu] += np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                    
+                    
+
+                    #reset Kmu_prev |psi_i> -> |psi_i>
+                    qc_psi.set_coeff_vec(psi_i)
+                    
+                    
+                    for mu in reversed(range(M-1)):
+                        # mu => N-1 => M-2
+                        # mu+1 => N => M-1
+                        # Kmu => KN-1
+                        # Kmu_prev => KN
+
+                        Kmu = Kmus[mu]
+                        Umu = Umus[mu+1]
+
+
+                        qc_sig.apply_circuit(Umu)
+                        qc_psi.apply_circuit(Umu)
+                        psi_i = qc_psi.get_coeff_vec()
+
+                        qc_psi.apply_operator(Kmu)
+                        grads[r, r2, mu] += np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                        grads[r2, r, mu] += np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                        
+                        
+                        #reset Kmu |psi_i> -> |psi_i>
+                        qc_psi.set_coeff_vec(psi_i)
+                        Kmu_prev = Kmu
+
+            return grads    
+
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-12)
         
         return grads
 
-    def measure_gradient3(self, return_individual = False):
+    def measure_gradient3(self, return_individual = False, coupling = True):
         """ Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._pool_obj.
         For antihermitian K_mu, this is equal to <Psi|[H, K_mu]|Psi>.
         In ADAPT-VQE, this is the 'residual gradient' used to determine
@@ -322,37 +416,70 @@ class UCCVQE(VQE, UCC):
                 qc_psi.set_coeff_vec(psi_i)
 
         else:
-            Kmus = []
-            for mu, (coeff, operator) in enumerate(self._pool_obj):
-                Kmu = operator.jw_transform(self._qubit_excitations)
-                Kmu.mult_coeffs(coeff)
-                Kmus.append(Kmu)
-
-            U_ansatz = self.ansatz_circuit()
-            grads = np.zeros((len(self._Uprep), len(self._pool_obj)))
-
-            for r in range(len(self._Uprep)):
-                qc_psi = qforte.Computer(self._nqb)
-                qc_psi.apply_circuit(self._Uprep[r])
-                qc_psi.apply_circuit(U_ansatz)
-                psi_i = qc_psi.get_coeff_vec()
-                 
-                qc_sig = qforte.Computer(self._nqb)
-                qc_sig.set_coeff_vec(psi_i)
-                qc_sig.apply_operator(self._qb_ham)
-                
-
+            if coupling == False:
+                Kmus = []
                 for mu, (coeff, operator) in enumerate(self._pool_obj):
-                    Kmu = Kmus[mu]
-                    qc_psi.apply_operator(Kmu)
-                    grads[r, mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
-                    qc_psi.set_coeff_vec(psi_i)
+                    Kmu = operator.jw_transform(self._qubit_excitations)
+                    Kmu.mult_coeffs(coeff)
+                    Kmus.append(Kmu)
 
-            if return_individual == True:
-                np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
+                U_ansatz = self.ansatz_circuit()
+                grads = np.zeros((len(self._Uprep), len(self._pool_obj)))
+
+                for r in range(len(self._Uprep)):
+                    qc_psi = qforte.Computer(self._nqb)
+                    qc_psi.apply_circuit(self._Uprep[r])
+                    qc_psi.apply_circuit(U_ansatz)
+                    psi_i = qc_psi.get_coeff_vec()
+
+                    qc_sig = qforte.Computer(self._nqb)
+                    qc_sig.set_coeff_vec(psi_i)
+                    qc_sig.apply_operator(self._qb_ham)
+
+
+                    for mu, (coeff, operator) in enumerate(self._pool_obj):
+                        Kmu = Kmus[mu]
+                        qc_psi.apply_operator(Kmu)
+                        grads[r, mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                        qc_psi.set_coeff_vec(psi_i)
+
+                if return_individual == True:
+                    np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
+                    return grads
+            elif coupling == True:
+                Kmus = []
+                for mu, (coeff, operator) in enumerate(self._pool_obj):
+                    Kmu = operator.jw_transform(self._qubit_excitations)
+                    Kmu.mult_coeffs(coeff)
+                    Kmus.append(Kmu)
+
+                U_ansatz = self.ansatz_circuit()
+                grads = np.zeros((len(self._Uprep), len(self._Uprep), len(self._pool_obj)))
+
+                for r in range(len(self._Uprep)):
+                    for r2 in range(len(self._Uprep)):
+                        qc_psi = qforte.Computer(self._nqb)
+                        qc_psi.apply_circuit(self._Uprep[r])
+                        qc_psi.apply_circuit(U_ansatz)
+                        psi_i = qc_psi.get_coeff_vec()
+
+                        qc_sig = qforte.Computer(self._nqb)
+                        qc_sig.apply_circuit(self._Uprep[r2])
+                        qc_sig.apply_circuit(U_ansatz)
+                        
+                        qc_sig.apply_operator(self._qb_ham)
+
+                        for mu, (coeff, operator) in enumerate(self._pool_obj):
+                            Kmu = Kmus[mu]
+                            qc_psi.apply_operator(Kmu)
+                            grads[r, r2, mu] += np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                            grads[r2, r, mu] += np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                            qc_psi.set_coeff_vec(psi_i)
+
+                if return_individual == True:
+                    np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
                 return grads
-            else:
-                grads = np.einsum('iu->u', grads)       
+                
 
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
         
