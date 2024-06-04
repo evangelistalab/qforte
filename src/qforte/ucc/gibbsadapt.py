@@ -45,7 +45,7 @@ class Gibbs_ADAPT(UCCVQE):
         
 
 
-    def compute_free_energy(self, x):
+    def compute_free_energy(self, x, return_U = False):
         #Get energy expectation values. 
         U = self.build_Uvqc(amplitudes = x)
         E, A, ops = qf.ritz_eigh(self._nqb, self._qb_ham, U, [], verbose = False)
@@ -69,7 +69,10 @@ class Gibbs_ADAPT(UCCVQE):
         
         #S = (1/self.beta)*(p.T@np.log(q) - np.sum(p)*np.log(Q))
         self.current_energy = U + S
-        return U + S
+        if return_U == False:
+            return U + S
+        else:
+            return U + S, U
 
     def compute_free_energy_gradient(self, x):
         #Get energy expectation values.
@@ -154,7 +157,8 @@ class Gibbs_ADAPT(UCCVQE):
             print(f"TOPS: {self._tops}") 
             E, self._tamps = self.free_energy_vqe(self._tamps)
             self.history.append((E, self._tamps))                
-            print(f"ADAPT Energy {adapt_iteration}: {E}", flush = True)
+            E, U = self.compute_free_energy(self._tamps, return_U = True)
+            print(f"ADAPT Energy {adapt_iteration}: {E} {U}", flush = True)
             if len(self._tops) == max_depth:
                 Done = True
 
