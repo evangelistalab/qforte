@@ -71,7 +71,7 @@ class Algorithm(ABC):
         fast=True,
         verbose=False,
         print_summary_file=False,
-        is_multi_state = False
+        is_multi_state = False,
         weights = None,
         **kwargs,
     ):
