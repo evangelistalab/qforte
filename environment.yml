@@ -16,5 +16,6 @@ dependencies:
     - clang-format
     - pip:
         - black
+
 build:
     - postBuild.sh
