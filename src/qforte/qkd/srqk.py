@@ -7,23 +7,24 @@ quantum Krylov algorithm.
 """
 
 import qforte
+from qforte.abc.mixin import Trotterizable
 from qforte.abc.qsdabc import QSD
 from qforte.helper.printing import matprint
 
 from qforte.maths.eigsolve import canonical_geig_solve
 
 from qforte.utils.state_prep import *
-from qforte.utils.trotterization import (trotterize,
-                                         trotterize_w_cRz)
+from qforte.utils.trotterization import trotterize, trotterize_w_cRz
 
 import numpy as np
 
-class SRQK(QSD):
+
+class SRQK(Trotterizable, QSD):
     """A quantum subspace diagonalization algorithm that generates the many-body
     basis from different durations of real time evolution:
 
     .. math::
-        | \Psi_n \\rangle = e^{-i n \Delta t \hat{H}} | \Phi_0 \\rangle
+        | \\Psi_n \\rangle = e^{-i n \\Delta t \\hat{H}} | \\Phi_0 \\rangle
 
     In practice Trotterization is used to approximate the time evolution operator.
 
@@ -41,15 +42,10 @@ class SRQK(QSD):
 
 
     """
-    def run(self,
-            s=3,
-            dt=0.5,
-            target_root=0,
-            diagonalize_each_step=True
-            ):
 
+    def run(self, s=3, dt=0.5, target_root=0, diagonalize_each_step=True):
         self._s = s
-        self._nstates = s+1
+        self._nstates = s + 1
         self._dt = dt
         self._target_root = target_root
         self._diagonalize_each_step = diagonalize_each_step
@@ -65,55 +61,44 @@ class SRQK(QSD):
 
     # Define Algorithm abstract methods.
     def run_realistic(self):
-        raise NotImplementedError('run_realistic() is not fully implemented for SRQK.')
+        raise NotImplementedError("run_realistic() is not fully implemented for SRQK.")
 
     def verify_run(self):
         self.verify_required_attributes()
         self.verify_required_QSD_attributes()
 
     def print_options_banner(self):
-        print('\n-----------------------------------------------------')
-        print('           Single Reference Quantum Krylov   ')
-        print('-----------------------------------------------------')
+        print("\n-----------------------------------------------------")
+        print("           Single Reference Quantum Krylov   ")
+        print("-----------------------------------------------------")
 
-        print('\n\n                     ==> QK options <==')
-        print('-----------------------------------------------------------')
-        # General algorithm options.
-        print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
-        print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
-        print('Trial state preparation method:          ',  self._state_prep_type)
-        print('Trotter order (rho):                     ',  self._trotter_order)
-        print('Trotter number (m):                      ',  self._trotter_number)
-        print('Use fast version of algorithm:           ',  str(self._fast))
-        if(self._fast):
-            print('Measurement varience thresh:             ',  'NA')
-        else:
-            print('Measurement varience thresh:             ',  0.01)
+        print("\n\n                     ==> QK options <==")
+        print("-----------------------------------------------------------")
+
+        self.print_generic_options()
 
         # Specific SRQK options.
-        print('Dimension of Krylov space (N):           ',  self._nstates)
-        print('Delta t (in a.u.):                       ',  self._dt)
-        print('Target root:                             ',  str(self._target_root))
-
+        print("Dimension of Krylov space (N):           ", self._nstates)
+        print("Delta t (in a.u.):                       ", self._dt)
+        print("Target root:                             ", str(self._target_root))
 
     def print_summary_banner(self):
-        cs_str = '{:.2e}'.format(self._Scond)
+        cs_str = "{:.2e}".format(self._Scond)
 
-        print('\n\n                     ==> QK summary <==')
-        print('-----------------------------------------------------------')
-        print('Condition number of overlap mat k(S):      ', cs_str)
-        print('Final SRQK ground state Energy:           ', round(self._Egs, 10))
-        print('Final SRQK target state Energy:           ', round(self._Ets, 10))
-        print('Number of classical parameters used:       ', self._n_classical_params)
-        print('Number of CNOT gates in deepest circuit:   ', self._n_cnot)
-        print('Number of Pauli term measurements:         ', self._n_pauli_trm_measures)
+        print("\n\n                     ==> QK summary <==")
+        print("-----------------------------------------------------------")
+        print("Condition number of overlap mat k(S):      ", cs_str)
+        print("Final SRQK ground state Energy:           ", round(self._Egs, 10))
+        print("Final SRQK target state Energy:           ", round(self._Ets, 10))
+        print("Number of classical parameters used:       ", self._n_classical_params)
+        print("Number of CNOT gates in deepest circuit:   ", self._n_cnot)
+        print("Number of Pauli term measurements:         ", self._n_pauli_trm_measures)
 
     def build_qk_mats(self):
-        if (self._fast):
+        if self._fast:
             return self.build_qk_mats_fast()
         else:
             return self.build_qk_mats_realistic()
-
 
     def build_qk_mats_fast(self):
         """Returns matrices S and H needed for the QK algorithm using the Trotterized
@@ -133,33 +118,33 @@ class SRQK(QSD):
             _nstates by _nstates
         """
 
-        h_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
-        s_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
+        h_mat = np.zeros((self._nstates, self._nstates), dtype=complex)
+        s_mat = np.zeros((self._nstates, self._nstates), dtype=complex)
 
         # Store these vectors for the aid of MRSQK
         self._omega_lst = []
         Homega_lst = []
 
-        if(self._diagonalize_each_step):
-            print('\n\n')
+        if self._diagonalize_each_step:
+            print("\n\n")
+            string = f"{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}\n"
+            string += "-------------------------------------------------------------------------------"
+            print(string)
 
-            print(f"{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
-            print('-------------------------------------------------------------------------------')
-
-            if (self._print_summary_file):
+            if self._print_summary_file:
                 f = open("summary.dat", "w+", buffering=1)
-                f.write(f"#{'k(S)':>7}{'E(Npar)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}\n")
-                f.write('#-------------------------------------------------------------------------------\n')
+                f.write(string + "\n")
 
         for m in range(self._nstates):
             # Compute U_m = exp(-i m dt H)
-            Um = qforte.Circuit()
-            Um.add(self._Uprep)
+            Um = qforte.Circuit(self._Uprep)
             phase1 = 1.0
 
-            if(m>0):
-                fact = (0.0-1.0j) * m * self._dt
-                expn_op1, phase1 = trotterize(self._qb_ham, factor=fact, trotter_number=self._trotter_number)
+            if m > 0:
+                fact = (0.0 - 1.0j) * m * self._dt
+                expn_op1, phase1 = trotterize(
+                    self._qb_ham, factor=fact, trotter_number=self._trotter_number
+                )
                 Um.add(expn_op1)
 
             # Compute U_m |φ>
@@ -179,43 +164,48 @@ class SRQK(QSD):
                 s_mat[m][n] = np.vdot(self._omega_lst[m], self._omega_lst[n])
                 s_mat[n][m] = np.conj(s_mat[m][n])
 
-            if (self._diagonalize_each_step):
+            if self._diagonalize_each_step:
                 # TODO (cleanup): have this print to a separate file
-                k = m+1
-                evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
-                                   h_mat[0:k, 0:k],
-                                   print_mats=False,
-                                   sort_ret_vals=True)
+                k = m + 1
+                evals, evecs = canonical_geig_solve(
+                    s_mat[0:k, 0:k],
+                    h_mat[0:k, 0:k],
+                    print_mats=False,
+                    sort_ret_vals=True,
+                )
 
                 scond = np.linalg.cond(s_mat[0:k, 0:k])
                 self._n_classical_params = k
                 self._n_cnot = 2 * Um.get_num_cnots()
-                self._n_pauli_trm_measures  = k * self._Nl
-                self._n_pauli_trm_measures += k * (k-1) * self._Nl
-                self._n_pauli_trm_measures += k * (k-1)
+                self._n_pauli_trm_measures = k * self._Nl
+                self._n_pauli_trm_measures += k * (k - 1) * self._Nl
+                self._n_pauli_trm_measures += k * (k - 1)
 
-                print(f' {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
-                if (self._print_summary_file):
-                    f.write(f'  {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n')
+                print(
+                    f" {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}"
+                )
+                if self._print_summary_file:
+                    f.write(
+                        f"  {scond:7.2e}    {np.real(evals[self._target_root]):+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n"
+                    )
 
-        if (self._diagonalize_each_step and self._print_summary_file):
+        if self._diagonalize_each_step and self._print_summary_file:
             f.close()
 
         self._n_classical_params = self._nstates
         self._n_cnot = 2 * Um.get_num_cnots()
         # diagonal terms of Hbar
-        self._n_pauli_trm_measures  = self._nstates * self._Nl
+        self._n_pauli_trm_measures = self._nstates * self._Nl
         # off-diagonal of Hbar (<X> and <Y> of Hadamard test)
-        self._n_pauli_trm_measures += self._nstates*(self._nstates-1) * self._Nl
+        self._n_pauli_trm_measures += self._nstates * (self._nstates - 1) * self._Nl
         # off-diagonal of S (<X> and <Y> of Hadamard test)
-        self._n_pauli_trm_measures += self._nstates*(self._nstates-1)
-
+        self._n_pauli_trm_measures += self._nstates * (self._nstates - 1)
 
         return s_mat, h_mat
 
     def build_qk_mats_realistic(self):
-        h_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
-        s_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
+        h_mat = np.zeros((self._nstates, self._nstates), dtype=complex)
+        s_mat = np.zeros((self._nstates, self._nstates), dtype=complex)
 
         for p in range(self._nstates):
             for q in range(p, self._nstates):
@@ -226,8 +216,7 @@ class SRQK(QSD):
 
         return s_mat, h_mat
 
-
-    #TODO depricate this function
+    # TODO deprecate this function
     def matrix_element(self, m, n, use_op=False):
         """Returns a single matrix element M_mn based on the evolution of
         two unitary operators Um = exp(-i * m * dt * H) and Un = exp(-i * n * dt * H)
@@ -243,6 +232,9 @@ class SRQK(QSD):
 
         n : int
             The number of time steps for the Un evolution.
+
+        use_op : bool
+            Should the matrix element be of H (true) or S (false)?
 
         Returns
         -------
@@ -261,9 +253,9 @@ class SRQK(QSD):
             phase = -1.0j * n * self._dt * c
             temp_op1.add(phase, op)
 
-        expn_op1, phase1 = trotterize_w_cRz(temp_op1,
-                                            ancilla_idx,
-                                            trotter_number=self._trotter_number)
+        expn_op1, phase1 = trotterize_w_cRz(
+            temp_op1, ancilla_idx, trotter_number=self._trotter_number
+        )
 
         for gate in expn_op1.gates():
             Uk.add(gate)
@@ -276,49 +268,45 @@ class SRQK(QSD):
             phase = -1.0j * m * self._dt * c
             temp_op2.add(phase, op)
 
-        expn_op2, phase2 = trotterize_w_cRz(temp_op2,
-                                            ancilla_idx,
-                                            trotter_number=self._trotter_number,
-                                            Use_open_cRz=False)
+        expn_op2, phase2 = trotterize_w_cRz(
+            temp_op2,
+            ancilla_idx,
+            trotter_number=self._trotter_number,
+            Use_open_cRz=False,
+        )
 
         for gate in expn_op2.gates():
             Ub.add(gate)
 
         if not use_op:
-            # TODO (opt): use Uprep
-            cir = qforte.Circuit()
-            for j in range(self._nqb):
-                if self._ref[j] == 1:
-                    cir.add(qforte.gate('X', j, j))
+            cir = qforte.Circuit(self._Uprep)
 
-            cir.add(qforte.gate('H', ancilla_idx, ancilla_idx))
+            cir.add(qforte.gate("H", ancilla_idx, ancilla_idx))
 
             cir.add(Uk)
 
-            cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
+            cir.add(qforte.gate("X", ancilla_idx, ancilla_idx))
             cir.add(Ub)
-            cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
+            cir.add(qforte.gate("X", ancilla_idx, ancilla_idx))
 
             X_op = qforte.QubitOperator()
             x_circ = qforte.Circuit()
             Y_op = qforte.QubitOperator()
             y_circ = qforte.Circuit()
 
-            x_circ.add(qforte.gate('X', ancilla_idx, ancilla_idx))
-            y_circ.add(qforte.gate('Y', ancilla_idx, ancilla_idx))
+            x_circ.add(qforte.gate("X", ancilla_idx, ancilla_idx))
+            y_circ.add(qforte.gate("Y", ancilla_idx, ancilla_idx))
 
             X_op.add(1.0, x_circ)
             Y_op.add(1.0, y_circ)
 
-            X_exp = qforte.Experiment(self._nqb+1, cir, X_op, 100)
-            Y_exp = qforte.Experiment(self._nqb+1, cir, Y_op, 100)
+            X_exp = qforte.Experiment(self._nqb + 1, cir, X_op, 100)
+            Y_exp = qforte.Experiment(self._nqb + 1, cir, Y_op, 100)
 
-            params = [1.0]
-            x_value = X_exp.perfect_experimental_avg(params)
-            y_value = Y_exp.perfect_experimental_avg(params)
+            x_value = X_exp.perfect_experimental_avg()
+            y_value = Y_exp.perfect_experimental_avg()
 
             value = (x_value + 1.0j * y_value) * phase1 * np.conj(phase2)
-
 
         else:
             value = 0.0
@@ -330,42 +318,36 @@ class SRQK(QSD):
                 for gate in V_l.gates():
                     gate_str = gate.gate_id()
                     target = gate.target()
-                    control_gate_str = 'c' + gate_str
+                    control_gate_str = "c" + gate_str
                     cV_l.add(qforte.gate(control_gate_str, target, ancilla_idx))
 
-                cir = qforte.Circuit()
-                # TODO (opt): use Uprep
-                for j in range(self._nqb):
-                    if self._ref[j] == 1:
-                        cir.add(qforte.gate('X', j, j))
+                cir = qforte.Circuit(self._Uprep)
 
-                cir.add(qforte.gate('H', ancilla_idx, ancilla_idx))
+                cir.add(qforte.gate("H", ancilla_idx, ancilla_idx))
 
                 cir.add(Uk)
                 cir.add(cV_l)
 
-                cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
+                cir.add(qforte.gate("X", ancilla_idx, ancilla_idx))
                 cir.add(Ub)
-                cir.add(qforte.gate('X', ancilla_idx, ancilla_idx))
+                cir.add(qforte.gate("X", ancilla_idx, ancilla_idx))
 
                 X_op = qforte.QubitOperator()
                 x_circ = qforte.Circuit()
                 Y_op = qforte.QubitOperator()
                 y_circ = qforte.Circuit()
 
-                x_circ.add(qforte.gate('X', ancilla_idx, ancilla_idx))
-                y_circ.add(qforte.gate('Y', ancilla_idx, ancilla_idx))
+                x_circ.add(qforte.gate("X", ancilla_idx, ancilla_idx))
+                y_circ.add(qforte.gate("Y", ancilla_idx, ancilla_idx))
 
                 X_op.add(1.0, x_circ)
                 Y_op.add(1.0, y_circ)
 
-                X_exp = qforte.Experiment(self._nqb+1, cir, X_op, 100)
-                Y_exp = qforte.Experiment(self._nqb+1, cir, Y_op, 100)
+                X_exp = qforte.Experiment(self._nqb + 1, cir, X_op, 100)
+                Y_exp = qforte.Experiment(self._nqb + 1, cir, Y_op, 100)
 
-                # TODO (cleanup): Remove params as required arg (Nick)
-                params = [1.0]
-                x_value = X_exp.perfect_experimental_avg(params)
-                y_value = Y_exp.perfect_experimental_avg(params)
+                x_value = X_exp.perfect_experimental_avg()
+                y_value = Y_exp.perfect_experimental_avg()
 
                 element = (x_value + 1.0j * y_value) * phase1 * np.conj(phase2)
                 value += c * element

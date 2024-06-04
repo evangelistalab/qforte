@@ -1,25 +1,25 @@
 import qforte
 from qforte.abc.algorithm import Algorithm
-from qforte.utils.transforms import (circuit_to_organizer,
-                                    organizer_to_circuit,
-                                    join_organizers,
-                                    get_jw_organizer)
+from qforte.abc.mixin import Trotterizable
+from qforte.utils.transforms import (
+    circuit_to_organizer,
+    organizer_to_circuit,
+    join_organizers,
+    get_jw_organizer,
+)
 
 from qforte.utils.state_prep import *
-from qforte.utils.trotterization import (trotterize,
-                                         trotterize_w_cRz)
+from qforte.utils.trotterization import trotterize, trotterize_w_cRz
 
 
 import numpy as np
 from scipy import stats
 
-class QPE(Algorithm):
-    def run(self,
-            guess_energy: float,
-            t = 1.0,
-            nruns = 20,
-            success_prob = 0.5,
-            num_precise_bits = 4):
+
+class QPE(Trotterizable, Algorithm):
+    def run(
+        self, guess_energy: float, t=1.0, nruns=20, success_prob=0.5, num_precise_bits=4
+    ):
         """
         guess_energy : A guess for the eigenvalue of the eigenspace with which |0>^(n)
             has greatest overlap. You should be confident the ground state is within
@@ -40,7 +40,7 @@ class QPE(Algorithm):
         self._n_state_qubits = self._nqb
         eps = 1 - success_prob
         # int: The number of ancilla qubits used to hold eigenvalue information
-        self._n_ancilla = num_precise_bits + int(np.log2(2 + (1.0/eps)))
+        self._n_ancilla = num_precise_bits + int(np.log2(2 + (1.0 / eps)))
         # int: The total number of qubits needed in the circuit
         self._n_tot_qubits = self._n_state_qubits + self._n_ancilla
         self._abegin = self._n_state_qubits
@@ -67,15 +67,17 @@ class QPE(Algorithm):
         self._Uqpe.add(self.get_dynamics_circ())
 
         # add reverse QFT
-        self._Uqpe.add(self.get_qft_circuit('reverse'))
+        self._Uqpe.add(self.get_qft_circuit("reverse"))
 
         computer = qforte.Computer(self._n_tot_qubits)
         computer.apply_circuit(self._Uqpe)
 
         self._n_cnot = self._Uqpe.get_num_cnots()
 
-        if(self._fast):
-            z_readouts = computer.measure_z_readouts_fast(self._abegin, self._aend, self._nruns)
+        if self._fast:
+            z_readouts = computer.measure_z_readouts_fast(
+                self._abegin, self._aend, self._nruns
+            )
         else:
             Zcirc = self.get_z_circuit()
             z_readouts = computer.measure_readouts(Zcirc, self._nruns)
@@ -93,7 +95,9 @@ class QPE(Algorithm):
             final_readout_aves.append(iave)
             final_readout.append(1 if iave > 0.5 else 0)
 
-        self._final_phase = sum(z / (2**i) for i, z in enumerate(final_readout, start=1))
+        self._final_phase = sum(
+            z / (2**i) for i, z in enumerate(final_readout, start=1)
+        )
 
         E_u = -2 * np.pi * (self._final_phase + self._guess_periods - 1) / t
         E_l = -2 * np.pi * (self._final_phase + self._guess_periods - 0) / t
@@ -103,13 +107,15 @@ class QPE(Algorithm):
         self._mode_phase = res.mode
         E_u = -2 * np.pi * (self._mode_phase + self._guess_periods - 1) / t
         E_l = -2 * np.pi * (self._mode_phase + self._guess_periods - 0) / t
-        self._mode_energy = E_l if abs(E_l - guess_energy) < abs(E_u - guess_energy) else E_u
+        self._mode_energy = (
+            E_l if abs(E_l - guess_energy) < abs(E_u - guess_energy) else E_u
+        )
 
-        print('\n           ==> QPE readout averages <==')
-        print('------------------------------------------------')
+        print("\n           ==> QPE readout averages <==")
+        print("------------------------------------------------")
         for i, ave in enumerate(final_readout_aves):
-            print('  bit ', i,  ': ', ave)
-        print('\n  Final bit readout: ', final_readout)
+            print("  bit ", i, ": ", ave)
+        print("\n  Final bit readout: ", final_readout)
 
         ######### QPE ########
 
@@ -127,44 +133,48 @@ class QPE(Algorithm):
         self.verify_run()
 
     def run_realistic(self):
-        raise NotImplementedError('run_realistic() for QPE can be done by initializing QPE with fast==False and calling run().')
+        raise NotImplementedError(
+            "run_realistic() for QPE can be done by initializing QPE with fast==False and calling run()."
+        )
 
     def verify_run(self):
         self.verify_required_attributes()
 
     def print_options_banner(self):
-        print('\n-----------------------------------------------------')
-        print('       Quantum Phase Estimation Algorithm   ')
-        print('-----------------------------------------------------')
+        print("\n-----------------------------------------------------")
+        print("       Quantum Phase Estimation Algorithm   ")
+        print("-----------------------------------------------------")
 
-        print('\n\n                 ==> QPE options <==')
-        print('-----------------------------------------------------------')
+        print("\n\n                 ==> QPE options <==")
+        print("-----------------------------------------------------------")
         # General algorithm options.
-        print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
-        print('Trial state preparation method:          ',  self._state_prep_type)
-        print('Trotter order (rho):                     ',  self._trotter_order)
-        print('Trotter number (m):                      ',  self._trotter_number)
-        print('Use fast version of algorithm:           ',  str(self._fast))
-        print('Measurement variance thresh:             ', 'NA' if self._fast else 0.01)
+        self.print_generic_options()
 
         # Specific QPE options.
-        print('Target success probability:              ',  self._success_prob)
-        print('Number of precise bits for phase:        ',  self._num_precise_bits)
-        print('Number of time steps:                    ',  self._n_ancilla)
-        print('Evolution time (t):                      ',  self._t)
-        print('Number of QPE algorithm executions:      ',  self._nruns)
-        print('\n')
+        print("Target success probability:              ", self._success_prob)
+        print("Number of precise bits for phase:        ", self._num_precise_bits)
+        print("Number of time steps:                    ", self._n_ancilla)
+        print("Evolution time (t):                      ", self._t)
+        print("Number of QPE algorithm executions:      ", self._nruns)
+        print("\n")
 
     def print_summary_banner(self):
-        print('\n\n                        ==> QPE summary <==')
-        print('---------------------------------------------------------------')
-        print('Final QPE Energy:                        ',  np.round(self._Egs, 10))
-        print('Mode QPE Energy:                         ',  np.round(self._mode_energy, 10))
-        print('Final QPE phase:                          ', np.round(self._final_phase, 10))
-        print('Mode QPE phase:                           ', np.round(self._mode_phase, 10))
-        print('Number of classical parameters used:      ', self._n_classical_params)
-        print('Number of CNOT gates in deepest circuit:  ', self._n_cnot)
-        print('Number of Pauli term measurements:        ', self._n_pauli_trm_measures)
+        print("\n\n                        ==> QPE summary <==")
+        print("---------------------------------------------------------------")
+        print("Final QPE Energy:                        ", np.round(self._Egs, 10))
+        print(
+            "Mode QPE Energy:                         ", np.round(self._mode_energy, 10)
+        )
+        print(
+            "Final QPE phase:                          ",
+            np.round(self._final_phase, 10),
+        )
+        print(
+            "Mode QPE phase:                           ", np.round(self._mode_phase, 10)
+        )
+        print("Number of classical parameters used:      ", self._n_classical_params)
+        print("Number of CNOT gates in deepest circuit:  ", self._n_cnot)
+        print("Number of Pauli term measurements:        ", self._n_pauli_trm_measures)
 
     ### QPE specific methods
 
@@ -189,7 +199,7 @@ class QPE(Algorithm):
         """
         Uhad = qforte.Circuit()
         for j in range(self._abegin, self._aend + 1):
-            Uhad.add(qforte.gate('H', j))
+            Uhad.add(qforte.gate("H", j))
 
         return Uhad
 
@@ -217,12 +227,20 @@ class QPE(Algorithm):
                 temp_op.add(phase, operator)
 
         for n in range(self._n_ancilla):
-            tn = 2 ** n
-            expn_op, _ = trotterize_w_cRz(temp_op, ancilla_idx,
-                                               trotter_number=self._trotter_number)
+            tn = 2**n
+            expn_op, _ = trotterize_w_cRz(
+                temp_op, ancilla_idx, trotter_number=self._trotter_number
+            )
 
             # Rotation for the scalar Hamiltonian term
-            U.add(qforte.gate('R', ancilla_idx, ancilla_idx, -1.0 * np.sum(scalar_terms) * float(tn)))
+            U.add(
+                qforte.gate(
+                    "R",
+                    ancilla_idx,
+                    ancilla_idx,
+                    -1.0 * np.sum(scalar_terms) * float(tn),
+                )
+            )
 
             for i in range(tn):
                 U.add_circuit(expn_op)
@@ -230,7 +248,6 @@ class QPE(Algorithm):
             ancilla_idx += 1
 
         return U
-
 
     def get_qft_circuit(self, direct):
         """Generates a circuit for Quantum Fourier Transformation with no swapping
@@ -258,40 +275,41 @@ class QPE(Algorithm):
         qft_circ = qforte.Circuit()
         lens = self._aend - self._abegin + 1
         for j in range(lens):
-            qft_circ.add(qforte.gate('H', j+self._abegin))
-            for k in range(2, lens+1-j):
-                phase = 2.0*np.pi/(2**k)
-                qft_circ.add(qforte.gate('cR', j+self._abegin, j+k-1+self._abegin, phase))
+            qft_circ.add(qforte.gate("H", j + self._abegin))
+            for k in range(2, lens + 1 - j):
+                phase = 2.0 * np.pi / (2**k)
+                qft_circ.add(
+                    qforte.gate("cR", j + self._abegin, j + k - 1 + self._abegin, phase)
+                )
 
-        if direct == 'forward':
+        if direct == "forward":
             return qft_circ
-        elif direct == 'reverse':
+        elif direct == "reverse":
             return qft_circ.adjoint()
         else:
             raise ValueError('QFT directions can only be "forward" or "reverse"')
 
-
     def get_z_circuit(self):
         """Generates a circuit of Z gates for each quibit in the ancilla register.
 
-            Arguments
-            ---------
+        Arguments
+        ---------
 
-            self._abegin : int
-                The index of the begin qubit.
+        self._abegin : int
+            The index of the begin qubit.
 
-            self._aend : int
-                The index of the end qubit.
+        self._aend : int
+            The index of the end qubit.
 
-            Returns
-            -------
+        Returns
+        -------
 
-            z_circ : Circuit
-                A circuit representing the the Z gates to be measured.
+        z_circ : Circuit
+            A circuit representing the the Z gates to be measured.
         """
 
         Z_circ = qforte.Circuit()
         for j in range(self._abegin, self._aend + 1):
-            Z_circ.add(qforte.gate('Z', j))
+            Z_circ.add(qforte.gate("Z", j))
 
         return Z_circ

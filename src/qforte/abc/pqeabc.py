@@ -8,6 +8,7 @@ variant.
 from abc import abstractmethod
 from qforte.abc.algorithm import AnsatzAlgorithm
 
+
 class PQE(AnsatzAlgorithm):
     """The abstract base class inheritied by any algorithm that seeks to find
     eigenstates by minimization of the residual condition
@@ -23,11 +24,17 @@ class PQE(AnsatzAlgorithm):
         pass
 
     def verify_required_PQE_attributes(self):
-        if not hasattr(self, '_converged'):
-            raise NotImplementedError('Concrete PQE class must define self._converged attribute.')
+        if not hasattr(self, "_converged"):
+            raise NotImplementedError(
+                "Concrete PQE class must define self._converged attribute."
+            )
 
-        if not hasattr(self, '_opt_maxiter'):
-            raise NotImplementedError('Concrete PQE class must define self._opt_maxiter attribute.')
+        if not hasattr(self, "_opt_maxiter"):
+            raise NotImplementedError(
+                "Concrete PQE class must define self._opt_maxiter attribute."
+            )
 
-        if not hasattr(self, '_opt_thresh'):
-            raise NotImplementedError('Concrete PQE class must define self._opt_thresh attribute.')
+        if not hasattr(self, "_opt_thresh"):
+            raise NotImplementedError(
+                "Concrete PQE class must define self._opt_thresh attribute."
+            )

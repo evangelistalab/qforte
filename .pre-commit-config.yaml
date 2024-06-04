@@ -1,0 +1,13 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v14.0.3  # Replace with the latest version or the version you prefer
+    hooks:
+      - id: clang-format
+        files: \.(cc|cpp|h)$
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0  # Replace with the latest version or the version you prefer
+    hooks:
+      - id: black
+        language_version: python3  # or specify your desired Python version
+        files: \.(py)$

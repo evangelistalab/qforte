@@ -10,6 +10,7 @@ import json
 
 try:
     import psi4
+
     use_psi4 = True
 except:
     use_psi4 = False
@@ -24,9 +25,9 @@ def create_psi_mol(**kwargs):
         The qforte Molecule object which holds the molecular information.
     """
 
-    kwargs.setdefault('symmetry', 'c1')
-    kwargs.setdefault('charge', 0)
-    kwargs.setdefault('multiplicity', 1)
+    kwargs.setdefault("symmetry", "c1")
+    kwargs.setdefault("charge", 0)
+    kwargs.setdefault("multiplicity", 1)
 
     mol_geometry = kwargs['mol_geometry']
     basis = kwargs['basis']
@@ -64,18 +65,20 @@ def create_psi_mol(**kwargs):
     kwargs.setdefault('frozen_uocc', None)
     
     # run_scf is not read, because we always run SCF to get a wavefunction object.
-    kwargs.setdefault('run_mp2', False)
-    kwargs.setdefault('run_ccsd', False)
-    kwargs.setdefault('run_cisd', False)
-    kwargs.setdefault('run_fci', False)
+    kwargs.setdefault("run_mp2", False)
+    kwargs.setdefault("run_ccsd", False)
+    kwargs.setdefault("run_cisd", False)
+    kwargs.setdefault("run_fci", False)
 
     # Setup psi4 calculation(s)
-    psi4.set_memory('2 GB')
-    psi4.core.set_output_file(kwargs['filename']+'.out', False)
+    psi4.set_memory("2 GB")
+    psi4.core.set_output_file(kwargs["filename"] + ".out", False)
 
-    p4_geom_str =  f"{int(charge)}  {int(multiplicity)}"
+    p4_geom_str = f"{int(charge)}  {int(multiplicity)}"
     for geom_line in mol_geometry:
-        p4_geom_str += f"\n{geom_line[0]}  {geom_line[1][0]}  {geom_line[1][1]}  {geom_line[1][2]}"
+        p4_geom_str += (
+            f"\n{geom_line[0]}  {geom_line[1][0]}  {geom_line[1][1]}  {geom_line[1][2]}"
+        )
     p4_geom_str += f"\nsymmetry {kwargs['symmetry']}"
     p4_geom_str += f"\nunits angstrom"
     if kwargs["no_reorient"] == True:
@@ -84,8 +87,8 @@ def create_psi_mol(**kwargs):
         p4_geom_str += f"\nno_com"
     
 
-    print(' ==> Psi4 geometry <==')
-    print('-------------------------')
+    print(" ==> Psi4 geometry <==")
+    print("-------------------------")
     print(p4_geom_str)
 
     p4_mol = psi4.geometry(p4_geom_str)
@@ -134,20 +137,22 @@ def create_psi_mol(**kwargs):
         p4_Escf, p4_wfn = psi4.energy('SCF', return_wfn=True)
         
     # Run additional computations requested by the user
-    if kwargs['run_mp2']:
-        qforte_mol.mp2_energy = psi4.energy('MP2')
+    if kwargs["run_mp2"]:
+        qforte_mol.mp2_energy = psi4.energy("MP2")
 
-    if kwargs['run_ccsd']:
-        qforte_mol.ccsd_energy = psi4.energy('CCSD')
+    if kwargs["run_ccsd"]:
+        qforte_mol.ccsd_energy = psi4.energy("CCSD")
 
-    if kwargs['run_cisd']:
-        qforte_mol.cisd_energy = psi4.energy('CISD')
+    if kwargs["run_cisd"]:
+        qforte_mol.cisd_energy = psi4.energy("CISD")
 
     if kwargs['run_fci'] and kwargs['casscf'] == None:
         if kwargs['num_frozen_uocc'] == 0:
             qforte_mol.fci_energy = psi4.energy('FCI')
         else:
-            print('\nWARNING: Skipping FCI computation due to a Psi4 bug related to FCI with frozen virtuals.\n')
+            print(
+                "\nWARNING: Skipping FCI computation due to a Psi4 bug related to FCI with frozen virtuals.\n"
+            )
 
     # Get integrals using MintsHelper.
     mints = psi4.core.MintsHelper(p4_wfn.basisset())
@@ -164,8 +169,7 @@ def create_psi_mol(**kwargs):
     # Do MO integral transformation
     mo_teis = np.asarray(mints.mo_eri(C, C, C, C))
     mo_oeis = np.asarray(mints.ao_kinetic()) + np.asarray(mints.ao_potential())
-    mo_oeis = np.einsum('uj,vi,uv', C, C, mo_oeis)
-    
+    mo_oeis = np.einsum("uj,vi,uv", C, C, mo_oeis)
 
     nmo = np.shape(mo_oeis)[0] 
     
@@ -247,8 +251,8 @@ def create_psi_mol(**kwargs):
     Hsq = qforte.SQOperator()
     Hsq.add(p4_Enuc_ref + frozen_core_energy, [], [])
     for i in range(frozen_core, nmo - frozen_virtual):
-        ia = (i - frozen_core)*2
-        ib = (i - frozen_core)*2 + 1
+        ia = (i - frozen_core) * 2
+        ib = (i - frozen_core) * 2 + 1
         for j in range(frozen_core, nmo - frozen_virtual):
             ja = (j - frozen_core)*2
             jb = (j - frozen_core)*2 + 1
@@ -260,8 +264,8 @@ def create_psi_mol(**kwargs):
             
 
             for k in range(frozen_core, nmo - frozen_virtual):
-                ka = (k - frozen_core)*2
-                kb = (k - frozen_core)*2 + 1
+                ka = (k - frozen_core) * 2
+                kb = (k - frozen_core) * 2 + 1
                 for l in range(frozen_core, nmo - frozen_virtual):
                     la = (l - frozen_core)*2
                     lb = (l - frozen_core)*2 + 1
@@ -466,9 +470,11 @@ def create_external_mol(**kwargs):
         The qforte Molecule object which holds the molecular information.
     """
 
-    qforte_mol = Molecule(multiplicity = kwargs['multiplicity'],
-                                charge = kwargs['charge'],
-                                filename = kwargs['filename'])
+    qforte_mol = Molecule(
+        multiplicity=kwargs["multiplicity"],
+        charge=kwargs["charge"],
+        filename=kwargs["filename"],
+    )
 
     # open json file
     with open(kwargs["filename"]) as f:
@@ -476,7 +482,7 @@ def create_external_mol(**kwargs):
 
     # extract symmetry information if found
     try:
-        point_group = external_data['point_group']['data']
+        point_group = external_data["point_group"]["data"]
     except KeyError:
         "No point group in JSON file.  Using C1."
         point_group = 'C1'
@@ -488,18 +494,17 @@ def create_external_mol(**kwargs):
 
     # we need the irreps of the spatial orbitals, but the
     # json file provides the irreps of the spin-orbitals
-    if point_group.upper() == 'C1':
-        qforte_mol.orb_irreps = ['A'] * int(external_data['nso']['data']/2)
-        qforte_mol.orb_irreps_to_int = [0] * int(external_data['nso']['data']/2)
+    if point_group == "C1":
+        qforte_mol.orb_irreps = ["A"] * int(external_data["nso"]["data"] / 2)
+        qforte_mol.orb_irreps_to_int = [0] * int(external_data["nso"]["data"] / 2)
     else:
-        for int_irrep in external_data['symmetry']['data'][::2]:
+        for int_irrep in external_data["symmetry"]["data"][::2]:
             qforte_mol.orb_irreps_to_int.append(int_irrep)
             qforte_mol.orb_irreps.append(irreps[int_irrep])
-    
 
     # build sq hamiltonian
     qforte_sq_hamiltonian = qforte.SQOperator()
-    qforte_sq_hamiltonian.add(external_data['scalar_energy']['data'], [], [])
+    qforte_sq_hamiltonian.add(external_data["scalar_energy"]["data"], [], [])
 
     
     for p, q, h_pq in external_data['oei']['data']:

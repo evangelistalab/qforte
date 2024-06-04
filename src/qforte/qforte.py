@@ -28,7 +28,8 @@ def example_doc_function():
         A description of what this parameter does
     """
 
-class example_doc_class():
+
+class example_doc_class:
     """
     A class to read, write, and manipulate cube files
 

@@ -1,7 +1,8 @@
 import numpy as np
 from scipy import linalg
 from qforte.helper.idx_org import sorted_largest_idxs
-from qforte.helper.printing import matprint 
+from qforte.helper.printing import matprint
+
 
 def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
     """Solves a generalized eigenvalue problem HC = SCe in a numerically stable
@@ -40,15 +41,17 @@ def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
     s_prime = []
 
     for sii in s:
-        if(np.imag(sii) > 1e-12):
-            raise ValueError('S may not be hermetian, large imag. eval component.')
-        if(np.real(sii) > THRESHOLD):
+        if np.imag(sii) > 1e-12:
+            raise ValueError("S may not be hermetian, large imag. eval component.")
+        if np.real(sii) > THRESHOLD:
             s_prime.append(np.real(sii))
 
-    if((len(s) - len(s_prime)) != 0):
-        print('\nGeneralized eigenvalue probelm rank was reduced, matrix may be ill conditioned!')
-        print('  s is of inital rank:    ', len(s))
-        print('  s is of truncated rank: ', len(s_prime))
+    if (len(s) - len(s_prime)) != 0:
+        print(
+            "\nGeneralized eigenvalue probelm rank was reduced, matrix may be ill conditioned!"
+        )
+        print("  s is of inital rank:    ", len(s))
+        print("  s is of truncated rank: ", len(s_prime))
 
     X_prime = np.zeros((len(s), len(s_prime)), dtype=complex)
     for i in range(len(s)):
@@ -59,46 +62,46 @@ def canonical_geig_solve(S, H, print_mats=False, sort_ret_vals=False):
     e_prime, C_prime = linalg.eig(H_prime)
     C = X_prime.dot(C_prime)
 
-    if(print_mats):
-        print('\n      -----------------------------')
-        print('      Printing GEVS Mats (unsorted)')
-        print('      -----------------------------')
+    if print_mats:
+        print("\n      -----------------------------")
+        print("      Printing GEVS Mats (unsorted)")
+        print("      -----------------------------")
 
         I_prime = (((C.conjugate()).transpose()).dot(S)).dot(C)
 
-        print('\ns:\n')
+        print("\ns:\n")
         print(s)
-        print('\nU:\n')
+        print("\nU:\n")
         matprint(U)
-        print('\nX_prime:\n')
+        print("\nX_prime:\n")
         matprint(X_prime)
-        print('\nH_prime:\n')
+        print("\nH_prime:\n")
         matprint(H_prime)
-        print('\ne_prime:\n')
+        print("\ne_prime:\n")
         print(e_prime)
-        print('\nC_prime:\n')
+        print("\nC_prime:\n")
         matprint(C_prime)
-        print('\ne_prime:\n')
+        print("\ne_prime:\n")
         print(e_prime)
-        print('\nC:\n')
+        print("\nC:\n")
         matprint(C)
-        print('\nIprime:\n')
+        print("\nIprime:\n")
         matprint(I_prime)
 
-        print('\n      ------------------------------')
-        print('          Printing GEVS Mats End    ')
-        print('      ------------------------------')
+        print("\n      ------------------------------")
+        print("          Printing GEVS Mats End    ")
+        print("      ------------------------------")
 
-    if(sort_ret_vals):
+    if sort_ret_vals:
         sorted_e_prime_idxs = sorted_largest_idxs(e_prime, use_real=True, rev=False)
         sorted_e_prime = np.zeros((len(e_prime)), dtype=complex)
-        sorted_C_prime = np.zeros((len(e_prime),len(e_prime)), dtype=complex)
-        sorted_X_prime = np.zeros((len(s),len(e_prime)), dtype=complex)
+        sorted_C_prime = np.zeros((len(e_prime), len(e_prime)), dtype=complex)
+        sorted_X_prime = np.zeros((len(s), len(e_prime)), dtype=complex)
         for n in range(len(e_prime)):
             old_idx = sorted_e_prime_idxs[n][1]
-            sorted_e_prime[n]   = e_prime[old_idx]
-            sorted_C_prime[:,n] = C_prime[:,old_idx]
-            sorted_X_prime[:,n] = X_prime[:,old_idx]
+            sorted_e_prime[n] = e_prime[old_idx]
+            sorted_C_prime[:, n] = C_prime[:, old_idx]
+            sorted_X_prime[:, n] = X_prime[:, old_idx]
 
         sorted_C = sorted_X_prime.dot(sorted_C_prime)
         return sorted_e_prime, sorted_C

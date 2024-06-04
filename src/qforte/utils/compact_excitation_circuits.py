@@ -5,6 +5,7 @@ Functions for constructing compact quantum circuits for fermioninc/qubit excitat
 import qforte as qf
 import numpy as np
 
+
 def compact_excitation_circuit(theta, creation, annihilation, qubit_excitations):
     """
     This function constructs compact quantum circuits for fermionic/qubit
@@ -32,7 +33,9 @@ def compact_excitation_circuit(theta, creation, annihilation, qubit_excitations)
     """
 
     if len(creation) != len(annihilation):
-        raise ValueError("Compact fermionic/qubit excitations are implemented for particle-number-conserving operators only.")
+        raise ValueError(
+            "Compact fermionic/qubit excitations are implemented for particle-number-conserving operators only."
+        )
 
     # When using GSD, there are excitations of the form p^ q^ s q, etc.
     # Such excitations can be viewed as controled single excitations,
@@ -56,7 +59,7 @@ def compact_excitation_circuit(theta, creation, annihilation, qubit_excitations)
                 duplicate.append(i)
             if annihilation[i] == gsd_control[0]:
                 duplicate.append(i)
-        if duplicate == [0,0] or duplicate == [1,1]:
+        if duplicate == [0, 0] or duplicate == [1, 1]:
             gsd_unique = True
 
     circ = qf.Circuit()
@@ -70,13 +73,23 @@ def compact_excitation_circuit(theta, creation, annihilation, qubit_excitations)
 
         circ.add(CNOT_stair)
 
-    circ.add(qubit_excitation(theta, creation_unique, annihilation_unique, gsd_control, gsd_sign, qubit_excitations))
+    circ.add(
+        qubit_excitation(
+            theta,
+            creation_unique,
+            annihilation_unique,
+            gsd_control,
+            gsd_sign,
+            qubit_excitations,
+        )
+    )
 
     # Add adjoint of CNOT staircase
     if not qubit_excitations:
         circ.add(CNOT_stair.adjoint())
 
     return circ
+
 
 def fermion_sign_circuit(creation, annihilation):
     """
@@ -100,7 +113,7 @@ def fermion_sign_circuit(creation, annihilation):
     n_qubit = max(creation + annihilation) + 1
 
     # A 1 in a given column indicates a Z gate for this qubit.
-    aux = np.zeros((n_qubit, len(creation) + len(annihilation) + 1), dtype = bool)
+    aux = np.zeros((n_qubit, len(creation) + len(annihilation) + 1), dtype=bool)
     for i, create in enumerate(creation):
         for j in range(create):
             aux[j, i] = 1
@@ -117,7 +130,7 @@ def fermion_sign_circuit(creation, annihilation):
         aux[i, -1] = 0
 
     CNOT_indices = []
-    for idx, boolean in enumerate(aux[:,-1]):
+    for idx, boolean in enumerate(aux[:, -1]):
         if boolean:
             CNOT_indices.append(idx)
 
@@ -129,13 +142,16 @@ def fermion_sign_circuit(creation, annihilation):
         return CNOT_circ
 
     for i in range(len(CNOT_indices) - 1):
-        CNOT_circ.add(qf.gate('CNOT', CNOT_indices[i + 1], CNOT_indices[i]))
+        CNOT_circ.add(qf.gate("CNOT", CNOT_indices[i + 1], CNOT_indices[i]))
 
-    CNOT_circ.add(qf.gate('cZ', creation[0], CNOT_indices[-1]))
+    CNOT_circ.add(qf.gate("cZ", creation[0], CNOT_indices[-1]))
 
     return CNOT_circ
 
-def qubit_excitation(theta, creation, annihilation, gsd_control, gsd_sign, qubit_excitations):
+
+def qubit_excitation(
+    theta, creation, annihilation, gsd_control, gsd_sign, qubit_excitations
+):
     """
     Function that performs a "qubit" excitation. Note that, unless qubit_excitations=True,
     the resulting circuit is not equivalent to a pure qubit excitation since sign factors
@@ -167,20 +183,39 @@ def qubit_excitation(theta, creation, annihilation, gsd_control, gsd_sign, qubit
     circ = qf.Circuit()
 
     for target in creation[1:]:
-        circ.add(qf.gate('CNOT', target, creation[0]))
+        circ.add(qf.gate("CNOT", target, creation[0]))
     for target in annihilation[1:]:
-        circ.add(qf.gate('CNOT', target, annihilation[0]))
-    circ.add(qf.gate('CNOT', annihilation[0], creation[0]))
+        circ.add(qf.gate("CNOT", target, annihilation[0]))
+    circ.add(qf.gate("CNOT", annihilation[0], creation[0]))
 
     CNOT_circ_adjoint = circ.adjoint()
 
-    circ.add(multi_qubit_controlled_Ry(theta, creation[0], creation[1:], annihilation, gsd_control, gsd_sign, qubit_excitations))
+    circ.add(
+        multi_qubit_controlled_Ry(
+            theta,
+            creation[0],
+            creation[1:],
+            annihilation,
+            gsd_control,
+            gsd_sign,
+            qubit_excitations,
+        )
+    )
 
     circ.add(CNOT_circ_adjoint)
 
     return circ
 
-def multi_qubit_controlled_Ry(theta, target, control_creation, control_annihilation, gsd_control, gsd_sign, qubit_excitations):
+
+def multi_qubit_controlled_Ry(
+    theta,
+    target,
+    control_creation,
+    control_annihilation,
+    gsd_control,
+    gsd_sign,
+    qubit_excitations,
+):
     """
     Function that constructs a multi-qubit-controlled Ry gate as a series of
     single-qubit Ry rotations and two-qubit CNOT and aCNOT gates.
@@ -228,7 +263,7 @@ def multi_qubit_controlled_Ry(theta, target, control_creation, control_annihilat
     circ = qf.Circuit()
 
     for i in range(num_Ry_gates):
-        sign = 1-2*(i%2)
+        sign = 1 - 2 * (i % 2)
         if not qubit_excitations:
             # In the case of fermionic excitations, there exists a sign factor that
             # multiplies the angle theta of the multi-qubit-controlled Ry gate. The
@@ -237,20 +272,20 @@ def multi_qubit_controlled_Ry(theta, target, control_creation, control_annihilat
             rank = len(control_annihilation)
             if rank == 1:
                 prefactor = 1
-            if not rank%2 and not rank%4:
+            if not rank % 2 and not rank % 4:
                 prefactor = 1
-            elif not (rank - 1)%2 and not (rank - 1)%4:
+            elif not (rank - 1) % 2 and not (rank - 1) % 4:
                 prefactor = 1
             sign *= prefactor * gsd_sign
-        circ.add(qf.gate('Ry', target, target, sign * new_theta))
+        circ.add(qf.gate("Ry", target, target, sign * new_theta))
         for j, control in enumerate(control_qubits):
-            if not (i+1)%(num_Ry_gates/(1<<j+1)):
-                if not (i+1)%(num_Ry_gates/2) or i == num_Ry_gates - 1:
-                    circ.add(qf.gate('CNOT', target, control))
+            if not (i + 1) % (num_Ry_gates / (1 << j + 1)):
+                if not (i + 1) % (num_Ry_gates / 2) or i == num_Ry_gates - 1:
+                    circ.add(qf.gate("CNOT", target, control))
                 elif gsd_control != []:
-                    circ.add(qf.gate('CNOT', target, control))
+                    circ.add(qf.gate("CNOT", target, control))
                 else:
-                    circ.add(qf.gate('aCNOT', target, control))
+                    circ.add(qf.gate("aCNOT", target, control))
                 break
 
     return circ

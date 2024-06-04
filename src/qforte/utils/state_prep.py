@@ -1,16 +1,14 @@
 import qforte
 import numpy as np
 
-def build_Uprep(ref, state_prep_type):
-    Uprep = qforte.Circuit()
-    if state_prep_type == 'occupation_list':
-        for j in range(len(ref)):
-            if ref[j] == 1:
-                Uprep.add(qforte.gate('X', j, j))
-    else:
-        raise ValueError("Only 'occupation_list' supported as state preparation type")
 
-    return Uprep
+def build_refprep(ref):
+    refprep = qforte.Circuit()
+    for j, occupied in enumerate(ref):
+        if occupied:
+            refprep.add(qforte.gate("X", j, j))
+
+    return refprep
 
 
 def ref_string(ref, nqb):
@@ -19,6 +17,7 @@ def ref_string(ref, nqb):
     ref_basis_idx = int("".join(str(x) for x in temp), 2)
     ref_basis = qforte.QubitBasis(ref_basis_idx)
     return ref_basis.str(nqb)
+
 
 def integer_to_ref(n, nqubits):
     """Takes an integer pertaining to a biary number and returns the corresponding
@@ -44,11 +43,12 @@ def integer_to_ref(n, nqubits):
     qb = qforte.QubitBasis(n)
     ref = []
     for i in range(nqubits):
-        if (qb.get_bit(i)):
+        if qb.get_bit(i):
             ref.append(1)
         else:
             ref.append(0)
     return ref
+
 
 def open_shell(ref):
     """Determines Wheter or not the reference is an open shell determinant.
@@ -64,12 +64,13 @@ def open_shell(ref):
     """
     norb = int(len(ref) / 2)
     for i in range(norb):
-        i_alfa = 2*i
-        i_beta = (2*i) + 1
-        if((ref[i_alfa] + ref[i_beta]) == 1):
+        i_alfa = 2 * i
+        i_beta = (2 * i) + 1
+        if (ref[i_alfa] + ref[i_beta]) == 1:
             return True
 
     return False
+
 
 def correct_spin(ref, abs_spin):
     """Determines Wheter or not the reference has correct spin.
@@ -92,15 +93,16 @@ def correct_spin(ref, abs_spin):
     norb = int(len(ref) / 2)
     spin = 0.0
     for i in range(norb):
-        i_alfa = 2*i
-        i_beta = (2*i) + 1
+        i_alfa = 2 * i
+        i_beta = (2 * i) + 1
         spin += ref[i_alfa] * 0.5
         spin -= ref[i_beta] * 0.5
 
-    if(np.abs(spin) == abs_spin):
+    if np.abs(spin) == abs_spin:
         return True
     else:
         return False
+
 
 def flip_spin(ref, orb_idx):
     """Takes in a single determinant reference and returns a determinant with
@@ -128,14 +130,15 @@ def flip_spin(ref, orb_idx):
 
     """
     temp = ref.copy()
-    i_alfa = 2*orb_idx
-    i_beta = (2*orb_idx) + 1
+    i_alfa = 2 * orb_idx
+    i_beta = (2 * orb_idx) + 1
     alfa_val = ref[i_alfa]
     beta_val = ref[i_beta]
 
     temp[i_alfa] = beta_val
     temp[i_beta] = alfa_val
     return temp
+
 
 def build_eq_dets(open_shell_ref):
     """Builds a list of unique spin equivalent determinants from an open shell
@@ -161,12 +164,12 @@ def build_eq_dets(open_shell_ref):
     one_e_orbs = []
     spin = 0.0
     for i in range(norb):
-        i_alfa = 2*i
-        i_beta = (2*i) + 1
+        i_alfa = 2 * i
+        i_beta = (2 * i) + 1
         spin += open_shell_ref[i_alfa] * 0.5
         spin -= open_shell_ref[i_beta] * 0.5
 
-        if((open_shell_ref[i_alfa] + open_shell_ref[i_beta]) == 1):
+        if (open_shell_ref[i_alfa] + open_shell_ref[i_beta]) == 1:
             one_e_orbs.append(i)
 
     abs_spin = np.abs(spin)
@@ -175,31 +178,32 @@ def build_eq_dets(open_shell_ref):
     for ref in eq_ref_lst1:
         for orb in one_e_orbs:
             temp = flip_spin(ref, orb)
-            if(temp not in eq_ref_lst1):
+            if temp not in eq_ref_lst1:
                 eq_ref_lst1.append(temp)
 
     eq_ref_lst2 = []
     for ref in eq_ref_lst1:
-        if(correct_spin(ref, abs_spin)):
+        if correct_spin(ref, abs_spin):
             eq_ref_lst2.append(ref)
 
     return eq_ref_lst2
 
+
 def ref_to_basis_idx(ref):
     """Turns a reference list into a integer representing its binary value.
 
-        Arguments
-        ---------
+    Arguments
+    ---------
 
-        ref : list
-            The reference determinant (list of 1's and 0's) indicating the spin
-            orbtial occupation.
+    ref : list
+        The reference determinant (list of 1's and 0's) indicating the spin
+        orbtial occupation.
 
-        Returns
-        -------
+    Returns
+    -------
 
-        idx_val : int
-            The value of the index.
+    idx_val : int
+        The value of the index.
 
     """
     temp = ref.copy()

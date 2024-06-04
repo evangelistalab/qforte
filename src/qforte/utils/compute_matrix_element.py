@@ -1,5 +1,6 @@
 import qforte as qf
 
+
 def compute_operator_matrix_element(n_qubit, U_bra, U_ket, QOp=None):
     """
     This function computes expressions of the form:

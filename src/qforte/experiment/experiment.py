@@ -6,12 +6,13 @@ that will return approximate expectation values.
 import qforte
 import numpy
 
+
 class Experiment(object):
-
-    def __init__(self, n_qubits, generator, operator, N_samples, prepare_each_time = False):
-
+    def __init__(
+        self, n_qubits, generator, operator, N_samples, prepare_each_time=False
+    ):
         """
-        Experimant is a class that exemplifies two quantum computational tasks:
+        Experiment is a class that exemplifies two quantum computational tasks:
         (1) state preparation from a 'generator' circuit which may or may not be
         parameterized, and (2) to measure operators to produce approximate
         expectation values.
@@ -37,8 +38,7 @@ class Experiment(object):
         self.N_samples_ = N_samples
         self.prepare_each_time_ = prepare_each_time
 
-    def experimental_avg(self, params):
-
+    def experimental_avg(self, params=[]):
         """
         calculates the experimental average of the operator the Experiment object was initialized with
 
@@ -46,33 +46,36 @@ class Experiment(object):
 
         """
 
-        if(self.prepare_each_time_==False):
-            #1 initialize a quantum computer
+        if self.prepare_each_time_ == False:
+            # 1 initialize a quantum computer
             qc = qforte.Computer(self.n_qubits_)
 
-            #2 build/update generator with params
+            # 2 build/update generator with params
             # self.generator_.set_parameters(params)
 
-            #3 apply generator (once if prepare_each_time = False, N_sample times if)
+            # 3 apply generator (once if prepare_each_time = False, N_sample times if)
             qc.apply_circuit(self.generator_)
 
-            #4 measure operator
+            # 4 measure operator
             n_terms = len(self.operator_.terms())
             term_sum = 0.0
 
             for k in range(n_terms):
-                measured = qc.measure_circuit(self.operator_.terms()[k][1], self.N_samples_)
+                measured = qc.measure_circuit(
+                    self.operator_.terms()[k][1], self.N_samples_
+                )
                 term_sum += self.operator_.terms()[k][0] * sum(measured)
 
             term_sum /= self.N_samples_
 
             return numpy.real(term_sum)
 
-        elif(self.prepare_each_time_==True):
-            raise Exception('No support yet for measurement with multiple state preparations')
+        elif self.prepare_each_time_ == True:
+            raise Exception(
+                "No support yet for measurement with multiple state preparations"
+            )
 
-    def perfect_experimental_avg(self, params):
-
+    def perfect_experimental_avg(self, params=[]):
         """
         calculates the exact experimental result of the operator the Experiment object was initialized with
 
@@ -80,26 +83,30 @@ class Experiment(object):
 
         """
 
-        if(self.prepare_each_time_==False):
-            #1 initialize a quantum computer
+        if self.prepare_each_time_ == False:
+            # 1 initialize a quantum computer
             qc = qforte.Computer(self.n_qubits_)
 
-            #2 build/update generator with params
+            # 2 build/update generator with params
             # self.generator_.set_parameters(params)
 
-            #3 apply generator (once if prepare_each_time = False, N_sample times if)
+            # 3 apply generator (once if prepare_each_time = False, N_sample times if)
             qc.apply_circuit(self.generator_)
 
-            #4 measure operator
+            # 4 measure operator
             n_terms = len(self.operator_.terms())
             term_sum = 0.0
 
             for k in range(n_terms):
-                term_sum += self.operator_.terms()[k][0] * qc.perfect_measure_circuit(self.operator_.terms()[k][1]);
+                term_sum += self.operator_.terms()[k][0] * qc.perfect_measure_circuit(
+                    self.operator_.terms()[k][1]
+                )
 
             return numpy.real(term_sum)
 
-        elif(self.prepare_each_time_==True):
-            raise Exception('No support yet for measurement with multiple state preparations')
+        elif self.prepare_each_time_ == True:
+            raise Exception(
+                "No support yet for measurement with multiple state preparations"
+            )
 
-    #Have VQE function here? or make in a separate class?
+    # Have VQE function here? or make in a separate class?
