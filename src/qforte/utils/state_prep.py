@@ -2,7 +2,7 @@ import qforte
 import numpy as np
 
 
-def build_refprep(ref):
+def build_Uprep(ref):
     refprep = qforte.Circuit()
     for j, occupied in enumerate(ref):
         if occupied:

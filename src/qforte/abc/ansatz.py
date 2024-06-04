@@ -8,7 +8,7 @@ the ansatz circut and potential supporting utility functions.
 
 import qforte as qf
 
-from qforte.utils.state_prep import build_refprep
+from qforte.utils.state_prep import build_Uprep
 from qforte.utils.trotterization import trotterize
 from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
 from qforte.abc.mixin import Trotterizable
