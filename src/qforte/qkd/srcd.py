@@ -70,6 +70,9 @@ class SRCD(QSD):
         self.common_run()
         self._timer.record("Run")
 
+        # Temporary solution, replacing Egs with lambda_low
+        self._Egs = self._lambda_low
+
     # Define Algorithm abstract methods.
     def run_realistic(self):
         raise NotImplementedError('run_realistic() is not fully implemented for SRCD.')
@@ -100,7 +103,7 @@ class SRCD(QSD):
         print('\n\n                     ==> CD summary <==')
         print('-----------------------------------------------------------')
         print('Condition number of overlap mat k(S):      ', cs_str)
-        print('Final SRCD ground state Energy:           ', round(self._Egs, 10))
+        print('Final SRCD ground state Energy:           ', round(self._lambda_low, 10))
         print('Final SRCD target state Energy:           ', round(self._Ets, 10))
         print('Number of classical parameters used:       ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:   ', self._n_cnot)
@@ -288,6 +291,7 @@ class SRCD(QSD):
             if abs(lambda_old - lambda_low) <= self.thresh:
                 print('\n Davidson Converged!')
                 self._Egs = np.real(np.real(lambda_low))
+                self._lambda_low = np.real(lambda_low)
                 break
 
         print(f'davidson iteration: {m + 1}, energy: {np.real(lambda_low):15.9f}, energy difference: {lambda_low - lambda_old}')
