@@ -17,7 +17,6 @@ Gate::Gate(const std::string& label, size_t target, size_t control, std::complex
             gate_[i][j] = gate[i][j];
         }
     }
-    type_ = mapLabelToType(label_);
 }
 
 size_t Gate::target() const { return target_; }
@@ -97,8 +96,6 @@ const SparseMatrix Gate::sparse_matrix(size_t nqubit) const {
 }
 
 std::string Gate::gate_id() const { return label_; }
-
-GateType Gate::gate_type() const { return type_; }
 
 bool Gate::has_parameter() const { return parameter_.has_value(); }
 
@@ -216,6 +213,7 @@ bool operator<(const Gate& lhs, const Gate& rhs) {
         return lhs.parameter().value() < rhs.parameter().value();
     }
     return false;
+<<<<<<< HEAD
 }
 
 GateType Gate::mapLabelToType(const std::string& label_) {
@@ -412,3 +410,6 @@ std::pair<bool, int> evaluate_gate_interaction(const Gate& gate1, const Gate& ga
 
     return {false, 0}; // Default return
 };
+=======
+}
+>>>>>>> parent of ec9128b (Added simplify circuit functionality and tests)

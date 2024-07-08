@@ -226,6 +226,7 @@ bool Circuit::is_pauli() const {
     return true;
 }
 
+<<<<<<< HEAD
 double Circuit::get_phase_gate_parameter(const Gate& gate) {
     std::unordered_map<GateType, double> gate_parameters = {
         {GateType::T, M_PI / 4}, {GateType::S, M_PI / 2}, {GateType::Z, M_PI}};
@@ -339,6 +340,8 @@ void Circuit::simplify() {
     }
 }
 
+=======
+>>>>>>> parent of ec9128b (Added simplify circuit functionality and tests)
 bool operator==(const Circuit& circ1, const Circuit& circ2) {
     return circ1.gates() == circ2.gates();
 }

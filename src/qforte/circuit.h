@@ -90,9 +90,6 @@ class Circuit {
     /// Return true if this circuit is composed of only Pauli gates
     bool is_pauli() const;
 
-    /// Simplify the circuit
-    void simplify();
-
   private:
     /// the list of gates
     std::vector<Gate> gates_;
