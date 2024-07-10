@@ -4,6 +4,7 @@ VQE base classes
 The abstract base classes inheritied by any projective variational quantum
 eigensolver (VQE) variant.
 """
+
 from abc import abstractmethod
 from qforte.abc.algorithm import AnsatzAlgorithm
 

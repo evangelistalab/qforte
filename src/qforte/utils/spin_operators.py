@@ -6,7 +6,8 @@ total spin ladder operators
 
 import qforte as qf
 
-def total_spin_squared(n_qubits, do_jw = True):
+
+def total_spin_squared(n_qubits, do_jw=True):
     """
     This function constructs the operator representing the square of the total spin
     in the qubit basis (assuming Jordan-Wigner encoding).
@@ -16,7 +17,7 @@ def total_spin_squared(n_qubits, do_jw = True):
 
     n_qubits: int
         Number of qubits (spin-orbitals) of the system
-        
+
     do_jw: bool
         Do JW transfom?
 
@@ -46,30 +47,31 @@ def total_spin_squared(n_qubits, do_jw = True):
         q_Sigma_squared.simplify(True)
 
     else:
-        #S_z
-        q_Sigma_squared = total_spin_z(n_qubits, do_jw = False)
+        # S_z
+        q_Sigma_squared = total_spin_z(n_qubits, do_jw=False)
 
-        #S_z^2
+        # S_z^2
         for i in range(0, n_qubits, 2):
-            q_Sigma_squared.add(.25, [i], [i])
-            q_Sigma_squared.add(.25, [i+1], [i+1])
+            q_Sigma_squared.add(0.25, [i], [i])
+            q_Sigma_squared.add(0.25, [i + 1], [i + 1])
             for j in range(0, n_qubits, 2):
-                q_Sigma_squared.add(.25, [i+1, j], [i+1, j])
-                q_Sigma_squared.add(.25, [i, j+1], [i, j+1])
-                q_Sigma_squared.add(-.25, [i, j], [i, j])
-                q_Sigma_squared.add(-.25, [i+1, j+1], [i+1, j+1])
+                q_Sigma_squared.add(0.25, [i + 1, j], [i + 1, j])
+                q_Sigma_squared.add(0.25, [i, j + 1], [i, j + 1])
+                q_Sigma_squared.add(-0.25, [i, j], [i, j])
+                q_Sigma_squared.add(-0.25, [i + 1, j + 1], [i + 1, j + 1])
 
-        #S_minus*S_plus
+        # S_minus*S_plus
         for i in range(0, n_qubits, 2):
-            q_Sigma_squared.add(1, [i+1], [i+1])
+            q_Sigma_squared.add(1, [i + 1], [i + 1])
             for j in range(0, n_qubits, 2):
-                q_Sigma_squared.add(-1, [i+1,j], [i,j+1])
-        
+                q_Sigma_squared.add(-1, [i + 1, j], [i, j + 1])
+
         q_Sigma_squared.simplify()
 
     return q_Sigma_squared
 
-def total_spin_z(n_qubits, do_jw = True):
+
+def total_spin_z(n_qubits, do_jw=True):
     """
     This function constructs the operator representing the projection of the
     total spin on the z axis in the qubit basis (assuming Jordan-Wigner encoding)
@@ -97,12 +99,13 @@ def total_spin_z(n_qubits, do_jw = True):
     for i in range(0, n_qubits, 2):
         sq_Sigma_z.add(0.5, [i], [i])
         sq_Sigma_z.add(-0.5, [i + 1], [i + 1])
-    
+
     if do_jw == True:
         return sq_Sigma_z.jw_transform()
     else:
         return sq_Sigma_z
-    
+
+
 def total_spin_lowering(n_qubits):
     """
     This function constructs the lowering operator of the total spin
@@ -154,7 +157,8 @@ def total_spin_raising(n_qubits):
 
     return sq_Sigma_plus.jw_transform()
 
-def total_number(n_qubits, do_jw = True):
+
+def total_number(n_qubits, do_jw=True):
     """
     This function constructs the operator representing the number operator
     in the qubit basis (assuming Jordan-Wigner encoding).
@@ -164,7 +168,7 @@ def total_number(n_qubits, do_jw = True):
 
     n_qubits: int
         Number of qubits (spin-orbitals) of the system
-        
+
     do_jw: bool
         Do JW transfom?
 
@@ -175,7 +179,7 @@ def total_number(n_qubits, do_jw = True):
         Number operator in the qubit basis, using Jordan-Wigner encoding
 
         (Or the Fermionic basis if do_jw == False)
-    """ 
+    """
 
     sq_Number = qf.SQOperator()
 
@@ -185,7 +189,7 @@ def total_number(n_qubits, do_jw = True):
     sq_Number.simplify()
 
     if do_jw == True:
-       sq_Number = sq_Number.jw_transform()
-       sq_Number.simplify(True)
+        sq_Number = sq_Number.jw_transform()
+        sq_Number.simplify(True)
 
     return sq_Number

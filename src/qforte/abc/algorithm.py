@@ -62,18 +62,20 @@ class Algorithm(ABC):
         List of weights in the state-averaged approach.  Defaults to an equipartition.
     """
 
-    def __init__(self,
-                 system,
-                 reference=None,
-                 state_prep_type='occupation_list',
-                 fast=True,
-                 verbose=False,
-                 print_summary_file=False,
-                 is_multi_state=False,
-                 weights=None,
-                 **kwargs):
+    def __init__(
+        self,
+        system,
+        reference=None,
+        state_prep_type="occupation_list",
+        fast=True,
+        verbose=False,
+        print_summary_file=False,
+        is_multi_state=False,
+        weights=None,
+        **kwargs,
+    ):
 
-        if isinstance(self, qf.QPE) and hasattr(system, 'frozen_core'):
+        if isinstance(self, qf.QPE) and hasattr(system, "frozen_core"):
             if system.frozen_core + system.frozen_virtual > 0:
                 raise ValueError("QPE with frozen orbitals is not currently supported.")
 
@@ -82,21 +84,25 @@ class Algorithm(ABC):
         self._is_multi_state = is_multi_state
 
         if not self._is_multi_state:
-            if self._state_prep_type == 'occupation_list':
+            if self._state_prep_type == "occupation_list":
                 if reference is None:
                     self._ref = system.hf_reference
                 else:
                     if not (isinstance(reference, list)):
-                        raise ValueError("occupation_list reference must be list of 1s and 0s.")
+                        raise ValueError(
+                            "occupation_list reference must be list of 1s and 0s."
+                        )
                     for r in reference:
                         if r != 0 and r != 1:
-                            raise ValueError("occupation_list reference must be list of 1s and 0s.")
+                            raise ValueError(
+                                "occupation_list reference must be list of 1s and 0s."
+                            )
                     self._ref = reference
 
                 self._refprep = self.build_refprep(self._ref)
                 self._Uprep = qf.Circuit(self._refprep)
 
-            elif self._state_prep_type == 'unitary_circ':
+            elif self._state_prep_type == "unitary_circ":
                 if not isinstance(reference, qf.Circuit):
                     raise ValueError("unitary_circ reference must be a Circuit.")
 
@@ -125,7 +131,7 @@ class Algorithm(ABC):
                 self._refprep = build_refprep(self._ref)
                 self._Uprep = qf.Circuit()
                 self.computer = reference
-        
+
             else:
                 raise ValueError(
                     "QForte only supports references as occupation lists, Circuits, or Computers."
@@ -135,64 +141,76 @@ class Algorithm(ABC):
         else:
             if weights == None:
                 print("State-averaging weights not specified.  Assuming equal weights.")
-                self._weights = [1/len(self._ref)] * len(self._ref)
+                self._weights = [1 / len(self._ref)] * len(self._ref)
             else:
                 self._weights = weights
-            
-            if self._state_prep_type == 'occupation_list':
-                if(reference==None):
+
+            if self._state_prep_type == "occupation_list":
+                if reference == None:
                     self._ref = [system.hf_reference]
                 else:
                     self._ref = []
                     if not isinstance(reference, list):
-                        raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]")
+                        raise ValueError(
+                            "Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]"
+                        )
                     for ref in reference:
                         if not isinstance(ref, list):
-                            raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]")
+                            raise ValueError(
+                                "Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]"
+                            )
                         for r in ref:
                             if r != 0 and r != 1:
-                                raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]") 
+                                raise ValueError(
+                                    "Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]"
+                                )
                         self._ref.append(ref)
-                
+
                 self._refprep = []
                 self._Uprep = []
-                for ref in self._ref:                
+                for ref in self._ref:
                     self._refprep.append(build_refprep(ref))
                     self._Uprep.append(qf.Circuit(self._refprep[-1]))
 
-            elif self._state_prep_type == 'unitary_circ':
+            elif self._state_prep_type == "unitary_circ":
                 if not isinstance(reference, list):
-                    raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
-         
+                    raise ValueError(
+                        "Ill-constructed reference.  Should be a list of qf.Circuit objects."
+                    )
+
                 self._ref = [system.hf_reference] * len(reference)
                 self._refprep = []
                 self._Uprep = []
                 for ref in reference:
                     if not isinstance(ref, qf.Circuit):
-                        raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
+                        raise ValueError(
+                            "Ill-constructed reference.  Should be a list of qf.Circuit objects."
+                        )
                     self._refprep.append(build_refprep(ref))
-                    self.Uprep.append(ref) 
+                    self.Uprep.append(ref)
 
             elif self._state_prep_type == "computer":
-                
+
                 self._ref = [system.hf_reference] * len(self._weights)
                 self._refprep = []
-                self._Uprep = [qf.Circuit()]*len(weights)
+                self._Uprep = [qf.Circuit()] * len(weights)
                 self.computer = reference
                 if not isinstance(reference, list):
-                    raise ValueError("reference should be a list of Computer objects.") 
-                for ref in reference:    
+                    raise ValueError("reference should be a list of Computer objects.")
+                for ref in reference:
                     if not isinstance(ref, qf.Computer):
-                        raise ValueError("reference should be a list of Computer objects.") 
+                        raise ValueError(
+                            "reference should be a list of Computer objects."
+                        )
                     if ref.get_nqubit() != len(system.hf_reference):
                         raise ValueError(
                             f"Computer needs {len(system.hf_reference)} qubits, found {ref.get_nqubit()}."
-                        )   
+                        )
                 self._refprep.append(self._ref)
             if not fast:
                 raise ValueError(
                     "`self._fast = False` specifies not to skip steps, but `self._state_prep_type = computer` specifies to skip state initialization. That's inconsistent."
-                ) 
+                )
             if (
                 not hasattr(self, "computer_initializable")
                 or not self.computer_initializable
@@ -203,7 +221,7 @@ class Algorithm(ABC):
                 raise ValueError("Number of weights should match number of references.")
             if abs(sum(self._weights) - 1) > 1e-12:
                 raise ValueError("Reference weights should sum to 1.")
-        
+
             self._nqb = len(self._ref[0])
 
         self._qb_ham = system.hamiltonian
@@ -354,7 +372,7 @@ class AnsatzAlgorithm(Algorithm):
 
     # TODO (opt major): write a C function that prepares this super efficiently
     def build_Uvqc(self, amplitudes=None):
-        """ This function returns the Circuit object built
+        """This function returns the Circuit object built
         from the appropriate amplitudes (tops),
         or in the case where _is_multi_state, a list of circuit objects
 
@@ -364,7 +382,7 @@ class AnsatzAlgorithm(Algorithm):
             A list of parameters that define the variational degrees of freedom in
             the state preparation circuit Uvqc. This is needed for the scipy minimizer.
         """
-        
+
         U = self.ansatz_circuit(amplitudes)
 
         if not self._is_multi_state:
@@ -388,20 +406,22 @@ class AnsatzAlgorithm(Algorithm):
             if hasattr(self._sys, "orb_irreps_to_int"):
                 self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
             else:
-                raise ValueError('Invalid operator pool type specified.')
+                raise ValueError("Invalid operator pool type specified.")
         else:
-            #Only GSD is well-defined for multiple references.
-            if self._pool_type in {'GSD'}:
+            # Only GSD is well-defined for multiple references.
+            if self._pool_type in {"GSD"}:
                 self._pool_obj = qf.SQOpPool()
-                #o/v spaces are not well-defined: passing the dummy state self._ref[0]
-                if hasattr(self._sys, 'orb_irreps_to_int'):
-                    self._pool_obj.set_orb_spaces(self._ref[0], self._sys.orb_irreps_to_int)
+                # o/v spaces are not well-defined: passing the dummy state self._ref[0]
+                if hasattr(self._sys, "orb_irreps_to_int"):
+                    self._pool_obj.set_orb_spaces(
+                        self._ref[0], self._sys.orb_irreps_to_int
+                    )
                 else:
                     self._pool_obj.set_orb_spaces(self._ref[0])
-                self._pool_obj.fill_pool(self._pool_type) 
-                
+                self._pool_obj.fill_pool(self._pool_type)
+
             else:
-                raise ValueError('Only GSD is well-defined for multiple references.')
+                raise ValueError("Only GSD is well-defined for multiple references.")
 
         self._Nm = [
             len(operator.jw_transform().terms()) for _, operator in self._pool_obj
@@ -419,7 +439,7 @@ class AnsatzAlgorithm(Algorithm):
             The state preparation circuit (or list of circuits).
         """
 
-        if not self._is_multi_state:            
+        if not self._is_multi_state:
             if self._fast:
                 if computer is None:
                     computer = qf.Computer(self._nqb)
@@ -435,10 +455,13 @@ class AnsatzAlgorithm(Algorithm):
         else:
             if self._fast:
                 if computer is None:
-                    computer = [qf.Computer(self._nqb)]*len(self._ref)
+                    computer = [qf.Computer(self._nqb)] * len(self._ref)
                     for i in range(len(computer)):
                         computer[i].apply_circuit(Ucirc[i])
-                        val += np.real(computer.direct_op_exp_val(self._qb_ham)) * self._weights[i]
+                        val += (
+                            np.real(computer.direct_op_exp_val(self._qb_ham))
+                            * self._weights[i]
+                        )
             else:
                 if computer is not None:
                     raise TypeError(
@@ -448,7 +471,7 @@ class AnsatzAlgorithm(Algorithm):
                 val = Exp.perfect_experimental_avg()
 
         assert np.isclose(np.imag(val), 0.0)
-        
+
         return val
 
     def __init__(

@@ -35,15 +35,15 @@ def compute_operator_matrix_element(n_qubit, U_bra, U_ket, QOp=None):
     The value of the desired matrix element.
     """
     try:
-        assert(U_ket.num_qubits() <= n_qubit)
+        assert U_ket.num_qubits() <= n_qubit
     except:
         raise ValueError("Circuit involves more qubits than n_qubit.")
-    
+
     comp = qf.Computer(n_qubit)
     comp.apply_circuit(U_ket)
-     
+
     if QOp is not None:
         comp.apply_operator(QOp)
     comp.apply_circuit(U_bra.adjoint())
-     
+
     return comp.get_coeff_vec()[0]

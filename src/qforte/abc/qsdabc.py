@@ -4,6 +4,7 @@ QSD base classes
 The abstract base classes inheritied by any quantum subspace diagonalizaiton (QSD)
 variant.
 """
+
 from abc import abstractmethod
 from qforte.abc.algorithm import Algorithm
 from qforte.maths.eigsolve import canonical_geig_solve

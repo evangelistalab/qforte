@@ -70,7 +70,7 @@ class ADAPTVQE(UCCVQE):
 
     _ritz_energies : list of lists
         The eigenstates in the subspace of H defined by the current ADAPT ansatz acting on multiple references.
-            
+
     _final_energy : float
         The final ADAPT-VQE energy value.
 
@@ -84,24 +84,26 @@ class ADAPTVQE(UCCVQE):
         The optimizer result objects from each iteration of ADAPT-VQE.
     """
 
-    def run(self,
-            avqe_thresh=1.0e-2,
-            pool_type='sa_SD',
-            opt_thresh=1.0e-5,
-            opt_maxiter=200,
-            adapt_maxiter=20,
-            stop_E=None,
-            optimizer='BFGS',
-            use_analytic_grad = True,
-            use_cumulative_thresh = False,
-            add_equiv_ops = False,
-            tamps = [],
-            tops = []):
+    def run(
+        self,
+        avqe_thresh=1.0e-2,
+        pool_type="sa_SD",
+        opt_thresh=1.0e-5,
+        opt_maxiter=200,
+        adapt_maxiter=20,
+        stop_E=None,
+        optimizer="BFGS",
+        use_analytic_grad=True,
+        use_cumulative_thresh=False,
+        add_equiv_ops=False,
+        tamps=[],
+        tops=[],
+    ):
 
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
         self._adapt_maxiter = adapt_maxiter
-        
+
         self._opt_maxiter = opt_maxiter
         self._stop_E = stop_E
         self._use_analytic_grad = use_analytic_grad
@@ -146,10 +148,9 @@ class ADAPTVQE(UCCVQE):
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
-        
 
         self.fill_pool()
-        
+
         if self._max_moment_rank:
             print("\nConstructing Moller-Plesset and Epstein-Nesbet denominators")
             self.construct_moment_space()
@@ -161,7 +162,7 @@ class ADAPTVQE(UCCVQE):
             print(self._pool_obj.str())
 
         avqe_iter = 0
-        
+
         hit_maxiter = 0
         if adapt_maxiter == 0:
             hit_maxiter = 1
@@ -176,7 +177,6 @@ class ADAPTVQE(UCCVQE):
                 "#-------------------------------------------------------------------------------\n"
             )
 
-        
         if self._is_multi_state:
             E, A, ops = ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
             self._diag_energies.append(E)
@@ -207,25 +207,31 @@ class ADAPTVQE(UCCVQE):
                 self.compute_moment_energies()
 
             if self._is_multi_state:
-                E, A, ops = qforte.excited_state_algorithms.ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
+                E, A, ops = qforte.excited_state_algorithms.ritz_eigh(
+                    self._nqb, self._qb_ham, self.build_Uvqc()
+                )
                 self._diag_energies.append(E)
-                self._diag_As.append(A) 
+                self._diag_As.append(A)
 
-            if(self._verbose):
-                print('\ntamplitudes for tops post solve: \n', list(np.real(self._tamps)))
-                if self._is_multi_state:     
+            if self._verbose:
+                print(
+                    "\ntamplitudes for tops post solve: \n", list(np.real(self._tamps))
+                )
+                if self._is_multi_state:
                     diag_string = f"Current Energies {avqe_iter + 1}:"
                     for e in E:
                         diag_string += f" {e}"
                     print(diag_string)
                     best_string = f"Best Energies {avqe_iter + 1}"
                     D = np.array(self._diag_energies)
-                    for i in range(len(self._ref)):    
+                    for i in range(len(self._ref)):
                         best_string += f" {np.amin(D[:,i])}"
                     print(best_string)
-                    
-            if (self._print_summary_file):
-                f.write(f'  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n')
+
+            if self._print_summary_file:
+                f.write(
+                    f"  {avqe_iter:7}    {self._energies[-1]:+15.9f}    {len(self._tamps):8}        {self._n_cnot_lst[-1]:10}        {sum(self._n_pauli_trm_measures_lst):12}\n"
+                )
 
             avqe_iter += 1
 
@@ -239,20 +245,20 @@ class ADAPTVQE(UCCVQE):
         # Set final ground state energy.
         if hit_maxiter:
             self._Egs = self.get_final_energy(hit_max_avqe_iter=1)
-            if self._optimizer.lower() != 'jacobi':
+            if self._optimizer.lower() != "jacobi":
                 if len(self._results) == 0:
                     self._final_result = None
                 else:
                     self._final_result = self._results[-1]
-                         
+
         if self._is_multi_state:
-            #Check that ref and final are included
+            # Check that ref and final are included
             best_diags = []
             E_arr = np.array(self._diag_energies)
             for i in range(len(self._ref)):
-                best_diags.append(np.amin(E_arr[:,i]))
-            self._best_diags = best_diags    
-        
+                best_diags.append(np.amin(E_arr[:, i]))
+            self._best_diags = best_diags
+
         self._Egs = self.get_final_energy()
 
         print("\n\n")
@@ -278,7 +284,9 @@ class ADAPTVQE(UCCVQE):
             )
 
             for k, Ek in enumerate(self._energies):
-                print(f' {k+1:7}    {Ek:+15.9f}    {self._E_mmcc_mp[k]:15.9f}    {self._E_mmcc_en[k]:15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
+                print(
+                    f" {k+1:7}    {Ek:+15.9f}    {self._E_mmcc_mp[k]:15.9f}    {self._E_mmcc_en[k]:15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}"
+                )
 
         if len(self._tamps) > 0:
             self._n_classical_params = len(self._tamps)
@@ -423,15 +431,15 @@ class ADAPTVQE(UCCVQE):
             print("  => Minimization successful!")
             print(f"  => Minimum Energy: {res.fun:+12.10f}")
 
-        
         else:
             print("  => WARNING: minimization result may not be tightly converged.")
             print(f"  => Minimum Energy: {res.fun:+12.10f}")
 
-
         if res.x[-1] == 0:
-            print('  => WARNING: ADAPT could not optimize the new parameter.  Deleting new parameter and terminating the algorithm.')
-            print(f'  => Minimum Energy: {self._energies[-1]:+12.10f}')
+            print(
+                "  => WARNING: ADAPT could not optimize the new parameter.  Deleting new parameter and terminating the algorithm."
+            )
+            print(f"  => Minimum Energy: {self._energies[-1]:+12.10f}")
             self._converged = True
             self._final_energy = self._energies[-1]
             self._final_results = self._results[-1]
@@ -520,34 +528,40 @@ class ADAPTVQE(UCCVQE):
                         temp_order_tops.insert(0, gm_sq[1])
 
                 self._tops.extend(copy.deepcopy(temp_order_tops))
-                
+
             else:
                 print("  Adding operator m =", lgrst_grad_idx)
 
-                if(len(self._tops) > 0 and self._stop_E!=None and self._energies[-1]<self._stop_E):
+                if (
+                    len(self._tops) > 0
+                    and self._stop_E != None
+                    and self._energies[-1] < self._stop_E
+                ):
                     print("Energy is below the targeted accuracy.")
                     self._converged = True
                     self._final_energy = self._energies[-1]
-                    if self._optimizer.lower() != 'jacobi':
+                    if self._optimizer.lower() != "jacobi":
                         self._final_result = self._results[-1]
 
-                elif(len(self._tops) > 0 and self._tops[-1] == lgrst_grad_idx):
-                    print("ADAPT wants to add the same operator as the previous iteration.  Aborting.")
+                elif len(self._tops) > 0 and self._tops[-1] == lgrst_grad_idx:
+                    print(
+                        "ADAPT wants to add the same operator as the previous iteration.  Aborting."
+                    )
                     self._converged = True
                     self._final_energy = self._energies[-1]
-                    if self._optimizer.lower() != 'jacobi':
+                    if self._optimizer.lower() != "jacobi":
                         self._final_result = self._results[-1]
 
                 else:
                     self._tops.append(lgrst_grad_idx)
                     self._tamps.append(0.0)
 
-                    if(self._add_equiv_ops):
-                        if (abs(lgrst_grad) - abs(secnd_lgst_grad) < 1.0e-5):
+                    if self._add_equiv_ops:
+                        if abs(lgrst_grad) - abs(secnd_lgst_grad) < 1.0e-5:
                             print(" *Adding operator m =", secnd_lgrst_grad_idx)
                             self._tops.append(secnd_lgrst_grad_idx)
                             self._tamps.append(0.0)
-                
+
             self._n_classical_params_lst.append(len(self._tops))
 
         else:
@@ -562,7 +576,8 @@ class ADAPTVQE(UCCVQE):
                 self._final_result = self._results[-1]
         else:
             self._converged = False
-        print("", flush = True)
+        print("", flush=True)
+
     def get_num_ham_measurements(self):
         if not self._is_multi_state:
             factor = 1
@@ -583,7 +598,7 @@ class ADAPTVQE(UCCVQE):
 
         if self._use_analytic_grad:
             for m, res in enumerate(self._results):
-                self._n_commut_measurements += factor * res.njev * (m+1)
+                self._n_commut_measurements += factor * res.njev * (m + 1)
 
         return self._n_commut_measurements
 
