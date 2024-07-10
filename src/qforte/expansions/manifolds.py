@@ -5,7 +5,7 @@ Quality-of-life shortcuts to build manifolds for excited state/addition/electron
 import copy
 from itertools import combinations
 import qforte as qf
-from qforte import build_Uprep
+from qforte import build_refprep
 from pytest import approx
 import numpy as np
 
@@ -228,7 +228,7 @@ def sa_cis(ref, sz=[0], mult=[1, 3], irreps=None, target_irrep=None):
             sc[2 * j + 1] = det[2 * j]
             sc[2 * j] = det[2 * j + 1]
         if sc == det:
-            Us.append(build_Uprep(det, "occupation_list"))
+            Us.append(build_refprep(det, "occupation_list"))
         else:
             diff = [det[i] - ref[i] for i in range(len(det))]
             inds = [int(diff.index(-1) / 2), int(diff.index(1) / 2)]

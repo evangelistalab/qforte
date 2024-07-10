@@ -2,7 +2,7 @@ from pytest import approx
 from qforte import ADAPTVQE
 from qforte import system_factory
 from qforte import cisd_manifold
-from qforte import build_Uprep
+from qforte import build_refprep
 from qforte import sq_op_to_scipy
 from qforte import q_sc_eom
 import numpy as np
@@ -37,11 +37,11 @@ class TestQSCEOM:
         )
 
         U_ansatz = alg.ansatz_circuit(alg._tamps)
-        U_hf = build_Uprep(mol.hf_reference, "occupation_list")
+        U_hf = build_refprep(mol.hf_reference, "occupation_list")
         U_hf.add_circuit(U_ansatz)
 
         cisd = [
-            build_Uprep(det, "occupation_list")
+            build_refprep(det, "occupation_list")
             for det in cisd_manifold(mol.hf_reference, mol.orb_irreps_to_int)
         ]
         manifold = []

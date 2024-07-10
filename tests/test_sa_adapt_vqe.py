@@ -4,7 +4,7 @@ from qforte import system_factory
 from qforte import sq_op_to_scipy
 from qforte import ritz_eigh
 from qforte import cisd_manifold
-from qforte import build_Uprep
+from qforte import build_refprep
 
 import numpy as np
 
@@ -88,7 +88,7 @@ class TestSAADAPTVQE:
             for j in range(len(Es)):
                 assert dip_dir[i, j] - total_dip[i, j] == approx(0.0, abs=1e-10)
 
-        circ_refs = [build_Uprep(ref, "occupation_list") for ref in refs]
+        circ_refs = [build_refprep(ref, "occupation_list") for ref in refs]
         # broken here?
         alg = ADAPTVQE(
             mol,
