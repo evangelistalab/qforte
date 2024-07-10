@@ -7,7 +7,8 @@ import numpy as np
 from itertools import product
 from copy import deepcopy
 
-def find_Z2_symmetries(hamiltonian, taper_from_least = True, debug = False):
+
+def find_Z2_symmetries(hamiltonian, taper_from_least=True, debug=False):
     """
     This function computes the Z2 symmetries of the qubit Hamiltonian, identifies the ID numbers of the qubits to
     be tapered off, and constructs the necessary unitary operators.
@@ -51,7 +52,9 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = True, debug = False):
 
     SGSO_basis, SGSO_commute = Symplectic_Gram_Schmidt_Orthogonalization(basis, commute)
 
-    generators_binary = find_maximal_Abelian_subgroup(n_qubits, SGSO_basis, SGSO_commute, taper_from_least)
+    generators_binary = find_maximal_Abelian_subgroup(
+        n_qubits, SGSO_basis, SGSO_commute, taper_from_least
+    )
 
     # Translate binary vectors back to Pauli strings to obtain the generators of the symmetry group
     generators = []
@@ -59,12 +62,15 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = True, debug = False):
         pauli = qf.Circuit()
         for j in reversed(range(n_qubits)):
             if generators_binary[i, j] != 0 or generators_binary[i, j + n_qubits] != 0:
-                if generators_binary[i, j] == 1 and generators_binary[i, j + n_qubits] == 1:
-                    gate_type = 'Y'
+                if (
+                    generators_binary[i, j] == 1
+                    and generators_binary[i, j + n_qubits] == 1
+                ):
+                    gate_type = "Y"
                 elif generators_binary[i, j] == 1:
-                    gate_type = 'X'
+                    gate_type = "X"
                 elif generators_binary[i, j + n_qubits] == 1:
-                    gate_type = 'Z'
+                    gate_type = "Z"
                 pauli.add_gate(qf.gate(gate_type, n_qubits - j - 1))
         generators.append(pauli)
 
@@ -76,8 +82,8 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = True, debug = False):
     else:
         _range = reversed(range(n_qubits))
     for i in _range:
-        if np.argwhere(generators_binary[:,n_qubits + i]).shape[0] == 1:
-            sigma_x[np.argwhere(generators_binary[:,n_qubits + i])] = n_qubits - i - 1
+        if np.argwhere(generators_binary[:, n_qubits + i]).shape[0] == 1:
+            sigma_x[np.argwhere(generators_binary[:, n_qubits + i])] = n_qubits - i - 1
 
     # Reorder sigma_x operators in descending order of qubit identity. Do the same with the generators for consistency.
 
@@ -90,10 +96,10 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = True, debug = False):
 
     for idx, generator in enumerate(generators):
         circ = qf.Circuit()
-        circ.add_gate(qf.gate('X', sigma_x[idx]))
+        circ.add_gate(qf.gate("X", sigma_x[idx]))
         oprtr = qf.QubitOperator()
-        oprtr.add_term(1/np.sqrt(2), generator)
-        oprtr.add_term(1/np.sqrt(2), circ)
+        oprtr.add_term(1 / np.sqrt(2), generator)
+        oprtr.add_term(1 / np.sqrt(2), circ)
         unitaries.append(oprtr)
 
     # Construct final unitary matrix
@@ -106,6 +112,7 @@ def find_Z2_symmetries(hamiltonian, taper_from_least = True, debug = False):
         return generators, sigma_x, unitaries, unitary
     else:
         return sigma_x, unitary
+
 
 def construct_parity_check_matrix(n_qubits, n_strings, hamiltonian):
     """
@@ -137,12 +144,13 @@ def construct_parity_check_matrix(n_qubits, n_strings, hamiltonian):
         for pauli in string.gates():
             XYZ_gate = pauli.gate_id()
             trgt = pauli.target()
-            if XYZ_gate in ['Y', 'Z']:
+            if XYZ_gate in ["Y", "Z"]:
                 prt_chck_mtrx[i, n_qubits - trgt - 1] = 1
-            if XYZ_gate in ['X', 'Y']:
+            if XYZ_gate in ["X", "Y"]:
                 prt_chck_mtrx[i, 2 * n_qubits - trgt - 1] = 1
 
     return prt_chck_mtrx
+
 
 def find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx):
     """
@@ -168,7 +176,9 @@ def find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx):
 
     ## Augment the (n_strings) × (2 * n_qubits) parity check matrix by the (2 * n_qubits) × (2 * n_qubits) identity matrix
 
-    prt_chck_mtrx_aug = np.concatenate((prt_chck_mtrx, np.identity(2 * n_qubits, dtype=np.uint8)), axis=0)
+    prt_chck_mtrx_aug = np.concatenate(
+        (prt_chck_mtrx, np.identity(2 * n_qubits, dtype=np.uint8)), axis=0
+    )
 
     ## Find column echelon form (CEF) of augmented matix.
 
@@ -178,15 +188,19 @@ def find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx):
 
     for row in range(n_strings):
         ### Find a non-zero row
-        nonzero_indices = np.argwhere(prt_chck_mtrx_aug[row,idx:])
+        nonzero_indices = np.argwhere(prt_chck_mtrx_aug[row, idx:])
         if nonzero_indices.shape[0] > 0:
-            column_to_be_CEFed = int(nonzero_indices[0]) + idx
+            column_to_be_CEFed = nonzero_indices[0].item() + idx
             ### The first column that is non-zero in this row is the next column to "CEF" - swap positions accordingly
-            prt_chck_mtrx_aug[:, [column_to_be_CEFed , idx]] = prt_chck_mtrx_aug[:, [idx, column_to_be_CEFed]]
+            prt_chck_mtrx_aug[:, [column_to_be_CEFed, idx]] = prt_chck_mtrx_aug[
+                :, [idx, column_to_be_CEFed]
+            ]
             ### Eliminate remaining non-zero row elements in the part of the parity check matrix that is not in CEF
-            for i in range(1,nonzero_indices.shape[0]):
-                column_not_in_CEF = int(nonzero_indices[i]) + idx
-                prt_chck_mtrx_aug[:,column_not_in_CEF] = np.bitwise_xor(prt_chck_mtrx_aug[:, idx], prt_chck_mtrx_aug[:,column_not_in_CEF])
+            for i in range(1, nonzero_indices.shape[0]):
+                column_not_in_CEF = nonzero_indices[i].item() + idx
+                prt_chck_mtrx_aug[:, column_not_in_CEF] = np.bitwise_xor(
+                    prt_chck_mtrx_aug[:, idx], prt_chck_mtrx_aug[:, column_not_in_CEF]
+                )
             ### decrease the number of columns that need to be checked
             idx += 1
 
@@ -197,10 +211,13 @@ def find_parity_check_matrix_kernel(n_qubits, n_strings, prt_chck_mtrx):
     for column in range(idx, 2 * n_qubits):
         row = n_strings
         if not np.any(prt_chck_mtrx_aug[:row, column]):
-            new_basis_vector = prt_chck_mtrx_aug[row:, column].reshape((1,2 * n_qubits))
+            new_basis_vector = prt_chck_mtrx_aug[row:, column].reshape(
+                (1, 2 * n_qubits)
+            )
             basis = np.concatenate((basis, new_basis_vector), axis=0)
 
     return basis
+
 
 def find_commutation_matrix(basis):
     """
@@ -220,12 +237,13 @@ def find_commutation_matrix(basis):
     ## Construct symplectic bilinear form matrix B, which acts on binary vectors.
     ## v * B * w.T = 0/1 means v and w commute/anticommute.
 
-    zero_matrix = np.zeros((int(basis.shape[1]/2), int(basis.shape[1]/2)), dtype=np.uint8)
-    identity_matrix = np.identity(int(basis.shape[1]/2), dtype=np.uint8)
-    blnr_frm_mtrx = np.block([
-        [zero_matrix    , identity_matrix],
-        [identity_matrix, zero_matrix    ]
-        ])
+    zero_matrix = np.zeros(
+        (int(basis.shape[1] / 2), int(basis.shape[1] / 2)), dtype=np.uint8
+    )
+    identity_matrix = np.identity(int(basis.shape[1] / 2), dtype=np.uint8)
+    blnr_frm_mtrx = np.block(
+        [[zero_matrix, identity_matrix], [identity_matrix, zero_matrix]]
+    )
 
     ## For all pairs of ker(E) basis vectors, compute commute[v, w] = v * B * w.T
 
@@ -233,6 +251,7 @@ def find_commutation_matrix(basis):
     commute %= 2
 
     return commute
+
 
 def Symplectic_Gram_Schmidt_Orthogonalization(basis, commute):
     """
@@ -268,7 +287,7 @@ def Symplectic_Gram_Schmidt_Orthogonalization(basis, commute):
     for pauli_1 in range(SGSO_basis.shape[0]):
         if pauli_1 not in processed:
             processed.add(pauli_1)
-            anticommute = np.argwhere(SGSO_commute[pauli_1,:])
+            anticommute = np.argwhere(SGSO_commute[pauli_1, :])
             if anticommute.shape[0] != 0:
                 for i in anticommute:
                     pauli_2 = int(i)
@@ -285,6 +304,7 @@ def Symplectic_Gram_Schmidt_Orthogonalization(basis, commute):
                 SGSO_commute = find_commutation_matrix(SGSO_basis)
 
     return SGSO_basis, SGSO_commute
+
 
 def find_maximal_Abelian_subgroup(n_qubits, basis, commute, taper_from_least):
     """
@@ -322,7 +342,6 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, commute, taper_from_least):
     basis_tmp = basis
 
     while not np.all(commute == 0):
-
         ### Maximum possible Hamming weight of a given binary vector
         hmng = 2 * n_qubits
 
@@ -335,7 +354,7 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, commute, taper_from_least):
                 idx = row
 
         ### Identify basis vectors that do not commute with e and eliminate them.
-        nonzero_indices = np.argwhere(commute[idx,:])
+        nonzero_indices = np.argwhere(commute[idx, :])
         basis_tmp = np.delete(basis_tmp, nonzero_indices, axis=0)
 
         ### Construct commute matrix for the next iteration.
@@ -358,20 +377,26 @@ def find_maximal_Abelian_subgroup(n_qubits, basis, commute, taper_from_least):
         nonzero_indices = np.argwhere(generators_binary[:, column])
         if nonzero_indices.shape[0] == 1:
             if nonzero_indices[0] not in lst:
-                lst.append(int(nonzero_indices[0]))
+                lst.append(nonzero_indices[0].item())
                 idx += 1
         else:
             for i in range(nonzero_indices.shape[0]):
                 if nonzero_indices[i] not in lst:
                     lst.append(int(nonzero_indices[i]))
-                    for el in filter(lambda el: el not in nonzero_indices[i], nonzero_indices):
-                        generators_binary[int(el), :] = np.bitwise_xor(generators_binary[int(el), :], generators_binary[int(nonzero_indices[i]), :])
+                    for el in filter(
+                        lambda el: el not in nonzero_indices[i], nonzero_indices
+                    ):
+                        generators_binary[int(el), :] = np.bitwise_xor(
+                            generators_binary[int(el), :],
+                            generators_binary[int(nonzero_indices[i]), :],
+                        )
                     idx += 1
                     break
         if idx == generators_binary.shape[0]:
             break
 
     return generators_binary
+
 
 def taper_operator(tapered_qubits, sign, operator, unitary):
     """
@@ -404,9 +429,11 @@ def taper_operator(tapered_qubits, sign, operator, unitary):
     # Validating 'sign' argument
 
     if not all(i == 1 or i == -1 for i in sign):
-        raise ValueError('The signs should be either 1 or -1!')
+        raise ValueError("The signs should be either 1 or -1!")
     if not len(sign) == len(tapered_qubits):
-        raise ValueError('There should be as many signs as the number of tapered qubits!')
+        raise ValueError(
+            "There should be as many signs as the number of tapered qubits!"
+        )
 
     # Similarity transform the given operator using the fact that the unitary matrix is also Hermitian
 
@@ -428,7 +455,7 @@ def taper_operator(tapered_qubits, sign, operator, unitary):
         # List that will store the coefficients modified according to the sign structure provided by the user
         for pauli in circuit.gates():
             if pauli.target() in tapered_qubits:
-                coeff *= sign[int(np.argwhere(tapered_qubits == pauli.target()))]
+                coeff *= sign[np.argwhere(tapered_qubits == pauli.target()).item()]
             else:
                 # Adjust gate targets to account for tapered qubits
                 idx = np.count_nonzero(pauli.target() > tapered_qubits)
@@ -441,6 +468,7 @@ def taper_operator(tapered_qubits, sign, operator, unitary):
     operator_tapered.simplify(True)
 
     return operator_tapered
+
 
 def taper_reference(tapered_qubits, ref):
     """

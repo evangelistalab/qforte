@@ -12,3 +12,11 @@ dependencies:
     - yaml
     - pytest
     - psi4=1.8.2
+    - pre-commit
+    - clang-format
+    - pip:
+        - black
+
+# Post build script
+build:
+    - postBuild.sh

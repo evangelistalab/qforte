@@ -17,20 +17,21 @@ from qforte.utils.trotterization import trotterize
 
 import numpy as np
 
-class UCCPQE(PQE, UCC):
+
+class UCCPQE(UCC, PQE):
     """The abstract base class inheritied by any algorithm that seeks to find
     eigenstates by minimization of the residual condition
 
     .. math::
-        r_\mu = \langle \Phi_\mu | \hat{U}^\dagger(\mathbf{t}) \hat{H} \hat{U}(\mathbf{t}) | \Phi_0 \\rangle \\rightarrow 0
+        r_\\mu = \\langle \\Phi_\\mu | \\hat{U}^\\dagger(\\mathbf{t}) \\hat{H} \\hat{U}(\\mathbf{t}) | \\Phi_0 \\rangle \\rightarrow 0
 
     using a disentagled UCC type ansatz
 
     .. math::
-        \hat{U}(\mathbf{t}) = \prod_\mu e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger)},
+        \\hat{U}(\\mathbf{t}) = \\prod_\\mu e^{t_\\mu (\\hat{\\tau}_\\mu - \\hat{\\tau}_\\mu^\\dagger)},
 
-    were :math:`\hat{\\tau}_\mu` is a Fermionic excitation operator and
-    :math:`t_\mu` is a cluster amplitude.
+    were :math:`\\hat{\\tau}_\\mu` is a Fermionic excitation operator and
+    :math:`t_\\mu` is a cluster amplitude.
 
     Attributes
     ----------
@@ -46,14 +47,17 @@ class UCCPQE(PQE, UCC):
     """
 
     def verify_required_UCCPQE_attributes(self):
+        if not hasattr(self, "_pool_type"):
+            raise NotImplementedError(
+                "Concrete UCCPQE class must define self._pool_type attribute."
+            )
 
-        if not hasattr(self, '_pool_type'):
-            raise NotImplementedError('Concrete UCCPQE class must define self._pool_type attribute.')
+        if not hasattr(self, "_pool_obj"):
+            raise NotImplementedError(
+                "Concrete UCCPQE class must define self._pool_obj attribute."
+            )
 
-        if not hasattr(self, '_pool_obj'):
-            raise NotImplementedError('Concrete UCCPQE class must define self._pool_obj attribute.')
-
-    #TODO: consider moving functions from uccnpqe or spqe into this class to
+    # TODO: consider moving functions from uccnpqe or spqe into this class to
     #      to prevent duplication of code
 
     def report_iteration(self, x):
@@ -62,22 +66,34 @@ class UCCPQE(PQE, UCC):
 
         self._k_counter += 1
 
-        if(self._k_counter == 1):
-            print('\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
-            print('--------------------------------------------------------------------------------------------------')
-            if (self._print_summary_file):
+        if self._k_counter == 1:
+            print(
+                "\n    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||"
+            )
+            print(
+                "--------------------------------------------------------------------------------------------------"
+            )
+            if self._print_summary_file:
                 f = open("summary.dat", "w+", buffering=1)
-                f.write('\n#    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||')
-                f.write('\n#--------------------------------------------------------------------------------------------------')
+                f.write(
+                    "\n#    k iteration         Energy               dE           Nrvec ev      Nrm ev*         ||r||"
+                )
+                f.write(
+                    "\n#--------------------------------------------------------------------------------------------------"
+                )
                 f.close()
 
         self._curr_energy = self.energy_feval(x)
         dE = self._curr_energy - self._prev_energy
-        print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._res_vec_norm:+12.10f}')
+        print(
+            f"     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._res_vec_norm:+12.10f}"
+        )
 
-        if (self._print_summary_file):
+        if self._print_summary_file:
             f = open("summary.dat", "a", buffering=1)
-            f.write(f'\n       {self._k_counter:7}        {self._curr_energy:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._res_vec_norm:+12.12f}')
+            f.write(
+                f"\n       {self._k_counter:7}        {self._curr_energy:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._res_vec_norm:+12.12f}"
+            )
             f.close()
 
         self._prev_energy = self._curr_energy
@@ -85,14 +101,23 @@ class UCCPQE(PQE, UCC):
     def get_sum_residual_square(self, tamps):
         # This function is passed to scipy minimize for residual minimization
         residual_vector = self.get_residual_vector(tamps)
-        sum_residual_vector_square = np.sum(np.square(residual_vector))
-        return sum_residual_vector_square
+        sum_residual_vector_square = np.sum(np.square(np.abs(residual_vector)))
+        assert sum_residual_vector_square.imag < 1.0e-14
+        return np.real(sum_residual_vector_square)
 
     def solve(self):
-        if self._optimizer.lower() == 'jacobi':
+        if self._optimizer.lower() == "jacobi":
             self.jacobi_solver()
-        elif self._optimizer.lower() in ['nelder-mead', 'powell', 'bfgs', 'l-bfgs-b', 'cg', 'slsqp']:
+        elif self._optimizer.lower() in [
+            "nelder-mead",
+            "powell",
+            "bfgs",
+            "l-bfgs-b",
+            "cg",
+            "slsqp",
+        ]:
             self.scipy_solver(self.get_sum_residual_square)
         else:
-            raise NotImplementedError('Currently only Jacobi, Nelder-Mead, Powell, BFGS, L-BFGS-B, CG, and SLSQP solvers are implemented')
-
+            raise NotImplementedError(
+                "Currently only Jacobi, Nelder-Mead, Powell, BFGS, L-BFGS-B, CG, and SLSQP solvers are implemented"
+            )

@@ -19,6 +19,7 @@ from qforte.expansions.excited_state_algorithms import *
 import numpy as np
 from scipy.optimize import minimize
 
+
 class ADAPTVQE(UCCVQE):
     """A class that encompasses the three components of using the variational
     quantum eigensolver to optimize a parameterized unitary CC like wave function
@@ -30,15 +31,15 @@ class ADAPTVQE(UCCVQE):
     In ADAPT-VQE, the unitary ansatz at macro-iteration :math:`k` is defined as
 
     .. math::
-        \hat{U}_\mathrm{ADAPT}^{(k)}(\mathbf{t}) = \prod_\\nu^{k} e^{ t_\\nu^{(k)} \hat{\kappa}_\\nu^{(k)} },
+        \\hat{U}_\\mathrm{ADAPT}^{(k)}(\\mathbf{t}) = \\prod_\\nu^{k} e^{ t_\\nu^{(k)} \\hat{\\kappa}_\\nu^{(k)} },
 
     where the index :math:`\\nu` is likewise a index corresponding to unique operators
-    :math:`\hat{\kappa}_\\nu` in a pool of operators.
+    :math:`\\hat{\\kappa}_\\nu` in a pool of operators.
     Note that the parameters :math:`t_\\nu^{(k)}` are re-optimized at each macro-iteration.
     New operators are determined from the pool by computing the energy gradient
 
     .. math::
-        g_\\nu = \\langle \Psi_\mathrm{VQE} | [ \hat{H}, \hat{\kappa}_\\nu ] | \Psi_\mathrm{VQE} \\rangle,
+        g_\\nu = \\langle \\Psi_\\mathrm{VQE} | [ \\hat{H}, \\hat{\\kappa}_\\nu ] | \\Psi_\\mathrm{VQE} \\rangle,
 
     with respect to :math:`t_\\nu` of each operator in the pool and selecting
     the operator with the largest gradient magnitude to place at the end of
@@ -82,6 +83,7 @@ class ADAPTVQE(UCCVQE):
     _results : list
         The optimizer result objects from each iteration of ADAPT-VQE.
     """
+
     def run(self,
             avqe_thresh=1.0e-2,
             pool_type='sa_SD',
@@ -104,6 +106,13 @@ class ADAPTVQE(UCCVQE):
         self._stop_E = stop_E
         self._use_analytic_grad = use_analytic_grad
         self._optimizer = optimizer
+        if self._use_analytic_grad and self._optimizer in {
+            "nelder-mead",
+            "powell",
+            "cobyla",
+        }:
+            print(f"{self._optimizer} optimizer doesn't support analytic grads.")
+            self._use_analytic_grad = False
         self._pool_type = pool_type
         self._use_cumulative_thresh = use_cumulative_thresh
         self._add_equiv_ops = add_equiv_ops
@@ -142,13 +151,13 @@ class ADAPTVQE(UCCVQE):
         self.fill_pool()
         
         if self._max_moment_rank:
-            print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
+            print("\nConstructing Moller-Plesset and Epstein-Nesbet denominators")
             self.construct_moment_space()
 
         if self._verbose:
-            print('\n\n-------------------------------------')
-            print('   Second Quantized Operator Pool')
-            print('-------------------------------------')
+            print("\n\n-------------------------------------")
+            print("   Second Quantized Operator Pool")
+            print("-------------------------------------")
             print(self._pool_obj.str())
 
         avqe_iter = 0
@@ -158,10 +167,14 @@ class ADAPTVQE(UCCVQE):
             hit_maxiter = 1
             self._converged = True
 
-        if (self._print_summary_file):
+        if self._print_summary_file:
             f = open("summary.dat", "w+", buffering=1)
-            f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
-            f.write('#-------------------------------------------------------------------------------\n')
+            f.write(
+                f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n"
+            )
+            f.write(
+                "#-------------------------------------------------------------------------------\n"
+            )
 
         
         if self._is_multi_state:
@@ -177,21 +190,20 @@ class ADAPTVQE(UCCVQE):
             print(diag_string)
 
         while not self._converged:
-
-            print('\n\n -----> ADAPT-VQE iteration ', avqe_iter, ' <-----\n')
+            print("\n\n -----> ADAPT-VQE iteration ", avqe_iter, " <-----\n")
             self.update_ansatz()
 
             if self._converged:
                 break
 
-            if(self._verbose):
-                print('\ntoperators included from pool: \n', self._tops)
-                print('\ntamplitudes for tops: \n', self._tamps)
+            if self._verbose:
+                print("\ntoperators included from pool: \n", self._tops)
+                print("\ntamplitudes for tops: \n", self._tamps)
 
             self.solve()
 
             if self._max_moment_rank:
-                print('\nComputing non-iterative energy corrections')
+                print("\nComputing non-iterative energy corrections")
                 self.compute_moment_energies()
 
             if self._is_multi_state:
@@ -217,11 +229,11 @@ class ADAPTVQE(UCCVQE):
 
             avqe_iter += 1
 
-            if avqe_iter > self._adapt_maxiter-1:
+            if avqe_iter > self._adapt_maxiter - 1:
                 hit_maxiter = 1
                 break
 
-        if (self._print_summary_file):
+        if self._print_summary_file:
             f.close()
 
         # Set final ground state energy.
@@ -232,9 +244,7 @@ class ADAPTVQE(UCCVQE):
                     self._final_result = None
                 else:
                     self._final_result = self._results[-1]
-            
-                
-                    
+                         
         if self._is_multi_state:
             #Check that ref and final are included
             best_diags = []
@@ -245,17 +255,27 @@ class ADAPTVQE(UCCVQE):
         
         self._Egs = self.get_final_energy()
 
-        print('\n\n')
+        print("\n\n")
         if not self._max_moment_rank:
-            print(f"{'Iter':>8}{'E':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}")
-            print('-------------------------------------------------------------------------------')
+            print(
+                f"{'Iter':>8}{'E':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}"
+            )
+            print(
+                "-------------------------------------------------------------------------------"
+            )
 
             for k, Ek in enumerate(self._energies):
-                print(f' {k:7}    {Ek:+15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
+                print(
+                    f" {k:7}    {Ek:+15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}"
+                )
 
         else:
-            print(f"{'Iter':>8}{'E':>14}{'E_MMCC(MP)':>24}{'E_MMCC(EN)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
-            print('-----------------------------------------------------------------------------------------------------------------------')
+            print(
+                f"{'Iter':>8}{'E':>14}{'E_MMCC(MP)':>24}{'E_MMCC(EN)':>19}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}"
+            )
+            print(
+                "-----------------------------------------------------------------------------------------------------------------------"
+            )
 
             for k, Ek in enumerate(self._energies):
                 print(f' {k+1:7}    {Ek:+15.9f}    {self._E_mmcc_mp[k]:15.9f}    {self._E_mmcc_en[k]:15.9f}    {self._n_classical_params_lst[k]:8}        {self._n_cnot_lst[k]:10}        {sum(self._n_pauli_trm_measures_lst[:k+1]):12}')
@@ -274,7 +294,9 @@ class ADAPTVQE(UCCVQE):
 
     # Define Algorithm abstract methods.
     def run_realistic(self):
-        raise NotImplementedError('run_realistic() is not fully implemented for ADAPT-VQE.')
+        raise NotImplementedError(
+            "run_realistic() is not fully implemented for ADAPT-VQE."
+        )
 
     def verify_run(self):
         self.verify_required_attributes()
@@ -282,69 +304,64 @@ class ADAPTVQE(UCCVQE):
         self.verify_required_UCCVQE_attributes()
 
     def print_options_banner(self):
-        print('\n-----------------------------------------------------')
-        print('  Adaptive Derivative-Assembled Pseudo-Trotter VQE   ')
-        print('-----------------------------------------------------')
+        print("\n-----------------------------------------------------")
+        print("  Adaptive Derivative-Assembled Pseudo-Trotter VQE   ")
+        print("-----------------------------------------------------")
 
-        print('\n\n               ==> ADAPT-VQE options <==')
-        print('---------------------------------------------------------')
-        # General algorithm options.
-        if(self._state_prep_type=='occupation_list'):
-            if not self._is_multi_state:
-                print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
-            else:
-                for idx, ref in enumerate(self._ref):
-                    print(f"{f'Trial reference state {idx}:':<35}",  ref_string(ref, self._nqb))
-        else:
-            print('Trial reference state(s) were not provided as Slater determinants.')
-        print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
-        print('Trial state preparation method:          ',  self._state_prep_type)
-        print('Trotter order (rho):                     ',  self._trotter_order)
-        print('Trotter number (m):                      ',  self._trotter_number)
-        print('Use fast version of algorithm:           ',  str(self._fast))
-        if(self._fast):
-            print('Measurement varience thresh:             ',  'NA')
-        else:
-            print('Measurement varience thresh:             ',  0.01)
+        print("\n\n               ==> ADAPT-VQE options <==")
+        print("---------------------------------------------------------")
 
-        print('Use qubit excitations:                   ', self._qubit_excitations)
-        print('Use compact excitation circuits:         ', self._compact_excitations)
+        self.print_generic_options()
+
+        print("Use qubit excitations:                   ", self._qubit_excitations)
+        print("Use compact excitation circuits:         ", self._compact_excitations)
 
         # VQE options.
-        opt_thrsh_str = '{:.2e}'.format(self._opt_thresh)
-        avqe_thrsh_str = '{:.2e}'.format(self._avqe_thresh)
-        print('Optimization algorithm:                  ',  self._optimizer)
-        print('Optimization maxiter:                    ',  self._opt_maxiter)
-        print('Optimizer grad-norm threshold (theta):   ',  opt_thrsh_str)
+        opt_thrsh_str = "{:.2e}".format(self._opt_thresh)
+        avqe_thrsh_str = "{:.2e}".format(self._avqe_thresh)
+        print("Optimization algorithm:                  ", self._optimizer)
+        print("Optimization maxiter:                    ", self._opt_maxiter)
+        print("Optimizer grad-norm threshold (theta):   ", opt_thrsh_str)
 
         # UCCVQE options.
-        print('Use analytic gradient:                   ',  str(self._use_analytic_grad))
-        print('Operator pool type:                      ',  str(self._pool_type))
+        print("Use analytic gradient:                   ", str(self._use_analytic_grad))
+        print("Operator pool type:                      ", str(self._pool_type))
 
         # Specific ADAPT-VQE options.
-        print('ADAPT-VQE grad-norm threshold (eps):     ',  avqe_thrsh_str)
-        print('ADAPT-VQE maxiter:                       ',  self._adapt_maxiter)
-
+        print("ADAPT-VQE grad-norm threshold (eps):     ", avqe_thrsh_str)
+        print("ADAPT-VQE maxiter:                       ", self._adapt_maxiter)
 
     def print_summary_banner(self):
-
-        print('\n\n                ==> ADAPT-VQE summary <==')
-        print('-----------------------------------------------------------')
-        print('Final ADAPT-VQE Energy:                     ', round(self._Egs, 10))
+        print("\n\n                ==> ADAPT-VQE summary <==")
+        print("-----------------------------------------------------------")
+        print("Final ADAPT-VQE Energy:                     ", round(self._Egs, 10))
         if self._max_moment_rank:
-            print('Moment-corrected (MP) ADAPT-VQE Energy:     ', round(self._E_mmcc_mp[-1], 10))
-            print('Moment-corrected (EN) ADAPT-VQE Energy:     ', round(self._E_mmcc_en[-1], 10))
-        print('Number of operators in pool:                 ', len(self._pool_obj))
-        print('Final number of amplitudes in ansatz:        ', len(self._tamps))
-        print('Total number of Hamiltonian measurements:    ', self.get_num_ham_measurements())
-        print('Total number of commutator measurements:     ', self.get_num_commut_measurements())
-        print('Number of classical parameters used:         ', self._n_classical_params)
-        print('Number of CNOT gates in deepest circuit:     ', self._n_cnot)
-        print('Number of Pauli term measurements:           ', self._n_pauli_trm_measures)
+            print(
+                "Moment-corrected (MP) ADAPT-VQE Energy:     ",
+                round(self._E_mmcc_mp[-1], 10),
+            )
+            print(
+                "Moment-corrected (EN) ADAPT-VQE Energy:     ",
+                round(self._E_mmcc_en[-1], 10),
+            )
+        print("Number of operators in pool:                 ", len(self._pool_obj))
+        print("Final number of amplitudes in ansatz:        ", len(self._tamps))
+        print(
+            "Total number of Hamiltonian measurements:    ",
+            self.get_num_ham_measurements(),
+        )
+        print(
+            "Total number of commutator measurements:      ",
+            self.get_num_commut_measurements(),
+        )
+        print("Number of classical parameters used:         ", self._n_classical_params)
+        print("Number of CNOT gates in deepest circuit:     ", self._n_cnot)
+        print(
+            "Number of Pauli term measurements:           ", self._n_pauli_trm_measures
+        )
 
-        print('Number of grad vector evaluations:           ', self._res_vec_evals)
-        print('Number of individual grad evaluations:       ', self._res_m_evals)
-
+        print("Number of grad vector evaluations:           ", self._res_vec_evals)
+        print("Number of individual grad evaluations:       ", self._res_m_evals)
 
     # Define VQE abstract methods.
     def solve(self):
@@ -355,14 +372,12 @@ class ADAPTVQE(UCCVQE):
             return self.scipy_solve()
 
     def scipy_solve(self):
-
         self._k_counter = 0
 
         opts = {}
-        opts['gtol'] = self._opt_thresh
-        opts['disp'] = False
-        opts['maxiter'] = self._opt_maxiter
-
+        opts["gtol"] = self._opt_thresh
+        opts["disp"] = False
+        opts["maxiter"] = self._opt_maxiter
         x0 = copy.deepcopy(self._tamps)
 
         init_gues_energy = self.energy_feval(x0)
@@ -373,13 +388,16 @@ class ADAPTVQE(UCCVQE):
         else:
             factor = len(self._ref)
         if self._use_analytic_grad:
-            print('  \n--> Begin opt with analytic gradient:')
+            print("  \n--> Begin opt with analytic gradient:")
             print(f" Initial guess energy:              {init_gues_energy:+12.10f}")
-            res =  minimize(self.energy_feval, x0,
-                                    method=self._optimizer,
-                                    jac=self.gradient_ary_feval,
-                                    options=opts,
-                                    callback=self.report_iteration)
+            res = minimize(
+                self.energy_feval,
+                x0,
+                method=self._optimizer,
+                jac=self.gradient_ary_feval,
+                options=opts,
+                callback=self.report_iteration,
+            )
 
             # account for energy evaluations
             self._n_pauli_measures_k += factor * self._Nl * res.nfev
@@ -389,23 +407,26 @@ class ADAPTVQE(UCCVQE):
                 self._n_pauli_measures_k += factor * self._Nm[m] * self._Nl * res.njev
 
         else:
-            print('  \n--> Begin opt with grad estimated using first-differences:')
+            print("  \n--> Begin opt with grad estimated using first-differences:")
             print(f" Initial guess energy:              {init_gues_energy:+12.10f}")
-            res =  minimize(self.energy_feval, x0,
-                                    method=self._optimizer,
-                                    options=opts,
-                                    callback=self.report_iteration)
+            res = minimize(
+                self.energy_feval,
+                x0,
+                method=self._optimizer,
+                options=opts,
+                callback=self.report_iteration,
+            )
 
             self._n_pauli_measures_k += factor * self._Nl * res.nfev
 
-        if(res.success):
-            print('  => Minimization successful!')
-            print(f'  => Minimum Energy: {res.fun:+12.10f}')
+        if res.success:
+            print("  => Minimization successful!")
+            print(f"  => Minimum Energy: {res.fun:+12.10f}")
 
         
         else:
-            print('  => WARNING: minimization result may not be tightly converged.')
-            print(f'  => Minimum Energy: {res.fun:+12.10f}')
+            print("  => WARNING: minimization result may not be tightly converged.")
+            print(f"  => Minimum Energy: {res.fun:+12.10f}")
 
 
         if res.x[-1] == 0:
@@ -440,11 +461,14 @@ class ADAPTVQE(UCCVQE):
 
         curr_norm = 0.0
         lgrst_grad = 0.0
-        Uvqc = self.build_Uvqc()
 
         if self._verbose:
-            print('     op index (m)     N pauli terms              Gradient            Tmu  ')
-            print('  ------------------------------------------------------------------------------')
+            print(
+                "     op index (m)     N pauli terms              Gradient            Tmu  "
+            )
+            print(
+                "  ------------------------------------------------------------------------------"
+            )
 
         grads = self.measure_gradient3()
 
@@ -456,13 +480,14 @@ class ADAPTVQE(UCCVQE):
             # refers to number of times sigma_y must be measured in "strategies for UCC" grad eval circuit
             self._n_pauli_measures_k += factor * self._Nl * self._Nm[m]
 
-            curr_norm += grad_m ** 2
-            if (self._verbose):
-                print(f'       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}      {self._pool_obj[m][1].terms()[0][1]}')
+            curr_norm += grad_m**2
+            if self._verbose:
+                print(
+                    f"       {m:3}                {self._Nm[m]:8}             {grad_m:+12.9f}      {self._pool_obj[m][1].terms()[0][1]}"
+                )
 
-            if (abs(grad_m) > abs(lgrst_grad)):
-
-                if(abs(lgrst_grad) > 0.0):
+            if abs(grad_m) > abs(lgrst_grad):
+                if abs(lgrst_grad) > 0.0:
                     secnd_lgst_grad = lgrst_grad
                     secnd_lgrst_grad_idx = lgrst_grad_idx
 
@@ -471,8 +496,8 @@ class ADAPTVQE(UCCVQE):
 
         curr_norm = np.sqrt(curr_norm)
         print("\n==> Measuring gradients from pool:")
-        print(" Norm of <[H,Am]> = %12.8f" %curr_norm)
-        print(" Max  of <[H,Am]> = %12.8f" %lgrst_grad)
+        print(" Norm of <[H,Am]> = %12.8f" % curr_norm)
+        print(" Max  of <[H,Am]> = %12.8f" % lgrst_grad)
 
         self._curr_grad_norm = curr_norm
         self._grad_norms.append(curr_norm)
@@ -480,8 +505,7 @@ class ADAPTVQE(UCCVQE):
         self.conv_status()
 
         if not self._converged:
-            
-            if(self._use_cumulative_thresh):
+            if self._use_cumulative_thresh:
                 temp_order_tops = []
                 grads_sq = [(grads[m] * grads[m], m) for m in range(len(grads))]
                 grads_sq.sort()
@@ -489,10 +513,12 @@ class ADAPTVQE(UCCVQE):
                 for m, gm_sq in enumerate(grads_sq):
                     gm_sq_sum += gm_sq[0]
                     if gm_sq_sum > (self._avqe_thresh * self._avqe_thresh):
-                        print(f"  Adding operator m =     {gm_sq[1]:10}   |gm| = {np.sqrt(gm_sq[0]):10.8f}")
+                        print(
+                            f"  Adding operator m =     {gm_sq[1]:10}   |gm| = {np.sqrt(gm_sq[0]):10.8f}"
+                        )
                         self._tamps.append(0.0)
-                        temp_order_tops.insert(0,gm_sq[1])
-                
+                        temp_order_tops.insert(0, gm_sq[1])
+
                 self._tops.extend(copy.deepcopy(temp_order_tops))
                 
             else:
@@ -527,14 +553,12 @@ class ADAPTVQE(UCCVQE):
         else:
             print("\n  ADAPT-VQE converged!")
 
-
     def conv_status(self):
-        """Sets the convergence states.
-        """
+        """Sets the convergence states."""
         if abs(self._curr_grad_norm) < abs(self._avqe_thresh):
             self._converged = True
             self._final_energy = self._energies[-1]
-            if self._optimizer.lower() != 'jacobi':
+            if self._optimizer.lower() != "jacobi":
                 self._final_result = self._results[-1]
         else:
             self._converged = False
@@ -596,6 +620,7 @@ class ADAPTVQE(UCCVQE):
                 self._final_result = self._results[-1]
         else:
             return self._final_result
+
 
 ADAPTVQE.jacobi_solver = optimizer.jacobi_solver
 ADAPTVQE.construct_moment_space = moment_energy_corrections.construct_moment_space

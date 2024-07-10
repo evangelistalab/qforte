@@ -37,7 +37,6 @@ class SparseVector {
 
   private:
     std::map<size_t, std::complex<double>> values_;
-
 };
 
 class SparseMatrix {

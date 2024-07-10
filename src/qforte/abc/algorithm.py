@@ -7,6 +7,8 @@ The abstract base classes inherited by all algorithm subclasses.
 from abc import ABC, abstractmethod
 import qforte as qf
 from qforte.utils.state_prep import *
+from qforte.abc.mixin import Trotterizable
+
 
 class Algorithm(ABC):
     """A class that characterizes the most basic functionality for all
@@ -29,16 +31,6 @@ class Algorithm(ABC):
         Whether or not to use a faster version of the algorithm that bypasses
         measurment (unphysical for quantum computer). Most algorithms only
         have a fast implentation.
-
-    _trotter_order : int
-        The Trotter order to use for exponentiated operators.
-        (exact in the infinite limit).
-
-    _trotter_number : int
-        The number of trotter steps (m) to perform when approximating the matrix
-        exponentials (Um or Un). For the exponential of two non commuting terms
-        e^(A + B), the approximate operator C(m) = (e^(A/m) * e^(B/m))^m is
-        exact in the infinite m limit.
 
     _Egs : float
         The final ground state energy value.
@@ -74,8 +66,6 @@ class Algorithm(ABC):
                  system,
                  reference=None,
                  state_prep_type='occupation_list',
-                 trotter_order=1,
-                 trotter_number=1,
                  fast=True,
                  verbose=False,
                  print_summary_file=False,
@@ -93,7 +83,7 @@ class Algorithm(ABC):
 
         if not self._is_multi_state:
             if self._state_prep_type == 'occupation_list':
-                if(reference==None):
+                if reference is None:
                     self._ref = system.hf_reference
                 else:
                     if not (isinstance(reference, list)):
@@ -101,23 +91,54 @@ class Algorithm(ABC):
                     for r in reference:
                         if r != 0 and r != 1:
                             raise ValueError("occupation_list reference must be list of 1s and 0s.")
-
                     self._ref = reference
 
-                self._Uprep = build_Uprep(self._ref, state_prep_type)
+                self._refprep = self.build_refprep(self._ref)
+                self._Uprep = qf.Circuit(self._refprep)
 
             elif self._state_prep_type == 'unitary_circ':
                 if not isinstance(reference, qf.Circuit):
                     raise ValueError("unitary_circ reference must be a Circuit.")
 
                 self._ref = system.hf_reference
+                self._Uprep = qf.Circuit(self._refprep)
                 self._Uprep = reference
 
+            elif self._state_prep_type == "computer":
+                if not isinstance(reference, qf.Computer):
+                    raise ValueError("computer reference must be a Computer.")
+                if not fast:
+                    raise ValueError(
+                        "`self._fast = False` specifies not to skip steps, but `self._state_prep_type = computer` specifies to skip state initialization. That's inconsistent."
+                    )
+                if reference.get_nqubit() != len(system.hf_reference):
+                    raise ValueError(
+                        f"Computer needs {len(system.hf_reference)} qubits, found {reference.get_nqubit()}."
+                    )
+                if (
+                    not hasattr(self, "computer_initializable")
+                    or not self.computer_initializable
+                ):
+                    raise ValueError("Class cannot be initialized with a computer.")
+
+                self._ref = system.hf_reference
+                self._refprep = build_refprep(self._ref)
+                self._Uprep = qf.Circuit()
+                self.computer = reference
+        
             else:
-                raise ValueError("QForte only suppors references as occupation lists and Circuits.")
+                raise ValueError(
+                    "QForte only supports references as occupation lists, Circuits, or Computers."
+                )
+            self._nqb = len(self._ref)
 
         else:
-            #Make self._ref and self._Uprep into lists of references and associated preparation unitaries. 
+            if weights == None:
+                print("State-averaging weights not specified.  Assuming equal weights.")
+                self._weights = [1/len(self._ref)] * len(self._ref)
+            else:
+                self._weights = weights
+            
             if self._state_prep_type == 'occupation_list':
                 if(reference==None):
                     self._ref = [system.hf_reference]
@@ -132,49 +153,71 @@ class Algorithm(ABC):
                             if r != 0 and r != 1:
                                 raise ValueError("Ill-constructed reference.  Should take form [[0,0,1,1], [1,1,0,0] ...]") 
                         self._ref.append(ref)
+                
+                self._refprep = []
                 self._Uprep = []
-                for ref in self._ref:
-                    self._Uprep.append(build_Uprep(ref, state_prep_type))
+                for ref in self._ref:                
+                    self._refprep.append(build_refprep(ref))
+                    self._Uprep.append(qf.Circuit(self._refprep[-1]))
 
             elif self._state_prep_type == 'unitary_circ':
-                self._ref = []
-                self._Uprep = []
                 if not isinstance(reference, list):
                     raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
+         
                 self._ref = [system.hf_reference] * len(reference)
+                self._refprep = []
+                self._Uprep = []
                 for ref in reference:
                     if not isinstance(ref, qf.Circuit):
                         raise ValueError("Ill-constructed reference.  Should be a list of qf.Circuit objects.")
-                    self._Uprep.append(ref)
+                    self._refprep.append(build_refprep(ref))
+                    self.Uprep.append(ref) 
 
-            else:
-                raise ValueError("QForte only suppors references as occupation lists and Circuits.")
+            elif self._state_prep_type == "computer":
+                
+                self._ref = [system.hf_reference] * len(self._weights)
+                self._refprep = []
+                self._Uprep = [qf.Circuit()]*len(weights)
+                self.computer = reference
+                if not isinstance(reference, list):
+                    raise ValueError("reference should be a list of Computer objects.") 
+                for ref in reference:    
+                    if not isinstance(ref, qf.Computer):
+                        raise ValueError("reference should be a list of Computer objects.") 
+                    if ref.get_nqubit() != len(system.hf_reference):
+                        raise ValueError(
+                            f"Computer needs {len(system.hf_reference)} qubits, found {ref.get_nqubit()}."
+                        )   
+                self._refprep.append(self._ref)
+            if not fast:
+                raise ValueError(
+                    "`self._fast = False` specifies not to skip steps, but `self._state_prep_type = computer` specifies to skip state initialization. That's inconsistent."
+                ) 
+            if (
+                not hasattr(self, "computer_initializable")
+                or not self.computer_initializable
+            ):
+                raise ValueError("Class cannot be initialized with a computer.")
 
-            if(weights==None):
-                print("State-averaging weights not specified.  Assuming equal weights.")
-                self._weights = [1/len(self._ref)] * len(self._ref)
-            else:
-                self._weights = weights
             if len(self._weights) != len(self._ref):
                 raise ValueError("Number of weights should match number of references.")
             if abs(sum(self._weights) - 1) > 1e-12:
                 raise ValueError("Reference weights should sum to 1.")
-        if not self._is_multi_state:
-            self._nqb = len(self._ref)
-        else:
+        
             self._nqb = len(self._ref[0])
 
         self._qb_ham = system.hamiltonian
         if self._qb_ham.num_qubits() != self._nqb:
-            raise ValueError(f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent.")
+            raise ValueError(
+                f"The reference has {self._nqb} qubits, but the Hamiltonian has {self._qb_ham.num_qubits()}. This is inconsistent."
+            )
         try:
             self._hf_energy = system.hf_energy
         except AttributeError:
             self._hf_energy = 0.0
 
         self._Nl = len(self._qb_ham.terms())
-        self._trotter_order = trotter_order
-        self._trotter_number = trotter_number
+
         self._fast = fast
         self._verbose = verbose
         self._print_summary_file = print_summary_file
@@ -188,23 +231,19 @@ class Algorithm(ABC):
         self._n_cnot = None
         self._n_pauli_trm_measures = None
 
-
     @abstractmethod
     def print_options_banner(self):
-        """Prints the run options used for algorithm.
-        """
+        """Prints the run options used for algorithm."""
         pass
 
     @abstractmethod
     def print_summary_banner(self):
-        """Prints a summary of the post-run information.
-        """
+        """Prints a summary of the post-run information."""
         pass
 
     @abstractmethod
     def run(self):
-        """Executes the algorithm.
-        """
+        """Executes the algorithm."""
         pass
 
     @abstractmethod
@@ -216,13 +255,11 @@ class Algorithm(ABC):
 
     @abstractmethod
     def verify_run(self):
-        """Verifies that the abstract sub-class(es) define the required attributes.
-        """
+        """Verifies that the abstract sub-class(es) define the required attributes."""
         pass
 
     def get_gs_energy(self):
-        """Returns the final ground state energy.
-        """
+        """Returns the final ground state energy."""
         return self._Egs
 
     def get_Umaxdepth(self):
@@ -238,22 +275,44 @@ class Algorithm(ABC):
         pass
 
     def verify_required_attributes(self):
-        """Verifies that the concrete sub-class(es) define the required attributes.
-        """
+        """Verifies that the concrete sub-class(es) define the required attributes."""
         if self._Egs is None:
-            raise NotImplementedError('Concrete Algorithm class must define self._Egs attribute.')
+            raise NotImplementedError(
+                "Concrete Algorithm class must define self._Egs attribute."
+            )
 
-#         if self._Umaxdepth is None:
-#             raise NotImplementedError('Concrete Algorithm class must define self._Umaxdepth attribute.')
+        #         if self._Umaxdepth is None:
+        #             raise NotImplementedError('Concrete Algorithm class must define self._Umaxdepth attribute.')
 
         if self._n_classical_params is None:
-            raise NotImplementedError('Concrete Algorithm class must define self._n_classical_params attribute.')
+            raise NotImplementedError(
+                "Concrete Algorithm class must define self._n_classical_params attribute."
+            )
 
         if self._n_cnot is None:
-            raise NotImplementedError('Concrete Algorithm class must define self._n_cnot attribute.')
+            raise NotImplementedError(
+                "Concrete Algorithm class must define self._n_cnot attribute."
+            )
 
         if self._n_pauli_trm_measures is None:
-            raise NotImplementedError('Concrete Algorithm class must define self._n_pauli_trm_measures attribute.')
+            raise NotImplementedError(
+                "Concrete Algorithm class must define self._n_pauli_trm_measures attribute."
+            )
+
+    def print_generic_options(self):
+        """Print options applicable to any algorithm."""
+        print(
+            "Trial reference state:                   ",
+            ref_string(self._ref, self._nqb),
+        )
+        print("Number of Hamiltonian Pauli terms:       ", self._Nl)
+        print("Trial state preparation method:          ", self._state_prep_type)
+        if isinstance(self, Trotterizable):
+            self.print_trotter_options()
+        print("Use fast version of algorithm:           ", str(self._fast))
+        if not self._fast:
+            print("Measurement variance thresh:             ", 0.01)
+
 
 class AnsatzAlgorithm(Algorithm):
     """A class that characterizes the most basic functionality for all
@@ -322,43 +381,19 @@ class AnsatzAlgorithm(Algorithm):
         return Uvqc
 
     def fill_pool(self):
-        """ This function populates an operator pool with SQOperator objects.
-        """
+        """This function populates an operator pool with SQOperator objects."""
 
-        if not self._is_multi_state:
-            if self._pool_type in {'sa_SD', 'GSD', 'SD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}:
-                if self._pool_type == 'sa_SD' and self._compact_excitations:
-                    raise ValueError('Compact excitation circuits not yet implemented for sa_SD operator pool.')
-                self._pool_obj = qf.SQOpPool()
-                if hasattr(self._sys, 'orb_irreps_to_int'):
-                    self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
-                else:
-                    self._pool_obj.set_orb_spaces(self._ref)
-                self._pool_obj.fill_pool(self._pool_type)
-            elif isinstance(self._pool_type, qf.SQOpPool):
-                self._pool_obj = self._pool_type
-
+        if self._pool_type in {"sa_SD", "GSD", "SD", "SDT", "SDTQ", "SDTQP", "SDTQPH"}:
+            self._pool_obj = qf.SQOpPool()
+            if hasattr(self._sys, "orb_irreps_to_int"):
+                self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
             else:
                 raise ValueError('Invalid operator pool type specified.')
         else:
-            if self._sys.point_group[0].upper() != 'C1':
-                if self._state_prep_type != "occupation_list":
-                    print("\nWARNING: Symmetry consistency of references is only checked for occupation lists.\n")
-                for r in range(1, len(self._ref)):
-                    diff = [self._ref[0][i] ^ self._ref[r][i] for i in range(len(self._ref[0]))]
-                    irrep = 0
-                    for i in range(len(diff)):
-                        if diff[i] == 1:
-                            irrep ^= self._sys.orb_irreps_to_int[int(i/2)] 
-                    if irrep != 0:
-                        print("WARNING: References of different irreps. Proceeding with symmetric pool anyway.")
-                    break
-                
-                
             #Only GSD is well-defined for multiple references.
             if self._pool_type in {'GSD'}:
                 self._pool_obj = qf.SQOpPool()
-                #o/v spaces are not well-defined: passing the dummy state |0>
+                #o/v spaces are not well-defined: passing the dummy state self._ref[0]
                 if hasattr(self._sys, 'orb_irreps_to_int'):
                     self._pool_obj.set_orb_spaces(self._ref[0], self._sys.orb_irreps_to_int)
                 else:
@@ -366,49 +401,67 @@ class AnsatzAlgorithm(Algorithm):
                 self._pool_obj.fill_pool(self._pool_type) 
                 
             else:
-                raise ValueError('Invalid operator pool type specified.')
+                raise ValueError('Only GSD is well-defined for multiple references.')
 
-        self._Nm = [len(operator.jw_transform().terms()) for _, operator in self._pool_obj]
+        self._Nm = [
+            len(operator.jw_transform().terms()) for _, operator in self._pool_obj
+        ]
 
-    def measure_energy(self, Ucirc):
+    def measure_energy(self, Ucirc, computer=None):
         """
         This function returns the energy expectation value of the state
-        Uprep|0>, or in the case where _is_multi_state, the weighted average
-        of all Uprep[i]|0>.
+        Ucirc|Ψ>, or in the case where _is_multi_state, the weighted average
+        of all Ucirc[i]|Ψ>.
 
         Parameters
         ----------
         Ucirc : Circuit
             The state preparation circuit (or list of circuits).
         """
-        if not self._is_multi_state:
+
+        if not self._is_multi_state:            
             if self._fast:
-                myQC = qforte.Computer(self._nqb)
-                myQC.apply_circuit(Ucirc)
-                val = np.real(myQC.direct_op_exp_val(self._qb_ham))
+                if computer is None:
+                    computer = qf.Computer(self._nqb)
+                computer.apply_circuit(Ucirc)
+                val = np.real(computer.direct_op_exp_val(self._qb_ham))
             else:
+                if computer is not None:
+                    raise TypeError(
+                        "measure_energy in slow mode does not support custom Computer."
+                    )
                 Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
-                val = Exp.perfect_experimental_avg([])
+                val = Exp.perfect_experimental_avg()
         else:
-            val = 0
-            if self._fast:    
-                for idx, U in enumerate(Ucirc):
-                    myQC = qforte.Computer(self._nqb)
-                    myQC.apply_circuit(U)
-                    
-                    val += self._weights[idx] * np.real(myQC.direct_op_exp_val(self._qb_ham))
+            if self._fast:
+                if computer is None:
+                    computer = [qf.Computer(self._nqb)]*len(self._ref)
+                    for i in range(len(computer)):
+                        computer[i].apply_circuit(Ucirc[i])
+                        val += np.real(computer.direct_op_exp_val(self._qb_ham)) * self._weights[i]
             else:
-                for idx, U in enumerate(Ucirc):
-                    Exp = qforte.Experiment(self._nqb, U, self._qb_ham, 2000)
-                    val += self._weights[idx] * Exp.perfect_experimental_avg([])
+                if computer is not None:
+                    raise TypeError(
+                        "measure_energy in slow mode does not support custom Computer."
+                    )
+                Exp = qf.Experiment(self._nqb, Ucirc[i], self._qb_ham, 2000)
+                val = Exp.perfect_experimental_avg()
 
         assert np.isclose(np.imag(val), 0.0)
         
         return val
 
-    def __init__(self, *args, qubit_excitations=False, compact_excitations=False, diis_max_dim=8,
-            max_moment_rank = 0, moment_dt=None, penalty=None,
-            **kwargs):
+    def __init__(
+        self,
+        *args,
+        qubit_excitations=False,
+        compact_excitations=False,
+        diis_max_dim=8,
+        max_moment_rank=0,
+        moment_dt=None,
+        penalty=None,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self._curr_energy = 0
         self._Nm = []
@@ -429,32 +482,59 @@ class AnsatzAlgorithm(Algorithm):
 
         if self._penalty is not None:
             if isinstance(self, qf.UCCNPQE) or isinstance(self, qf.SPQE):
-                raise ValueError("PQE with Hamiltonian penalty terms not yet supported.")
-            expected_keys = {'operators', 'eigenvalues', 'scaling_factors'}
+                raise ValueError(
+                    "PQE with Hamiltonian penalty terms not yet supported."
+                )
+            expected_keys = {"operators", "eigenvalues", "scaling_factors"}
             if not isinstance(self._penalty, dict):
-                raise ValueError(f"The 'penalty' option must be a dictionary with keys: {expected_keys}")
+                raise ValueError(
+                    f"The 'penalty' option must be a dictionary with keys: {expected_keys}"
+                )
             if not set(self._penalty.keys()) == expected_keys:
-                raise ValueError(f"Incorrect keys in 'penalty' dictionary. Expected keys: {expected_keys}")
+                raise ValueError(
+                    f"Incorrect keys in 'penalty' dictionary. Expected keys: {expected_keys}"
+                )
             if not all(isinstance(value, list) for value in self._penalty.values()):
-                raise ValueError("All values in the 'penalty' dictionary must be lists.")
-            if not len(self._penalty['operators']) == len(self._penalty['eigenvalues']) == len(self._penalty['scaling_factors']):
-                raise ValueError("Operators, eigenvalues, and scaling factors lists must be of the same length.")
-            if not all(isinstance(op, qf.QubitOperator) for op in self._penalty.get('operators', [])):
-                raise ValueError("All elements in 'operators' must be instances of the QubitOperator class.")
-            if not all(isinstance(eigval, (int, float)) for eigval in self._penalty.get('eigenvalues', [])):
+                raise ValueError(
+                    "All values in the 'penalty' dictionary must be lists."
+                )
+            if (
+                not len(self._penalty["operators"])
+                == len(self._penalty["eigenvalues"])
+                == len(self._penalty["scaling_factors"])
+            ):
+                raise ValueError(
+                    "Operators, eigenvalues, and scaling factors lists must be of the same length."
+                )
+            if not all(
+                isinstance(op, qf.QubitOperator)
+                for op in self._penalty.get("operators", [])
+            ):
+                raise ValueError(
+                    "All elements in 'operators' must be instances of the QubitOperator class."
+                )
+            if not all(
+                isinstance(eigval, (int, float))
+                for eigval in self._penalty.get("eigenvalues", [])
+            ):
                 raise ValueError("All elements in 'eigenvalues' must be real numbers.")
-            if not all(isinstance(scaling, (int, float)) for scaling in self._penalty.get('scaling_factors', [])):
-                raise ValueError("All elements in 'scaling_factors' must be real numbers.")
+            if not all(
+                isinstance(scaling, (int, float))
+                for scaling in self._penalty.get("scaling_factors", [])
+            ):
+                raise ValueError(
+                    "All elements in 'scaling_factors' must be real numbers."
+                )
             penalties_qop = qf.QubitOperator()
-            for i in range(len(self._penalty['eigenvalues'])):
+            for i in range(len(self._penalty["eigenvalues"])):
                 eig = qf.Circuit()
                 temp_qop = qf.QubitOperator()
                 penalty_qop = qf.QubitOperator()
-                temp_qop.add(self._penalty['operators'][i])
-                temp_qop.add(-self._penalty['eigenvalues'][i], eig)
+                temp_qop.add(self._penalty["operators"][i])
+                temp_qop.add(-self._penalty["eigenvalues"][i], eig)
                 penalty_qop.add(temp_qop)
                 penalty_qop.operator_product(temp_qop, True, True)
-                penalty_qop.mult_coeffs(self._penalty['scaling_factors'][i])
+                penalty_qop.mult_coeffs(self._penalty["scaling_factors"][i])
                 penalties_qop.add(penalty_qop)
                 penalties_qop.simplify(True)
             self._qb_ham = qf.QubitOperator()
@@ -463,30 +543,41 @@ class AnsatzAlgorithm(Algorithm):
             self._qb_ham.simplify(True)
             self._Nl = len(self._qb_ham.terms())
 
-        kwargs.setdefault('irrep', None)
-        if hasattr(self._sys, 'point_group'):
+        kwargs.setdefault("irrep", None)
+        if hasattr(self._sys, "point_group"):
             irreps = list(range(len(self._sys.point_group[1])))
-            if kwargs['irrep'] is None:
-                print('\nWARNING: The {0} point group was detected, but no irreducible representation was specified.\n'
-                        '         Proceeding with totally symmetric.\n'.format(self._sys.point_group[0].capitalize()))
+            if kwargs["irrep"] is None:
+                print(
+                    "\nWARNING: The {0} point group was detected, but no irreducible representation was specified.\n"
+                    "         Proceeding with totally symmetric.\n".format(
+                        self._sys.point_group[0].capitalize()
+                    )
+                )
                 self._irrep = 0
-            elif kwargs['irrep'] in irreps:
-                self._irrep = kwargs['irrep']
+            elif kwargs["irrep"] in irreps:
+                self._irrep = kwargs["irrep"]
             else:
-                raise ValueError("{0} is not an irreducible representation of {1}.\n"
-                                 "               Choose one of {2} corresponding to the\n"
-                                 "               {3} irreducible representations of {1}".format(kwargs['irrep'],
-                                     self._sys.point_group[0].capitalize(),
-                                     irreps,
-                                     self._sys.point_group[1]))
-        elif kwargs['irrep'] is not None:
-            print('\nWARNING: Point group information not found.\n'
-                    '         Ignoring "irrep" and proceeding without symmetry.\n')
+                raise ValueError(
+                    "{0} is not an irreducible representation of {1}.\n"
+                    "               Choose one of {2} corresponding to the\n"
+                    "               {3} irreducible representations of {1}".format(
+                        kwargs["irrep"],
+                        self._sys.point_group[0].capitalize(),
+                        irreps,
+                        self._sys.point_group[1],
+                    )
+                )
+        elif kwargs["irrep"] is not None:
+            print(
+                "\nWARNING: Point group information not found.\n"
+                '         Ignoring "irrep" and proceeding without symmetry.\n'
+            )
 
     def energy_feval(self, params):
         """
         This function returns the energy expectation value of the state
-        Uprep(params)|0>, where params are parameters that can be optimized
+
+        Uprep(params)|Ψ>, where params are parameters that can be optimized
         for some purpose such as energy minimization.  If _is_multi_state,
         this will be the state-averaged energy instead.
 
@@ -497,7 +588,13 @@ class AnsatzAlgorithm(Algorithm):
             the state preparation circuit.
         """
         Ucirc = self.build_Uvqc(amplitudes=params)
-        Energy = self.measure_energy(Ucirc)
+        Energy = self.measure_energy(Ucirc, self.get_initial_computer())
 
         self._curr_energy = Energy
         return Energy
+
+    def get_initial_computer(self) -> qf.Computer:
+        if hasattr(self, "computer"):
+            return qf.Computer(self.computer)
+        else:
+            return qf.Computer(self._nqb)

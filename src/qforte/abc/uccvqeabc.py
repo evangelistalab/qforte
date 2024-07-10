@@ -18,20 +18,21 @@ from qforte.utils.compact_excitation_circuits import compact_excitation_circuit
 
 import numpy as np
 
-class UCCVQE(VQE, UCC):
+
+class UCCVQE(UCC, VQE):
     """The abstract base class inheritied by any algorithm that seeks to find
     eigenstates by variational minimization of the Energy
 
     .. math::
-        E(\mathbf{t}) = \langle \Phi_0 | \hat{U}^\dagger(\mathbf{\mathbf{t}}) \hat{H} \hat{U}(\mathbf{\mathbf{t}}) | \Phi_0 \\rangle
+        E(\\mathbf{t}) = \\langle \\Phi_0 | \\hat{U}^\\dagger(\\mathbf{\\mathbf{t}}) \\hat{H} \\hat{U}(\\mathbf{\\mathbf{t}}) | \\Phi_0 \\rangle
 
-    using a disentagled UCC type ansatz
+    using a disentangled UCC type ansatz
 
     .. math::
-        \hat{U}(\mathbf{t}) = \prod_\mu e^{t_\mu (\hat{\\tau}_\mu - \hat{\\tau}_\mu^\dagger)},
+        \\hat{U}(\\mathbf{t}) = \\prod_\\mu e^{t_\\mu (\\hat{\\tau}_\\mu - \\hat{\\tau}_\\mu^\\dagger)},
 
-    were :math:`\hat{\\tau}_\mu` is a Fermionic excitation operator and
-    :math:`t_\mu` is a cluster amplitude.
+    were :math:`\\hat{\\tau}_\\mu` is a Fermionic excitation operator and
+    :math:`t_\\mu` is a cluster amplitude.
 
     Attributes
     ----------
@@ -69,6 +70,10 @@ class UCCVQE(VQE, UCC):
 
     """
 
+    def __init__(self, *args, **kwargs):
+        self.computer_initializable = True
+        super().__init__(*args, **kwargs)
+
     @abstractmethod
     def get_num_ham_measurements(self):
         pass
@@ -78,10 +83,10 @@ class UCCVQE(VQE, UCC):
         pass
 
     def fill_commutator_pool(self):
-        print('\n\n==> Building commutator pool for gradient measurement.')
+        print("\n\n==> Building commutator pool for gradient measurement.")
         self._commutator_pool = self._pool_obj.get_qubit_op_pool()
         self._commutator_pool.join_as_commutator(self._qb_ham)
-        print('==> Commutator pool construction complete.')
+        print("==> Commutator pool construction complete.")
 
     def measure_operators(self, operators, Ucirc, idxs=[]):
         """
@@ -100,7 +105,7 @@ class UCCVQE(VQE, UCC):
         """
 
         if self._fast:
-            myQC = qforte.Computer(self._nqb)
+            myQC = self.get_initial_computer()
             myQC.apply_circuit(Ucirc)
             if not idxs:
                 grads = myQC.direct_oppl_exp_val(operators)
@@ -115,8 +120,9 @@ class UCCVQE(VQE, UCC):
         return np.real(grads)
 
     def measure_gradient(self, params=None):
-        """ Returns the disentangled (factorized) UCC gradient, using a
-        recursive approach.
+        """Returns the disentangled (factorized) UCC gradient, using a
+        recursive approach, as described in Section D of the Appendix of
+        10.1038/s41467-019-10988-2
 
         Parameters
         ----------
@@ -136,124 +142,152 @@ class UCCVQE(VQE, UCC):
         else:
             Utot = self.build_Uvqc(params)
 
-        if not self._is_multi_state:
-            qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
-            qc_psi.apply_circuit(Utot)
-            qc_sig = qforte.Computer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
-            psi_i = qc_psi.get_coeff_vec()
-            qc_sig.set_coeff_vec(psi_i) # Why was this being copied?
-            qc_sig.apply_operator(self._qb_ham)
 
-            mu = M-1
-            # find <sing_N | K_N | psi_N>
-            Kmu_prev = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
+        if not self._is_multi_state: 
+            qc_psi = self.get_initial_computer()
+            qc_psi.apply_circuit(Utot)
+            qc_sig = qf.Computer(qc_psi)
+            qc_sig.apply_operator(self._qb_ham)
+            qc_temp = qf.Computer(qc_psi)
+
+            mu = M - 1
+
+            # find <sig_N | K_N | psi_N>
+            Kmu_prev = self._pool_obj[self._tops[mu]][1].jw_transform(
+                self._qubit_excitations
+            )
             Kmu_prev.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
-            qc_psi.apply_operator(Kmu_prev)
-            grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+            qc_temp.apply_operator(Kmu_prev)
+            grads[mu] = 2.0 * np.real(
+                np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec())
+            )
 
-            #reset Kmu_prev |psi_i> -> |psi_i>
-            qc_psi.set_coeff_vec(psi_i)
-
-            for mu in reversed(range(M-1)):
-
+            for mu in reversed(range(M - 1)):
+                qc_temp = qf.Computer(qc_psi)
                 # mu => N-1 => M-2
                 # mu+1 => N => M-1
                 # Kmu => KN-1
                 # Kmu_prev => KN
 
                 if params is None:
-                    tamp = self._tamps[mu+1]
+                    tamp = self._tamps[mu + 1]
                 else:
-                    tamp = params[mu+1]
+                    tamp = params[mu + 1]
 
-                Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
+                Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(
+                    self._qubit_excitations
+                )
                 Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
                 if self._compact_excitations:
-                    Umu = qf.Circuit()
-                    # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
-                    # (see original ADAPT-VQE paper)
-                    Umu.add(compact_excitation_circuit(-tamp * self._pool_obj[self._tops[mu + 1]][1].terms()[1][0],
-                                                               self._pool_obj[self._tops[mu + 1]][1].terms()[1][1],
-                                                               self._pool_obj[self._tops[mu + 1]][1].terms()[1][2],
-                                                               self._qubit_excitations))
+                    if self._pool_type == "sa_SD":
+                        sa_sq_op = self._pool_obj[self._tops[mu + 1]][1].terms()
+                        half_length = len(sa_sq_op) // 2
+                        Umu = qf.Circuit()
+                        for coeff, cr, ann in sa_sq_op[:half_length]:
+                            # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                            # (see original ADAPT-VQE paper)
+                            # In this particular case, the minus sign is already incorporated
+                            Umu.add(
+                                compact_excitation_circuit(
+                                    tamp * coeff, ann, cr, self._qubit_excitations
+                                )
+                            )
+                    else:
+                        Umu = qf.Circuit()
+                        # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                        # (see original ADAPT-VQE paper)
+                        Umu.add(
+                            compact_excitation_circuit(
+                                -tamp * self._pool_obj[self._tops[mu + 1]][1].terms()[1][0],
+                                self._pool_obj[self._tops[mu + 1]][1].terms()[1][1],
+                                self._pool_obj[self._tops[mu + 1]][1].terms()[1][2],
+                                self._qubit_excitations,
+                            )
+                        )
                 else:
-                    # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
-                    # (see original ADAPT-VQE paper)
-                    Umu, pmu = trotterize(Kmu_prev, factor=-tamp, trotter_number=self._trotter_number)
+                    if self._pool_type == "sa_SD":
+                        sa_sq_op = self._pool_obj[self._tops[mu + 1]][1].terms()
+                        half_length = len(sa_sq_op) // 2
+                        Umu = qf.Circuit()
+                        for coeff, cr, ann in sa_sq_op[:half_length]:
+                            sq_op = qf.SQOperator()
+                            sq_op.add_term(coeff, cr, ann)
+                            sq_op.add_term(-coeff, ann, cr)
+                            q_op = sq_op.jw_transform(self._qubit_excitations)
+                            U, p = trotterize(
+                                q_op, factor=-tamp, trotter_number=self._trotter_number
+                            )
+                            if p != 1.0 + 0.0j:
+                                raise ValueError(
+                                    "Encountered phase change, phase not equal to (1.0 + 0.0i)"
+                                )
+                            Umu.add(U)
+                    else:
+                        # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
+                        # (see original ADAPT-VQE paper)
+                        Umu, pmu = trotterize(
+                            Kmu_prev, factor=-tamp, trotter_number=self._trotter_number
+                        )
 
-                    if (pmu != 1.0 + 0.0j):
-                        raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+                        if pmu != 1.0 + 0.0j:
+                            raise ValueError(
+                                "Encountered phase change, phase not equal to (1.0 + 0.0i)"
+                            )
 
                 qc_sig.apply_circuit(Umu)
                 qc_psi.apply_circuit(Umu)
-                psi_i = qc_psi.get_coeff_vec()
+                qc_temp = qf.Computer(qc_psi)
 
-                qc_psi.apply_operator(Kmu)
-                grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                qc_temp.apply_operator(Kmu)
+                grads[mu] = 2.0 * np.real(
+                    np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec())
+                )
 
-                #reset Kmu |psi_i> -> |psi_i>
-                qc_psi.set_coeff_vec(psi_i)
+                # reset Kmu |psi_i> -> |psi_i>
                 Kmu_prev = Kmu
+
         else:
             Kmus = []
             Umus = []
-            
+            grads = np.zeros((len(self._ref), len(self._tops)))
+
+            #Build all Kmu and Umu in advance.            
             for mu in range(0, M):
+                if params is None:
+                    tamp = self._tamps[mu]
+                else:
+                    tamp = params[mu]
+                Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
+                Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
+                Kmus.append(Kmu)
                 if self._compact_excitations:
-                    if params is None:
-                        tamp = self._tamps[mu]
-                    else:
-                        tamp = params[mu]
-                     
-                    Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
-                    Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0]) 
-                    Kmus.append(Kmu)
-
-                    if params is None:
-                        tamp = self._tamps[mu]
-                    else:
-                        tamp = params[mu]
-                    
-                    
                     Umu = qf.Circuit()
-                    # The minus sign is dictated by the recursive algorithm used to compute the analytic gradient
-                    # (see original ADAPT-VQE paper)
-                    
                     Umu.add(compact_excitation_circuit(-tamp * self._pool_obj[self._tops[mu]][1].terms()[1][0],
-                                                                   self._pool_obj[self._tops[mu]][1].terms()[1][1],
-                                                                   self._pool_obj[self._tops[mu]][1].terms()[1][2],
-                                                                   self._qubit_excitations))
+                                                                       self._pool_obj[self._tops[mu]][1].terms()[1][1],
+                                                                       self._pool_obj[self._tops[mu]][1].terms()[1][2],
+                                                                       self._qubit_excitations))
                     Umus.append(Umu)
-
-                else: 
-                    Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(self._qubit_excitations)
-                    Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
-                    Kmus.append(Kmu)
-                    if params is None:
-                        tamp = self._tamps[mu]
-                    else:
-                        tamp = params[mu]
-                    Umu, pmu = trotterize(Kmu, factor=-tamp, trotter_number=self._trotter_number)
-                    if (pmu != 1.0 + 0.0j):
-                        raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
-                    Umus.append(Umu)
-                    
+                else:
+                     Umu, pmu = trotterize(Kmu, factor = -tamp, trotter_number = self._trotter_number)
+                     if (pmu != 1.0 + 0.0j):
+                          raise ValueError("Encountered phase change, phase not equal to (1.0 + 0.0i)")
+                     Umus.append(Umu)
 
             for r in range(len(self._ref)):
-                qc_psi = qforte.Computer(self._nqb) # build | sig_N > according ADAPT-VQE analytical grad section
+                qc_psi = qforte.Computer(self._nqb) # build | sig_N > according to ADAPT-VQE analytical grad section
                 qc_psi.apply_circuit(Utot[r])
-                qc_sig = qforte.Computer(self._nqb) # build | psi_N > according ADAPT-VQE analytical grad section
+                qc_sig = qforte.Computer(self._nqb) # build | psi_N > according to ADAPT-VQE analytical grad section
                 psi_i = qc_psi.get_coeff_vec()
                 qc_sig.set_coeff_vec(psi_i) # Why was this being copied?
                 qc_sig.apply_operator(self._qb_ham)
 
                 mu = M-1
-                # find <sing_N | K_N | psi_N>
+                # find <sig_N | K_N | psi_N>
                 Kmu_prev = Kmus[mu]
                 qc_psi.apply_operator(Kmu_prev)
-                grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                grads[r, mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
 
                 #reset Kmu_prev |psi_i> -> |psi_i>
                 qc_psi.set_coeff_vec(psi_i)
@@ -267,25 +301,22 @@ class UCCVQE(VQE, UCC):
                     Kmu = Kmus[mu]
                     Umu = Umus[mu+1]
                         
-                        
                     qc_sig.apply_circuit(Umu)
                     qc_psi.apply_circuit(Umu)
                     psi_i = qc_psi.get_coeff_vec()
 
                     qc_psi.apply_operator(Kmu)
-                    grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                    grads[r, mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
 
                     #reset Kmu |psi_i> -> |psi_i>
                     qc_psi.set_coeff_vec(psi_i)
-                    Kmu_prev = Kmu
-
-
+            #Combine individual gradients
+            grads = np.einsum('ru->u', grads)
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-12)
-        
         return grads
 
     def measure_gradient3(self):
-        """ Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._pool_obj.
+        """Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._pool_obj.
         For antihermitian K_mu, this is equal to <Psi|[H, K_mu]|Psi>.
         In ADAPT-VQE, this is the 'residual gradient' used to determine
         whether to append exp(t_mu K_mu) to the iterative ansatz.
@@ -299,24 +330,22 @@ class UCCVQE(VQE, UCC):
 
         if not self._is_multi_state:
             Utot = self.build_Uvqc()
-            qc_psi = qforte.Computer(self._nqb)
+            qc_psi = self.get_initial_computer()
             qc_psi.apply_circuit(Utot)
-            psi_i = qc_psi.get_coeff_vec()
 
-            qc_sig = qforte.Computer(self._nqb)
-            # TODO: Check if it's faster to recompute psi_i or copy it.
-            qc_sig.set_coeff_vec(psi_i)
+            qc_sig = qforte.Computer(qc_psi)
             qc_sig.apply_operator(self._qb_ham)
 
             grads = np.zeros(len(self._pool_obj))
 
             for mu, (coeff, operator) in enumerate(self._pool_obj):
+                qc_temp = qf.Computer(qc_psi)
                 Kmu = operator.jw_transform(self._qubit_excitations)
                 Kmu.mult_coeffs(coeff)
-                qc_psi.apply_operator(Kmu)
-                grads[mu] = 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
-                qc_psi.set_coeff_vec(psi_i)
-
+                qc_temp.apply_operator(Kmu)
+                grads[mu] = 2.0 * np.real(
+                np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec())
+            )
         else:
             Kmus = []
             for mu, (coeff, operator) in enumerate(self._pool_obj):
@@ -328,7 +357,7 @@ class UCCVQE(VQE, UCC):
             grads = np.zeros(len(self._pool_obj))
 
             for r in range(len(self._ref)):
-                qc_psi = qforte.Computer(self._nqb)
+                qc_psi = self.get_initial_computer()
                 qc_psi.apply_circuit(self._Uprep[r])
                 qc_psi.apply_circuit(U_ansatz)
                 psi_i = qc_psi.get_coeff_vec()
@@ -341,11 +370,11 @@ class UCCVQE(VQE, UCC):
                 for mu, (coeff, operator) in enumerate(self._pool_obj):
                     Kmu = Kmus[mu]
                     qc_psi.apply_operator(Kmu)
-                    grads[mu] += self._weights[r] * 2.0 * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
+                    grads[mu] += self._weights[r] * 2.0 * np.real(
+                    np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec())
+                    )
                     qc_psi.set_coeff_vec(psi_i)
         
-        
-
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
         
         return grads
@@ -353,8 +382,11 @@ class UCCVQE(VQE, UCC):
     def gradient_ary_feval(self, params):
         grads = self.measure_gradient(params)
 
-        if(self._noise_factor > 1e-14):
-            grads = [np.random.normal(np.real(grad_m), self._noise_factor) for grad_m in grads]
+        if self._noise_factor > 1e-14:
+            grads = [
+                np.random.normal(np.real(grad_m), self._noise_factor)
+                for grad_m in grads
+            ]
 
         if not self._is_multi_state:
             factor = 1
@@ -367,35 +399,47 @@ class UCCVQE(VQE, UCC):
         return np.asarray(grads)
 
     def report_iteration(self, x):
-
         self._k_counter += 1
 
-        if(self._k_counter == 1):
-            print('\n    k iteration         Energy               dE           Ngvec ev      Ngm ev*         ||g||')
-            print('--------------------------------------------------------------------------------------------------')
-            if (self._print_summary_file):
-                f = open("summary.dat", "w+", buffering=1)
-                f.write('\n#    k iteration         Energy               dE           Ngvec ev      Ngm ev*         ||g||')
-                f.write('\n#--------------------------------------------------------------------------------------------------')
-                f.close()
+        if self._k_counter == 1:
+            header = "\n    k iteration         Energy               dE"
+            if self._use_analytic_grad:
+                header += "           Ngvec ev      Ngm ev*         ||g||"
+            header += "\n------------------------------------------------------"
+            if self._use_analytic_grad:
+                header += "--------------------------------------------"
+            print(header)
+            if self._print_summary_file:
+                header.replace("\n ", "\n#  ").replace("\n-", "\n#--")
+                with open("summary.dat", "w+", buffering=1) as f:
+                    f.write(header)
 
         # else:
         dE = self._curr_energy - self._prev_energy
-        print(f'     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.10f}')
+        update = f"     {self._k_counter:7}        {self._curr_energy:+12.10f}      {dE:+12.10f}"
+        if self._use_analytic_grad:
+            update += f"      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.10f}"
+        print(update)
 
-        if (self._print_summary_file):
-            f = open("summary.dat", "a", buffering=1)
-            f.write(f'\n       {self._k_counter:7}        {self._curr_energy:+12.12f}      {dE:+12.12f}      {self._res_vec_evals:4}        {self._res_m_evals:6}       {self._curr_grad_norm:+12.12f}')
-            f.close()
+        if self._print_summary_file:
+            with open("summary.dat", "a", buffering=1) as f:
+                update = "\n  " + update
+                f.write(header)
 
         self._prev_energy = self._curr_energy
 
     def verify_required_UCCVQE_attributes(self):
         if self._use_analytic_grad is None:
-            raise NotImplementedError('Concrete UCCVQE class must define self._use_analytic_grad attribute.')
+            raise NotImplementedError(
+                "Concrete UCCVQE class must define self._use_analytic_grad attribute."
+            )
 
         if self._pool_type is None:
-            raise NotImplementedError('Concrete UCCVQE class must define self._pool_type attribute.')
+            raise NotImplementedError(
+                "Concrete UCCVQE class must define self._pool_type attribute."
+            )
 
         if self._pool_obj is None:
-            raise NotImplementedError('Concrete UCCVQE class must define self._pool_obj attribute.')
+            raise NotImplementedError(
+                "Concrete UCCVQE class must define self._pool_obj attribute."
+            )

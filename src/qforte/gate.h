@@ -4,13 +4,44 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <set>
 #include <optional>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "qforte-def.h"
 
 class QubitBasis;
 class SparseMatrix;
 class SparseVector;
+
+/// useful for type safety and efficient comparisons
+enum class GateType {
+    X,
+    Y,
+    Z,
+    H,
+    R,
+    Rx,
+    Ry,
+    Rz,
+    V,
+    adjV,
+    S,
+    T,
+    I,
+    A,
+    cX,
+    acX,
+    cY,
+    cZ,
+    cR,
+    cV,
+    adjcV,
+    cRz,
+    SWAP,
+    Undefined
+};
 
 /// alias for a 4 x 4 complex matrix stored as an array of arrays
 using complex_4_4_mat = std::array<std::array<std::complex<double>, 4>, 4>;
@@ -76,9 +107,15 @@ class Gate {
     static const std::vector<size_t>& get_index1() { return index1; }
     static const std::vector<size_t>& get_index2() { return index2; }
 
+    /// Get the gate type
+    GateType gate_type() const;
+
   private:
     /// the label of this gate
     std::string label_;
+
+    /// the gate type
+    GateType type_;
 
     /// the target qubit
     size_t target_;
@@ -111,6 +148,9 @@ class Gate {
     /// 2 -> |10>
     /// 3 -> |11>
     static const std::vector<size_t> index2;
+
+    /// Determine the GateType based on the label string
+    static GateType mapLabelToType(const std::string& label_);
 };
 
 /// Gate equality operator
@@ -127,5 +167,13 @@ Gate make_gate(std::string type, size_t target, size_t control, double parameter
 
 /// Utility function to create a controlled version of a gate
 Gate make_control_gate(size_t control, Gate& U);
+
+/// Evaluate interaction of two gates
+/// bool: whether the gates commute
+/// int: which simplification scheme can be applied
+std::pair<bool, int> evaluate_gate_interaction(const Gate& gate1, const Gate& gate2);
+
+extern const std::unordered_set<GateType> phase_1qubit_gates;
+extern const std::unordered_map<GateType, GateType> controlled_2qubit_to_1qubit_gate;
 
 #endif // _gate_h_

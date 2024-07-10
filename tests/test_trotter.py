@@ -1,11 +1,19 @@
 from pytest import approx
 import numpy as np
-from qforte import Circuit, build_circuit, Computer, QubitOperator, trotterization, smart_print, gate
+from qforte import (
+    Circuit,
+    build_circuit,
+    Computer,
+    QubitOperator,
+    trotterization,
+    smart_print,
+    gate,
+)
+
 
 class TestTrotter:
     def test_trotterization(self):
-
-        circ_vec = [Circuit(), build_circuit('Z_0')]
+        circ_vec = [Circuit(), build_circuit("Z_0")]
         coef_vec = [-1.0j * 0.5, -1.0j * -0.04544288414432624]
 
         # the operator to be exponentiated
@@ -17,8 +25,8 @@ class TestTrotter:
         Utrot, phase = trotterization.trotterize(minus_iH)
 
         inital_state = np.zeros(2**4, dtype=complex)
-        inital_state[3]  =  np.sqrt(2/3)
-        inital_state[12] = -np.sqrt(1/3)
+        inital_state[3] = np.sqrt(2 / 3)
+        inital_state[12] = -np.sqrt(1 / 3)
 
         # initalize a quantum computer with above coeficients
         # i.e. ca|1100> + cb|0011>
@@ -33,14 +41,13 @@ class TestTrotter:
 
         coeffs = qc.get_coeff_vec()
 
-        assert np.real(coeffs[3]) ==  approx(0.6980209737879599, abs=1.0e-15)
+        assert np.real(coeffs[3]) == approx(0.6980209737879599, abs=1.0e-15)
         assert np.imag(coeffs[3]) == approx(-0.423595782342996, abs=1.0e-15)
         assert np.real(coeffs[12]) == approx(-0.5187235657531178, abs=1.0e-15)
         assert np.imag(coeffs[12]) == approx(0.25349397560041553, abs=1.0e-15)
 
     def test_trotterization_with_controlled_U(self):
-
-        circ_vec = [build_circuit('Y_0 X_1'), build_circuit('X_0 Y_1')]
+        circ_vec = [build_circuit("Y_0 X_1"), build_circuit("X_0 Y_1")]
         coef_vec = [-1.0719145972781818j, 1.0719145972781818j]
 
         # the operator to be exponentiated
@@ -59,10 +66,10 @@ class TestTrotter:
         qc = Computer(3)
 
         # build HF state
-        qc.apply_gate(gate('X', 0, 0))
+        qc.apply_gate(gate("X", 0, 0))
 
         # put ancilla in |1> state
-        qc.apply_gate(gate('X', 2, 2))
+        qc.apply_gate(gate("X", 2, 2))
 
         # apply the troterized minus_iH
         qc.apply_circuit(Utrot)
@@ -80,7 +87,7 @@ class TestTrotter:
         qc = Computer(3)
 
         # build HF state
-        qc.apply_gate(gate('X', 0, 0))
+        qc.apply_gate(gate("X", 0, 0))
 
         # apply the troterized minus_iH
         qc.apply_circuit(Utrot)

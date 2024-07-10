@@ -1,6 +1,7 @@
 import qforte
 
-def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20):
+
+def circuit_to_latex(circ, filename="circuit", max_circuit_depth_per_tikz=20):
     """
     This function constructs the filename.tex latex
     file with the graphical representation of the given
@@ -44,11 +45,18 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
     if not isinstance(filename, str):
         raise TypeError("The filename needs to be a string!")
 
-    if not isinstance(max_circuit_depth_per_tikz, int) or max_circuit_depth_per_tikz <= 0:
-        raise ValueError("The maximum circuit depth per tikz figure needs to be a positive integer!")
+    if (
+        not isinstance(max_circuit_depth_per_tikz, int)
+        or max_circuit_depth_per_tikz <= 0
+    ):
+        raise ValueError(
+            "The maximum circuit depth per tikz figure needs to be a positive integer!"
+        )
 
-    print('WARNING 1: The quantikz package is required for compiling the generated tex file!')
-    print('WARNING 2: For large quantum circuits, compiling with lualatex is advised!')
+    print(
+        "WARNING 1: The quantikz package is required for compiling the generated tex file!"
+    )
+    print("WARNING 2: For large quantum circuits, compiling with lualatex is advised!")
 
     preamble = r"""\documentclass[tikz]{standalone}
 
@@ -71,7 +79,7 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
     epilogue = r"""
 \end{document}"""
 
-    if filename.endswith('.tex'):
+    if filename.endswith(".tex"):
         texfile = open(filename, "w")
     else:
         texfile = open(filename + ".tex", "w")
@@ -93,7 +101,7 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
 
     # initialize wires and gate_count dictionaries
     for wire in qubit_ids:
-        wires[wire] = "            \lstick{$\ket{q_{"+str(wire)+"}}$}"
+        wires[wire] = "            \lstick{$\ket{q_{" + str(wire) + "}}$}"
         gate_count[wire] = 0
 
     for gate in circ.gates():
@@ -103,15 +111,22 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
         # wire, create a new tikz picture
         current_max_circuit_depth = max(gate_count.values())
         if current_max_circuit_depth == max_circuit_depth_per_tikz:
-            wires_with_max_circuit_depth_per_tikz = [wire for wire in gate_count if gate_count[wire] == max_circuit_depth_per_tikz]
-            if gate.target() in wires_with_max_circuit_depth_per_tikz or gate.control() in wires_with_max_circuit_depth_per_tikz:
+            wires_with_max_circuit_depth_per_tikz = [
+                wire
+                for wire in gate_count
+                if gate_count[wire] == max_circuit_depth_per_tikz
+            ]
+            if (
+                gate.target() in wires_with_max_circuit_depth_per_tikz
+                or gate.control() in wires_with_max_circuit_depth_per_tikz
+            ):
                 for wire in wires:
                     for i in range(max_circuit_depth_per_tikz - gate_count[wire]):
                         wires[wire] += " & \qw"
                 for wire in reversed(list(qubit_ids)[1:]):
-                    texfile.write(wires[wire]+" \\\ \n")
+                    texfile.write(wires[wire] + " \\\ \n")
                 wire = list(qubit_ids)[0]
-                texfile.write(wires[wire]+"\n")
+                texfile.write(wires[wire] + "\n")
                 texfile.write(tikz_end)
                 texfile.write(tikz_start)
                 for wire in qubit_ids:
@@ -142,15 +157,17 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
                     gate_count[wire] += 1
             diff = int(gate.control() - gate.target())
             if gate.gate_id() not in ["cZ", "aCNOT", "acX", "CNOT", "cX"]:
-                raise ValueError("The only two-qubit gates that are currently supported are: CNOT, aCNOT, and cZ!")
+                raise ValueError(
+                    "The only two-qubit gates that are currently supported are: CNOT, aCNOT, and cZ!"
+                )
             if gate.gate_id() == "cZ":
                 wires[gate.target()] += " & \\ctrl{}"
             else:
                 wires[gate.target()] += " & \\targ{}"
-            if gate.gate_id() in {'aCNOT', 'acX'}:
-                wires[gate.control()] += " & \\octrl{"+str(diff)+"}"
+            if gate.gate_id() in {"aCNOT", "acX"}:
+                wires[gate.control()] += " & \\octrl{" + str(diff) + "}"
             else:
-                wires[gate.control()] += " & \\ctrl{"+str(diff)+"}"
+                wires[gate.control()] += " & \\ctrl{" + str(diff) + "}"
             gate_count[gate.target()] += 1
             gate_count[gate.control()] += 1
             # To avoid overlapping gates, the "void" between the
@@ -168,11 +185,12 @@ def circuit_to_latex(circ, filename = 'circuit', max_circuit_depth_per_tikz = 20
                 wires[wire] += " & \qw"
 
         for wire in reversed(list(qubit_ids)[1:]):
-            texfile.write(wires[wire]+" \\\ \n")
+            texfile.write(wires[wire] + " \\\ \n")
         wire = list(qubit_ids)[0]
-        texfile.write(wires[wire]+"\n")
+        texfile.write(wires[wire] + "\n")
         texfile.write(tikz_end)
     texfile.write(epilogue)
     texfile.close()
+
 
 qforte.Circuit.circuit_to_latex = circuit_to_latex

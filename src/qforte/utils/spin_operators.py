@@ -128,6 +128,7 @@ def total_spin_lowering(n_qubits):
 
     return sq_Sigma_minus.jw_transform()
 
+
 def total_spin_raising(n_qubits):
     """
     This function constructs the raising operator of the total spin,
