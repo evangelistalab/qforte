@@ -15,7 +15,6 @@ data_path = os.path.join(THIS_DIR, "H4-sto6g-075a.json")
 
 class TestQSCEOM:
     def test_lih_qsceom(self):
-
         geom = [("Li", (0, 0, 0)), ("H", (0, 0, 1))]
         mol = system_factory(
             system_type="molecule",

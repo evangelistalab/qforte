@@ -74,7 +74,6 @@ class Algorithm(ABC):
         weights=None,
         **kwargs,
     ):
-
         if isinstance(self, qf.QPE) and hasattr(system, "frozen_core"):
             if system.frozen_core + system.frozen_virtual > 0:
                 raise ValueError("QPE with frozen orbitals is not currently supported.")
@@ -190,7 +189,6 @@ class Algorithm(ABC):
                     self.Uprep.append(ref)
 
             elif self._state_prep_type == "computer":
-
                 self._ref = [system.hf_reference] * len(self._weights)
                 self._refprep = []
                 self._Uprep = [qf.Circuit()] * len(weights)

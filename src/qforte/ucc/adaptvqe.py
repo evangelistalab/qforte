@@ -99,7 +99,6 @@ class ADAPTVQE(UCCVQE):
         tamps=[],
         tops=[],
     ):
-
         self._avqe_thresh = avqe_thresh
         self._opt_thresh = opt_thresh
         self._adapt_maxiter = adapt_maxiter

@@ -339,7 +339,6 @@ def create_psi_mol(**kwargs):
 
     # Dump everything to a JSON file to be loaded later if desired.
     if json_dump != False:
-
         norbs = nmo - frozen_virtual - frozen_core
 
         external_data = {}
