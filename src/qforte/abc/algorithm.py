@@ -205,7 +205,7 @@ class Algorithm(ABC):
                         raise ValueError(
                             f"Computer needs {len(system.hf_reference)} qubits, found {ref.get_nqubit()}."
                         )
-                self._refprep.append(self._ref)
+                    self._refprep.append(build_refprep(ref))
             if not fast:
                 raise ValueError(
                     "`self._fast = False` specifies not to skip steps, but `self._state_prep_type = computer` specifies to skip state initialization. That's inconsistent."
