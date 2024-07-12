@@ -436,6 +436,7 @@ class ADAPTVQE(UCCVQE):
                 print("ADAPT Already Converged.")
                 self._tops = []
                 self._tamps = []
+                self._converged = True
                 self._final_energy = []
                 self._final_results = []
             else:

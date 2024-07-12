@@ -180,6 +180,7 @@ class Algorithm(ABC):
                 self._ref = [system.hf_reference] * len(reference)
                 self._refprep = []
                 self._Uprep = []
+                
                 for i, ref in enumerate(reference):
                     if not isinstance(ref, qf.Circuit):
                         raise ValueError(
@@ -187,6 +188,9 @@ class Algorithm(ABC):
                         )
                     self._refprep.append(build_refprep(self._ref[i]))
                     self._Uprep.append(ref)
+                    
+                
+                
 
             elif self._state_prep_type == "computer":
                 self._ref = [system.hf_reference] * len(self._weights)
@@ -456,7 +460,7 @@ class AnsatzAlgorithm(Algorithm):
         Ucirc : Circuit
             The state preparation circuit (or list of circuits).
         """
-
+        
         if not self._is_multi_state:
             if self._fast:
                 if computer is None:
@@ -472,25 +476,31 @@ class AnsatzAlgorithm(Algorithm):
                 val = Exp.perfect_experimental_avg()
         else:
             val = 0
+            
             if self._fast:
                 if computer is None:
                     computer = [qf.Computer(self._nqb)] * len(self._ref)
-
-                    for i in range(len(computer)):
-                        computer[i].apply_circuit(Ucirc[i])
-                        val += (
-                            np.real(computer.direct_op_exp_val(self._qb_ham))
-                            * self._weights[i]
-                        )
+                
+                for i in range(len(computer)):
+                    
+                    qc_temp = qf.Computer(computer[i])
+                    qc_temp.apply_circuit(Ucirc[i])
+                    val += (
+                        np.real(qc_temp.direct_op_exp_val(self._qb_ham))
+                        * self._weights[i]
+                    )
+                    
             else:
                 if computer is not None:
                     raise TypeError(
                         "measure_energy in slow mode does not support custom Computer."
                     )
-                Exp = qf.Experiment(self._nqb, Ucirc[i], self._qb_ham, 2000)
-                val += Exp.perfect_experimental_avg()
-
+                for i in range(len(self._weights)):
+                    Exp = qf.Experiment(self._nqb, Ucirc[i], self._qb_ham, 2000)
+                    val += Exp.perfect_experimental_avg()
+            
         assert np.isclose(np.imag(val), 0.0)
+        
         return val
 
     def __init__(
@@ -636,7 +646,13 @@ class AnsatzAlgorithm(Algorithm):
         return Energy
 
     def get_initial_computer(self) -> qf.Computer:
-        if hasattr(self, "computer"):
-            return qf.Computer(self.computer)
+        if not self._is_multi_state:
+            if hasattr(self, "computer"):
+                return qf.Computer(self.computer)
+            else:
+                return qf.Computer(self._nqb)
         else:
-            return qf.Computer(self._nqb)
+            if hasattr(self, "computer"):
+                return [qf.Computer(i) for i in self.computer]
+            else:
+                return [qf.Computer(self._nqb)] * len(self._weights)

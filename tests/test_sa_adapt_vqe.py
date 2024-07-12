@@ -89,7 +89,7 @@ class TestSAADAPTVQE:
                 assert dip_dir[i, j] - total_dip[i, j] == approx(0.0, abs=1e-10)
 
         circ_refs = [build_refprep(ref) for ref in refs]
-        # broken here?
+
         alg = ADAPTVQE(
             mol,
             print_summary_file=False,

@@ -249,94 +249,69 @@ class UCCVQE(UCC, VQE):
                 Kmu_prev = Kmu
 
         else:
+            #TODO add sa-SD
+            try:
+                assert self._pool_type != "sa_SD"
+            except:
+                raise ValueError("sa SD not implemented for multireference ADAPT")
+            #Build all Kmus and Umus in advance.
             Kmus = []
             Umus = []
-            grads = np.zeros((len(self._ref), len(self._tops)))
-
-            # Build all Kmu and Umu in advance.
-            for mu in range(0, M):
+            for mu in range(len(self._tops)):
+                Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(
+                    self._qubit_excitations
+                ) 
+                Kmus.append(Kmu)
                 if params is None:
                     tamp = self._tamps[mu]
                 else:
                     tamp = params[mu]
-                Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(
-                    self._qubit_excitations
-                )
-                Kmu.mult_coeffs(self._pool_obj[self._tops[mu]][0])
-                Kmus.append(Kmu)
                 if self._compact_excitations:
-                    Umu = qf.Circuit()
-                    Umu.add(
-                        compact_excitation_circuit(
-                            -tamp * self._pool_obj[self._tops[mu]][1].terms()[1][0],
-                            self._pool_obj[self._tops[mu]][1].terms()[1][1],
-                            self._pool_obj[self._tops[mu]][1].terms()[1][2],
-                            self._qubit_excitations,
-                        )
-                    )
-                    Umus.append(Umu)
+                    
+                     Umu = qf.Circuit()
+                     Umu.add(
+                         compact_excitation_circuit(
+                             -tamp
+                             * self._pool_obj[self._tops[mu]][1].terms()[1][0],
+                             self._pool_obj[self._tops[mu]][1].terms()[1][1],
+                             self._pool_obj[self._tops[mu]][1].terms()[1][2],
+                             self._qubit_excitations,
+                         )
+                     )
                 else:
                     Umu, pmu = trotterize(
-                        Kmu, factor=-tamp, trotter_number=self._trotter_number
-                    )
+                        Kmu_prev, factor=-tamp, trotter_number=self._trotter_number
+                            )
+
                     if pmu != 1.0 + 0.0j:
                         raise ValueError(
                             "Encountered phase change, phase not equal to (1.0 + 0.0i)"
                         )
-                    Umus.append(Umu)
+                Umus.append(Umu)
+        
+        grads = np.zeros(len(self._tops))
+        #print('----')
+        for r in range(len(self._weights)):
+            qc_psi = self.get_initial_computer()[r]
+            qc_psi.apply_circuit(Utot[r])
+            qc_sig = qf.Computer(qc_psi)
+            qc_sig.apply_operator(self._qb_ham)
+            qc_temp = qf.Computer(qc_psi)
+            qc_temp.apply_operator(Kmus[M-1])
+            grads[M-1] += 2* self._weights[r] * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
+            
+            for mu in reversed(range(M-1)):
+                qc_psi.apply_circuit(Umus[mu])
+                qc_sig.apply_circuit(Umus[mu])
+                qc_temp = qf.Computer(qc_psi)
+                qc_temp.apply_operator(Kmus[mu])
+                grads[mu] += 2* self._weights[r] * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
 
-            for r in range(len(self._ref)):
-                qc_psi = qforte.Computer(
-                    self._nqb
-                )  # build | sig_N > according to ADAPT-VQE analytical grad section
-                qc_psi.apply_circuit(Utot[r])
-                qc_sig = qforte.Computer(
-                    self._nqb
-                )  # build | psi_N > according to ADAPT-VQE analytical grad section
-                psi_i = qc_psi.get_coeff_vec()
-                qc_sig.set_coeff_vec(psi_i)  # Why was this being copied?
-                qc_sig.apply_operator(self._qb_ham)
 
-                mu = M - 1
-                # find <sig_N | K_N | psi_N>
-                Kmu_prev = Kmus[mu]
-                qc_psi.apply_operator(Kmu_prev)
-                grads[r, mu] += (
-                    self._weights[r]
-                    * 2.0
-                    * np.real(np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec()))
-                )
-
-                # reset Kmu_prev |psi_i> -> |psi_i>
-                qc_psi.set_coeff_vec(psi_i)
-
-                for mu in reversed(range(M - 1)):
-                    # mu => N-1 => M-2
-                    # mu+1 => N => M-1
-                    # Kmu => KN-1
-                    # Kmu_prev => KN
-
-                    Kmu = Kmus[mu]
-                    Umu = Umus[mu + 1]
-
-                    qc_sig.apply_circuit(Umu)
-                    qc_psi.apply_circuit(Umu)
-                    psi_i = qc_psi.get_coeff_vec()
-
-                    qc_psi.apply_operator(Kmu)
-                    grads[r, mu] += (
-                        self._weights[r]
-                        * 2.0
-                        * np.real(
-                            np.vdot(qc_sig.get_coeff_vec(), qc_psi.get_coeff_vec())
-                        )
-                    )
-
-                    # reset Kmu |psi_i> -> |psi_i>
-                    qc_psi.set_coeff_vec(psi_i)
-            # Combine individual gradients
-            grads = np.einsum("ru->u", grads)
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-12)
+        #print(f"Gradient: {grads}")
+        #print(f"Energy: {self.measure_energy(Utot)}")
+        
         return grads
 
     def measure_gradient3(self):
@@ -381,7 +356,7 @@ class UCCVQE(UCC, VQE):
             grads = np.zeros(len(self._pool_obj))
 
             for r in range(len(self._ref)):
-                qc_psi = self.get_initial_computer()
+                qc_psi = self.get_initial_computer()[r]
                 qc_psi.apply_circuit(self._Uprep[r])
                 qc_psi.apply_circuit(U_ansatz)
                 psi_i = qc_psi.get_coeff_vec()
