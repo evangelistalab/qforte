@@ -98,7 +98,7 @@ class Algorithm(ABC):
                             )
                     self._ref = reference
 
-                self._refprep = self.build_refprep(self._ref)
+                self._refprep = qforte.build_refprep(self._ref)
                 self._Uprep = qf.Circuit(self._refprep)
 
             elif self._state_prep_type == "unitary_circ":
@@ -106,7 +106,7 @@ class Algorithm(ABC):
                     raise ValueError("unitary_circ reference must be a Circuit.")
 
                 self._ref = system.hf_reference
-                self._Uprep = qf.Circuit(self._refprep)
+                self._refprep = build_refprep(self._ref)
                 self._Uprep = reference
 
             elif self._state_prep_type == "computer":
@@ -180,13 +180,14 @@ class Algorithm(ABC):
                 self._ref = [system.hf_reference] * len(reference)
                 self._refprep = []
                 self._Uprep = []
-                for ref in reference:
+                print(reference)
+                for i, ref in enumerate(reference):
                     if not isinstance(ref, qf.Circuit):
                         raise ValueError(
                             "Ill-constructed reference.  Should be a list of qf.Circuit objects."
                         )
-                    self._refprep.append(build_refprep(ref))
-                    self.Uprep.append(ref)
+                    self._refprep.append(build_refprep(self._ref[i]))
+                    self._Uprep.append(ref)
 
             elif self._state_prep_type == "computer":
                 self._ref = [system.hf_reference] * len(self._weights)
@@ -317,10 +318,17 @@ class Algorithm(ABC):
 
     def print_generic_options(self):
         """Print options applicable to any algorithm."""
-        print(
-            "Trial reference state:                   ",
-            ref_string(self._ref, self._nqb),
-        )
+        if not self._is_multi_state:
+            print(
+                "Trial reference state:                   ",
+                ref_string(self._ref, self._nqb),
+            )
+        else:
+            for i, r in enumerate(self._ref):
+                print(
+                    f"Trial reference state {i}:                   ",
+                    ref_string(r, self._nqb)
+                )
         print("Number of Hamiltonian Pauli terms:       ", self._Nl)
         print("Trial state preparation method:          ", self._state_prep_type)
         if isinstance(self, Trotterizable):
@@ -398,13 +406,16 @@ class AnsatzAlgorithm(Algorithm):
 
     def fill_pool(self):
         """This function populates an operator pool with SQOperator objects."""
-
-        if self._pool_type in {"sa_SD", "GSD", "SD", "SDT", "SDTQ", "SDTQP", "SDTQPH"}:
-            self._pool_obj = qf.SQOpPool()
-            if hasattr(self._sys, "orb_irreps_to_int"):
-                self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
-            else:
-                raise ValueError("Invalid operator pool type specified.")
+        if not self._is_multi_state:
+            if self._pool_type in {"sa_SD", "GSD", "SD", "SDT", "SDTQ", "SDTQP", "SDTQPH"}:
+                self._pool_obj = qf.SQOpPool()
+                if hasattr(self._sys, "orb_irreps_to_int"):
+                    self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
+                else:
+                    self._pool_obj.set_orb_spaces(self._ref)
+                self._pool_obj.fill_pool(self._pool_type)
+            elif isinstance(self._pool_type, qf.SQOpPool):
+                self._pool_obj = self._pool_type
         else:
             # Only GSD is well-defined for multiple references.
             if self._pool_type in {"GSD"}:
@@ -451,9 +462,12 @@ class AnsatzAlgorithm(Algorithm):
                 Exp = qforte.Experiment(self._nqb, Ucirc, self._qb_ham, 2000)
                 val = Exp.perfect_experimental_avg()
         else:
-            if self._fast:
+            val = 0
+            if self._fast:        
                 if computer is None:
+                    
                     computer = [qf.Computer(self._nqb)] * len(self._ref)
+                    
                     for i in range(len(computer)):
                         computer[i].apply_circuit(Ucirc[i])
                         val += (
@@ -466,10 +480,9 @@ class AnsatzAlgorithm(Algorithm):
                         "measure_energy in slow mode does not support custom Computer."
                     )
                 Exp = qf.Experiment(self._nqb, Ucirc[i], self._qb_ham, 2000)
-                val = Exp.perfect_experimental_avg()
+                val += Exp.perfect_experimental_avg()
 
         assert np.isclose(np.imag(val), 0.0)
-
         return val
 
     def __init__(

@@ -150,11 +150,11 @@ class UCCVQE(UCC, VQE):
             qc_temp = qf.Computer(qc_psi)
 
             mu = M - 1
-
             # find <sig_N | K_N | psi_N>
             Kmu_prev = self._pool_obj[self._tops[mu]][1].jw_transform(
                 self._qubit_excitations
             )
+
             Kmu_prev.mult_coeffs(self._pool_obj[self._tops[mu]][0])
 
             qc_temp.apply_operator(Kmu_prev)

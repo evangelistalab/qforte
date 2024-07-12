@@ -435,15 +435,20 @@ class ADAPTVQE(UCCVQE):
             print(f"  => Minimum Energy: {res.fun:+12.10f}")
 
         if res.x[-1] == 0:
-            print(
-                "  => WARNING: ADAPT could not optimize the new parameter.  Deleting new parameter and terminating the algorithm."
-            )
-            print(f"  => Minimum Energy: {self._energies[-1]:+12.10f}")
-            self._converged = True
-            self._final_energy = self._energies[-1]
-            self._final_results = self._results[-1]
-            self._tops = self._tops[:-1]
-            self._tamps = self._tamps[:-1]
+            if len(self._energies) == 0:
+                print("ADAPT Already Converged.")
+                self._tops = []
+                self._tamps = []
+                self._final_energy = []
+                self._final_results = []
+            else:
+                print("  => WARNING: ADAPT could not optimize the new parameter.  Deleting new parameter and terminating the algorithm.")
+                print(f"  => Minimum Energy: {self._energies[-1]:+12.10f}")
+                self._converged = True
+                self._final_energy = self._energies[-1]
+                self._final_results = self._results[-1]
+                self._tops = self._tops[:-1]
+                self._tamps = self._tamps[:-1]
         else:
             self._energies.append(res.fun)
             self._results.append(res)

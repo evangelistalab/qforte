@@ -37,11 +37,11 @@ class TestQSCEOM:
         )
 
         U_ansatz = alg.ansatz_circuit(alg._tamps)
-        U_hf = build_refprep(mol.hf_reference, "occupation_list")
+        U_hf = build_refprep(mol.hf_reference)
         U_hf.add_circuit(U_ansatz)
 
         cisd = [
-            build_refprep(det, "occupation_list")
+            build_refprep(det)
             for det in cisd_manifold(mol.hf_reference, mol.orb_irreps_to_int)
         ]
         manifold = []

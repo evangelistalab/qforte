@@ -82,11 +82,10 @@ class UCCNVQE(UCCVQE):
         self.print_options_banner()
 
         ######### UCCN-VQE #########
-
-        self.fill_pool()
-
+        self.fill_pool() 
         if self._verbose:
             print(self._pool_obj.str())
+        
 
         self.initialize_ansatz()
 
@@ -220,6 +219,8 @@ class UCCNVQE(UCCVQE):
         if self._use_analytic_grad:
             print("  \n--> Begin opt with analytic gradient:")
             print(f" Initial guess energy:              {init_gues_energy:+12.10f}")
+            
+            
             res = minimize(
                 self.energy_feval,
                 x0,
