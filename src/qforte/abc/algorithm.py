@@ -475,7 +475,6 @@ class AnsatzAlgorithm(Algorithm):
             val = 0
             if self._fast:
                 if computer is None:
-
                     computer = [qf.Computer(self._nqb)] * len(self._ref)
 
                     for i in range(len(computer)):
