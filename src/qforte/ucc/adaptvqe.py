@@ -6,13 +6,10 @@ with variants of the Adaptive Derivative-Assembled Pseudo-Trotter
 (ADAPT) anxatz.
 """
 
-import qforte as qf
-
 from qforte.abc.uccvqeabc import UCCVQE
 from qforte.experiment import *
 from qforte.utils.transforms import *
 from qforte.utils.state_prep import *
-from qforte.utils.trotterization import trotterize
 from qforte.utils import moment_energy_corrections
 from qforte.maths import optimizer
 from qforte.expansions.excited_state_algorithms import *

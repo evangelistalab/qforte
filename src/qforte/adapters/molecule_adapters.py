@@ -172,7 +172,7 @@ def create_psi_mol(**kwargs):
 
     nalpha = p4_wfn.nalpha()
     nbeta = p4_wfn.nbeta()
-    nel = nalpha + nbeta
+    
 
     if kwargs["casscf"] != None:
         frozen_core = vanilla_wfn.frzcpi().sum()

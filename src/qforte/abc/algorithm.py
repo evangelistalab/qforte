@@ -180,7 +180,6 @@ class Algorithm(ABC):
                 self._ref = [system.hf_reference] * len(reference)
                 self._refprep = []
                 self._Uprep = []
-                print(reference)
                 for i, ref in enumerate(reference):
                     if not isinstance(ref, qf.Circuit):
                         raise ValueError(

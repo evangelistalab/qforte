@@ -131,7 +131,7 @@ def sc_double(ref, p, q, r, s, sign):
     diff[ra] = 1
     diff[sa] = 1
 
-    new_det = [ref[i] + diff[i] for i in range(len(ref))]
+    
 
     U = qf.Circuit()
 

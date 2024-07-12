@@ -168,3 +168,5 @@ class TestSAADAPTVQE:
         for i in range(len(Es)):
             for j in range(len(Es)):
                 assert dip_dir[i, j] - total_dip[i, j] == approx(0.0, abs=1e-10)
+
+
