@@ -327,7 +327,7 @@ class Algorithm(ABC):
             for i, r in enumerate(self._ref):
                 print(
                     f"Trial reference state {i}:                   ",
-                    ref_string(r, self._nqb)
+                    ref_string(r, self._nqb),
                 )
         print("Number of Hamiltonian Pauli terms:       ", self._Nl)
         print("Trial state preparation method:          ", self._state_prep_type)
@@ -407,10 +407,20 @@ class AnsatzAlgorithm(Algorithm):
     def fill_pool(self):
         """This function populates an operator pool with SQOperator objects."""
         if not self._is_multi_state:
-            if self._pool_type in {"sa_SD", "GSD", "SD", "SDT", "SDTQ", "SDTQP", "SDTQPH"}:
+            if self._pool_type in {
+                "sa_SD",
+                "GSD",
+                "SD",
+                "SDT",
+                "SDTQ",
+                "SDTQP",
+                "SDTQPH",
+            }:
                 self._pool_obj = qf.SQOpPool()
                 if hasattr(self._sys, "orb_irreps_to_int"):
-                    self._pool_obj.set_orb_spaces(self._ref, self._sys.orb_irreps_to_int)
+                    self._pool_obj.set_orb_spaces(
+                        self._ref, self._sys.orb_irreps_to_int
+                    )
                 else:
                     self._pool_obj.set_orb_spaces(self._ref)
                 self._pool_obj.fill_pool(self._pool_type)
@@ -463,11 +473,11 @@ class AnsatzAlgorithm(Algorithm):
                 val = Exp.perfect_experimental_avg()
         else:
             val = 0
-            if self._fast:        
+            if self._fast:
                 if computer is None:
-                    
+
                     computer = [qf.Computer(self._nqb)] * len(self._ref)
-                    
+
                     for i in range(len(computer)):
                         computer[i].apply_circuit(Ucirc[i])
                         val += (

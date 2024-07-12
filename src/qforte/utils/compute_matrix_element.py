@@ -34,7 +34,7 @@ def compute_operator_matrix_element(n_qubit, U_bra, U_ket, QOp=None):
 
     The value of the desired matrix element.
     """
-    
+
     comp = qf.Computer(n_qubit)
     comp.apply_circuit(U_ket)
 
