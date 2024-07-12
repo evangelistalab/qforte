@@ -131,8 +131,6 @@ def sc_double(ref, p, q, r, s, sign):
     diff[ra] = 1
     diff[sa] = 1
 
-    
-
     U = qf.Circuit()
 
     for i in range(len(ref)):

@@ -36,10 +36,8 @@ def sq_op_to_scipy(sq_op, N_qubits, N=None, Sz=None):
     # Function to convert a second-quantized operator to a sparse, complex matrix
     # Draws heavily from the sparse_tools module in OpenFermion
 
-    
     X = scipy.sparse.csc_matrix(np.array([[0, 1 + 0j], [1 + 0j, 0]]))
     Y = scipy.sparse.csc_matrix(np.array([[0, 0 - 1j], [0 + 1j, 0]]))
-    
 
     # Hilbert space dimension
     dim = 1 << N_qubits
