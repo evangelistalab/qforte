@@ -995,7 +995,8 @@ void FCIComputer::evolve_op_taylor(
       const SQOperator& op,
       const double evolution_time,
       const double convergence_thresh,
-      const int max_taylor_iter)
+      const int max_taylor_iter,
+      const bool real_evolution)
 
 {
     Tensor Cevol = C_;
@@ -1006,9 +1007,64 @@ void FCIComputer::evolve_op_taylor(
 
         // std::cout << "C_: " << C_.str() << std::endl;
         // std::cout << "Cevol: " << Cevol.str() << std::endl;
+        std::complex<double> coeff;
 
-        std::complex<double> coeff(0.0, -evolution_time);
+        if (real_evolution) {
+            coeff = std::complex<double>(-evolution_time, 0.0);
+        } else {
+            coeff = std::complex<double>(0.0, -evolution_time);
+        }
+
         apply_sqop(op);
+        scale(coeff);
+
+        Cevol.zaxpy(
+            C_,
+            1.0 / std::tgamma(order+1),
+            1,
+            1);
+        
+        if (C_.norm() * std::abs(coeff) < convergence_thresh) {
+            break;
+        }
+    }
+    C_ = Cevol;
+}
+
+void FCIComputer::evolve_tensor_taylor(
+      const std::complex<double> h0e,
+      const Tensor& h1e, 
+      const Tensor& h2e, 
+      const Tensor& h2e_einsum, 
+      size_t norb,
+      const double evolution_time,
+      const double convergence_thresh,
+      const int max_taylor_iter,
+      const bool real_evolution)
+
+{
+    Tensor Cevol = C_;
+
+    for (int order = 1; order < max_taylor_iter; ++order) {
+
+        // std::cout << "I get here, order: " << order << std::endl;
+
+        // std::cout << "C_: " << C_.str() << std::endl;
+        // std::cout << "Cevol: " << Cevol.str() << std::endl;
+        std::complex<double> coeff;
+
+        if (real_evolution) {
+            coeff = std::complex<double>(-evolution_time, 0.0);
+        } else {
+            coeff = std::complex<double>(0.0, -evolution_time);
+        }
+
+        apply_tensor_spat_012bdy(
+            h0e,
+            h1e,
+            h2e,
+            h2e_einsum,
+            norb);
         scale(coeff);
 
         Cevol.zaxpy(
