@@ -413,7 +413,8 @@ class SRQK(QSD):
                         self._sq_ham,
                         self._dt,
                         1.0e-15,
-                        30)
+                        30,
+                        False)
 
                 else:
                     QC.evolve_pool_trotter(
