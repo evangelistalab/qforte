@@ -49,7 +49,7 @@ class QLANCZOS(QSD):
 
             # s=3,
             # dt=0.5,
-            # target_root=0,
+            target_root=0,
             # use_exact_evolution=False,
             diagonalize_each_step=True, 
 
@@ -58,12 +58,12 @@ class QLANCZOS(QSD):
             beta=1.0,
             db=0.2,
             expansion_type='SD',
-            sparseSb=True,
+            sparseSb=False,
             low_memorySb=False,
             second_order=False,
             b_thresh=1.0e-6,
             x_thresh=1.0e-10,
-            do_lanczos=False,
+            do_lanczos=True,
             lanczos_gap=2,
             realistic_lanczos=True,
             fname=None 
@@ -74,11 +74,11 @@ class QLANCZOS(QSD):
 
 
         # OLD STUFF
-        self._s = s
-        self._nstates = s+1
-        self._dt = dt
+        # self._s = s
+        # self._nstates = s+1
+        # self._dt = dt
         self._target_root = target_root
-        self._use_exact_evolution = use_exact_evolution
+        # self._use_exact_evolution = use_exact_evolution
         self._diagonalize_each_step = diagonalize_each_step
 
         self._n_classical_params = 0
@@ -156,7 +156,7 @@ class QLANCZOS(QSD):
         print('Trial state preparation method:          ',  self._state_prep_type)
         print('Trotter order (rho):                     ',  self._trotter_order)
         print('Trotter number (m):                      ',  self._trotter_number)
-        print('Use exact time evolution?:               ',  self._use_exact_evolution)
+        # print('Use exact time evolution?:               ',  self._use_exact_evolution)
         print('Use fast version of algorithm:           ',  str(self._fast))
         if(self._fast):
             print('Measurement varience thresh:             ',  'NA')
@@ -164,8 +164,8 @@ class QLANCZOS(QSD):
             print('Measurement varience thresh:             ',  0.01)
 
         # Specific SRQK options.
-        print('Dimension of Krylov space (N):           ',  self._nstates)
-        print('Delta beta (in a.u.):                       ',  self._dt)
+        # print('Dimension of Krylov space (N):           ',  self._nstates)
+        # print('Delta beta (in a.u.):                       ',  self._dt)
         print('Target root:                             ',  str(self._target_root))
 
 
@@ -221,12 +221,20 @@ class QLANCZOS(QSD):
         # s_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
 
         if(self._realistic_lanczos):
-            pass
-        
-        else:
-            n_lanczos_vecs = len(self._qite._lanczos_vecs)
-            h_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
-            s_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
+            # t_dim = self._qite._t # total number of steps
+            # print(f't_dim:{t_dim}')
+            # # print(f'length of lanczos_vecs:{len(self._qite._lanczos_vecs)}')
+
+            # if t_dim % 2 == 0:
+            #     n_dim = int((t+1)//2+1)
+            # else:
+            #     n_dim = int((t+1)//2)
+
+            ndim = len(self._qite._c_list)
+            print(f'n_dim:{ndim}')
+
+            h_mat = np.zeros((ndim, ndim), dtype=complex)
+            s_mat = np.zeros((ndim, ndim), dtype=complex)
 
             if(self._diagonalize_each_step):
                 print('\n\n')
@@ -234,17 +242,69 @@ class QLANCZOS(QSD):
                 print(f"{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}")
                 print('-------------------------------------------------------------------------------')
 
+                if (self._print_summary_file):
+                    # put fname here too
+                    f2 = open(f"{self._qite._fname}_lanczos_summary.dat", "w+", buffering=1)
+                    f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
+                    f2.write('#-------------------------------------------------------------------------------\n')
+
+            # build elements of S and H matrix
+            # see quket github for more info
+            for i in range(ndim):
+                for j in range(i+1):
+                    n = 1
+                    d = 1
+
+                    for r in range(j, i - 1):
+                        n *= self._qite._c_list[r]
+
+                    for r in range(i - 1, j):
+                        d *= self._qite._c_list[r]
+
+                    s_mat[j,i] = s_mat[i,j] = np.sqrt(n / d)
+                    h_mat[j,i] = h_mat[i,j] = s_mat[i,j] * self._qite._Ekb[(i + j)//2]
+
+                if (self._diagonalize_each_step):
+                    k = i+1
+                    evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
+                                    h_mat[0:k, 0:k],
+                                    print_mats=False,
+                                    sort_ret_vals=True)
+
+                    scond = np.linalg.cond(s_mat[0:k, 0:k])
+
+                    print(f'{i * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} ')
+
+                    if (self._print_summary_file):
+                        f2.write(f'{i * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} \n')
+
             if (self._diagonalize_each_step and self._print_summary_file):
-                # put fname here too
-                f2 = open(f"{self._qite._fname}_lanczos_summary.dat", "w+", buffering=1)
-                f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
-                f2.write('#-------------------------------------------------------------------------------\n')
+                f2.close()
+
+            return s_mat, h_mat
+
+        else:
+            n_lanczos_vecs = len(self._qite._lanczos_vecs)
+            h_mat = np.zeros((n_lanczos_vecs, n_lanczos_vecs), dtype=complex)
+            s_mat = np.zeros((n_lanczos_vecs, n_lanczos_vecs), dtype=complex)
+
+            if(self._diagonalize_each_step):
+                print('\n\n')
+
+                print(f"{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}")
+                print('-------------------------------------------------------------------------------')
+
+                if (self._print_summary_file):
+                    # put fname here too
+                    f2 = open(f"{self._qite._fname}_lanczos_summary.dat", "w+", buffering=1)
+                    f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
+                    f2.write('#-------------------------------------------------------------------------------\n')
 
             for m in range(n_lanczos_vecs):
                 for n in range(m+1):
-                    h_mat[m][n] = self._lanczos_vecs[m].vector_dot(self._Hlanczos_vecs[n])
+                    h_mat[m][n] = self._qite._lanczos_vecs[m].vector_dot(self._qite._Hlanczos_vecs[n])
                     h_mat[n][m] = np.conj(h_mat[m][n])
-                    s_mat[m][n] = self._lanczos_vecs[m].vector_dot(self._lanczos_vecs[n])
+                    s_mat[m][n] = self._qite._lanczos_vecs[m].vector_dot(self._qite._lanczos_vecs[n])
                     s_mat[n][m] = np.conj(s_mat[m][n])
 
                 if (self._diagonalize_each_step):
@@ -258,7 +318,7 @@ class QLANCZOS(QSD):
 
                     print(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} ')
 
-                    if (self._diagonalize_each_step and self._print_summary_file):
+                    if (self._print_summary_file):
                         f2.write(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} \n')
 
             if (self._diagonalize_each_step and self._print_summary_file):
