@@ -8,6 +8,7 @@ import numpy as np
 import scipy
 import copy
 from pytest import approx
+from qforte import Computer
 
 
 def number(a):
@@ -109,3 +110,24 @@ def sq_op_to_scipy(sq_op, N_qubits, N=None, Sz=None):
     arr.eliminate_zeros()
 
     return scipy.sparse.csc_matrix(arr)
+
+
+def build_effective_array(O, U, basis):
+    """
+    O is a qubit operator.
+    U is a quantum circuit.
+    basis is a list of Computer objects.
+    This will return the matrix U'OU in the provided basis.
+    """
+    O_eff = np.zeros((len(basis), len(basis)), dtype="complex128")
+
+    for i in range(len(basis)):
+        basis[i].apply_circuit(U)
+
+    for i, b_i in enumerate(basis):
+        for j, b_j in enumerate(basis):
+            Ob_j = Computer(b_j)
+            Ob_j.apply_operator(O)
+            O_eff[i, j] = np.vdot(b_i.get_coeff_vec(), Ob_j.get_coeff_vec())
+
+    return O_eff

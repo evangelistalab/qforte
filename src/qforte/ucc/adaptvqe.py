@@ -174,7 +174,10 @@ class ADAPTVQE(UCCVQE):
             )
 
         if self._is_multi_state:
-            E, A, ops = ritz_eigh(self._nqb, self._qb_ham, self.build_Uvqc())
+            H_eff = qforte.build_effective_array(
+                self._qb_ham, self.build_Uvqc()[0], self.get_initial_computer()
+            )
+            E, A = np.linalg.eigh(H_eff.real)
             self._diag_energies.append(E)
             self._diag_As.append(A)
             cur_string = f"Current Energies {avqe_iter}"
