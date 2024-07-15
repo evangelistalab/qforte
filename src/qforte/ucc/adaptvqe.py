@@ -125,7 +125,11 @@ class ADAPTVQE(UCCVQE):
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
+        self._timer = qforte.local_timer()
+
+        self._timer.reset()
         self.fill_pool()
+        self._timer.record("fill_pool")
 
         if self._max_moment_rank:
             print('\nConstructing Moller-Plesset and Epstein-Nesbet denominators')
@@ -144,10 +148,12 @@ class ADAPTVQE(UCCVQE):
             f = open("summary.dat", "w+", buffering=1)
             f.write(f"#{'Iter(k)':>8}{'E(k)':>14}{'N(params)':>17}{'N(CNOT)':>18}{'N(measure)':>20}\n")
             f.write('#-------------------------------------------------------------------------------\n')
-
+        
+        self._timer.reset()
         while not self._converged:
 
             print('\n\n -----> ADAPT-VQE iteration ', avqe_iter, ' <-----\n')
+
             self.update_ansatz()
 
             if self._converged:
@@ -156,7 +162,7 @@ class ADAPTVQE(UCCVQE):
             if(self._verbose):
                 print('\ntoperators included from pool: \n', self._tops)
                 print('\ntamplitudes for tops: \n', self._tamps)
-
+    
             self.solve()
 
             if self._max_moment_rank:
@@ -174,6 +180,7 @@ class ADAPTVQE(UCCVQE):
             if avqe_iter > self._adapt_maxiter-1:
                 hit_maxiter = 1
                 break
+        self._timer.record("solve")
 
         if (self._print_summary_file):
             f.close()
@@ -258,6 +265,12 @@ class ADAPTVQE(UCCVQE):
         # Specific ADAPT-VQE options.
         print('ADAPT-VQE grad-norm threshold (eps):     ',  avqe_thrsh_str)
         print('ADAPT-VQE maxiter:                       ',  self._adapt_maxiter)
+        print(f"Computer type:                            {self._computer_type}")
+        b = False
+        if (self._apply_ham_as_tensor):
+            b = True
+        print('Apply ham as tensor                      ', str(b))
+        
 
 
     def print_summary_banner(self):
@@ -278,6 +291,9 @@ class ADAPTVQE(UCCVQE):
 
         print('Number of grad vector evaluations:           ', self._res_vec_evals)
         print('Number of individual grad evaluations:       ', self._res_m_evals)
+
+        print("\n\n")
+        print(self._timer)
 
 
     # Define VQE abstract methods.
@@ -326,6 +342,7 @@ class ADAPTVQE(UCCVQE):
                                     callback=self.report_iteration)
 
             self._n_pauli_measures_k += self._Nl * res.nfev
+
 
         if(res.success):
             print('  => Minimization successful!')

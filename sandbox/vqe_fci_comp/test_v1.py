@@ -43,4 +43,5 @@ alg_fci = qf.UCCNVQE(
 alg_fci.run(opt_thresh=1.0e-2, 
             pool_type='SD',
             optimizer='BFGS')
+            
 print(f'\n\n Efci:   {mol.fci_energy:+12.10f}')

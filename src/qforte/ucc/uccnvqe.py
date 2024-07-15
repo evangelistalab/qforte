@@ -156,7 +156,11 @@ class UCCNVQE(UCCVQE):
         # UCCVQE options.
         print('Use analytic gradient:                   ',  str(self._use_analytic_grad))
         print('Operator pool type:                      ',  str(self._pool_type))
-
+        print(f"Computer type:                            {self._computer_type}")
+        b = False
+        if (self._apply_ham_as_tensor):
+            b = True
+        print('Apply ham as tensor                      ', str(b))
 
     def print_summary_banner(self):
 
