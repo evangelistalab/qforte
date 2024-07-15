@@ -12,6 +12,7 @@
 #include "fci_graph.h"
 #include "qubit_operator.h"
 #include "sq_operator.h"
+#include "df_hamiltonian.h"
 #include "sq_op_pool.h"
 #include "qubit_op_pool.h"
 #include "sparse_tensor.h"
@@ -60,6 +61,38 @@ PYBIND11_MODULE(qforte, m) {
         .def("str", &SQOperator::str)
         .def("__str__", &SQOperator::str)
         .def("__repr__", &SQOperator::str);
+
+    py::class_<DFHamiltonian>(m, "DFHamiltonian")
+        .def(py::init<
+                int, 
+                int, 
+                Tensor&, 
+                Tensor&, 
+                Tensor&, 
+                Tensor&, 
+                std::vector<Tensor>&,
+                std::vector<Tensor>&, 
+                std::vector<Tensor>&
+                >(), 
+            "nel"_a, 
+            "norb"_a, 
+            "eigenvalues"_a, 
+            "one_body_squares"_a, 
+            "one_body_ints"_a, 
+            "one_body_correction"_a, 
+            "scaled_density_density_matrices"_a, 
+            "basis_change_matrices"_a, 
+            "trotter_basis_change_matrices"_a, 
+            "Make a DFHamiltonian with with all intermediats pre-computed with numpy")
+        .def("set_trotter_first_leaf_basis_chage", &DFHamiltonian::set_trotter_first_leaf_basis_chage)
+        .def("get_ff_eigenvalues", &DFHamiltonian::get_ff_eigenvalues)
+        .def("get_one_body_squares", &DFHamiltonian::get_one_body_squares)
+        .def("get_one_body_ints", &DFHamiltonian::get_one_body_ints)
+        .def("get_one_body_correction", &DFHamiltonian::get_one_body_correction)
+        .def("get_scaled_density_density_matrices", &DFHamiltonian::get_scaled_density_density_matrices)
+        .def("get_basis_change_matrices", &DFHamiltonian::get_basis_change_matrices)
+        .def("get_trotter_basis_change_matrices", &DFHamiltonian::get_trotter_basis_change_matrices)
+        .def_static("givens_decomposition_square", &DFHamiltonian::givens_decomposition_square);
 
     py::class_<TensorOperator>(m, "TensorOperator")
         .def(py::init<size_t, size_t, bool, bool>(), 
@@ -237,6 +270,9 @@ PYBIND11_MODULE(qforte, m) {
             py::arg("antiherm") = false,
             py::arg("adjoint") = false
             )
+        .def("evolve_df_ham_trotter", &FCIComputer::evolve_df_ham_trotter)
+        .def("evolve_givens", &FCIComputer::evolve_givens)
+        .def("evolve_diagonal_from_mat", &FCIComputer::evolve_diagonal_from_mat)
         .def("set_state", &FCIComputer::set_state)
         .def("get_state", &FCIComputer::get_state)
         .def("get_state_deep", &FCIComputer::get_state_deep)
@@ -282,6 +318,8 @@ PYBIND11_MODULE(qforte, m) {
         .def("copy_in", &Tensor::copy_in)
         .def("add_to_element", &Tensor::add_to_element)
         .def("get", &Tensor::get)
+        .def("data", &Tensor::data)
+        .def("read_data", &Tensor::read_data)
         .def("fill_from_np", &Tensor::fill_from_np)
         .def("add", &Tensor::add) // TODO(Tyler) Need Test (use numpy)
         .def("subtract", &Tensor::subtract)
@@ -297,6 +335,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("transpose", &Tensor::transpose) // TODO(Tyler) Need Test (use numpy)
         .def("general_transpose", &Tensor::general_transpose) // TODO(Tyler) Need Test (use numpy)
         .def("fill_from_nparray", &Tensor::fill_from_nparray)
+        // .def("copy_to_nparray", &Tensor::copy_to_nparray) // WE STILL NEED THIS!!
         .def("zaxpy", &Tensor::zaxpy, "x"_a, "alpha"_a, "incx"_a = 1, "incy"_a = 1) // TODO(Tyler) Need Test (use numpy)
         .def("zaxpby", &Tensor::zaxpby, "x"_a, "a"_a, "b"_a, "incx"_a = 1, "incy"_a = 1)
         .def("gemm", &Tensor::gemm, "B"_a, 

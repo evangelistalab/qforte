@@ -9,17 +9,32 @@ geom = [
     ('H', (0., 0., 2.0)),
     ('H', (0., 0., 3.0)), 
     ('H', (0., 0., 4.0)),
-    ('H', (0., 0., 5.0)), 
-    ('H', (0., 0., 6.0)),
+    # ('H', (0., 0., 5.0)), 
+    # ('H', (0., 0., 6.0)),
     # ('H', (0., 0., 7.0)), 
     # ('H', (0., 0., 8.0)),
     # ('H', (0., 0., 9.0)), 
-    # ('H', (0., 0.,10.0))
+    # ('H', (0., 0.,10.0)),
+    # ('H', (0., 0.,11.0)), 
+    # ('H', (0., 0.,12.0))
     ]
 
+
+timer = qf.local_timer()
+
+timer.reset()
 # Get the molecule object that now contains both the fermionic and qubit Hamiltonians.
-mol = qf.system_factory(build_type='psi4', mol_geometry=geom, basis='sto-3g', run_fci=1)
- 
+mol = qf.system_factory(
+    build_type='psi4', 
+    mol_geometry=geom, 
+    basis='sto-3g', 
+    build_qb_ham = False,
+    run_fci=1,
+    store_mo_ints=1,
+    build_df_ham=1)
+
+timer.record('Run Psi4 and Initialize')
+
 print("\n Initial FCIcomp Stuff")
 print("===========================")
 ref = mol.hf_reference
@@ -71,13 +86,13 @@ time = 0.1
 
 r = 1
 order = 1
+N = 1
 
 print(f"dt:    {time}")
 print(f"r:     {r}")
 print(f"order: {order}")
 
-for i in range(10):
-# Call Trotter for fci_comp1
+for _ in range(N):
     fci_comp1.evolve_pool_trotter(
         hermitian_pairs,
         time,
@@ -86,29 +101,28 @@ for i in range(10):
         antiherm=False,
         adjoint=False)
 
-
-    # print(fci_comp1.str(print_complex=False))
-    # print(fci_comp1.get_state().norm())
-
-    # Call full taylor evolution for fci_comp2
-    fci_comp2.evolve_op_taylor(
-        sqham,
-        time,
-        1.0e-15,
-        30)
-
-    # print(fci_comp2)
-    # print(fci_comp2.get_state().norm())
-
     C1 = fci_comp1.get_state_deep()
-    C2 = fci_comp2.get_state_deep()
 
-    C1.subtract(C2)
+    ## ===> Where all the setup of the givens stuff goes <=== ##
+    
+    fci_comp2.evolve_df_hamiltonain(
+        mol.df_ham,
+        time)
+
+    
+    C2 = fci_comp2.get_state_deep()
+    dC = fci_comp2.get_state_deep()
+
+
+
+    dC.subtract(C1)
 
     # print(C1)
-    print(f" t: {(i+1)*time:6.6f} deltaC.norm() {C1.norm():6.6f}")
+    print(f"deltaC.norm() {dC.norm()}")
 
 # not working rn, I suspect evolution is correct but formation of 
 # hermitian pairs might be funky for diagonal part of the
 # hamiltonain, or some such...
+
+
 

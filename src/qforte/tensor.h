@@ -251,6 +251,8 @@ std::string print_nonzero() const;
  **/
 void fill_from_nparray(std::vector<std::complex<double>>, std::vector<size_t>);
 
+// void copy_to_nparray(std::vector<std::complex<double>>&);
+
 /**
  * Print string representation of this Tensor
  **/
@@ -303,6 +305,9 @@ void gemm(
     const std::complex<double> alpha,
     const std::complex<double> beta,
     const bool multOnRight);
+
+// // New function for matrix exponential
+// Tensor exp() const;
 
 /// NICK: Comment out the functions below for now, will need external lib
 // => Tensor Multiplication/Permutation <= //

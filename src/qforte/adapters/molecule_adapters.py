@@ -2,13 +2,16 @@
 A class for building molecular object adapters. Adapters for various approaches to build
 the molecular info and properties (hamiltonian, rdms, etc...).
 """
-import operator
+# import operator
+# import itertools
 import numpy as np
 import copy
 from abc import ABC, abstractmethod
+from qforte.helper.df_ham_helper import *
 
 import qforte
 
+from scipy.linalg import expm
 from qforte.system.molecular_info import Molecule
 from qforte.utils import transforms as tf
 
@@ -207,6 +210,7 @@ def create_psi_mol(**kwargs):
     if kwargs['build_qb_ham']:
         qforte_mol.hamiltonian = Hsq.jw_transform()
     else:
+        Hsq.simplify()
         qforte_mol.hamiltonian = None
 
     qforte_mol.point_group = [point_group, irreps]
@@ -217,17 +221,24 @@ def create_psi_mol(**kwargs):
     qforte_mol.frozen_virtual = frozen_virtual
     qforte_mol.frozen_core_energy = frozen_core_energy
 
-    if kwargs['store_mo_ints']:
+    if kwargs['build_df_ham']:
+        if not kwargs['store_mo_ints']:
+            raise ValueError("store_mo_ints must be True if you want to build_df_ham")
+        else:
+            p4_mo_oeis = copy.deepcopy(mo_oeis)
+            p4_mo_teis = copy.deepcopy(mo_teis)
 
-        # Save data to a file
-        # np.savez(
-        #     "h4_integral_data_of_format_psi4_v2.npz", 
-        #     e_0=p4_Enuc_ref, 
-        #     h1e=mo_oeis, 
-        #     h2e=mo_teis)
+    if kwargs['store_mo_ints']:
 
         # keep ordering consistant with openfermion eri tensors
         mo_teis = np.asarray(mo_teis.transpose(0, 2, 3, 1), order='C')
+
+        # Save data to a file
+        # np.savez(
+        #     "mol_e0_h1e_h2e.npz", 
+        #     e0=p4_Enuc_ref, 
+        #     h1e=mo_oeis, 
+        #     h2e=mo_teis)
 
         # need restricted version
         h2e_rest = copy.deepcopy(np.einsum("ijlk", -0.5 * mo_teis))
@@ -255,6 +266,174 @@ def create_psi_mol(**kwargs):
         qforte_mol.mo_oeis = qf_mo_oeis
         qforte_mol.mo_teis = qf_mo_teis
         qforte_mol.mo_teis_einsum = qf_mo_teis_einsum
+
+        # TODO(Nick), If we want better controll over this, it there shuld be a molecule member function that
+        # builds the df_ham from the stored mo_oeis and mo_teis rather than building it when psi4 
+        # is initially run!
+        if kwargs['build_df_ham']:
+            # NOTE: build_df_ham should not be called unless store_mo_ints is True, if called here,
+            # mo_oeis and mo_teis are defined using openfermion ordering.
+
+            # Load h1e and h2e for Li-H the .npz file
+            # loaded_data = np.load('of_mol_e0_h1e_h2e.npz')
+            # e0 = loaded_data['e0']
+            # p4_mo_oeis = loaded_data['h1e']
+            # p4_mo_teis = loaded_data['h2e']
+
+
+            # keep ordering consistant with openfermion eri tensors
+            p4_mo_teis = np.asarray(p4_mo_teis.transpose(0, 2, 3, 1), order='C')
+
+            # # need restricted version
+            # p4_mo_teis2 = copy.deepcopy(np.einsum("ijlk", -0.5 * p4_mo_teis))
+
+            # # additoinal manipulation
+            # h1e_2 = copy.deepcopy(p4_mo_oeis)
+            # h2e_2 = np.moveaxis(copy.deepcopy(h2e_rest_2), 1, 2) * (-1.0)
+            # h1e_2 -= np.einsum('ikkj->ij', h2e_rest_2)
+
+
+            # do first factorization from integrals
+            ff_eigenvalues, one_body_squares, one_body_correction = first_factorization(
+                tei = p4_mo_teis,
+                lmax=None, # change if we want 
+                spin_basis=False,
+                threshold=kwargs['df_icut']) # may be very important to play with
+            
+            # do second factorization based on integrals and first factorizaiotn
+            scaled_density_density_matrices, basis_change_matrices = second_factorization(
+                ff_eigenvalues, 
+                one_body_squares)
+            
+            #          ===> get the trotter versions of the matricies <====
+
+            # don't need time_scaled_rho_rho_matrices for now, 
+            # will handle in FCI computer application funciton,
+            # or perhaps in some DFHamiltonain helper funciton 
+            # time_scaled_rho_rho_matrices = []
+            
+            # get the zero leaf, set to zero, this will make it more obvious if you try to evolve
+            # without setting the first leaf...
+            trotter_basis_change_matrices = [
+                # basis_change_matrices[0] @ expm(-1.0j * (p4_mo_oeis + one_body_correction[::2, ::2]))
+                np.zeros(shape=(nmo,nmo))
+            ]
+
+            # get the other "t" leaves (as Rob calls them)
+            for ii in range(len(basis_change_matrices) - 1):
+
+                trotter_basis_change_matrices.append(
+                    basis_change_matrices[ii + 1] @ basis_change_matrices[ii].conj().T)
+            
+            trotter_basis_change_matrices.append(basis_change_matrices[ii + 1].conj().T)
+
+            # ===> convert individual numpy arrays to qforte Tensors
+            qf_ff_eigenvalues = qforte.Tensor(
+                shape=np.shape(ff_eigenvalues), 
+                name='first_factorization_eigenvalues')
+            
+            qf_one_body_squares = qforte.Tensor(
+                shape=np.shape(one_body_squares), 
+                name='one_body_squares')
+            
+            # NOTE(may want to check this later)
+            qf_one_body_ints = qforte.Tensor(
+                shape=np.shape(p4_mo_oeis), 
+                name='one_body_ints')
+            
+            qf_one_body_correction = qforte.Tensor(
+                shape=np.shape(one_body_correction[::2, ::2]), 
+                name='one_body_correction')
+            
+            qf_ff_eigenvalues.fill_from_nparray(
+                ff_eigenvalues.ravel(), 
+                np.shape(ff_eigenvalues))
+            
+            qf_one_body_squares.fill_from_nparray(
+                one_body_squares.ravel(), 
+                np.shape(one_body_squares))
+            
+            qf_one_body_ints.fill_from_nparray(
+                p4_mo_oeis.ravel(), 
+                np.shape(p4_mo_oeis))
+            
+            qf_one_body_correction.fill_from_nparray(
+                one_body_correction[::2, ::2].ravel(), 
+                np.shape(one_body_correction[::2, ::2]))
+            
+            # ===> convert lists of numpy arrays to lists of qforte Tensors
+
+            qf_scaled_density_density_matrices = []
+
+            for l in range(len(scaled_density_density_matrices)):
+            
+                qf_scaled_density_density_mat = qforte.Tensor(
+                    shape=np.shape(scaled_density_density_matrices[l]), 
+                    name=f'scaled_density_density_matrices_{l}')
+                
+                qf_scaled_density_density_mat.fill_from_nparray(
+                scaled_density_density_matrices[l].ravel(), 
+                np.shape(scaled_density_density_matrices[l]))
+
+                qf_scaled_density_density_matrices.append(
+                    qf_scaled_density_density_mat
+                )
+            
+
+            qf_basis_change_matrices = []
+
+            for l in range(len(basis_change_matrices)):
+                qf_basis_change_mat = qforte.Tensor(
+                    shape=np.shape(basis_change_matrices[l]), 
+                    name=f'basis_change_matrices_{l}')
+                
+                qf_basis_change_mat.fill_from_nparray(
+                    basis_change_matrices[l].ravel(), 
+                    np.shape(basis_change_matrices[l]))
+            
+                qf_basis_change_matrices.append(
+                    qf_basis_change_mat
+                )
+
+            
+            qf_trotter_basis_change_matrices = []
+            for l in range(len(trotter_basis_change_matrices)):
+
+                qf_trotter_basis_change_mat = qforte.Tensor(
+                    shape=np.shape(trotter_basis_change_matrices[l]), 
+                    name=f'trotter_basis_change_matrices_{l}')
+                
+                
+                qf_trotter_basis_change_mat.fill_from_nparray(
+                    trotter_basis_change_matrices[l].ravel(), 
+                    np.shape(trotter_basis_change_matrices[l]))
+                
+                qf_trotter_basis_change_matrices.append(
+                    qf_trotter_basis_change_mat
+                )
+            
+            # build df_hamiltonain object
+
+            # print(f"type(qf_scaled_density_density_matrices): {type(qf_scaled_density_density_matrices)}")
+            # print(f"type(qf_scaled_density_density_matrices[0]): {type(qf_scaled_density_density_matrices[0])}")
+
+            # print(f"type(qf_basis_change_matrices): {type(qf_basis_change_matrices)}")
+            # print(f"type(qf_basis_change_matrices[0]): {type(qf_basis_change_matrices[0])}")
+
+            # print(f"type(qf_trotter_basis_change_matrices): {type(qf_trotter_basis_change_matrices)}")
+            # print(f"type(qf_trotter_basis_change_matrices[0]): {type(qf_trotter_basis_change_matrices[0])}")
+
+            qforte_mol._df_ham = qforte.DFHamiltonian(
+                nel=nel,
+                norb=nmo,
+                eigenvalues = qf_ff_eigenvalues,
+                one_body_squares = qf_one_body_squares,
+                one_body_ints = qf_one_body_ints,
+                one_body_correction = qf_one_body_correction,
+                scaled_density_density_matrices = qf_scaled_density_density_matrices,
+                basis_change_matrices = qf_basis_change_matrices,
+                trotter_basis_change_matrices = qf_trotter_basis_change_matrices
+            )
 
     # Order Psi4 to delete its temporary files.
     psi4.core.clean()

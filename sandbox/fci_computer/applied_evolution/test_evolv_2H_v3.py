@@ -18,7 +18,22 @@ geom = [
     ]
 
 # Get the molecule object that now contains both the fermionic and qubit Hamiltonians.
-mol = qf.system_factory(build_type='psi4', mol_geometry=geom, basis='sto-3g', run_fci=1)
+# mol = qf.system_factory(
+#     build_type='psi4', 
+#     mol_geometry=geom, 
+#     basis='sto-3g', 
+#     run_fci=1)
+
+mol = qf.system_factory(
+    build_type='psi4', 
+    mol_geometry=geom, 
+    basis='sto-3g', 
+    run_fci=1,
+    # build_qb_ham = False,
+    store_mo_ints=0,
+    build_df_ham=0,
+    df_icut=1.0e-6
+    )
  
 print("\n Initial FCIcomp Stuff")
 print("===========================")

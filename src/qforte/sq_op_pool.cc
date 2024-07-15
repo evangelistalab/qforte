@@ -47,8 +47,12 @@ void SQOpPool::add_hermitian_pairs(std::complex<double> coeff, const SQOperator&
                 SQOperator temp;
                 // if term is same as term adjoint add both
                 if(h == hd or h.first == h.second){
+                    // (Nick) Need this checked out for sure
                     temp.add_term(hl/2.0, h.first, h.second);
                     temp.add_term(hl/2.0, hd.first, hd.second);
+
+                    // temp.add_term(hl, h.first, h.second);
+                    // temp.add_term(hl, hd.first, hd.second);
                 } else {
                     temp.add_term(hl, h.first, h.second);
                     temp.add_term(hl, hd.first, hd.second);

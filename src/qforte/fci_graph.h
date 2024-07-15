@@ -107,6 +107,32 @@ public:
         return count;
     }
 
+    int count_bits(uint64_t string) {
+        int count = 0;
+        while (string) {
+            string &= (string - 1);
+            count++;
+        }
+        return count;
+    }
+
+    std::vector<int> get_positions(uint64_t string, int nbits) {
+        std::vector<int> positions;
+        positions.reserve(nbits); // Reserve space for nbits positions
+
+        int pos = 0;
+        while (nbits > 0) {
+            if (string & 1) {
+                positions.push_back(pos);
+                --nbits;
+            }
+            string >>= 1;
+            ++pos;
+        }
+
+        return positions;
+    }
+
     int count_bits_between(uint64_t string, int pos1, int pos2) {
 
         uint64_t mask = (((1 << pos1) - 1) ^ ((1 << (pos2 + 1)) - 1)) \
@@ -148,8 +174,8 @@ public:
     size_t get_lenb() const { return lenb_; }
 
     /// return the alfa/beta bitstrings
-    std::vector<uint64_t> get_astr() const { return astr_;  }
-    std::vector<uint64_t> get_bstr() const { return bstr_;  }
+    const std::vector<uint64_t>& get_astr() const { return astr_;  }
+    const std::vector<uint64_t>& get_bstr() const { return bstr_;  }
 
     /// return the alfa/beta bitstrings
     int get_astr_at_idx(int idx) const { return static_cast<int>(astr_[idx]);  }

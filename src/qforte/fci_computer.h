@@ -7,6 +7,7 @@
 #include "qforte-def.h" 
 #include "tensor.h" 
 #include "fci_graph.h" 
+#include "df_hamiltonian.h" 
 
 
 class Gate;
@@ -16,6 +17,7 @@ class TensorOperator;
 class Tensor;
 class FCIGraph;
 class SQOpPool;
+class DFHamiltonian;
 
 class FCIComputer {
   public:
@@ -297,6 +299,47 @@ class FCIComputer {
       const Tensor& h2e_einsum, 
       size_t norb);  
 
+    /// Applies the trotterized form of a
+    /// double factorized hamiltonain time evolution,
+    /// NOTE: thresholds for the double factorization eigenvalue cutoffs
+    /// are specified before this funciton is called
+    void evolve_df_ham_trotter(
+      const DFHamiltonian& df_ham,
+      const double evolution_time);
+
+    /// Evolve the wave funciton under a givens rotation specified by the matrix U.
+    void evolve_givens(
+      const Tensor& U,
+      const bool is_alfa);
+
+    /// Evolve the wave fuction by a diagonal operator specified by the
+    /// matrix V.
+    void evolve_diagonal_from_mat(
+      const Tensor& V,
+      const double evolution_time);
+
+    void apply_diagonal_array(
+      Tensor& C, // Just try in-place for now...
+      const std::vector<uint64_t>& astrs,
+      const std::vector<uint64_t>& bstrs,
+      const Tensor& D,
+      const Tensor& V,
+      const size_t nalfa_strs,
+      const size_t nbeta_strs,
+      const size_t nalfa_el,
+      const size_t nbeta_el,
+      const size_t norb);
+
+    void apply_diagonal_array_part(
+      std::vector<std::complex<double>>& out, 
+      const std::vector<int>& occ, 
+      const std::vector<std::complex<double>>& diag, 
+      const std::vector<std::complex<double>>& array, 
+      const size_t nstrs, 
+      const size_t nel, 
+      const size_t norb);
+
+
     /// apply a constant to the FCI quantum computer.
     void scale(const std::complex<double> a);
 
@@ -318,7 +361,6 @@ class FCIComputer {
     //     const std::vector<std::complex<double>>& mults);
 
     /// return a string representing the state of the computer
-    /// TODO(Nick) Implement (this will be a pain :/)
     std::string str(
       bool print_data,
       bool print_complex

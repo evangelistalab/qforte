@@ -211,6 +211,14 @@ class Molecule(System):
     def mo_teis_einsum(self, mo_teis_einsum):
         self._mo_teis_einsum = mo_teis_einsum
 
+    @property
+    def df_ham(self):
+        return self._df_ham
+    
+    @df_ham.setter
+    def df_ham(self, df_ham):
+        self._df_ham = df_ham
+
     @hf_orbital_energies.setter
     def hf_orbital_energies(self, hf_orbital_energies):
         self._hf_orbital_energies = hf_orbital_energies

@@ -734,9 +734,26 @@ void Tensor::fill_from_nparray(std::vector<std::complex<double>> arr, std::vecto
         throw std::runtime_error("The Shapes are not the same.");
     }
 
+    if (size_ != arr.size()){
+        throw std::runtime_error("The Sizes are not the same!");
+    }
+
     std::memcpy(data_.data(), arr.data(), sizeof(std::complex<double>)*size_);
 
 }
+
+// /// Careful, onus on user to make sure shapes are consistant
+// void Tensor::copy_to_nparray(std::vector<std::complex<double>>& arr){
+
+//     if (size_ != arr.size()){
+//         throw std::runtime_error("The sizes are not the same.");
+//     }
+
+//     // std::memcpy(arr.data(), data_.data(), sizeof(std::complex<double>)*size_);
+
+//     std::fill(arr.begin(), arr.end(), 1.0);
+
+// }
 
 // TODO(Nick): Re-Implement
 // void Tensor::print() const
