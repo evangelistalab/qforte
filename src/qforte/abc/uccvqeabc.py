@@ -278,7 +278,7 @@ class UCCVQE(UCC, VQE):
                     )
                 else:
                     Umu, pmu = trotterize(
-                        Kmu_prev, factor=-tamp, trotter_number=self._trotter_number
+                        Kmu, factor=-tamp, trotter_number=self._trotter_number
                     )
 
                     if pmu != 1.0 + 0.0j:
@@ -287,31 +287,31 @@ class UCCVQE(UCC, VQE):
                         )
                 Umus.append(Umu)
 
-        grads = np.zeros(len(self._tops))
-        # print('----')
-        for r in range(len(self._weights)):
-            qc_psi = self.get_initial_computer()[r]
-            qc_psi.apply_circuit(Utot[r])
-            qc_sig = qf.Computer(qc_psi)
-            qc_sig.apply_operator(self._qb_ham)
-            qc_temp = qf.Computer(qc_psi)
-            qc_temp.apply_operator(Kmus[M - 1])
-            grads[M - 1] += (
-                2
-                * self._weights[r]
-                * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
-            )
-
-            for mu in reversed(range(M - 1)):
-                qc_psi.apply_circuit(Umus[mu])
-                qc_sig.apply_circuit(Umus[mu])
+            grads = np.zeros(len(self._tops))
+            # print('----')
+            for r in range(len(self._weights)):
+                qc_psi = self.get_initial_computer()[r]
+                qc_psi.apply_circuit(Utot[r])
+                qc_sig = qf.Computer(qc_psi)
+                qc_sig.apply_operator(self._qb_ham)
                 qc_temp = qf.Computer(qc_psi)
-                qc_temp.apply_operator(Kmus[mu])
-                grads[mu] += (
+                qc_temp.apply_operator(Kmus[M - 1])
+                grads[M - 1] += (
                     2
                     * self._weights[r]
                     * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
                 )
+
+                for mu in reversed(range(M - 1)):
+                    qc_psi.apply_circuit(Umus[mu])
+                    qc_sig.apply_circuit(Umus[mu])
+                    qc_temp = qf.Computer(qc_psi)
+                    qc_temp.apply_operator(Kmus[mu])
+                    grads[mu] += (
+                        2
+                        * self._weights[r]
+                        * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
+                    )
 
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-12)
         # print(f"Gradient: {grads}")
