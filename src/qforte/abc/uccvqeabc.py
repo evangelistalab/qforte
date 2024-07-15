@@ -249,69 +249,74 @@ class UCCVQE(UCC, VQE):
                 Kmu_prev = Kmu
 
         else:
-            #TODO add sa-SD
+            # TODO add sa-SD
             try:
                 assert self._pool_type != "sa_SD"
             except:
                 raise ValueError("sa SD not implemented for multireference ADAPT")
-            #Build all Kmus and Umus in advance.
+            # Build all Kmus and Umus in advance.
             Kmus = []
             Umus = []
             for mu in range(len(self._tops)):
                 Kmu = self._pool_obj[self._tops[mu]][1].jw_transform(
                     self._qubit_excitations
-                ) 
+                )
                 Kmus.append(Kmu)
                 if params is None:
                     tamp = self._tamps[mu]
                 else:
                     tamp = params[mu]
                 if self._compact_excitations:
-                    
-                     Umu = qf.Circuit()
-                     Umu.add(
-                         compact_excitation_circuit(
-                             -tamp
-                             * self._pool_obj[self._tops[mu]][1].terms()[1][0],
-                             self._pool_obj[self._tops[mu]][1].terms()[1][1],
-                             self._pool_obj[self._tops[mu]][1].terms()[1][2],
-                             self._qubit_excitations,
-                         )
-                     )
+                    Umu = qf.Circuit()
+                    Umu.add(
+                        compact_excitation_circuit(
+                            -tamp * self._pool_obj[self._tops[mu]][1].terms()[1][0],
+                            self._pool_obj[self._tops[mu]][1].terms()[1][1],
+                            self._pool_obj[self._tops[mu]][1].terms()[1][2],
+                            self._qubit_excitations,
+                        )
+                    )
                 else:
                     Umu, pmu = trotterize(
                         Kmu_prev, factor=-tamp, trotter_number=self._trotter_number
-                            )
+                    )
 
                     if pmu != 1.0 + 0.0j:
                         raise ValueError(
                             "Encountered phase change, phase not equal to (1.0 + 0.0i)"
                         )
                 Umus.append(Umu)
-        
+
         grads = np.zeros(len(self._tops))
-        #print('----')
+        # print('----')
         for r in range(len(self._weights)):
             qc_psi = self.get_initial_computer()[r]
             qc_psi.apply_circuit(Utot[r])
             qc_sig = qf.Computer(qc_psi)
             qc_sig.apply_operator(self._qb_ham)
             qc_temp = qf.Computer(qc_psi)
-            qc_temp.apply_operator(Kmus[M-1])
-            grads[M-1] += 2* self._weights[r] * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
-            
-            for mu in reversed(range(M-1)):
+            qc_temp.apply_operator(Kmus[M - 1])
+            grads[M - 1] += (
+                2
+                * self._weights[r]
+                * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
+            )
+
+            for mu in reversed(range(M - 1)):
                 qc_psi.apply_circuit(Umus[mu])
                 qc_sig.apply_circuit(Umus[mu])
                 qc_temp = qf.Computer(qc_psi)
                 qc_temp.apply_operator(Kmus[mu])
-                grads[mu] += 2* self._weights[r] * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
-
+                grads[mu] += (
+                    2
+                    * self._weights[r]
+                    * np.vdot(qc_sig.get_coeff_vec(), qc_temp.get_coeff_vec()).real
+                )
 
         np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-12)
-        #print(f"Gradient: {grads}")
-        #print(f"Energy: {self.measure_energy(Utot)}")
-        
+        # print(f"Gradient: {grads}")
+        # print(f"Energy: {self.measure_energy(Utot)}")
+
         return grads
 
     def measure_gradient3(self):
