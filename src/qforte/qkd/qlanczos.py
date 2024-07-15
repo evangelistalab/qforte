@@ -58,9 +58,10 @@ class QLANCZOS(QSD):
             beta=1.0,
             db=0.2,
             expansion_type='SD',
+            use_exact_evolution=False,
             sparseSb=False,
             low_memorySb=False,
-            second_order=False,
+            second_order=True,
             b_thresh=1.0e-6,
             x_thresh=1.0e-10,
             do_lanczos=True,
@@ -89,6 +90,7 @@ class QLANCZOS(QSD):
         self._beta = beta
         self._db = db
         self._expansion_type = expansion_type
+        self._use_exact_evolution = use_exact_evolution
         self._sparseSb = sparseSb
         self._low_memorySb = low_memorySb
         self._second_order = second_order
@@ -99,9 +101,16 @@ class QLANCZOS(QSD):
         self._realistic_lanczos = realistic_lanczos
         self._fname = fname
 
-        if(self._do_lanczos!=True):
+        if(self._do_lanczos != True):
             print(f'cannot run QLanczos with do_lanczos option set to {self._do_lanczos}, setting option to True')
             self._do_lanczos = True
+
+        if(self._use_exact_evolution != False):
+            print(f'cannot run QLanczos with use_exact_evolution option set to {self._use_exact_evolution}, setting option to False')
+            self._use_exact_evolution = False
+
+        if(self._lanczos_gap % 2 != 0):
+            raise ValueError('Lanczos gap must be even to include HF state')
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
@@ -172,11 +181,11 @@ class QLANCZOS(QSD):
     def print_summary_banner(self):
         cs_str = '{:.2e}'.format(self._Scond)
 
-        print('\n\n                     ==> QK summary <==')
+        print('\n\n                     ==> Lanczos summary <==')
         print('-----------------------------------------------------------')
         print('Condition number of overlap mat k(S):      ', cs_str)
-        print('Final SRQK ground state Energy:           ', round(self._Egs, 10))
-        print('Final SRQK target state Energy:           ', round(self._Ets, 10))
+        print('Final QLanczos ground state Energy:        ', round(self._Egs, 10))
+        # print('Final SRQK target state Energy:           ', round(self._Ets, 10))
         print('Number of classical parameters used:       ', self._n_classical_params)
         print('Number of CNOT gates in deepest circuit:   ', self._n_cnot)
         print('Number of Pauli term measurements:         ', self._n_pauli_trm_measures)
@@ -225,12 +234,13 @@ class QLANCZOS(QSD):
             # print(f't_dim:{t_dim}')
             # # print(f'length of lanczos_vecs:{len(self._qite._lanczos_vecs)}')
 
+            # tdim = self._nbeta - 1
             # if t_dim % 2 == 0:
-            #     n_dim = int((t+1)//2+1)
+            ndim = int((self._qite._nbeta) // self._lanczos_gap + 1)
             # else:
             #     n_dim = int((t+1)//2)
 
-            ndim = len(self._qite._c_list)
+            # ndim = len(self._qite._c_list)
             print(f'n_dim:{ndim}')
 
             h_mat = np.zeros((ndim, ndim), dtype=complex)
@@ -244,27 +254,44 @@ class QLANCZOS(QSD):
 
                 if (self._print_summary_file):
                     # put fname here too
-                    f2 = open(f"{self._qite._fname}_lanczos_summary.dat", "w+", buffering=1)
+                    f2 = open(f"{self._qite._fname}_realistic_{self._realistic_lanczos}_lanczos_summary.dat", "w+", buffering=1)
                     f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
                     f2.write('#-------------------------------------------------------------------------------\n')
 
             # build elements of S and H matrix
-            # see quket github for more info
+            # see quket qlanczos implementaion for example on index mapping
             for i in range(ndim):
+                i_gap = self._lanczos_gap * i
+
                 for j in range(i+1):
+                    j_gap = self._lanczos_gap * j
+                    r = (i_gap + j_gap) // self._lanczos_gap
+
                     n = 1
                     d = 1
 
-                    for r in range(j, i - 1):
-                        n *= self._qite._c_list[r]
+                    for ix in range(j_gap+1, r+1):
+                        n *= self._qite._c_list[ix]
 
-                    for r in range(i - 1, j):
-                        d *= self._qite._c_list[r]
+                    for ix in range(r+1, i_gap+1):
+                        d *= self._qite._c_list[ix]
 
+                    # if i == j:
+                    #     s_mat[i,j] = 1.0
+                    # else:
+                    #     s_mat[j,i] = s_mat[i,j] = np.sqrt(n / d)
                     s_mat[j,i] = s_mat[i,j] = np.sqrt(n / d)
-                    h_mat[j,i] = h_mat[i,j] = s_mat[i,j] * self._qite._Ekb[(i + j)//2]
+                    h_mat[j,i] = h_mat[i,j] = s_mat[i,j] * self._qite._Ekb[r]
 
                 if (self._diagonalize_each_step):
+                    # print('\n')
+                    # print(f'iteration: {i}')
+                    # print('S MAT')
+                    # matprint(s_mat)
+                    # print('\n')
+                    # print('H MAT')
+                    # matprint(h_mat)
+                    # print('\n')
                     k = i+1
                     evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
                                     h_mat[0:k, 0:k],
@@ -296,7 +323,7 @@ class QLANCZOS(QSD):
 
                 if (self._print_summary_file):
                     # put fname here too
-                    f2 = open(f"{self._qite._fname}_lanczos_summary.dat", "w+", buffering=1)
+                    f2 = open(f"{self._qite._fname}_realistic_{self._realistic_lanczos}_lanczos_summary.dat", "w+", buffering=1)
                     f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
                     f2.write('#-------------------------------------------------------------------------------\n')
 
@@ -308,6 +335,14 @@ class QLANCZOS(QSD):
                     s_mat[n][m] = np.conj(s_mat[m][n])
 
                 if (self._diagonalize_each_step):
+                    # print('\n')
+                    # print(f'iteration: {m}')
+                    # print('S MAT')
+                    # matprint(s_mat)
+                    # print('\n')
+                    # print('H MAT')
+                    # matprint(h_mat)
+                    # print('\n')
                     k = m+1
                     evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
                                     h_mat[0:k, 0:k],

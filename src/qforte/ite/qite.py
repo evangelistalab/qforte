@@ -634,13 +634,15 @@ class QITE(Algorithm):
 
         for kb in range(1, self._nbeta):
             self.do_qite_step()
-            if(self._do_lanczos):
-                if(kb % self._lanczos_gap == 0):
-                    if(self._realistic_lanczos):
-                        # eqn 21 of 2nd order QITE paper
-                        c_kb = np.exp(-2.0 * self._db * (self._Ekb[kb] - self._Ekb[0]))
-                        self._c_list.append(c_kb)
 
+            if(self._do_lanczos):
+                if(self._realistic_lanczos):
+                    c_kb = np.exp(-2.0 * self._db * (self._Ekb[kb] - self._Ekb[0]))
+                    self._c_list.append(c_kb)
+                    
+                else:
+                    if(kb % self._lanczos_gap == 0):
+                    
                     # if(self._computer_type=='fock'):
                     #     self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
 
@@ -648,7 +650,7 @@ class QITE(Algorithm):
                     #     qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
                     #     qcSig_temp.apply_operator(self._qb_ham)
                     #     self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
-                    else:
+                    
                     # if(self._computer_type=='fci'):
                         self._lanczos_vecs.append(self._qc.get_state_deep())
 
