@@ -63,13 +63,13 @@ print('\nBuild Psi4 Geometry')
 print('-------------------------')
 
 geom = [('H', (0., 0., 0.)), 
-        ('H', (0., 0., .50)),
-        ('H', (0., 0., 1.00)), 
-        ('H', (0., 0., 1.50)),
+        ('H', (0., 0., 1.00)),
         ('H', (0., 0., 2.00)), 
-        ('H', (0., 0., 2.50)),
-        ('H', (0., 0., 3.00)), 
-        ('H', (0., 0., 3.50))]
+        ('H', (0., 0., 3.00)),
+        ('H', (0., 0., 4.00)), 
+        ('H', (0., 0., 5.00))]
+        # ('H', (0., 0., 3.00)), 
+        # ('H', (0., 0., 3.50))]
         # ('H', (0., 0., 4.00)), 
         # ('H', (0., 0., 4.50))]
 
@@ -85,7 +85,7 @@ print('\nBegin QLanzcos test for H4 with exact (unphysical) matrix construction'
 print('-------------------------')
 
 alg = QLANCZOS(mol, computer_type='fci')
-alg.run(beta=10, db=0.5, second_order=True, lanczos_gap=4, realistic_lanczos=False)
+alg.run(beta=4, db=0.1, second_order=True, lanczos_gap=4, realistic_lanczos=True, expansion_type='SDT')
 # Egs_FCI_low_mem = alg.get_gs_energy()
 
 print(f'The HF energy from Psi4:                                     {mol.hf_energy:12.10f}')
