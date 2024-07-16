@@ -217,6 +217,7 @@ PYBIND11_MODULE(qforte, m) {
         .def("apply_sqop_pool", &FCIComputer::apply_sqop_pool)
         .def("get_exp_val", &FCIComputer::get_exp_val)
         .def("get_exp_val_tensor", &FCIComputer::get_exp_val_tensor)
+        .def("scale", &FCIComputer::scale)
         .def("evolve_op_taylor", &FCIComputer::evolve_op_taylor)
         .def("evolve_tensor_taylor", &FCIComputer::evolve_tensor_taylor)
         .def("apply_sqop_evolution", &FCIComputer::apply_sqop_evolution, 
