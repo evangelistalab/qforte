@@ -159,7 +159,7 @@ class QITE(Algorithm):
 
         if(self._fname is None):
             if(self._use_exact_evolution):
-                self._fname = f'beta_{self._beta}_db_EXACT_EVOLUTION'
+                self._fname = f'beta_{self._beta}_db_{self._db}_EXACT_EVOLUTION'
             else:
                 self._fname = f'beta_{self._beta}_db_{self._db}_{self._computer_type}_{self._expansion_type}_second_order_{self._second_order}'
 
