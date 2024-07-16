@@ -89,8 +89,8 @@ class QLANCZOS(QSD):
         ###QITE STUFF
         self._beta = beta
         self._db = db
-        self._expansion_type = expansion_type
         self._use_exact_evolution = use_exact_evolution
+        self._expansion_type = expansion_type
         self._sparseSb = sparseSb
         self._low_memorySb = low_memorySb
         self._second_order = second_order
@@ -129,7 +129,8 @@ class QLANCZOS(QSD):
                           self._print_summary_file)
                           
         self._qite.run(self._beta, 
-                       self._db, 
+                       self._db,
+                       self._use_exact_evolution,
                        self._expansion_type, 
                        self._sparseSb, 
                        self._low_memorySb, 
