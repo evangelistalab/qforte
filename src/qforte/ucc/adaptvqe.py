@@ -174,10 +174,15 @@ class ADAPTVQE(UCCVQE):
             )
 
         if self._is_multi_state:
-            H_eff = qforte.build_effective_array(
+            if self._state_prep_type != "computer": 
+                E, A, ops = qforte.excited_state_algorithms.ritz_eigh(
+                self._nqb, self._qb_ham, self.build_Uvqc()
+                )
+            else:
+                H_eff = qforte.build_effective_array(
                 self._qb_ham, self.build_Uvqc()[0], self.get_initial_computer()
-            )
-            E, A = np.linalg.eigh(H_eff.real)
+                ).real
+                E, A = np.linalg.eigh(H_eff)
             self._diag_energies.append(E)
             self._diag_As.append(A)
             cur_string = f"Current Energies {avqe_iter}"
@@ -187,6 +192,7 @@ class ADAPTVQE(UCCVQE):
                 cur_string += f" {e}"
             print(cur_string)
             print(diag_string)
+            
 
         while not self._converged:
             print("\n\n -----> ADAPT-VQE iteration ", avqe_iter, " <-----\n")
@@ -206,9 +212,16 @@ class ADAPTVQE(UCCVQE):
                 self.compute_moment_energies()
 
             if self._is_multi_state:
-                E, A, ops = qforte.excited_state_algorithms.ritz_eigh(
-                    self._nqb, self._qb_ham, self.build_Uvqc()
-                )
+                if self._state_prep_type != "computer": 
+                    E, A, ops = qforte.excited_state_algorithms.ritz_eigh(
+                        self._nqb, self._qb_ham, self.build_Uvqc()
+                    )
+                else:
+                    H_eff = qforte.build_effective_array(
+                    self._qb_ham, self.build_Uvqc()[0], self.get_initial_computer()
+                    ).real
+                    E, A = np.linalg.eigh(H_eff)
+
                 self._diag_energies.append(E)
                 self._diag_As.append(A)
 

@@ -6,6 +6,7 @@ from qforte import ritz_eigh
 from qforte import cisd_manifold
 from qforte import build_refprep
 from qforte import build_effective_array
+from qforte import build_effective_symmetric_operator
 from qforte import compute_operator_matrix_element
 from qforte import Computer
 from qforte import Circuit
@@ -234,17 +235,12 @@ class TestSAADAPTVQE:
             for j in range(len(E_more)):
                 assert dip_dir[i, j] - total_dip[i, j] == approx(0.0, abs=1e-7)
 
-    def test_BeH2_more_adapt(self):
-        bohr = 0.529177210903
-        geom = [
-            ("Be", (0, 0, 0)),
-            ("H", (0, 0.7 * bohr, -4 * bohr)),
-            ("H", (0, -0.7 * bohr, -4 * bohr)),
-        ]
-        spaces = ([2, 0, 0, 0], [1, 0, 0, 1], [1, 0, 1, 1])
-
+        
+        
+        
         THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-        data_path = os.path.join(THIS_DIR, "beh2_cas_dump.json")
+        data_path = os.path.join(THIS_DIR, "lih_cas_dump.json")
+        spaces = [[1,0,0,0],[2,0,0,0],[1,0,1,1]]
         mol = system_factory(
             system_type="molecule",
             mol_geometry=geom,
@@ -257,51 +253,61 @@ class TestSAADAPTVQE:
             no_reorient=True,
             json_dump=data_path,
         )
-
+        
         mol = system_factory(
-            build_type="external",
-            num_frozen_docc=0,
-            num_frozen_uocc=0,
-            filename=data_path,
+            build_type = "external",
+            filename = data_path
         )
 
-        print(mol.orb_irreps_to_int)
+        occ_refs = [[1,1,1,1,0,0] + [0]*6,
+                    [1,1,0,0,1,1] + [0]*6,
+                    [1,1,0,1,1,0] + [0]*6,
+                    [1,1,1,0,0,1] + [0]*6]
 
-        comp_refs = [Computer(14) for i in range(4)]
+        alg = ADAPTVQE(
+            mol,
+            print_summary_file=False,
+            is_multi_state=True,
+            reference=occ_refs,
+            weights=[.25]*4,
+            compact_excitations=True,
+        )
 
-        coeff_vec = np.zeros(2**14)
-        coeff_vec[int("11001111", 2)] = 1
+        H_eff = build_effective_symmetric_operator(12, mol.hamiltonian, alg._refprep).real
+        E_casscf = np.linalg.eigh(H_eff)[0][0]
+        assert E_casscf == approx(-7.873605319132174, 1e-8)
 
+        alg.run(pool_type = "GSD", adapt_maxiter = 3) 
+
+        correct_Es = [
+            -7.8593451680521662,
+            -7.7158474059591828,
+            -7.6836465355578119,
+            -7.2065322341909379
+        ]
+        
+        
+        for i in range(4):
+            assert correct_Es[i] == approx(alg._diag_energies[-1][i])
+        
+        comp_refs = [Computer(12) for i in range(4)]
+
+        coeff_vec = np.zeros(2**12)
+        coeff_vec[int("001111", 2)] = 1
         comp_refs[0].set_coeff_vec(copy.deepcopy(coeff_vec))
 
-        coeff_vec = np.zeros(2**14)
-        coeff_vec[int("111111", 2)] = 1
+        coeff_vec = np.zeros(2**12)
+        coeff_vec[int("110011", 2)] = 1
         comp_refs[1].set_coeff_vec(copy.deepcopy(coeff_vec))
-
-        coeff_vec = np.zeros(2**14)
-        coeff_vec[int("11011011", 2)] = 1 / np.sqrt(2)
-        coeff_vec[int("11100111", 2)] = 1 / np.sqrt(2)
+        
+        coeff_vec = np.zeros(2**12)
+        coeff_vec[int("100111", 2)] = 1
         comp_refs[2].set_coeff_vec(copy.deepcopy(coeff_vec))
-
-        coeff_vec = np.zeros(2**14)
-        coeff_vec[int("10011111", 2)] = 1 / np.sqrt(2)
-        coeff_vec[int("01101111", 2)] = 1 / np.sqrt(2)
+        
+        coeff_vec = np.zeros(2**12)
+        coeff_vec[int("011011", 2)] = 1
         comp_refs[3].set_coeff_vec(copy.deepcopy(coeff_vec))
-
-        H_ref = build_effective_array(mol.hamiltonian, Circuit(), comp_refs).real
-        E_0 = np.linalg.eigh(H_ref)[0]
-        assert np.linalg.norm(
-            E_0
-            - np.array(
-                [
-                    -15.623054642503174,
-                    -15.55904079806895,
-                    -15.284474019723618,
-                    -14.825985332253216,
-                ]
-            )
-        ) == approx(0, 1e-8)
-
+        
         alg = ADAPTVQE(
             mol,
             print_summary_file=False,
@@ -312,21 +318,28 @@ class TestSAADAPTVQE:
             state_prep_type="computer",
         )
 
+        alg.run(pool_type = "GSD", adapt_maxiter = 3) 
+        for i in range(4):
+            assert correct_Es[i] == approx(alg._diag_energies[-1][i])
+        
         circ_refs = []
 
-        circ_refs.append(build_refprep([1] * 4 + [0, 0, 1, 1] + [0] * 6))
-        circ_refs.append(build_refprep([1] * 4 + [1, 1, 0, 0] + [0] * 6))
-        circ_refs.append(
-            sa_single([1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0], 1, 2, mult=3)
+        circ_refs.append(build_refprep([1] * 2 + [1, 1, 0, 0] + [0] * 6))
+        circ_refs.append(build_refprep([1] * 2 + [0, 0, 1, 1] + [0] * 6))
+        circ_refs.append(build_refprep([1] * 2 + [0, 1, 1, 0] + [0] * 6))
+        circ_refs.append(build_refprep([1] * 2 + [1, 0, 0, 1] + [0] * 6))
+        
+        alg = ADAPTVQE(
+            mol,
+            print_summary_file=False,
+            is_multi_state=True,
+            reference=circ_refs,
+            weights=[0.25] * 4,
+            compact_excitations=True,
+            state_prep_type="unitary_circ",
         )
-        circ_refs.append(sa_single([1] * 6 + [0] * 8, 2, 3, mult=3))
 
-        E_circs = np.array(
-            [
-                compute_operator_matrix_element(
-                    14, circ_refs[i], circ_refs[i], QOp=mol.hamiltonian
-                ).real
-                for i in range(4)
-            ]
-        )
-        assert np.linalg.norm(E_circs - np.diag(H_ref)) == approx(0.0, 1e-8)
+        alg.run(pool_type = "GSD", adapt_maxiter = 3) 
+        for i in range(4):
+            assert correct_Es[i] == approx(alg._diag_energies[-1][i])
+        
