@@ -202,9 +202,6 @@ class QITE(Algorithm):
         timer.record('Total evolution time')
         print(timer)
 
-        # if (self._do_lanczos):
-        #     self.do_qlanczos()
-
         # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
 
@@ -514,9 +511,6 @@ class QITE(Algorithm):
         # this is only for UCC!
         x_list_fci = [x*self._db for x in x_list]
 
-
-        # sing_vals = lstsq(S, btot)[3]
-        # print(np.abs(sing_vals[-1] / sing_vals[0]))
         if(self._computer_type=='fock'):
             if(self._sparseSb):
                 for I, spI in enumerate(sp_idxs):
@@ -602,17 +596,6 @@ class QITE(Algorithm):
             else:
                 self._lanczos_vecs = []
                 self._Hlanczos_vecs = []
-
-                # if(self._computer_type=='fock'):
-                #     self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
-
-                #     qcSig_temp = qf.Computer(self._nqb)
-                #     qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
-                #     qcSig_temp.apply_operator(self._qb_ham)
-
-                #     self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
-
-                # if(self._computer_type=='fci'):
                 self._lanczos_vecs.append(self._qc.get_state_deep())
 
                 qcSig_temp = qf.FCIComputer(self._nel, self._sz, self._norb)
@@ -695,18 +678,7 @@ class QITE(Algorithm):
 
                     else:
                         if(kb % self._lanczos_gap == 0):
-                        
-                        # if(self._computer_type=='fock'):
-                        #     self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
-
-                        #     qcSig_temp = qf.Computer(self._nqb)
-                        #     qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
-                        #     qcSig_temp.apply_operator(self._qb_ham)
-                        #     self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
-                        
-                        # if(self._computer_type=='fci'):
                             self._lanczos_vecs.append(self._qc.get_state_deep())
-
                             qcSig_temp = qf.FCIComputer(self._nel, self._sz, self._norb)
                             qcSig_temp.set_state(self._qc.get_state_deep())
 
@@ -734,56 +706,3 @@ class QITE(Algorithm):
         print('\nQITE expansion operators:')
         print('-------------------------')
         print(self._sig.str())
-
-
-    # def do_qlanczos(self):
-    #     """Execute out the quantum Lanczos algorithm for the given run of QITE.
-    #     """
-    #     n_lanczos_vecs = len(self._lanczos_vecs)
-    #     h_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
-    #     s_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
-
-    #     print('\n\n-----------------------------------------------------')
-    #     print('         Quantum Imaginary Time Lanczos   ')
-    #     print('-----------------------------------------------------\n\n')
-
-
-    #     print(f"{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}")
-    #     print('-------------------------------------------------------------------------------')
-
-    #     if (self._print_summary_file):
-    #         # put fname here too
-    #         f2 = open(f"{self._fname}_lanczos_summary.dat", "w+", buffering=1)
-    #         f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
-    #         f2.write('#-------------------------------------------------------------------------------\n')
-
-    #     for m in range(n_lanczos_vecs):
-    #         for n in range(m+1):
-    #             # if(self._computer_type=='fock'):
-    #             #     h_mat[m][n] = np.vdot(self._lanczos_vecs[m], self._Hlanczos_vecs[n])
-    #             #     h_mat[n][m] = np.conj(h_mat[m][n])
-    #             #     s_mat[m][n] = np.vdot(self._lanczos_vecs[m], self._lanczos_vecs[n])
-    #             #     s_mat[n][m] = np.conj(s_mat[m][n])
-
-    #             # if(self._computer_type=='fci'):
-    #             h_mat[m][n] = self._lanczos_vecs[m].vector_dot(self._Hlanczos_vecs[n])
-    #             h_mat[n][m] = np.conj(h_mat[m][n])
-    #             s_mat[m][n] = self._lanczos_vecs[m].vector_dot(self._lanczos_vecs[n])
-    #             s_mat[n][m] = np.conj(s_mat[m][n])
-
-    #         k = m+1
-    #         evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
-    #                            h_mat[0:k, 0:k],
-    #                            print_mats=False,
-    #                            sort_ret_vals=True)
-
-    #         scond = np.linalg.cond(s_mat[0:k, 0:k])
-
-    #         print(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} ')
-    #         if (self._print_summary_file):
-    #             f2.write(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} \n')
-
-    #     if (self._print_summary_file):
-    #         f2.close()
-
-    #     self._Egs_lanczos = evals[0]

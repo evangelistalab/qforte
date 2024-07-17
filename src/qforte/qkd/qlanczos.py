@@ -44,17 +44,8 @@ class QLANCZOS(QSD):
 
     """
     def run(self,
-
-            # old srqk options
-
-            # s=3,
-            # dt=0.5,
             target_root=0,
-            # use_exact_evolution=False,
             diagonalize_each_step=True, 
-
-            # # put qite and qite.run options
-
             beta=1.0,
             db=0.2,
             expansion_type='SD',
@@ -67,21 +58,11 @@ class QLANCZOS(QSD):
             do_lanczos=True,
             lanczos_gap=2,
             realistic_lanczos=True,
-            fname=None 
-
-            # new ql options
-
-            ):
+            fname=None):
 
 
-        # OLD STUFF
-        # self._s = s
-        # self._nstates = s+1
-        # self._dt = dt
         self._target_root = target_root
-        # self._use_exact_evolution = use_exact_evolution
         self._diagonalize_each_step = diagonalize_each_step
-
         self._n_classical_params = 0
         self._n_cnot = 0
         self._n_pauli_trm_measures = 0
@@ -152,7 +133,7 @@ class QLANCZOS(QSD):
         self.verify_required_attributes()
         self.verify_required_QSD_attributes()
 
-# you gotta fix this at some point
+
     def print_options_banner(self):
         print('\n\n-----------------------------------------------------')
         print('         Quantum Imaginary Time Lanczos   ')
@@ -227,21 +208,8 @@ class QLANCZOS(QSD):
             _nstates by _nstates
         """
 
-        # h_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
-        # s_mat = np.zeros((self._nstates,self._nstates), dtype=complex)
-
         if(self._realistic_lanczos):
-            # t_dim = self._qite._t # total number of steps
-            # print(f't_dim:{t_dim}')
-            # # print(f'length of lanczos_vecs:{len(self._qite._lanczos_vecs)}')
-
-            # tdim = self._nbeta - 1
-            # if t_dim % 2 == 0:
             ndim = int((self._qite._nbeta) // self._lanczos_gap + 1)
-            # else:
-            #     n_dim = int((t+1)//2)
-
-            # ndim = len(self._qite._c_list)
             print(f'n_dim:{ndim}')
 
             h_mat = np.zeros((ndim, ndim), dtype=complex)
@@ -277,22 +245,10 @@ class QLANCZOS(QSD):
                     for ix in range(r+1, i_gap+1):
                         d *= self._qite._c_list[ix]
 
-                    # if i == j:
-                    #     s_mat[i,j] = 1.0
-                    # else:
-                    #     s_mat[j,i] = s_mat[i,j] = np.sqrt(n / d)
                     s_mat[j,i] = s_mat[i,j] = np.sqrt(n / d)
                     h_mat[j,i] = h_mat[i,j] = s_mat[i,j] * self._qite._Ekb[r]
 
                 if (self._diagonalize_each_step):
-                    # print('\n')
-                    # print(f'iteration: {i}')
-                    # print('S MAT')
-                    # matprint(s_mat)
-                    # print('\n')
-                    # print('H MAT')
-                    # matprint(h_mat)
-                    # print('\n')
                     k = i+1
                     evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
                                     h_mat[0:k, 0:k],
@@ -336,14 +292,6 @@ class QLANCZOS(QSD):
                     s_mat[n][m] = np.conj(s_mat[m][n])
 
                 if (self._diagonalize_each_step):
-                    # print('\n')
-                    # print(f'iteration: {m}')
-                    # print('S MAT')
-                    # matprint(s_mat)
-                    # print('\n')
-                    # print('H MAT')
-                    # matprint(h_mat)
-                    # print('\n')
                     k = m+1
                     evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
                                     h_mat[0:k, 0:k],
