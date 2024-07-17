@@ -14,6 +14,13 @@ from qforte import sa_single
 import copy
 import os
 import numpy as np
+import psi4
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+data_path = os.path.join(THIS_DIR, "lih_cas_dump.json")
+if os.path.exists(data_path):
+    os.remove(data_path)
 
 
 class TestSAADAPTVQE:
@@ -235,8 +242,6 @@ class TestSAADAPTVQE:
             for j in range(len(E_more)):
                 assert dip_dir[i, j] - total_dip[i, j] == approx(0.0, abs=1e-7)
 
-        THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-        data_path = os.path.join(THIS_DIR, "lih_cas_dump.json")
         spaces = [[1, 0, 0, 0], [2, 0, 0, 0], [1, 0, 1, 1]]
         mol = system_factory(
             system_type="molecule",
@@ -339,3 +344,5 @@ class TestSAADAPTVQE:
         alg.run(pool_type="GSD", adapt_maxiter=3)
         for i in range(4):
             assert correct_Es[i] == approx(alg._diag_energies[-1][i])
+
+        psi4.core.clean_options()
