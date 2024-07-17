@@ -65,7 +65,7 @@ class TestSAADAPTVQE:
         alg.run(
             avqe_thresh=1e-12,
             pool_type="GSD",
-            opt_thresh=1e-7,
+            opt_thresh=1e-10,
             opt_maxiter=1000,
             adapt_maxiter=1,
         )
@@ -117,7 +117,7 @@ class TestSAADAPTVQE:
         alg.run(
             avqe_thresh=1e-12,
             pool_type="GSD",
-            opt_thresh=1e-7,
+            opt_thresh=1e-10,
             opt_maxiter=1000,
             adapt_maxiter=1,
         )
@@ -155,7 +155,7 @@ class TestSAADAPTVQE:
         alg.run(
             avqe_thresh=1e-12,
             pool_type="GSD",
-            opt_thresh=1e-7,
+            opt_thresh=1e-10,
             opt_maxiter=1000,
             adapt_maxiter=1,
             tamps=[],
@@ -204,9 +204,9 @@ class TestSAADAPTVQE:
         alg.run(
             avqe_thresh=1e-12,
             pool_type="GSD",
-            opt_thresh=1e-7,
+            opt_thresh=1e-10,
             opt_maxiter=1000,
-            adapt_maxiter=20,
+            adapt_maxiter=30,
             tamps=[],
             tops=[],
         )
