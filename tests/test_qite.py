@@ -71,6 +71,8 @@ class TestQITE:
         mol = Molecule()
         mol.hamiltonian = H2_qubit_hamiltonian
         mol.sq_hamiltonian = H2_sq_hamiltonian
+        mol.nuclear_repulsion_energy = 0.0
+        mol.ccsd_energy = 0.0
 
         alg = QITE(mol, reference=ref)
         alg.run(beta=18.0, do_lanczos=True, lanczos_gap=49)

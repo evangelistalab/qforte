@@ -242,7 +242,22 @@ class FCIComputer {
       const SQOperator& op,
       const double evolution_time,
       const double convergence_thresh,
-      const int max_taylor_iter);
+      const int max_taylor_iter,
+      const bool real_evolution);
+
+    /// A funciton to apply the exact time evolution of an operator
+    /// usnig a tayler expanson.
+    /// Onus on the user to assure evolution is unitary.
+    void evolve_tensor_taylor(
+      const std::complex<double> h0e,
+      const Tensor& h1e, 
+      const Tensor& h2e, 
+      const Tensor& h2e_einsum, 
+      size_t norb,
+      const double evolution_time,
+      const double convergence_thresh,
+      const int max_taylor_iter,
+      const bool real_evolution);
 
     /// A lower-level helper function that applies a SQOperator
     /// term to the FCIComputer.

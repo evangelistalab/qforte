@@ -160,6 +160,14 @@ class Molecule(System):
         self._ccsd_energy = ccsd_energy
 
     @property
+    def nuclear_repulsion_energy(self):
+        return self._nuclear_repulsion_energy
+
+    @nuclear_repulsion_energy.setter
+    def nuclear_repulsion_energy(self, nuclear_repulsion_energy):
+        self._nuclear_repulsion_energy = nuclear_repulsion_energy
+
+    @property
     def point_group(self):
         return self._point_group
 

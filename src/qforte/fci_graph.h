@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <cstddef>
 
-
 struct PairHash {
     template <class T1, class T2>
     std::size_t operator () (const std::pair<T1, T2>& p) const {

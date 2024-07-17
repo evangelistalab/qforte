@@ -123,18 +123,26 @@ class QITE(Algorithm):
     def run(self,
             beta=1.0,
             db=0.2,
+            use_exact_evolution=False,
             expansion_type='SD',
             sparseSb=True,
+            low_memorySb=False,
+            second_order=False,
             b_thresh=1.0e-6,
             x_thresh=1.0e-10,
             do_lanczos=False,
-            lanczos_gap=2):
+            lanczos_gap=2,
+            realistic_lanczos=True,
+            fname=None):
 
         self._beta = beta
         self._db = db
+        self._use_exact_evolution = use_exact_evolution
         self._nbeta = int(beta/db)+1
         self._expansion_type = expansion_type
         self._sparseSb = sparseSb
+        self._low_memorySb = low_memorySb
+        self._second_order = second_order
         self._total_phase = 1.0 + 0.0j
         self._Uqite = qf.Circuit()
         self._b_thresh = b_thresh
@@ -146,22 +154,53 @@ class QITE(Algorithm):
 
         self._do_lanczos = do_lanczos
         self._lanczos_gap = lanczos_gap
+        self._realistic_lanczos = realistic_lanczos
+        self._fname = fname
 
-        qc_ref = qf.Computer(self._nqb)
-        qc_ref.apply_circuit(self._Uprep)
-        self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
+        if(self._fname is None):
+            if(self._use_exact_evolution):
+                self._fname = f'beta_{self._beta}_db_{self._db}_EXACT_EVOLUTION'
+            else:
+                self._fname = f'beta_{self._beta}_db_{self._db}_{self._computer_type}_{self._expansion_type}_second_order_{self._second_order}'
+
+        self._sz = 0
+
+        if(self._computer_type=='fci'):
+            qc_ref = qf.FCIComputer(self._nel, self._sz, self._norb)
+            qc_ref.hartree_fock()
+
+            if(self._apply_ham_as_tensor):
+
+                self._Ekb = [np.real(qc_ref.get_exp_val_tensor(
+                        self._nuclear_repulsion_energy, 
+                        self._mo_oeis, 
+                        self._mo_teis, 
+                        self._mo_teis_einsum, 
+                        self._norb))]
+
+            else:
+                self._Ekb = [np.real(qc_ref.get_exp_val(self._sq_ham))]
+            
+        if(self._computer_type=='fock'):
+            qc_ref = qf.Computer(self._nqb)
+            qc_ref.apply_circuit(self._Uprep)
+            self._Ekb = [np.real(qc_ref.direct_op_exp_val(self._qb_ham))]
 
         # Print options banner (should done for all algorithms).
         self.print_options_banner()
 
         # Build expansion pool.
-        self.build_expansion_pool()
+        if(not self._use_exact_evolution):
+            self.build_expansion_pool()
 
         # Do the imaginary time evolution.
+        timer = qf.local_timer()
+        timer.reset()
+
         self.evolve()
 
-        if (self._do_lanczos):
-            self.do_qlanczos()
+        timer.record('Total evolution time')
+        print(timer)
 
         # Print summary banner (should done for all algorithms).
         self.print_summary_banner()
@@ -184,6 +223,7 @@ class QITE(Algorithm):
         print('\n\n                 ==> QITE options <==')
         print('-----------------------------------------------------------')
         # General algorithm options.
+        print('Computer Type:                           ',  self._computer_type)
         print('Trial reference state:                   ',  ref_string(self._ref, self._nqb))
         print('Number of Hamiltonian Pauli terms:       ',  self._Nl)
         print('Trial state preparation method:          ',  self._state_prep_type)
@@ -196,12 +236,15 @@ class QITE(Algorithm):
         # Specific QITE options.
         print('Total imaginary evolution time (beta):   ',  self._beta)
         print('Imaginary time step (db):                ',  self._db)
+        print('Use exact evolution:                     ',  self._use_exact_evolution)
         print('Expansion type:                          ',  self._expansion_type)
         print('x value threshold:                       ',  self._x_thresh)
         print('Use sparse tensors to solve Sx = b:      ',  str(self._sparseSb))
         if(self._sparseSb):
             print('b value threshold:                       ',  str(self._b_thresh))
         print('\n')
+        print('Use low memory mode:                     ',  self._low_memorySb)
+        print('Use 2nd order derivation of QITE:        ',  self._second_order)
         print('Do Quantum Lanczos                       ',  str(self._do_lanczos))
         if(self._do_lanczos):
             print('Lanczos gap size                         ',  self._lanczos_gap)
@@ -210,50 +253,158 @@ class QITE(Algorithm):
         print('\n\n                        ==> QITE summary <==')
         print('-----------------------------------------------------------')
         print('Final QITE Energy:                        ', round(self._Egs, 10))
-        print('Number of operators in pool:              ', self._NI)
-        print('Number of classical parameters used:      ', self._n_classical_params)
-        print('Number of CNOT gates in deepest circuit:  ', self._n_cnot)
-        print('Number of Pauli term measurements:        ', self._n_pauli_trm_measures)
+        if(not self._use_exact_evolution):
+            print('Number of operators in pool:              ', self._NI)
+            print('Number of classical parameters used:      ', self._n_classical_params)
+            print('Estimated classical memory usage (GB):    ', f'{self._total_memory * 10**-9:e}')
+            print('Number of CNOT gates in deepest circuit:  ', self._n_cnot)
+            print('Number of Pauli term measurements:        ', self._n_pauli_trm_measures)
 
     def build_expansion_pool(self):
         print('\n==> Building expansion pool <==')
-        self._sig = qf.QubitOpPool()
 
-        if(self._expansion_type == 'complete_qubit'):
-            if (self._nqb > 6):
-                raise ValueError('Using complete qubits expansion will result in a very large number of terms!')
-            self._sig.fill_pool("complete_qubit", self._ref)
+        if(self._computer_type=='fci'):
+            self._sig = qf.SQOpPool() # changed this from QubitOpPool
+            self._sig.set_orb_spaces(self._ref)
 
-        elif(self._expansion_type == 'cqoy'):
-            self._sig.fill_pool("cqoy", self._ref)
+            if(self._expansion_type in {'SD', 'GSD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}):
+                self._sig.fill_pool(self._expansion_type) # This automatically filters non-particle conserving terms
 
-        elif(self._expansion_type in {'SD', 'GSD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}):
-            P = qf.SQOpPool()
-            P.set_orb_spaces(self._ref)
-            P.fill_pool(self._expansion_type)
-            sig_temp = P.get_qubit_operator("commuting_grp_lex", False)
+            else:
+                raise ValueError('Invalid expansion type specified.')
 
-            # Filter the generated operators, so that only those with an odd number of Y gates are allowed.
-            # See section "Real Hamiltonians and states" in the SI of Motta for theoretical justification.
-            # Briefly, this method solves Ax=b, but all b elements with an odd number of Y gates are imaginary and
-            # thus vanish. This method will not be correct for non-real Hamiltonians or states.
-            for _, rho in sig_temp.terms():
-                nygates = 0
-                temp_rho = qf.Circuit()
-                for gate in rho.gates():
-                    temp_rho.add(qf.gate(gate.gate_id(), gate.target(), gate.control()))
-                    if (gate.gate_id() == "Y"):
-                        nygates += 1
+            self._NI = len(self._sig.terms())
 
-                if (nygates % 2 == 1):
-                    rho_op = qf.QubitOperator()
-                    rho_op.add(1.0, temp_rho)
-                    self._sig.add(1.0, rho_op)
+        if(self._computer_type=='fock'):
+            self._sig = qf.QubitOpPool()
+
+            if(self._expansion_type == 'complete_qubit'):
+                if (self._nqb > 6):
+                    raise ValueError('Using complete qubits expansion will result in a very large number of terms!')
+                self._sig.fill_pool("complete_qubit", self._ref)
+
+            elif(self._expansion_type == 'cqoy'):
+                self._sig.fill_pool("cqoy", self._ref)
+
+            elif(self._expansion_type in {'SD', 'GSD', 'SDT', 'SDTQ', 'SDTQP', 'SDTQPH'}):
+                P = qf.SQOpPool()
+                P.set_orb_spaces(self._ref) 
+                P.fill_pool(self._expansion_type)
+                sig_temp = P.get_qubit_operator("commuting_grp_lex", False)
+
+                # Filter the generated operators, so that only those with an odd number of Y gates are allowed.
+                # See section "Real Hamiltonians and states" in the SI of Motta for theoretical justification.
+                # Briefly, this method solves Ax=b, but all b elements with an odd number of Y gates are imaginary and
+                # thus vanish. This method will not be correct for non-real Hamiltonians or states.
+                for _, rho in sig_temp.terms():
+                    nygates = 0
+                    temp_rho = qf.Circuit()
+                    for gate in rho.gates():
+                        temp_rho.add(qf.gate(gate.gate_id(), gate.target(), gate.control()))
+                        if (gate.gate_id() == "Y"):
+                            nygates += 1
+
+                    if (nygates % 2 == 1):
+                        rho_op = qf.QubitOperator()
+                        rho_op.add(1.0, temp_rho)
+                        self._sig.add(1.0, rho_op)
+
+            else:
+                raise ValueError('Invalid expansion type specified.')
+
+            self._NI = len(self._sig.terms())
+
+
+    def build_S_b_FCI(self):
+        """Construct the matrix S (eq. 5a) and vector b (eq. 5b) of Motta, with h[m] the full Hamiltonian, utilizing FCIComputer class.
+        """
+        Idim = self._NI
+
+        self._n_pauli_trm_measures += int(self._NI*(self._NI+1)*0.5)
+        self._n_pauli_trm_measures += self._Nl * self._NI
+
+        # Initialize linear system
+        S = np.zeros((Idim, Idim), dtype=complex)
+        b = np.zeros(Idim, dtype=complex)
+
+        if(self._second_order):
+            prefactor = -2.0
+            S_factor = 2.0
 
         else:
-            raise ValueError('Invalid expansion type specified.')
+            denom = np.sqrt(1.0 - 2.0*self._db*self._Ekb[-1])
+            prefactor = -1.0 / denom
+            S_factor = 1.0
 
-        self._NI = len(self._sig.terms())
+        Ipsi_qc = qf.FCIComputer(self._nel, self._sz, self._norb)
+        Hpsi_qc = qf.FCIComputer(self._nel, self._sz, self._norb)
+        Hpsi_qc.set_state(self._qc.get_state_deep())
+ 
+        if(self._apply_ham_as_tensor):
+            Hpsi_qc.apply_tensor_spat_012bdy(
+                    self._nuclear_repulsion_energy, 
+                    self._mo_oeis, 
+                    self._mo_teis, 
+                    self._mo_teis_einsum, 
+                    self._norb)
+        else:
+            Hpsi_qc.apply_sqop(self._sq_ham)
+
+        if(self._low_memorySb):
+            for i in range(Idim):
+                S[i][i] = 1.0 # With Pauli strings, this is always the inner product
+
+                # initialize state and apply pool term
+                Ipsi_qc.set_state(self._qc.get_state_deep())
+                Ipsi_qc.apply_sqop(self._sig.terms()[i][1])
+                Ipsi_mu = Ipsi_qc.get_state_deep()
+
+                # build b (second order variation)
+                if(self._second_order):
+                    exp_val = Hpsi_qc.get_state_deep().vector_dot(Ipsi_mu)
+                    b[i] = prefactor * exp_val
+
+                # build b (original)
+                else:
+                    exp_val = Ipsi_mu.vector_dot(Hpsi_qc.get_state_deep())
+                    b[i] = prefactor * exp_val
+
+                # populate lower triangle of S and copy conjugate to upper triangle
+                for j in range(i):
+                    Ipsi_qc.set_state(self._qc.get_state_deep())
+                    Ipsi_qc.apply_sqop(self._sig.terms()[j][1])
+
+                    S[i][j] = Ipsi_mu.vector_dot(Ipsi_qc.get_state_deep())
+                    S[j][i] = S[i][j].conj()
+
+            return S_factor * np.real(S), np.real(b)
+
+        else:
+            rho_psi = []
+            for i in range(Idim):
+                S[i][i] = 1.0 # With Pauli strings, this is always the inner product
+                
+                # initialize state and apply pool term
+                Ipsi_qc.set_state(self._qc.get_state_deep())
+                Ipsi_qc.apply_sqop(self._sig.terms()[i][1])
+                rho_psi.append(Ipsi_qc.get_state_deep())
+
+                # build b (second order variation)
+                if(self._second_order):
+                    exp_val = Hpsi_qc.get_state_deep().vector_dot(rho_psi[i])
+                    b[i] = prefactor * exp_val
+
+                # build b (original)
+                else:
+                    exp_val = rho_psi[i].vector_dot(Hpsi_qc.get_state_deep())
+                    b[i] = prefactor * exp_val
+
+                # populate lower triangle of S and copy conjugate to upper triangle
+                for j in range(i):
+                    S[i][j] = rho_psi[i].vector_dot(rho_psi[j])
+                    S[j][i] = S[i][j].conj()
+
+            return S_factor * np.real(S), np.real(b)
 
 
     def build_S(self):
@@ -331,34 +482,47 @@ class QITE(Algorithm):
 
         return np.real(b)
 
+
     def do_qite_step(self):
 
-        btot = self.build_b()
-        A = qf.QubitOperator()
+        if(self._computer_type=='fci'):
+            if(self._sparseSb):
+                print(f"Warning, build sparseSb method isn't supported for FCI computer, setting option to false")
+                self._sparseSb = False
 
-        if(self._sparseSb):
-            sp_idxs, S, btot = self.build_sparse_S_b(btot)
-        else:
-            S = self.build_S()
+            S, btot = self.build_S_b_FCI()
+
+        if(self._computer_type=='fock'):
+            if(self._low_memorySb):
+                print(f"Warning, build low memory Sb method isn't supported for Fock computer, setting option to false")
+                self._low_memorySb = False
+
+            btot = self.build_b()
+            A = qf.QubitOperator()
+
+            if(self._sparseSb):
+                sp_idxs, S, btot = self.build_sparse_S_b(btot)
+            else:
+                S = self.build_S()
 
         x = lstsq(S, btot)[0]
         x = np.real(x)
+        x_list = x.tolist()
+        # this is only for UCC!
+        x_list_fci = [x*self._db for x in x_list]
 
+        if(self._computer_type=='fock'):
+            if(self._sparseSb):
+                for I, spI in enumerate(sp_idxs):
+                    if np.abs(x[I]) > self._x_thresh:
+                        A.add(-1.0j * self._db * x[I], self._sig.terms()[spI][1].terms()[0][1])
+                        self._n_classical_params += 1
 
-        # sing_vals = lstsq(S, btot)[3]
-        # print(np.abs(sing_vals[-1] / sing_vals[0]))
-
-        if(self._sparseSb):
-            for I, spI in enumerate(sp_idxs):
-                if np.abs(x[I]) > self._x_thresh:
-                    A.add(-1.0j * self._db * x[I], self._sig.terms()[spI][1].terms()[0][1])
-                    self._n_classical_params += 1
-
-        else:
-            for I, SigI in enumerate(self._sig.terms()):
-                if np.abs(x[I]) > self._x_thresh:
-                    A.add(-1.0j * self._db * x[I], SigI[1].terms()[0][1])
-                    self._n_classical_params += 1
+            else:
+                for I, SigI in enumerate(self._sig.terms()):
+                    if np.abs(x[I]) > self._x_thresh:
+                        A.add(-1.0j * self._db * x[I], SigI[1].terms()[0][1])
+                        self._n_classical_params += 1
 
         if(self._verbose):
             print('\nbtot:\n ', btot)
@@ -367,13 +531,30 @@ class QITE(Algorithm):
             print('\n x:  \n')
             print(x)
 
-        eiA_kb, phase1 = trotterize(A, trotter_number=self._trotter_number)
-        self._total_phase *= phase1
-        self._Uqite.add(eiA_kb)
-        self._qc.apply_circuit(eiA_kb)
-        self._Ekb.append(np.real(self._qc.direct_op_exp_val(self._qb_ham)))
+        # added fock computer conditional
+        if(self._computer_type=='fock'):
+            eiA_kb, phase1 = trotterize(A, trotter_number=self._trotter_number)
+            self._total_phase *= phase1
+            self._Uqite.add(eiA_kb)
+            self._qc.apply_circuit(eiA_kb)
+            self._Ekb.append(np.real(self._qc.direct_op_exp_val(self._qb_ham)))
 
-        self._n_cnot += eiA_kb.get_num_cnots()
+            self._n_cnot += eiA_kb.get_num_cnots()
+
+        if(self._computer_type=='fci'):
+            self._sig.set_coeffs(x_list_fci)
+            self._qc.evolve_pool_trotter_basic(self._sig, True, False)
+
+            if(self._apply_ham_as_tensor):
+                self._Ekb.append(np.real(self._qc.get_exp_val_tensor(
+                        self._nuclear_repulsion_energy, 
+                        self._mo_oeis, 
+                        self._mo_teis, 
+                        self._mo_teis_einsum, 
+                        self._norb)))
+            else:
+                self._Ekb.append(np.real(self._qc.get_exp_val(self._sq_ham)))
+
 
         if(self._verbose):
             qf.smart_print(self._qc)
@@ -381,20 +562,56 @@ class QITE(Algorithm):
     def evolve(self):
         """Perform QITE for a time step :math:`\\Delta \\beta`.
         """
-        self._Uqite.add(self._Uprep)
-        self._qc = qf.Computer(self._nqb)
-        self._qc.apply_circuit(self._Uqite)
+    
+        if(self._computer_type=='fock'):
+            self._Uqite.add(self._Uprep)
+            self._qc = qf.Computer(self._nqb)
+            self._qc.apply_circuit(self._Uqite)
 
-        if(self._do_lanczos):
-            self._lanczos_vecs = []
-            self._Hlanczos_vecs = []
+        if(self._computer_type=='fci'):
+            self._qc = qf.FCIComputer(self._nel, self._sz, self._norb)
+            self._qc.hartree_fock()
 
-            self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
+            if(not self._use_exact_evolution):
+                qc_size = self._qc.get_state().size()
+                if(self._low_memorySb):
+                    self._total_memory = 5.0 * 16.0 * qc_size
+                else:
+                    self._total_memory = self._NI * 16.0 * qc_size
 
-            qcSig_temp = qf.Computer(self._nqb)
-            qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
-            qcSig_temp.apply_operator(self._qb_ham)
-            self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
+                if(self._total_memory > 8.0e9 and not self._low_memorySb):
+                    print('\n')
+                    print('WARNING: ESTIMATED MEMORY USAGE EXCEEDS 8GB, SWITCHING TO LOW MEMORY MODE')
+                    print('\n')
+                    self._low_memorySb = True
+                    self._total_memory = 5.0 * 16.0 * qc_size # 5 corresponds to total # of tensors at any given time in memory
+
+
+        if(self._do_lanczos and not self._use_exact_evolution):
+            #initialize constant list to build H and S matricies
+            if(self._realistic_lanczos):
+                self._c_list = []
+                self._c_list.append(1.0) # will always be 1.0 for 0th iteration (E_l = E_0)
+
+            else:
+                self._lanczos_vecs = []
+                self._Hlanczos_vecs = []
+                self._lanczos_vecs.append(self._qc.get_state_deep())
+
+                qcSig_temp = qf.FCIComputer(self._nel, self._sz, self._norb)
+                qcSig_temp.set_state(self._qc.get_state_deep())
+
+                if(self._apply_ham_as_tensor):
+                    qcSig_temp.apply_tensor_spat_012bdy(
+                            self._nuclear_repulsion_energy, 
+                            self._mo_oeis, 
+                            self._mo_teis, 
+                            self._mo_teis_einsum, 
+                            self._norb)
+                else:
+                    qcSig_temp.apply_sqop(self._sq_ham)
+
+                self._Hlanczos_vecs.append(qcSig_temp.get_state_deep())
 
 
         print(f"{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}")
@@ -402,21 +619,80 @@ class QITE(Algorithm):
         print(f' {0.0:7.3f}    {self._Ekb[0]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
 
         if (self._print_summary_file):
-            f = open("summary.dat", "w+", buffering=1)
+            f = open(f"qite_{self._fname}_summary.dat", "w+", buffering=1)
             f.write(f"#{'beta':>7}{'E(beta)':>18}{'N(params)':>14}{'N(CNOT)':>18}{'N(measure)':>20}\n")
             f.write('#-------------------------------------------------------------------------------\n')
             f.write(f'  {0.0:7.3f}    {self._Ekb[0]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}\n')
 
         for kb in range(1, self._nbeta):
-            self.do_qite_step()
-            if(self._do_lanczos):
-                if(kb % self._lanczos_gap == 0):
-                    self._lanczos_vecs.append(copy.deepcopy(self._qc.get_coeff_vec()))
+            if(self._use_exact_evolution):
+                if(self._apply_ham_as_tensor):
+                    self._qc.evolve_tensor_taylor(
+                            self._nuclear_repulsion_energy, 
+                            self._mo_oeis, 
+                            self._mo_teis, 
+                            self._mo_teis_einsum, 
+                            self._norb,
+                            self._db,
+                            1.0e-15,
+                            30,
+                            True)
 
-                    qcSig_temp = qf.Computer(self._nqb)
-                    qcSig_temp.set_coeff_vec(copy.deepcopy(self._qc.get_coeff_vec()))
-                    qcSig_temp.apply_operator(self._qb_ham)
-                    self._Hlanczos_vecs.append(copy.deepcopy(qcSig_temp.get_coeff_vec()))
+                    # print(f'norm before scaling: {self._qc.get_state().norm()}')
+
+                    norm = 1.0 / self._qc.get_state().norm()
+                    self._qc.scale(norm)
+
+                    # print(f'norm after scaling: {self._qc.get_state().norm()}')
+
+                    self._Ekb.append(np.real(self._qc.get_exp_val_tensor(
+                            self._nuclear_repulsion_energy, 
+                            self._mo_oeis, 
+                            self._mo_teis, 
+                            self._mo_teis_einsum, 
+                            self._norb)))
+                else:
+                    self._qc.evolve_op_taylor(
+                            self._sq_ham,
+                            self._db,
+                            1.0e-15,
+                            30,
+                            True)
+
+                    # print(f'norm before scaling: {self._qc.get_state().norm()}')
+
+                    norm = 1.0 / self._qc.get_state().norm()
+                    self._qc.scale(norm)
+
+                    # print(f'norm after scaling: {self._qc.get_state().norm()}')
+
+                    self._Ekb.append(np.real(self._qc.get_exp_val(self._sq_ham)))
+
+            else:
+                self.do_qite_step()
+
+                if(self._do_lanczos):
+                    if(self._realistic_lanczos):
+                        c_kb = np.exp(-2.0 * self._db * (self._Ekb[kb] - self._Ekb[0]))
+                        self._c_list.append(c_kb)
+
+                    else:
+                        if(kb % self._lanczos_gap == 0):
+                            self._lanczos_vecs.append(self._qc.get_state_deep())
+                            qcSig_temp = qf.FCIComputer(self._nel, self._sz, self._norb)
+                            qcSig_temp.set_state(self._qc.get_state_deep())
+
+                            if(self._apply_ham_as_tensor):
+                                qcSig_temp.apply_tensor_spat_012bdy(
+                                    self._nuclear_repulsion_energy, 
+                                    self._mo_oeis, 
+                                    self._mo_teis, 
+                                    self._mo_teis_einsum, 
+                                    self._norb)
+                            else:
+                                qcSig_temp.apply_sqop(self._sq_ham)
+
+                            self._Hlanczos_vecs.append(qcSig_temp.get_state_deep())
 
             print(f' {kb*self._db:7.3f}    {self._Ekb[kb]:+15.9f}    {self._n_classical_params:8}        {self._n_cnot:10}        {self._n_pauli_trm_measures:12}')
             if (self._print_summary_file):
@@ -430,48 +706,3 @@ class QITE(Algorithm):
         print('\nQITE expansion operators:')
         print('-------------------------')
         print(self._sig.str())
-
-
-    def do_qlanczos(self):
-        """Execute out the quantum Lanczos algorithm for the given run of QITE.
-        """
-        n_lanczos_vecs = len(self._lanczos_vecs)
-        h_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
-        s_mat = np.zeros((n_lanczos_vecs,n_lanczos_vecs), dtype=complex)
-
-        print('\n\n-----------------------------------------------------')
-        print('         Quantum Imaginary Time Lanczos   ')
-        print('-----------------------------------------------------\n\n')
-
-
-        print(f"{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}")
-        print('-------------------------------------------------------------------------------')
-
-        if (self._print_summary_file):
-            f2 = open("lanczos_summary.dat", "w+", buffering=1)
-            f2.write(f"#{'Beta':>7}{'k(S)':>7}{'E(Npar)':>19}\n")
-            f2.write('#-------------------------------------------------------------------------------\n')
-
-        for m in range(n_lanczos_vecs):
-            for n in range(m+1):
-                h_mat[m][n] = np.vdot(self._lanczos_vecs[m], self._Hlanczos_vecs[n])
-                h_mat[n][m] = np.conj(h_mat[m][n])
-                s_mat[m][n] = np.vdot(self._lanczos_vecs[m], self._lanczos_vecs[n])
-                s_mat[n][m] = np.conj(s_mat[m][n])
-
-            k = m+1
-            evals, evecs = canonical_geig_solve(s_mat[0:k, 0:k],
-                               h_mat[0:k, 0:k],
-                               print_mats=False,
-                               sort_ret_vals=True)
-
-            scond = np.linalg.cond(s_mat[0:k, 0:k])
-
-            print(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} ')
-            if (self._print_summary_file):
-                f2.write(f'{m * self._lanczos_gap * self._db:7.3f} {scond:7.2e}    {np.real(evals[0]):+15.9f} \n')
-
-        if (self._print_summary_file):
-            f2.close()
-
-        self._Egs_lanczos = evals[0]
