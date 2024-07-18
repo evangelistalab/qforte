@@ -152,7 +152,8 @@ for i in range(N):
         sqham,
         dt,
         1.0e-15,
-        30)
+        30,
+        False)
 
     fc2.evolve_pool_trotter(
         hermitian_pairs,
