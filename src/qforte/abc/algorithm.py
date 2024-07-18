@@ -134,7 +134,11 @@ class Algorithm(ABC):
 
         self._qb_ham = system.hamiltonian
 
-        self._nuclear_repulsion_energy = system.nuclear_repulsion_energy
+        if(hasattr(system, 'nuclear_repulsion_energy')):
+            self._nuclear_repulsion_energy = system.nuclear_repulsion_energy
+        else:
+            print("NOTE: No nuclear repulsion enerly set! Using only provided Hamiltonain.")
+            self._nuclear_repulsion_energy = 0.0
 
         if(computer_type=='fci'):
             self._sq_ham = system.sq_hamiltonian
