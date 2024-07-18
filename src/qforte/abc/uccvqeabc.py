@@ -339,11 +339,21 @@ class UCCVQE(VQE, UCC):
         return grads
 
     def measure_gradient3(self):
+        if(self._computer_type == 'fock'):
+            return self.measure_gradient3_fock()
+        elif(self._computer_type == 'fci'):
+            return self.measure_gradient3_fci()
+        else:
+            raise ValueError(f"{self._computer_type} is an unrecognized computer type.") 
+
+
+    def measure_gradient3_fock(self):
         """ Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._pool_obj.
         For antihermitian K_mu, this is equal to <Psi|[H, K_mu]|Psi>.
         In ADAPT-VQE, this is the 'residual gradient' used to determine
         whether to append exp(t_mu K_mu) to the iterative ansatz.
         """
+        # print("use fock gradient 3")
 
         if not self._fast:
             raise ValueError("self._fast must be True for gradient measurement.")
@@ -371,8 +381,74 @@ class UCCVQE(VQE, UCC):
 
         return grads
 
+    def measure_gradient3_fci(self):
+        """ Calculates 2 Re <Psi|H K_mu |Psi> for all K_mu in self._pool_obj.
+        For antihermitian K_mu, this is equal to <Psi|[H, K_mu]|Psi>.
+        In ADAPT-VQE, this is the 'residual gradient' used to determine
+        whether to append exp(t_mu K_mu) to the iterative ansatz.
+        """
+
+        if not self._fast:
+            raise ValueError("self._fast must be True for gradient measurement.")
+
+        # Utot = self.build_sUvqc()
+        # qc_psi = qforte.Computer(self._nqb)
+        qc_psi = qf.FCIComputer(
+            self._nel, 
+            self._2_spin, 
+            self._norb) 
+
+        qc_psi.hartree_fock()
+
+        # build wave function for current ADAPT iteration
+        # using self._tamps and self._tops
+        
+        vqc_ops = qf.SQOpPool()
+        for tamp, top in zip(self._tamps, self._tops):
+                vqc_ops.add(tamp, self._pool_obj[top][1])
+
+
+        qc_psi.evolve_pool_trotter_basic(
+            vqc_ops,
+            antiherm=True,
+            adjoint=False)
+
+        # psi_i = copy.deepcopy(qc_psi.get_coeff_vec())
+        psi_i = qc_psi.get_state_deep()
+        
+        # qc_sig = qforte.Computer(self._nqb)
+        qc_sig = qf.FCIComputer(
+            self._nel, 
+            self._2_spin, 
+            self._norb) 
+        
+        qc_sig.set_state(psi_i)
+
+        # qc_sig.apply_operator(self._qb_ham)
+        if(self._apply_ham_as_tensor):
+            qc_sig.apply_tensor_spat_012bdy(
+            self._nuclear_repulsion_energy, 
+            self._mo_oeis, 
+            self._mo_teis, 
+            self._mo_teis_einsum, 
+            self._norb)
+        else:   
+            qc_sig.apply_sqop(self._sq_ham)
+
+        grads = np.zeros(len(self._pool_obj))
+        for mu, (coeff, operator) in enumerate(self._pool_obj):
+            Kmu = operator
+            Kmu.mult_coeffs(coeff)
+            qc_psi.apply_sqop(Kmu)
+            grads[mu] = 2.0 * np.real(qc_sig.get_state().vector_dot(qc_psi.get_state()))
+            qc_psi.set_state(psi_i)
+
+        np.testing.assert_allclose(np.imag(grads), np.zeros_like(grads), atol=1e-7)
+        
+        return grads
+
     def gradient_ary_feval(self, params):
-        if(self._computer_type == 'fock'):
+        if(self._computer_type == 'fock'): 
             return self.gradient_ary_feval_fock(params)
         elif(self._computer_type == 'fci'):
             return self.gradient_ary_feval_fci(params)

@@ -133,6 +133,7 @@ class Algorithm(ABC):
         self._mult = int(2 * self._tot_spin + 1)
 
         self._qb_ham = system.hamiltonian
+        self._sq_ham = system.sq_hamiltonian
 
         if(hasattr(system, 'nuclear_repulsion_energy')):
             self._nuclear_repulsion_energy = system.nuclear_repulsion_energy
@@ -141,7 +142,6 @@ class Algorithm(ABC):
             self._nuclear_repulsion_energy = 0.0
 
         if(computer_type=='fci'):
-            self._sq_ham = system.sq_hamiltonian
             if(apply_ham_as_tensor):
                 self._mo_oeis = system.mo_oeis 
                 self._mo_teis = system.mo_teis 
