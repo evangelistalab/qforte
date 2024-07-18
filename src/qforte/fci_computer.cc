@@ -796,7 +796,12 @@ void FCIComputer::evolve_individual_nbody_easy(
     const std::vector<int>& creb,
     const std::vector<int>& annb) 
 {
-    std::complex<double> factor = std::exp(-time * std::real(coeff) * std::complex<double>(0.0, 1.0));
+    int n_a = anna.size();
+    int n_b = annb.size();
+
+    int power = n_a * (n_a - 1) / 2 + n_b * (n_b - 1) / 2;
+    std::complex<double> prefactor = coeff * std::pow(-1, power);
+    std::complex<double> factor = std::exp(-time * std::real(prefactor) * std::complex<double>(0.0, 1.0));
     std::pair<std::vector<int>, std::vector<int>> maps = evaluate_map_number(anna, annb);
 
     if (maps.first.size() != 0 and maps.second.size() != 0){
@@ -928,6 +933,12 @@ void FCIComputer::evolve_individual_nbody(
         std::get<0>(term) *= onei;
     }
 
+    if(std::get<1>(term).size()==0 && std::get<2>(term).size()==0){
+        std::complex<double> twoi(0.0, -2.0);
+        Cout.scale(std::exp(twoi * time * std::get<0>(term)));
+        return;
+    }
+
     std::vector<int> crea;
     std::vector<int> anna;
     std::vector<int> creb;
@@ -958,9 +969,11 @@ void FCIComputer::evolve_individual_nbody(
     std::complex<double> parity = std::pow(-1, nswaps);
 
     if (crea == anna && creb == annb) {
+        
+        std::complex<double> factor;
         evolve_individual_nbody_easy(
             time,
-            parity * std::get<0>(term), 
+            parity * 2.0 * std::get<0>(term), 
             Cin,
             Cout,
             crea,
@@ -1464,6 +1477,8 @@ void FCIComputer::evolve_givens(
 
     Tensor U2 = U;
 
+    //NOTE(Nick): May be SLOW, or don't need to compute, could just store rots_and_diag
+    // in DFHamiltonain class pass directly.
     auto rots_and_diag = DFHamiltonian::givens_decomposition_square(U2);
 
     auto ivec = std::get<0>(rots_and_diag);
@@ -1476,49 +1491,20 @@ void FCIComputer::evolve_givens(
     // Iterate through each layer and time evolve by the appropriate
     // SQOperators
     for (size_t k = 0; k < ivec.size(); k++){
-        // i, j, theta, phi = givens
-
         size_t i = ivec[k];
         size_t j = jvec[k];
-
         double tht = thts[k];
         double phi = phis[k];
 
-        // if not np.isclose(phi, 0):
-        if (std::abs(phi) > 1.0e-13){
-            // op = of.FermionOperator(
-            //     ((2 * j + sigma, 1), (2 * j + sigma, 0)), 
-            //     coefficient=-phi)
-
-            // out = out.time_evolve(1.0, op, inplace=True)
-
-            // evolve by number operator
-            SQOperator num_op1;
-            
-            // oritional!
-            // num_op1.add_term(-phi/2.0, {2 * j + sigma}, {2 * j + sigma});
-            // num_op1.add_term(-phi/2.0, {2 * j + sigma}, {2 * j + sigma});
-
-            num_op1.add_term(-phi, {2 * j + sigma}, {2 * j + sigma});
-            num_op1.add_term(-phi, {2 * j + sigma}, {2 * j + sigma}); // DUMMY!!!
-            
+        if (std::abs(phi) > compute_threshold_){
+            SQOperator num_op1; 
+            num_op1.add_term(-phi/2.0, {2 * j + sigma}, {2 * j + sigma});
+            num_op1.add_term(-phi/2.0, {2 * j + sigma}, {2 * j + sigma});            
             apply_sqop_evolution(1.0, num_op1);
         }
 
-        // if not np.isclose(theta, 0):
-        if (std::abs(tht) > 1.0e-13) {
-            // op = of.FermionOperator(((2 * i + sigma, 1),
-            //                             (2 * j + sigma, 0)),
-            //                         coefficient=-1j * theta) + \
-
-            //         of.FermionOperator(((2 * j + sigma, 1),
-            //                             (2 * i + sigma, 0)),
-            //                         coefficient=1j * theta)
-
-            // out = out.time_evolve(1.0, op, inplace=True)
-
+        if (std::abs(tht) > compute_threshold_) {
             std::complex<double> itheta(0.0, tht);
-
             SQOperator single;
             single.add_term(-itheta, {2 * i + sigma}, {2 * j + sigma});
             single.add_term(+itheta, {2 * j + sigma}, {2 * i + sigma});
@@ -1526,28 +1512,13 @@ void FCIComputer::evolve_givens(
         }
     }
         
-
-    // # evolve the last diagonal phases
-    // for idx, final_phase in enumerate(diagonal):
+    // Evolve the last diagonal phases
     for (size_t l = 0; l < diags.size(); l++){
-        // if not np.isclose(final_phase, 1.0):
         if (std::abs(diags[l]) > 1.0e-13) {
-            // op = of.FermionOperator(
-            // ((2 * idx + sigma, 1), (2 * idx + sigma, 0)),
-            // -np.angle(final_phase))
-            
-            // out = out.time_evolve(1.0, op, inplace=True)
-
             double diag_angle = std::atan2(diags[l].imag(), diags[l].real());
-
             SQOperator num_op2;
-            // origional!
-            // num_op2.add_term(-diag_angle/2.0, {2 * l + sigma}, {2 * l + sigma});
-            // num_op2.add_term(-diag_angle/2.0, {2 * l + sigma}, {2 * l + sigma});
-
-            num_op2.add_term(-diag_angle, {2 * l + sigma}, {2 * l + sigma});
-            num_op2.add_term(-diag_angle, {2 * l + sigma}, {2 * l + sigma}); /// DUMMY!
-            
+            num_op2.add_term(-diag_angle/2.0, {2 * l + sigma}, {2 * l + sigma});
+            num_op2.add_term(-diag_angle/2.0, {2 * l + sigma}, {2 * l + sigma});
             apply_sqop_evolution(1.0, num_op2);
         }
     }

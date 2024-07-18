@@ -249,15 +249,7 @@ def time_scale_first_leaf(
     for I in range(h1e_qf.size()): h1e_np.ravel()[I] = h1e_qf.data()[I]
     for I in range(h1e_cor_qf.size()): h1e_cor_np.ravel()[I] = h1e_cor_qf.data()[I]
     
-    # og
     g0trot_np = g0_np @ expm(-1.0j * evolution_time * (h1e_np + h1e_cor_np))
-
-    # g0trot_np = g0_np @ expm(-1.0j * evolution_time * (h1e_np)) #helps!
-
-    print(h1e_qf)
-    print(h1e_cor_qf)
-
-    
 
     g0trot_qf = qf.Tensor(
         shape=np.shape(g0trot_np), 
@@ -266,11 +258,6 @@ def time_scale_first_leaf(
     g0trot_qf.fill_from_nparray(
         g0trot_np.ravel(), 
         np.shape(g0trot_np))
-    
-
-    # print(df_ham.get_trotter_basis_change_matrices()[0])
 
     df_ham.set_trotter_first_leaf_basis_chage(g0trot_qf)
-
-    # print(df_ham.get_trotter_basis_change_matrices()[0])    
 

@@ -1,0 +1,1476 @@
+
+op = of.FermionOperator()
+e0 = 2.2931012462366667 
+
+op1 = of.FermionOperator(
+    "0^ 0",
+    -1.835108819077537)
+
+op1 = nod(op1)
+
+op += op1
+            
+op2 = of.FermionOperator(
+    "0^ 4",
+    0.1599558696423879)
+
+op2 = nod(op2)
+
+op += op2
+            
+op3 = of.FermionOperator(
+    "1^ 1",
+    -1.835108819077537)
+
+op3 = nod(op3)
+
+op += op3
+            
+op4 = of.FermionOperator(
+    "1^ 5",
+    0.1599558696423879)
+
+op4 = nod(op4)
+
+op += op4
+            
+op5 = of.FermionOperator(
+    "1^ 0^ 1 0",
+    -0.4972849596189123)
+
+op5 = nod(op5)
+
+op += op5
+            
+op6 = of.FermionOperator(
+    "1^ 0^ 3 2",
+    -0.15738195543255762)
+
+op6 = nod(op6)
+
+op += op6
+            
+op7 = of.FermionOperator(
+    "1^ 0^ 4 1",
+    -0.0815652565069051)
+
+op7 = nod(op7)
+
+op += op7
+            
+op8 = of.FermionOperator(
+    "1^ 0^ 5 0",
+    0.0815652565069051)
+
+op8 = nod(op8)
+
+op += op8
+            
+op9 = of.FermionOperator(
+    "1^ 0^ 5 4",
+    -0.10783206349916583)
+
+op9 = nod(op9)
+
+op += op9
+            
+op10 = of.FermionOperator(
+    "1^ 0^ 6 3",
+    -0.043084072307206685)
+
+op10 = nod(op10)
+
+op += op10
+            
+op11 = of.FermionOperator(
+    "1^ 0^ 7 2",
+    0.043084072307206685)
+
+op11 = nod(op11)
+
+op += op11
+            
+op12 = of.FermionOperator(
+    "1^ 0^ 7 6",
+    -0.0970695518540268)
+
+op12 = nod(op12)
+
+op += op12
+            
+op13 = of.FermionOperator(
+    "2^ 2",
+    -1.5506524476727686)
+
+op13 = nod(op13)
+
+op += op13
+            
+op14 = of.FermionOperator(
+    "2^ 6",
+    0.12946764778453934)
+
+op14 = nod(op14)
+
+op += op14
+            
+op15 = of.FermionOperator(
+    "2^ 0^ 2 0",
+    -0.2785500794923912)
+
+op15 = nod(op15)
+
+op += op15
+            
+op16 = of.FermionOperator(
+    "2^ 0^ 4 2",
+    -0.0881958149824055)
+
+op16 = nod(op16)
+
+op += op16
+            
+op17 = of.FermionOperator(
+    "2^ 0^ 6 0",
+    0.041163569567268785)
+
+op17 = nod(op17)
+
+op += op17
+            
+op18 = of.FermionOperator(
+    "2^ 0^ 6 4",
+    -0.04555245843238862)
+
+op18 = nod(op18)
+
+op += op18
+            
+op19 = of.FermionOperator(
+    "2^ 1^ 2 1",
+    -0.4359320349249488)
+
+op19 = nod(op19)
+
+op += op19
+            
+op20 = of.FermionOperator(
+    "2^ 1^ 3 0",
+    0.15738195543255762)
+
+op20 = nod(op20)
+
+op += op20
+            
+op21 = of.FermionOperator(
+    "2^ 1^ 4 3",
+    -0.09800101682648102)
+
+op21 = nod(op21)
+
+op += op21
+            
+op22 = of.FermionOperator(
+    "2^ 1^ 5 2",
+    0.00980520184407552)
+
+op22 = nod(op22)
+
+op += op22
+            
+op23 = of.FermionOperator(
+    "2^ 1^ 6 1",
+    0.08424764187447545)
+
+op23 = nod(op23)
+
+op += op23
+            
+op24 = of.FermionOperator(
+    "2^ 1^ 6 5",
+    -0.09851292570425839)
+
+op24 = nod(op24)
+
+op += op24
+            
+op25 = of.FermionOperator(
+    "2^ 1^ 7 0",
+    -0.043084072307206664)
+
+op25 = nod(op25)
+
+op += op25
+            
+op26 = of.FermionOperator(
+    "2^ 1^ 7 4",
+    0.05296046727186977)
+
+op26 = nod(op26)
+
+op += op26
+            
+op27 = of.FermionOperator(
+    "3^ 3",
+    -1.5506524476727686)
+
+op27 = nod(op27)
+
+op += op27
+            
+op28 = of.FermionOperator(
+    "3^ 7",
+    0.12946764778453934)
+
+op28 = nod(op28)
+
+op += op28
+            
+op29 = of.FermionOperator(
+    "3^ 0^ 2 1",
+    0.15738195543255762)
+
+op29 = nod(op29)
+
+op += op29
+            
+op30 = of.FermionOperator(
+    "3^ 0^ 3 0",
+    -0.4359320349249488)
+
+op30 = nod(op30)
+
+op += op30
+            
+op31 = of.FermionOperator(
+    "3^ 0^ 4 3",
+    0.00980520184407552)
+
+op31 = nod(op31)
+
+op += op31
+            
+op32 = of.FermionOperator(
+    "3^ 0^ 5 2",
+    -0.09800101682648102)
+
+op32 = nod(op32)
+
+op += op32
+            
+op33 = of.FermionOperator(
+    "3^ 0^ 6 1",
+    -0.043084072307206664)
+
+op33 = nod(op33)
+
+op += op33
+            
+op34 = of.FermionOperator(
+    "3^ 0^ 6 5",
+    0.05296046727186977)
+
+op34 = nod(op34)
+
+op += op34
+            
+op35 = of.FermionOperator(
+    "3^ 0^ 7 0",
+    0.08424764187447545)
+
+op35 = nod(op35)
+
+op += op35
+            
+op36 = of.FermionOperator(
+    "3^ 0^ 7 4",
+    -0.09851292570425839)
+
+op36 = nod(op36)
+
+op += op36
+            
+op37 = of.FermionOperator(
+    "3^ 1^ 3 1",
+    -0.2785500794923912)
+
+op37 = nod(op37)
+
+op += op37
+            
+op38 = of.FermionOperator(
+    "3^ 1^ 5 3",
+    -0.0881958149824055)
+
+op38 = nod(op38)
+
+op += op38
+            
+op39 = of.FermionOperator(
+    "3^ 1^ 7 1",
+    0.041163569567268785)
+
+op39 = nod(op39)
+
+op += op39
+            
+op40 = of.FermionOperator(
+    "3^ 1^ 7 5",
+    -0.04555245843238862)
+
+op40 = nod(op40)
+
+op += op40
+            
+op41 = of.FermionOperator(
+    "3^ 2^ 1 0",
+    -0.15738195543255762)
+
+op41 = nod(op41)
+
+op += op41
+            
+op42 = of.FermionOperator(
+    "3^ 2^ 3 2",
+    -0.4536261619804336)
+
+op42 = nod(op42)
+
+op += op42
+            
+op43 = of.FermionOperator(
+    "3^ 2^ 4 1",
+    0.098001016826481)
+
+op43 = nod(op43)
+
+op += op43
+            
+op44 = of.FermionOperator(
+    "3^ 2^ 5 0",
+    -0.098001016826481)
+
+op44 = nod(op44)
+
+op += op44
+            
+op45 = of.FermionOperator(
+    "3^ 2^ 5 4",
+    -0.1372828399211524)
+
+op45 = nod(op45)
+
+op += op45
+            
+op46 = of.FermionOperator(
+    "3^ 2^ 6 3",
+    -0.004056436395001304)
+
+op46 = nod(op46)
+
+op += op46
+            
+op47 = of.FermionOperator(
+    "3^ 2^ 7 2",
+    0.004056436395001304)
+
+op47 = nod(op47)
+
+op += op47
+            
+op48 = of.FermionOperator(
+    "3^ 2^ 7 6",
+    -0.10464527872782414)
+
+op48 = nod(op48)
+
+op += op48
+            
+op49 = of.FermionOperator(
+    "4^ 0",
+    0.1599558696423879)
+
+op49 = nod(op49)
+
+op += op49
+            
+op50 = of.FermionOperator(
+    "4^ 4",
+    -1.2458016302862076)
+
+op50 = nod(op50)
+
+op += op50
+            
+op51 = of.FermionOperator(
+    "4^ 0^ 4 0",
+    -0.3381619685106094)
+
+op51 = nod(op51)
+
+op += op51
+            
+op52 = of.FermionOperator(
+    "4^ 0^ 6 2",
+    -0.0976729120872554)
+
+op52 = nod(op52)
+
+op += op52
+            
+op53 = of.FermionOperator(
+    "4^ 1^ 1 0",
+    -0.08156525650690516)
+
+op53 = nod(op53)
+
+op += op53
+            
+op54 = of.FermionOperator(
+    "4^ 1^ 3 2",
+    0.09800101682648105)
+
+op54 = nod(op54)
+
+op += op54
+            
+op55 = of.FermionOperator(
+    "4^ 1^ 4 1",
+    -0.44599403200977517)
+
+op55 = nod(op55)
+
+op += op55
+            
+op56 = of.FermionOperator(
+    "4^ 1^ 5 0",
+    0.10783206349916577)
+
+op56 = nod(op56)
+
+op += op56
+            
+op57 = of.FermionOperator(
+    "4^ 1^ 5 4",
+    -0.0068625532529221316)
+
+op57 = nod(op57)
+
+op += op57
+            
+op58 = of.FermionOperator(
+    "4^ 1^ 6 3",
+    -0.15063337935912507)
+
+op58 = nod(op58)
+
+op += op58
+            
+op59 = of.FermionOperator(
+    "4^ 1^ 7 2",
+    0.05296046727186969)
+
+op59 = nod(op59)
+
+op += op59
+            
+op60 = of.FermionOperator(
+    "4^ 1^ 7 6",
+    -0.04096948961217299)
+
+op60 = nod(op60)
+
+op += op60
+            
+op61 = of.FermionOperator(
+    "4^ 2^ 2 0",
+    -0.08819581498240549)
+
+op61 = nod(op61)
+
+op += op61
+            
+op62 = of.FermionOperator(
+    "4^ 2^ 4 2",
+    -0.31048136914754915)
+
+op62 = nod(op62)
+
+op += op62
+            
+op63 = of.FermionOperator(
+    "4^ 2^ 6 0",
+    -0.052120453654866644)
+
+op63 = nod(op63)
+
+op += op63
+            
+op64 = of.FermionOperator(
+    "4^ 2^ 6 4",
+    -0.10218096659150386)
+
+op64 = nod(op64)
+
+op += op64
+            
+op65 = of.FermionOperator(
+    "4^ 3^ 2 1",
+    -0.09800101682648105)
+
+op65 = nod(op65)
+
+op += op65
+            
+op66 = of.FermionOperator(
+    "4^ 3^ 3 0",
+    0.009805201844075549)
+
+op66 = nod(op66)
+
+op += op66
+            
+op67 = of.FermionOperator(
+    "4^ 3^ 4 3",
+    -0.4477642090687015)
+
+op67 = nod(op67)
+
+op += op67
+            
+op68 = of.FermionOperator(
+    "4^ 3^ 5 2",
+    0.13728283992115237)
+
+op68 = nod(op68)
+
+op += op68
+            
+op69 = of.FermionOperator(
+    "4^ 3^ 6 1",
+    -0.15063337935912502)
+
+op69 = nod(op69)
+
+op += op69
+            
+op70 = of.FermionOperator(
+    "4^ 3^ 6 5",
+    -0.09936654028075614)
+
+op70 = nod(op70)
+
+op += op70
+            
+op71 = of.FermionOperator(
+    "4^ 3^ 7 0",
+    0.09851292570425836)
+
+op71 = nod(op71)
+
+op += op71
+            
+op72 = of.FermionOperator(
+    "4^ 3^ 7 4",
+    -0.002814426310747711)
+
+op72 = nod(op72)
+
+op += op72
+            
+op73 = of.FermionOperator(
+    "5^ 1",
+    0.1599558696423879)
+
+op73 = nod(op73)
+
+op += op73
+            
+op74 = of.FermionOperator(
+    "5^ 5",
+    -1.2458016302862076)
+
+op74 = nod(op74)
+
+op += op74
+            
+op75 = of.FermionOperator(
+    "5^ 0^ 1 0",
+    0.08156525650690516)
+
+op75 = nod(op75)
+
+op += op75
+            
+op76 = of.FermionOperator(
+    "5^ 0^ 3 2",
+    -0.09800101682648105)
+
+op76 = nod(op76)
+
+op += op76
+            
+op77 = of.FermionOperator(
+    "5^ 0^ 4 1",
+    0.10783206349916577)
+
+op77 = nod(op77)
+
+op += op77
+            
+op78 = of.FermionOperator(
+    "5^ 0^ 5 0",
+    -0.44599403200977517)
+
+op78 = nod(op78)
+
+op += op78
+            
+op79 = of.FermionOperator(
+    "5^ 0^ 5 4",
+    0.0068625532529221316)
+
+op79 = nod(op79)
+
+op += op79
+            
+op80 = of.FermionOperator(
+    "5^ 0^ 6 3",
+    0.05296046727186969)
+
+op80 = nod(op80)
+
+op += op80
+            
+op81 = of.FermionOperator(
+    "5^ 0^ 7 2",
+    -0.15063337935912507)
+
+op81 = nod(op81)
+
+op += op81
+            
+op82 = of.FermionOperator(
+    "5^ 0^ 7 6",
+    0.04096948961217299)
+
+op82 = nod(op82)
+
+op += op82
+            
+op83 = of.FermionOperator(
+    "5^ 1^ 5 1",
+    -0.3381619685106094)
+
+op83 = nod(op83)
+
+op += op83
+            
+op84 = of.FermionOperator(
+    "5^ 1^ 7 3",
+    -0.0976729120872554)
+
+op84 = nod(op84)
+
+op += op84
+            
+op85 = of.FermionOperator(
+    "5^ 2^ 2 1",
+    0.009805201844075549)
+
+op85 = nod(op85)
+
+op += op85
+            
+op86 = of.FermionOperator(
+    "5^ 2^ 3 0",
+    -0.09800101682648105)
+
+op86 = nod(op86)
+
+op += op86
+            
+op87 = of.FermionOperator(
+    "5^ 2^ 4 3",
+    0.13728283992115237)
+
+op87 = nod(op87)
+
+op += op87
+            
+op88 = of.FermionOperator(
+    "5^ 2^ 5 2",
+    -0.4477642090687015)
+
+op88 = nod(op88)
+
+op += op88
+            
+op89 = of.FermionOperator(
+    "5^ 2^ 6 1",
+    0.09851292570425836)
+
+op89 = nod(op89)
+
+op += op89
+            
+op90 = of.FermionOperator(
+    "5^ 2^ 6 5",
+    -0.002814426310747711)
+
+op90 = nod(op90)
+
+op += op90
+            
+op91 = of.FermionOperator(
+    "5^ 2^ 7 0",
+    -0.15063337935912502)
+
+op91 = nod(op91)
+
+op += op91
+            
+op92 = of.FermionOperator(
+    "5^ 2^ 7 4",
+    -0.09936654028075614)
+
+op92 = nod(op92)
+
+op += op92
+            
+op93 = of.FermionOperator(
+    "5^ 3^ 3 1",
+    -0.08819581498240549)
+
+op93 = nod(op93)
+
+op += op93
+            
+op94 = of.FermionOperator(
+    "5^ 3^ 5 3",
+    -0.31048136914754915)
+
+op94 = nod(op94)
+
+op += op94
+            
+op95 = of.FermionOperator(
+    "5^ 3^ 7 1",
+    -0.052120453654866644)
+
+op95 = nod(op95)
+
+op += op95
+            
+op96 = of.FermionOperator(
+    "5^ 3^ 7 5",
+    -0.10218096659150386)
+
+op96 = nod(op96)
+
+op += op96
+            
+op97 = of.FermionOperator(
+    "5^ 4^ 1 0",
+    -0.10783206349916581)
+
+op97 = nod(op97)
+
+op += op97
+            
+op98 = of.FermionOperator(
+    "5^ 4^ 3 2",
+    -0.1372828399211523)
+
+op98 = nod(op98)
+
+op += op98
+            
+op99 = of.FermionOperator(
+    "5^ 4^ 4 1",
+    -0.006862553252922129)
+
+op99 = nod(op99)
+
+op += op99
+            
+op100 = of.FermionOperator(
+    "5^ 4^ 5 0",
+    0.006862553252922129)
+
+op100 = nod(op100)
+
+op += op100
+            
+op101 = of.FermionOperator(
+    "5^ 4^ 5 4",
+    -0.4674057434947718)
+
+op101 = nod(op101)
+
+op += op101
+            
+op102 = of.FermionOperator(
+    "5^ 4^ 6 3",
+    0.09936654028075612)
+
+op102 = nod(op102)
+
+op += op102
+            
+op103 = of.FermionOperator(
+    "5^ 4^ 7 2",
+    -0.09936654028075612)
+
+op103 = nod(op103)
+
+op += op103
+            
+op104 = of.FermionOperator(
+    "5^ 4^ 7 6",
+    -0.16246439271101898)
+
+op104 = nod(op104)
+
+op += op104
+            
+op105 = of.FermionOperator(
+    "6^ 2",
+    0.12946764778453945)
+
+op105 = nod(op105)
+
+op += op105
+            
+op106 = of.FermionOperator(
+    "6^ 6",
+    -0.9063250725893804)
+
+op106 = nod(op106)
+
+op += op106
+            
+op107 = of.FermionOperator(
+    "6^ 0^ 2 0",
+    0.04116356956726876)
+
+op107 = nod(op107)
+
+op += op107
+            
+op108 = of.FermionOperator(
+    "6^ 0^ 4 2",
+    -0.05212045365486667)
+
+op108 = nod(op108)
+
+op += op108
+            
+op109 = of.FermionOperator(
+    "6^ 0^ 6 0",
+    -0.42588279487198716)
+
+op109 = nod(op109)
+
+op += op109
+            
+op110 = of.FermionOperator(
+    "6^ 0^ 6 4",
+    0.04493785013458506)
+
+op110 = nod(op110)
+
+op += op110
+            
+op111 = of.FermionOperator(
+    "6^ 1^ 2 1",
+    0.08424764187447543)
+
+op111 = nod(op111)
+
+op += op111
+            
+op112 = of.FermionOperator(
+    "6^ 1^ 3 0",
+    -0.04308407230720668)
+
+op112 = nod(op112)
+
+op += op112
+            
+op113 = of.FermionOperator(
+    "6^ 1^ 4 3",
+    -0.15063337935912507)
+
+op113 = nod(op113)
+
+op += op113
+            
+op114 = of.FermionOperator(
+    "6^ 1^ 5 2",
+    0.09851292570425839)
+
+op114 = nod(op114)
+
+op += op114
+            
+op115 = of.FermionOperator(
+    "6^ 1^ 6 1",
+    -0.5229523467260139)
+
+op115 = nod(op115)
+
+op += op115
+            
+op116 = of.FermionOperator(
+    "6^ 1^ 6 5",
+    0.08590733974675811)
+
+op116 = nod(op116)
+
+op += op116
+            
+op117 = of.FermionOperator(
+    "6^ 1^ 7 0",
+    0.09706955185402671)
+
+op117 = nod(op117)
+
+op += op117
+            
+op118 = of.FermionOperator(
+    "6^ 1^ 7 4",
+    -0.04096948961217305)
+
+op118 = nod(op118)
+
+op += op118
+            
+op119 = of.FermionOperator(
+    "6^ 2^ 4 0",
+    -0.09767291208725531)
+
+op119 = nod(op119)
+
+op += op119
+            
+op120 = of.FermionOperator(
+    "6^ 2^ 6 2",
+    -0.3592999693151803)
+
+op120 = nod(op120)
+
+op += op120
+            
+op121 = of.FermionOperator(
+    "6^ 3^ 1 0",
+    -0.043084072307206664)
+
+op121 = nod(op121)
+
+op += op121
+            
+op122 = of.FermionOperator(
+    "6^ 3^ 3 2",
+    -0.004056436395001326)
+
+op122 = nod(op122)
+
+op += op122
+            
+op123 = of.FermionOperator(
+    "6^ 3^ 4 1",
+    -0.15063337935912507)
+
+op123 = nod(op123)
+
+op += op123
+            
+op124 = of.FermionOperator(
+    "6^ 3^ 5 0",
+    0.052960467271869746)
+
+op124 = nod(op124)
+
+op += op124
+            
+op125 = of.FermionOperator(
+    "6^ 3^ 5 4",
+    0.09936654028075612)
+
+op125 = nod(op125)
+
+op += op125
+            
+op126 = of.FermionOperator(
+    "6^ 3^ 6 3",
+    -0.4639452480430045)
+
+op126 = nod(op126)
+
+op += op126
+            
+op127 = of.FermionOperator(
+    "6^ 3^ 7 2",
+    0.10464527872782418)
+
+op127 = nod(op127)
+
+op += op127
+            
+op128 = of.FermionOperator(
+    "6^ 3^ 7 6",
+    -0.09353804141917224)
+
+op128 = nod(op128)
+
+op += op128
+            
+op129 = of.FermionOperator(
+    "6^ 4^ 2 0",
+    -0.04555245843238869)
+
+op129 = nod(op129)
+
+op += op129
+            
+op130 = of.FermionOperator(
+    "6^ 4^ 4 2",
+    -0.10218096659150386)
+
+op130 = nod(op130)
+
+op += op130
+            
+op131 = of.FermionOperator(
+    "6^ 4^ 6 0",
+    0.04493785013458507)
+
+op131 = nod(op131)
+
+op += op131
+            
+op132 = of.FermionOperator(
+    "6^ 4^ 6 4",
+    -0.3177539656837267)
+
+op132 = nod(op132)
+
+op += op132
+            
+op133 = of.FermionOperator(
+    "6^ 5^ 2 1",
+    -0.09851292570425838)
+
+op133 = nod(op133)
+
+op += op133
+            
+op134 = of.FermionOperator(
+    "6^ 5^ 3 0",
+    0.05296046727186969)
+
+op134 = nod(op134)
+
+op += op134
+            
+op135 = of.FermionOperator(
+    "6^ 5^ 4 3",
+    -0.09936654028075609)
+
+op135 = nod(op135)
+
+op += op135
+            
+op136 = of.FermionOperator(
+    "6^ 5^ 5 2",
+    -0.0028144263107477575)
+
+op136 = nod(op136)
+
+op += op136
+            
+op137 = of.FermionOperator(
+    "6^ 5^ 6 1",
+    0.085907339746758)
+
+op137 = nod(op137)
+
+op += op137
+            
+op138 = of.FermionOperator(
+    "6^ 5^ 6 5",
+    -0.4802183583947457)
+
+op138 = nod(op138)
+
+op += op138
+            
+op139 = of.FermionOperator(
+    "6^ 5^ 7 0",
+    -0.040969489612172935)
+
+op139 = nod(op139)
+
+op += op139
+            
+op140 = of.FermionOperator(
+    "6^ 5^ 7 4",
+    0.16246439271101898)
+
+op140 = nod(op140)
+
+op += op140
+            
+op141 = of.FermionOperator(
+    "7^ 3",
+    0.12946764778453945)
+
+op141 = nod(op141)
+
+op += op141
+            
+op142 = of.FermionOperator(
+    "7^ 7",
+    -0.9063250725893804)
+
+op142 = nod(op142)
+
+op += op142
+            
+op143 = of.FermionOperator(
+    "7^ 0^ 2 1",
+    -0.04308407230720668)
+
+op143 = nod(op143)
+
+op += op143
+            
+op144 = of.FermionOperator(
+    "7^ 0^ 3 0",
+    0.08424764187447543)
+
+op144 = nod(op144)
+
+op += op144
+            
+op145 = of.FermionOperator(
+    "7^ 0^ 4 3",
+    0.09851292570425839)
+
+op145 = nod(op145)
+
+op += op145
+            
+op146 = of.FermionOperator(
+    "7^ 0^ 5 2",
+    -0.15063337935912507)
+
+op146 = nod(op146)
+
+op += op146
+            
+op147 = of.FermionOperator(
+    "7^ 0^ 6 1",
+    0.09706955185402671)
+
+op147 = nod(op147)
+
+op += op147
+            
+op148 = of.FermionOperator(
+    "7^ 0^ 6 5",
+    -0.04096948961217305)
+
+op148 = nod(op148)
+
+op += op148
+            
+op149 = of.FermionOperator(
+    "7^ 0^ 7 0",
+    -0.5229523467260139)
+
+op149 = nod(op149)
+
+op += op149
+            
+op150 = of.FermionOperator(
+    "7^ 0^ 7 4",
+    0.08590733974675811)
+
+op150 = nod(op150)
+
+op += op150
+            
+op151 = of.FermionOperator(
+    "7^ 1^ 3 1",
+    0.04116356956726876)
+
+op151 = nod(op151)
+
+op += op151
+            
+op152 = of.FermionOperator(
+    "7^ 1^ 5 3",
+    -0.05212045365486667)
+
+op152 = nod(op152)
+
+op += op152
+            
+op153 = of.FermionOperator(
+    "7^ 1^ 7 1",
+    -0.42588279487198716)
+
+op153 = nod(op153)
+
+op += op153
+            
+op154 = of.FermionOperator(
+    "7^ 1^ 7 5",
+    0.04493785013458506)
+
+op154 = nod(op154)
+
+op += op154
+            
+op155 = of.FermionOperator(
+    "7^ 2^ 1 0",
+    0.043084072307206664)
+
+op155 = nod(op155)
+
+op += op155
+            
+op156 = of.FermionOperator(
+    "7^ 2^ 3 2",
+    0.004056436395001326)
+
+op156 = nod(op156)
+
+op += op156
+            
+op157 = of.FermionOperator(
+    "7^ 2^ 4 1",
+    0.052960467271869746)
+
+op157 = nod(op157)
+
+op += op157
+            
+op158 = of.FermionOperator(
+    "7^ 2^ 5 0",
+    -0.15063337935912507)
+
+op158 = nod(op158)
+
+op += op158
+            
+op159 = of.FermionOperator(
+    "7^ 2^ 5 4",
+    -0.09936654028075612)
+
+op159 = nod(op159)
+
+op += op159
+            
+op160 = of.FermionOperator(
+    "7^ 2^ 6 3",
+    0.10464527872782418)
+
+op160 = nod(op160)
+
+op += op160
+            
+op161 = of.FermionOperator(
+    "7^ 2^ 7 2",
+    -0.4639452480430045)
+
+op161 = nod(op161)
+
+op += op161
+            
+op162 = of.FermionOperator(
+    "7^ 2^ 7 6",
+    0.09353804141917224)
+
+op162 = nod(op162)
+
+op += op162
+            
+op163 = of.FermionOperator(
+    "7^ 3^ 5 1",
+    -0.09767291208725531)
+
+op163 = nod(op163)
+
+op += op163
+            
+op164 = of.FermionOperator(
+    "7^ 3^ 7 3",
+    -0.3592999693151803)
+
+op164 = nod(op164)
+
+op += op164
+            
+op165 = of.FermionOperator(
+    "7^ 4^ 2 1",
+    0.05296046727186969)
+
+op165 = nod(op165)
+
+op += op165
+            
+op166 = of.FermionOperator(
+    "7^ 4^ 3 0",
+    -0.09851292570425838)
+
+op166 = nod(op166)
+
+op += op166
+            
+op167 = of.FermionOperator(
+    "7^ 4^ 4 3",
+    -0.0028144263107477575)
+
+op167 = nod(op167)
+
+op += op167
+            
+op168 = of.FermionOperator(
+    "7^ 4^ 5 2",
+    -0.09936654028075609)
+
+op168 = nod(op168)
+
+op += op168
+            
+op169 = of.FermionOperator(
+    "7^ 4^ 6 1",
+    -0.040969489612172935)
+
+op169 = nod(op169)
+
+op += op169
+            
+op170 = of.FermionOperator(
+    "7^ 4^ 6 5",
+    0.16246439271101898)
+
+op170 = nod(op170)
+
+op += op170
+            
+op171 = of.FermionOperator(
+    "7^ 4^ 7 0",
+    0.085907339746758)
+
+op171 = nod(op171)
+
+op += op171
+            
+op172 = of.FermionOperator(
+    "7^ 4^ 7 4",
+    -0.4802183583947457)
+
+op172 = nod(op172)
+
+op += op172
+            
+op173 = of.FermionOperator(
+    "7^ 5^ 3 1",
+    -0.04555245843238869)
+
+op173 = nod(op173)
+
+op += op173
+            
+op174 = of.FermionOperator(
+    "7^ 5^ 5 3",
+    -0.10218096659150386)
+
+op174 = nod(op174)
+
+op += op174
+            
+op175 = of.FermionOperator(
+    "7^ 5^ 7 1",
+    0.04493785013458507)
+
+op175 = nod(op175)
+
+op += op175
+            
+op176 = of.FermionOperator(
+    "7^ 5^ 7 5",
+    -0.3177539656837267)
+
+op176 = nod(op176)
+
+op += op176
+            
+op177 = of.FermionOperator(
+    "7^ 6^ 1 0",
+    -0.09706955185402666)
+
+op177 = nod(op177)
+
+op += op177
+            
+op178 = of.FermionOperator(
+    "7^ 6^ 3 2",
+    -0.1046452787278242)
+
+op178 = nod(op178)
+
+op += op178
+            
+op179 = of.FermionOperator(
+    "7^ 6^ 4 1",
+    -0.040969489612173005)
+
+op179 = nod(op179)
+
+op += op179
+            
+op180 = of.FermionOperator(
+    "7^ 6^ 5 0",
+    0.040969489612173005)
+
+op180 = nod(op180)
+
+op += op180
+            
+op181 = of.FermionOperator(
+    "7^ 6^ 5 4",
+    -0.1624643927110191)
+
+op181 = nod(op181)
+
+op += op181
+            
+op182 = of.FermionOperator(
+    "7^ 6^ 6 3",
+    -0.0935380414191723)
+
+op182 = nod(op182)
+
+op += op182
+            
+op183 = of.FermionOperator(
+    "7^ 6^ 7 2",
+    0.0935380414191723)
+
+op183 = nod(op183)
+
+op += op183
+            
+op184 = of.FermionOperator(
+    "7^ 6^ 7 6",
+    -0.5810460180708312)
+
+op184 = nod(op184)
+
+op += op184
+            

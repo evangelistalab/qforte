@@ -33,8 +33,8 @@ sq_terms = [
     (+0.704645 * 1.0j, [7, 6], [3, 2]), # 2body ab 
     (+0.4 * 1.0j, [6], [0]), # 1bdy-a
     (+0.4 * 1.0j, [7], [3]), # 1bdy-a
+    (+0.704645 * 1.0, [4, 5], [5, 4]), # 1body-nbr ab (coeff must be REAL)
     (+0.704645 * 1.0, [6, 3], [3, 2]), # 2body-nbr ab 
-    (+0.704645 * 1.0, [6, 5], [5, 2]), # 2body-nbr ab (coeff must be REAL)
     (+0.704645 * 1.0, [2], [2]), # 1body-nbr ab (coeff must be REAL)
     ]
 
@@ -49,29 +49,38 @@ for sq_term in sq_terms:
 
     print("\n SQOP Stuff")
     print("===========================")
+    # sqop.simplify()
     print(sqop)
     fci_comp.apply_sqop_evolution(time, sqop)
 
-    print("\n Final FCIcomp Stuff")
-    print("===========================")
+    # print("\n Final FCIcomp Stuff")
+    # print("===========================")
 
     Ctemp = fci_comp.get_state_deep()
     cnrm = Ctemp.norm()
     print(f"||C||: {cnrm}")
-    print(fci_comp.str(print_data=True, print_complex=print_imag))
+    # print(fci_comp.str(print_data=True, print_complex=print_imag))
+
+
+print(fci_comp.str(print_data=True, print_complex=print_imag))
 
 # From FQE
 
 # -0.704645j [2^ 3^ 6 7] +
 # 0.704645j [7^ 6^ 3 2]
+
 # -0.4j [0^ 6] +
 # 0.4j [6^ 0]
+
 # -0.4j [3^ 7] +
 # 0.4j [7^ 3]
-# 1.40929 [4^ 5^ 5 4]
+
+# 1.40929 [4^ 5^ 5 4]      # pure number op
+
 # 0.704645 [2^ 3^ 3 6] +
 # 0.704645 [6^ 3^ 3 2]
-# 1.40929 [2^ 2]
+
+# 1.40929 [2^ 2]           # pure number op
 
 
 

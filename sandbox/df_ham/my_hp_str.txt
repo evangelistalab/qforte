@@ -1,0 +1,1658 @@
+hp_lst = []
+
+op = of.FermionOperator()
+e0 = 1.1465506231183333 
+
+e0 = 1.1465506231183333 
+
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 0",
+    -0.9175544095387685)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "0^ 0",
+    -0.9175544095387685)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 4",
+    0.1599558696423879)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 0",
+    0.1599558696423879)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 1",
+    -0.9175544095387685)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "1^ 1",
+    -0.9175544095387685)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 5",
+    0.1599558696423879)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 1",
+    0.1599558696423879)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 1^ 0 1",
+    -0.24864247980945614)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "0^ 1^ 0 1",
+    -0.24864247980945614)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 0^ 3 2",
+    -0.15738195543255762)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "3^ 2^ 1 0",
+    -0.15738195543255762)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 0^ 4 1",
+    -0.0815652565069051)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 1^ 1 0",
+    -0.0815652565069051)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 0^ 5 0",
+    0.0815652565069051)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 0^ 1 0",
+    0.0815652565069051)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 0^ 5 4",
+    -0.10783206349916583)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 4^ 1 0",
+    -0.10783206349916583)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 0^ 6 3",
+    -0.043084072307206685)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 3^ 1 0",
+    -0.043084072307206685)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 0^ 7 2",
+    0.043084072307206685)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 2^ 1 0",
+    0.043084072307206685)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 0^ 7 6",
+    -0.0970695518540268)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 6^ 1 0",
+    -0.0970695518540268)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 2",
+    -0.7753262238363843)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "2^ 2",
+    -0.7753262238363843)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 6",
+    0.12946764778453934)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 2",
+    0.12946764778453934)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 2^ 0 2",
+    -0.1392750397461956)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "0^ 2^ 0 2",
+    -0.1392750397461956)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 0^ 4 2",
+    -0.0881958149824055)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 2^ 2 0",
+    -0.0881958149824055)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 0^ 6 0",
+    0.041163569567268785)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 0^ 2 0",
+    0.041163569567268785)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 0^ 6 4",
+    -0.04555245843238862)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 4^ 2 0",
+    -0.04555245843238862)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 2^ 1 2",
+    -0.2179660174624744)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "1^ 2^ 1 2",
+    -0.2179660174624744)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 1^ 3 0",
+    0.15738195543255762)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "3^ 0^ 2 1",
+    0.15738195543255762)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 1^ 4 3",
+    -0.09800101682648102)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 3^ 2 1",
+    -0.09800101682648102)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 1^ 5 2",
+    0.00980520184407552)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 2^ 2 1",
+    0.00980520184407552)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 1^ 6 1",
+    0.08424764187447545)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 1^ 2 1",
+    0.08424764187447545)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 1^ 6 5",
+    -0.09851292570425839)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 5^ 2 1",
+    -0.09851292570425839)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 1^ 7 0",
+    -0.043084072307206664)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 0^ 2 1",
+    -0.043084072307206664)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 1^ 7 4",
+    0.05296046727186977)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 4^ 2 1",
+    0.05296046727186977)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 3",
+    -0.7753262238363843)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "3^ 3",
+    -0.7753262238363843)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 7",
+    0.12946764778453934)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 3",
+    0.12946764778453934)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 3^ 0 3",
+    -0.2179660174624744)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "0^ 3^ 0 3",
+    -0.2179660174624744)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 0^ 4 3",
+    0.00980520184407552)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 3^ 3 0",
+    0.00980520184407552)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 0^ 5 2",
+    -0.09800101682648102)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 2^ 3 0",
+    -0.09800101682648102)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 0^ 6 1",
+    -0.043084072307206664)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 1^ 3 0",
+    -0.043084072307206664)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 0^ 6 5",
+    0.05296046727186977)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 5^ 3 0",
+    0.05296046727186977)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 0^ 7 0",
+    0.08424764187447545)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 0^ 3 0",
+    0.08424764187447545)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 0^ 7 4",
+    -0.09851292570425839)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 4^ 3 0",
+    -0.09851292570425839)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 3^ 1 3",
+    -0.1392750397461956)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "1^ 3^ 1 3",
+    -0.1392750397461956)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 1^ 5 3",
+    -0.0881958149824055)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 3^ 3 1",
+    -0.0881958149824055)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 1^ 7 1",
+    0.041163569567268785)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 1^ 3 1",
+    0.041163569567268785)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 1^ 7 5",
+    -0.04555245843238862)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 5^ 3 1",
+    -0.04555245843238862)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 3^ 2 3",
+    -0.2268130809902168)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "2^ 3^ 2 3",
+    -0.2268130809902168)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 2^ 4 1",
+    0.098001016826481)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 1^ 3 2",
+    0.098001016826481)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 2^ 5 0",
+    -0.098001016826481)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 0^ 3 2",
+    -0.098001016826481)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 2^ 5 4",
+    -0.1372828399211524)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 4^ 3 2",
+    -0.1372828399211524)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 2^ 6 3",
+    -0.004056436395001304)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 3^ 3 2",
+    -0.004056436395001304)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 2^ 7 2",
+    0.004056436395001304)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 2^ 3 2",
+    0.004056436395001304)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 2^ 7 6",
+    -0.10464527872782414)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 6^ 3 2",
+    -0.10464527872782414)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 4",
+    -0.6229008151431038)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 4",
+    -0.6229008151431038)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 4^ 0 4",
+    -0.1690809842553047)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "0^ 4^ 0 4",
+    -0.1690809842553047)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 0^ 6 2",
+    -0.0976729120872554)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 2^ 4 0",
+    -0.0976729120872554)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 4^ 1 4",
+    -0.22299701600488758)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "1^ 4^ 1 4",
+    -0.22299701600488758)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 1^ 5 0",
+    0.10783206349916577)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 0^ 4 1",
+    0.10783206349916577)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 1^ 5 4",
+    -0.0068625532529221316)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 4^ 4 1",
+    -0.0068625532529221316)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 1^ 6 3",
+    -0.15063337935912507)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 3^ 4 1",
+    -0.15063337935912507)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 1^ 7 2",
+    0.05296046727186969)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 2^ 4 1",
+    0.05296046727186969)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 1^ 7 6",
+    -0.04096948961217299)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 6^ 4 1",
+    -0.04096948961217299)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 4^ 2 4",
+    -0.15524068457377457)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "2^ 4^ 2 4",
+    -0.15524068457377457)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 2^ 6 0",
+    -0.052120453654866644)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 0^ 4 2",
+    -0.052120453654866644)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 2^ 6 4",
+    -0.10218096659150386)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 4^ 4 2",
+    -0.10218096659150386)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 4^ 3 4",
+    -0.22388210453435076)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "3^ 4^ 3 4",
+    -0.22388210453435076)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 3^ 5 2",
+    0.13728283992115237)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 2^ 4 3",
+    0.13728283992115237)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 3^ 6 1",
+    -0.15063337935912502)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 1^ 4 3",
+    -0.15063337935912502)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 3^ 6 5",
+    -0.09936654028075614)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 5^ 4 3",
+    -0.09936654028075614)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 3^ 7 0",
+    0.09851292570425836)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 0^ 4 3",
+    0.09851292570425836)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 3^ 7 4",
+    -0.002814426310747711)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 4^ 4 3",
+    -0.002814426310747711)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 5",
+    -0.6229008151431038)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 5",
+    -0.6229008151431038)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 5^ 0 5",
+    -0.22299701600488758)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "0^ 5^ 0 5",
+    -0.22299701600488758)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 0^ 5 4",
+    0.0068625532529221316)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 4^ 5 0",
+    0.0068625532529221316)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 0^ 6 3",
+    0.05296046727186969)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 3^ 5 0",
+    0.05296046727186969)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 0^ 7 2",
+    -0.15063337935912507)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 2^ 5 0",
+    -0.15063337935912507)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 0^ 7 6",
+    0.04096948961217299)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 6^ 5 0",
+    0.04096948961217299)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 5^ 1 5",
+    -0.1690809842553047)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "1^ 5^ 1 5",
+    -0.1690809842553047)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 1^ 7 3",
+    -0.0976729120872554)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 3^ 5 1",
+    -0.0976729120872554)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 5^ 2 5",
+    -0.22388210453435076)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "2^ 5^ 2 5",
+    -0.22388210453435076)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 2^ 6 1",
+    0.09851292570425836)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 1^ 5 2",
+    0.09851292570425836)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 2^ 6 5",
+    -0.002814426310747711)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 5^ 5 2",
+    -0.002814426310747711)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 2^ 7 0",
+    -0.15063337935912502)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 0^ 5 2",
+    -0.15063337935912502)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 2^ 7 4",
+    -0.09936654028075614)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 4^ 5 2",
+    -0.09936654028075614)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 5^ 3 5",
+    -0.15524068457377457)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "3^ 5^ 3 5",
+    -0.15524068457377457)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 3^ 7 1",
+    -0.052120453654866644)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 1^ 5 3",
+    -0.052120453654866644)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 3^ 7 5",
+    -0.10218096659150386)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 5^ 5 3",
+    -0.10218096659150386)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 5^ 4 5",
+    -0.2337028717473859)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 5^ 4 5",
+    -0.2337028717473859)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 4^ 6 3",
+    0.09936654028075612)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 3^ 5 4",
+    0.09936654028075612)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 4^ 7 2",
+    -0.09936654028075612)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 2^ 5 4",
+    -0.09936654028075612)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 4^ 7 6",
+    -0.16246439271101898)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 6^ 5 4",
+    -0.16246439271101898)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 6",
+    -0.4531625362946902)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 6",
+    -0.4531625362946902)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 6^ 0 6",
+    -0.21294139743599358)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "0^ 6^ 0 6",
+    -0.21294139743599358)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 0^ 6 4",
+    0.04493785013458506)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 4^ 6 0",
+    0.04493785013458506)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 6^ 1 6",
+    -0.26147617336300694)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "1^ 6^ 1 6",
+    -0.26147617336300694)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 1^ 6 5",
+    0.08590733974675811)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 5^ 6 1",
+    0.08590733974675811)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 1^ 7 0",
+    0.09706955185402671)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 0^ 6 1",
+    0.09706955185402671)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 1^ 7 4",
+    -0.04096948961217305)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 4^ 6 1",
+    -0.04096948961217305)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 6^ 2 6",
+    -0.17964998465759016)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "2^ 6^ 2 6",
+    -0.17964998465759016)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 6^ 3 6",
+    -0.23197262402150226)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "3^ 6^ 3 6",
+    -0.23197262402150226)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 3^ 7 2",
+    0.10464527872782418)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 2^ 6 3",
+    0.10464527872782418)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 3^ 7 6",
+    -0.09353804141917224)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 6^ 6 3",
+    -0.09353804141917224)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 6^ 4 6",
+    -0.15887698284186336)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 6^ 4 6",
+    -0.15887698284186336)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 6^ 5 6",
+    -0.24010917919737285)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 6^ 5 6",
+    -0.24010917919737285)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 5^ 7 0",
+    -0.040969489612172935)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 0^ 6 5",
+    -0.040969489612172935)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 5^ 7 4",
+    0.16246439271101898)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 4^ 6 5",
+    0.16246439271101898)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "7^ 7",
+    -0.4531625362946902)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 7",
+    -0.4531625362946902)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "0^ 7^ 0 7",
+    -0.26147617336300694)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "0^ 7^ 0 7",
+    -0.26147617336300694)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "7^ 0^ 7 4",
+    0.08590733974675811)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 4^ 7 0",
+    0.08590733974675811)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "1^ 7^ 1 7",
+    -0.21294139743599358)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "1^ 7^ 1 7",
+    -0.21294139743599358)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "7^ 1^ 7 5",
+    0.04493785013458506)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 5^ 7 1",
+    0.04493785013458506)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "2^ 7^ 2 7",
+    -0.23197262402150226)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "2^ 7^ 2 7",
+    -0.23197262402150226)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "7^ 2^ 7 6",
+    0.09353804141917224)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "7^ 6^ 7 2",
+    0.09353804141917224)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "3^ 7^ 3 7",
+    -0.17964998465759016)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "3^ 7^ 3 7",
+    -0.17964998465759016)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "4^ 7^ 4 7",
+    -0.24010917919737285)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "4^ 7^ 4 7",
+    -0.24010917919737285)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "5^ 7^ 5 7",
+    -0.15887698284186336)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "5^ 7^ 5 7",
+    -0.15887698284186336)
+
+op += op1
+            
+hp_lst.append(op)
+
+op = of.FermionOperator()
+op0 = of.FermionOperator(
+    "6^ 7^ 6 7",
+    -0.2905230090354156)
+
+op += op0
+            
+op1 = of.FermionOperator(
+    "6^ 7^ 6 7",
+    -0.2905230090354156)
+
+op += op1
+            
+hp_lst.append(op)
