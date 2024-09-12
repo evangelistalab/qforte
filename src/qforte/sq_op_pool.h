@@ -1,6 +1,7 @@
 #ifndef _sq_op_pool_h_
 #define _sq_op_pool_h_
 
+#include <cstdint>
 #include <complex>
 #include <string>
 #include <vector>
