@@ -4,7 +4,7 @@ import numpy as np
 
 
 class TestComputeMatrixElement:
-    def test_H2_Hmat_diagonilaztion(self):
+    def test_H2_Hmat_diagonalization(self):
         to_angs = 0.529177210903
 
         mol = system_factory(
