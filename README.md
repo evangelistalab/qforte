@@ -54,7 +54,7 @@ conda activate qforte_env
 
 #### install required packages:
 ```bash
-conda install psi4 -c psi4
+conda install psi4 -c conda-forge
 conda install scipy>=1.11
 ```
 
